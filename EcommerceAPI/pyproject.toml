@@ -1,0 +1,109 @@
+# Editable install ready: pip install -e . works without setup.py or requirements.txt.
+
+# =========================
+# Build system configuration
+# =========================
+[build-system]
+# setuptools 61+ fully supports editable installs and PEP 621 compliant
+requires = ["setuptools>=61.0", "wheel"]  # 'wheel' is needed to build wheels
+build-backend = "setuptools.build_meta"
+
+# =========================
+# Project metadata
+# =========================
+[project]
+name = "ecommerceapi"   # canonical distribution name (lowercase recommended, not EcommerceAPI)
+version = "1.4.8"
+description = "Practice API testing"
+authors = [
+  { name = "Luca Lucas", email = "example@gmail.com" }
+]
+readme = { file = "README.md", content-type = "text/markdown" }
+license = { text = "MIT" }
+requires-python = ">=3.9"
+
+# =========================
+# Runtime dependencies
+# =========================
+dependencies = [
+  "requests>=2.32.0",          # HTTP library
+  "SQLAlchemy>=2.0.43",        # ORM for database
+  "PyMySQL>=1.1.1",            # MySQL connector
+  "python-dotenv>=1.1.1",      # Load environment variables
+  "Jinja2>=3.1.6",             # Templating engine
+  "jsonschema>=4.23.0",        # JSON schema validation
+  "attrs>=25.3.0",             # Decorators for classes
+  "typing_extensions>=4.14.0", # Extra typing helpers
+  "urllib3>=2.5.0",            # HTTP utilities (used by requests)
+  "tzdata>=2025.2",            # Timezone database
+  "six>=1.17.0",               # Python 2/3 compatibility (optional but safe)
+  "colorama>=0.4.6",           # Colored output in terminal
+  "MarkupSafe>=3.0.2",         # Needed by Jinja2
+  "packaging>=24.2",           # Version parsing and utilities
+  "idna>=3.10",                 # URL encoding support
+  "charset-normalizer>=3.4.1", # HTTP charset handling
+  "certifi>=2025.1.31",        # SSL certificates
+  "oauthlib>=3.2.2",            # OAuth support
+  "requests-oauthlib>=2.0.0",  # OAuth wrapper for requests
+  "WooCommerce>=3.0.0",        # WooCommerce API client
+  "rich>=14.0.0",              # Pretty terminal output
+  "greenlet>=3.2.4",           # Required by SQLAlchemy async
+  "rpds-py>=0.25.0",           # Immutable data structures
+  "referencing>=0.36.2",       # JSON schema references
+  "antiorm>=1.2.1",            # Optional small ORM helper
+  "db>=0.1.1",                 # Lightweight DB utility
+  "markdown-it-py>=3.0.0",     # Markdown parser
+  "mdurl>=0.1.2",              # URL support for Markdown
+  "Pygments>=2.19.1"           # Syntax highlighting
+]
+
+# =========================
+# Classifiers (must be under [project], NOT optional-dependencies)
+# =========================
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+]
+
+# =========================
+# Optional dev/test dependencies
+# Install from repo root (recommended): pip install -e './EcommerceAPI[dev]'
+# Dev/test separation: dev dependencies only installed if explicitly requested: pip install -e .[dev]
+# =========================
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3.5",             # Core testing framework
+  "allure-pytest",             # Allure pytest adapter (replaces pytest-html)
+  "pytest-metadata>=3.1.1",    # Metadata for pytest reports
+  "Faker>=37.4.0",             # Generate fake data
+  "freezegun>=1.5.3",          # Freeze time in tests
+# Remove explicit pytest transitive deps like pluggy/iniconfig unless you need pinned versions.
+#  "iniconfig>=2.0.0",          # Configuration parser (pytest dependency)
+#  "pluggy>=1.5.0"              # Plugin system for pytest
+]
+
+# =========================
+# Project URLs
+# =========================
+[project.urls]
+homepage = "http://localhost:8888/kwakiweb/"
+repository = "https://github.com/yourusername/TestEcommerceAPI"
+
+# =========================
+# setuptools package discovery
+# =========================
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["EcommerceAPI*"]
+exclude = ["*.egg-info", "build", "dist", "tests*", "reports", ".venv", "docs/_build"]
+# What each pattern means (easy)
+#    - "*.egg-info" — skip any egg-info metadata folders created by packaging tools (these are build/metadata files,
+#     not source code).
+#    - "build" — skip the temporary build directory (created when you build a wheel or sdist).
+#    - "dist" — skip the output folder that holds built artifacts (.whl, .tar.gz).
+#    - "tests*" — skip any folder whose name starts with "tests" (so tests, tests_unit, etc.) — you usually don't want
+#     test code shipped in your package.

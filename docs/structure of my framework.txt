@@ -1,0 +1,873 @@
+TestEcommerceAPI (project suite)
+├──.github
+│       └── workflows/
+│             └── ci.yaml
+├── .gitlab/
+│       └──  ci.yaml
+├──.venv/...
+├── reports/
+│      └── html
+│           └── test/pytest_report_*.html
+│      └── logs
+│           └── test/test_debug_structured_*.jsonl
+├── build/...
+├── dist/...
+├── EcommerceAPI (framework package)/
+│       ├── data/
+│       │     └── coupon_scenarios.json
+│       │     └── create_order_payload.json
+│       ├── configs/
+│       │     └── config_loader.py
+│       │     └── hosts_config.py
+│       ├── pyproject.toml
+│       ├── src/
+│       │    └──│── manual_cleanup_scripts/
+│       │       ├── dao/
+│       │       │     └── coupons_dao.py
+│       │       │     └── customers_dao.py
+│       │       │     └── orders_dao.py
+│       │       │     └── products.dao.py
+│       │       ├── helpers/
+│       │       │     └── cleanup_helpers.py
+│       │       │     └── coupons_helper.py
+│       │       │     └── customers_helper.py
+│       │       │     └── orders_helper.py
+│       │       │     └── products_helper.py
+│       │       ├── schemas/...
+│       │       ├── utilities/
+│       │       │     └── __init__.py
+│       │       │     └── bulk_ops.py
+│       │       │     └── credentialsUtility.py
+│       │       │     └── custom_logger.py
+│       │       │     └── data_utils.py
+│       │       │     └── date_timestamp_utils.py
+│       │       │     └── dbUtility.py
+│       │       │     └── genericUtility.py
+│       │       │     └── entities_registry.py
+│       │       │     └── log._context.py
+│       │       │     └── pagination_utils.py
+│       │       │     └── requestUtility.py
+│       │       │     └── wooAPIUtility.py
+│       │       └── __init__.py
+│       ├── tests/
+│       │   ├── README_CONFTEST.md
+│       │   ├── constants/
+│       │   │      └── endpoints.py
+│       │   └── api/
+│       │        ├── coupons/...
+│       │        ├── customers/
+│       │        │     └── __init__.py
+│       │        │     └── .gitlab-ci-template.yml
+│       │        │     └── conftest.py
+│       │        │     └── README.md
+│       │        │     └── test_debug.log
+│       │        │     └── test_suite_summary.MD
+│       │        │     └── test_create_customer.py
+│       │        │     └── test_customer_deletion.py
+│       │        │     └── test_customer_filters.py
+│       │        │     └── test_customers_auth.py
+│       │        │     └── test_get_all_customers_smoke.py
+│       │        │     └── test_get_customer.py
+│       │        │     └── test_soft_deleted_customer_handling.py
+│       │        │     └── test_update_customer.py
+│       │        ├── orders/...
+│       │        ├── products/..
+│       │        ├── shared/
+│       │        │     └── performance/
+│       │        │     └── preflight/
+│       │        │             ├── test_logging_globals.py           ← API or framework-level healthcheck
+│       │        │             ├── test_schema_validation_smoke.py   ← Lightweight schema validation for all entities
+│       │        │             ├── __init__.py
+│       │        │             ├── README_PREFLIGHT.md
+│       │        │             └── conftest.py
+│       │        └──__init__.py
+│       │
+│       ├── __init__.py
+│       └── README.md
+│
+│─── EcommerceAPI.egg-info/..
+│─── Dockerfile.txt
+│─── .dockerignore
+│─── .gitignore
+│─── conftest.py
+│─── .env
+│─── pytest.ini
+└── README_ENV_AND_CI.md
+
+
+
+
+ 1. Framework Package (Reusable library - Reusable framework - Reusable Across Projects - all core, shared)
+
+ - It is a reusable framework package that should be installed via pip or Poetry and imported by the teams’ actual
+ test projects.
+ - Your “framework EcommerceAPI” must contain only reusable items!!
+- Reusable by all teams
+- Contains:
+     - clients/utilities
+     - helpers
+     - DAOs
+     - schemas (if generic)
+     - config loaders
+     - logging utilities
+     - pytest plugins (optional: these can be packaged!)
+
+
+Best-practice microservice testing structure for large orgs.
+One shared framework repo:
+qa-framework/
+    EcommerceAPI/
+        configs/
+        data/
+        schemas/
+        src/
+        pytest_plugins/
+            logging.py
+            cleanup.py
+            reporting.py
+        pyproject.toml
+Note: Framework plugins should be in a package, not inside tests/.
+
+
+It DOES NOT contain tests of any microservice.
+
+
+EcommerceAPI/
+│
+├── src/
+│    ├── ...                       # all core utilities, helpers, plugins, etc.
+│    └── utilities/
+│         ├── custom_logger.py
+│         ├── ... (all generic utilities)
+│
+├── configs/
+│    └── config_loader.py
+│    └── ...
+├── data/
+│    └── ... (shared test data, schemas)
+├── setup.py / pyproject.toml       # so it can be installed via pip (optional but best practice)
+└── README.md
+
+ You develop and maintain this as a standalone repo.
+Other “test suites” (per-app or per-microservice) just install/use this package.
+
+2. Project test Suite (per team or per microservice - One Per API or App):
+
+- Each team should have its own repo:
+   - customer-service-tests/
+   - order-service-tests/
+   - payment-service-tests/
+   - catalog-tests/
+
+- Each repo installs the shared framework:
+   - pip install EcommerceAPI
+
+Each repo contains only:
+   - tests/
+   - conftest.py for service-specific fixtures
+   - service-specific datasets
+   - service-specific environment configs
+   - test suites for that service
+
+
+One test suite per service (one repo per team)
+Example:
+
+customer-tests/
+    tests/
+        conftest.py
+        api/
+            test_create_customer.py
+            test_update_customer.py
+        performance/
+            test_response_time.py
+    pytest.ini
+    pyproject.toml
+
+
+TestEcommerceAPI/
+├── conftest.py                         # project-level, imports EcommerceAPI as a dependency
+├── requirements.txt                    # includes: EcommerceAPI @ git+https://...
+├── pytest.ini
+├── tests/                              # all project-specific tests and plugins
+│   ├── __init__.py
+│   ├── plugins/                        # project custom plugins (overrides/extensions if needed)
+│   │    ├── __init__.py
+│   │    ├── api_fixtures.py
+│   │    ├── cleanup.py
+│   │    ├── entities.py
+│   │    ├── logging.py
+│   │    └── reporting.py
+│   ├── constants/
+│   ├── api/
+│   │    ├── customers/
+│   │    │    ├── __init__.py
+│   │    │    ├── test_create_customer.py
+│   │    │    └── ...more customer tests...
+│   │    ├── coupons/
+│   │    ├── orders/
+│   │    └── products/
+│   ├── performance/
+│   │    └── test_basic_response_times.py
+│   ├── preflight/
+│   │    ├── test_healthcheck.py
+│   │    └── test_schema_smoke.py
+│   └── ... any other folders ...
+├── reports/                            # Project's own reports/logs/artifacts (optional)
+│   └── html/
+│   └── logs/
+├── README.md
+
+3. How Plugins Work:
+
+    Plugins for EACH PROJECT live in that project’s tests/plugins/ (import path:tests.plugins.logging).
+    Each project’s conftest.py at project root declares:
+    Python
+
+pytest_plugins = [
+    "tests.plugins.logging",
+    "tests.plugins.reporting",
+    "tests.plugins.entities",
+    "tests.plugins.cleanup",
+    "tests.plugins.api_fixtures"
+]
+
+If you want to share plugins between multiple projects, you can move those plugins into a plugins/ subpackage in the
+framework (EcommerceAPI/src/plugins etc.) and import as EcommerceAPI.src.plugins.logging in any project.
+
+4. Your requirements.txt for Project:
+
+EcommerceAPItest @ git+https://github.com/{org}/EcommerceAPItest.git@main
+pytest
+requests
+<other dependencies>
+
+Or, if you publish framework to your private PyPI:
+EcommerceAPItest==1.2.0
+
+5. Adding a New Project:
+
+For a new QA target, simply copy the project structure above, install the EcommerceAPItest package, and create new tests
+in the new repo.
+You get:
+    Reusable “core” framework (EcommerceAPItest)
+    Per-project tests, plugins, fixtures, configs
+
+6. Sample Tree With Multiple Projects:
+
+.../
+├── EcommerceAPItest/              # (framework, developed/maintained independently)
+│   ├── src/
+│   └── ...
+│   └── setup.py
+│   └── README.md
+│
+├── TestEcommerceAPI/         # (suite for E-commerce service)
+│   ├── conftest.py
+│   ├── requirements.txt
+│   ├── pytest.ini
+│   ├── tests/
+│   │   ├── plugins/
+│   │   └── ...
+│   └── reports/
+│   └── README.md
+│
+├── TestPaymentsAPI/          # (suite for Payments microservice)
+│   ├── conftest.py
+│   └── tests/
+│       └── plugins/
+│           └── ...
+│
+├── TestShippingAPI/          # (suite for Shipping microservice)
+│   └── ... as above ...
+│
+└── ... other projects ...
+
+Summary of Best Practice:
+
+    EcommerceAPItest is your centrally-maintained test framework/package.
+    Each microservice/project gets its own test suite repo, with tests/, its own plugins, and its own conftest.py.
+    Project teams get to iterate and branch on their own schedule while benefiting from your centralized test tooling
+    and updates.
+
+
+Should pyproject.toml be part of the test suite or framework?
+- Framework repo: YES
+    - This defines the package the teams install.
+
+- Test suite repos: Optional
+    - If they use Poetry/modern packaging, then yes.
+
+
+7. An example - Corrected Layout of My Entire Framework Repo:
+
+qa-framework/
+├── EcommerceAPItest/
+│   ├── configs/
+│   │   ├── config_loader.py
+│   │   └── hosts_config.py
+│   │
+│   ├── data/               ← ONLY cross-service, reusable data
+│   │   └── sample_payloads.json
+│   │
+│   ├── schemas/            ← ONLY reusable/base schemas
+│   │   └── base_schema.json
+│   │
+│   ├── dao/
+│   │   ├── customers_dao.py
+│   │   ├── orders_dao.py
+│   │   ├── products_dao.py
+│   │   └── coupons_dao.py
+│   │
+│   ├── helpers/
+│   │   ├── cleanup_helpers.py
+│   │   ├── coupons_helper.py
+│   │   ├── customers_helper.py
+│   │   ├── orders_helper.py
+│   │   └── products_helper.py
+│   │
+│   ├── utilities/
+│   │   ├── request_utility.py
+│   │   ├── custom_logger.py
+│   │   ├── db_utility.py
+│   │   ├── pagination_utils.py
+│   │   ├── date_utils.py
+│   │   └── entities_registry.py
+│   │
+│   ├── plugins/            ← All pytest plugins live here
+│   │   ├── __init__.py
+│   │   ├── logging.py
+│   │   ├── reporting.py
+│   │   ├── api_fixtures.py
+│   │   ├── cleanup.py
+│   │   └── entities.py
+│   │
+│   ├── __init__.py
+│   └── pyproject.toml        ← Defines EcommerceAPItest as pip-installable
+│
+├── README.md
+├── Dockerfile
+├── .gitignore
+└── pytest.ini (optional)
+
+🔥 Key Improvements:
+    - No tests live inside EcommerceAPItest/ → prevents Pytest import issues.
+    - Plugins live in a real Python package, importable via entrypoints.
+    - Framework contains only shared utilities, helpers, DAOs, config loaders.
+
+8. Canonical Template: Shared Framework’s pyproject.toml
+This is the simplest professional version:
+
+    [project]
+    name = "EcommerceAPItest"
+    version = "0.1.0"
+    description = "Shared QA automation framework for Ecommerce microservices"
+    authors = [{ name = "Your Team", email = "qa-team@example.com" }]
+    readme = "README.md"
+    requires-python = ">=3.10"
+    dependencies = [
+        "pytest",
+        "requests",
+        "pydantic",
+        "jsonschema",
+        "python-dotenv",
+    ]
+
+    [tool.pytest.ini_options]
+    addopts = "-p EcommerceAPItest.plugins.logging -p EcommerceAPItest.plugins.reporting"
+
+    [project.entry-points.pytest11]
+    logging = "EcommerceAPItest.plugins.logging"
+    reporting = "EcommerceAPItest.plugins.reporting"
+    api_fixtures = "EcommerceAPItest.plugins.api_fixtures"
+    cleanup = "EcommerceAPItest.plugins.cleanup"
+    entities = "EcommerceAPItest.plugins.entities"
+
+✔ Teams installing the framework automatically get all plugins
+✔ No need for weird imports or local plugin paths
+✔ Clean, production-grade structure
+
+
+9. Canonical Template: Team Test Suites
+
+Each microservice team has its own repo:
+
+A. Your Team: Customers + Products
+customers-products-tests/
+├── tests/
+│   ├── conftest.py
+│   │
+│   ├── customers/
+│   │   ├── test_create_customer.py
+│   │   ├── test_update_customer.py
+│   │   ├── test_get_customer.py
+│   │   └── test_delete_customer.py
+│   │
+│   ├── products/
+│       ├── test_create_product.py
+│       ├── test_get_product.py
+│       ├── test_update_product.py
+│       └── test_delete_product.py
+│
+├── data/
+│   ├── customer_payloads.json
+│   ├── product_payloads.json
+│   └── expected_schemas.json       ← service-specific only
+│
+├── configs/
+│   └── test_env.yaml               ← service-specific env
+│
+├── pytest.ini
+├── pyproject.toml
+├── requirements.txt (if not using poetry)
+└── README.md
+
+✔ Notes
+    - All customers/products-specific JSON payloads & schema are here (NOT in framework)
+    - conftest.py includes only service-specific fixtures (e.g. product setup)
+    - All reusable helpers come from the framework:
+from EcommerceAPItest.helpers.customers_helper import CustomersHelper
+
+B. Other Team: Orders + Coupons
+
+orders-coupons-tests/
+├── tests/
+│   ├── conftest.py
+│   │
+│   ├── orders/
+│   │   ├── test_create_order.py
+│   │   ├── test_get_order.py
+│   │   ├── test_cancel_order.py
+│   │   └── test_refund_order.py
+│   │
+│   ├── coupons/
+│       ├── test_apply_coupon.py
+│       ├── test_create_coupon.py
+│       ├── test_delete_coupon.py
+│       └── test_invalid_coupon.py
+│
+├── data/
+│   ├── order_payloads.json
+│   ├── coupon_scenarios.json
+│   └── expected_schemas.json
+│
+├── configs/
+│   └── test_env.yaml
+│
+├── pytest.ini
+├── pyproject.toml
+└── README.md
+
+
+10. Optional: Unified org-wide structure
+
+If you want a parent repo for documentation + framework + examples:
+
+ecommerce-qa/
+├── framework/                  ← EcommerceAPItest shared package
+├── customers-products-tests/
+├── orders-coupons-tests/
+└── docs/
+
+But this is optional—teams usually own their own repos.
+
+RECOMMENDED LAYOUT FOR A SHARED UNIFIED REPO (8 teams, 1 repo)
+
+This is what your previous company did, and it’s workable if:
+
+    - You want one CI pipeline
+    - One place for shared dependencies
+    - Minimal repo overhead
+    - BUT you need strong separation of test suites
+
+Here’s the correct version:
+
+ecommerce-tests/
+├── framework/                 ← installable Python package
+│   └── EcommerceAPItest/
+│       ├── configs/
+│       ├── data/
+│       ├── schemas/
+│       ├── dao/
+│       ├── helpers/
+│       ├── utilities/
+│       ├── plugins/
+│       │    ├── logging.py          ← shared
+│       │    ├── reporting.py        ← shared
+│       │    └── cleanup.py          ← shared
+│       ├── __init__.py
+│       └── pyproject.toml
+│
+├── tests/
+│   ├── customers/
+│   │    ├── conftest.py
+│   │    ├── plugins/
+│   │    │    ├── api_fixtures.py    ← customers-specific
+│   │    │    ├── entities.py        ← customers-specific
+│   │    │    └── _config.py         ← customers-specific
+│   │    ├── data/
+│   │    ├── test_create_customer.py
+│   │    ├── test_update_customer.py
+│   │    └── ...
+│   │
+│   ├── products/
+│   │    ├── conftest.py
+│   │    ├── plugins/
+│   │    │    ├── api_fixtures.py
+│   │    │    └── entities.py
+│   │    ├── data/
+│   │    └── tests...
+│   │
+│   ├── orders/
+│   │    ├── conftest.py
+│   │    ├── plugins/
+│   │    │    ├── api_fixtures.py
+│   │    │    ├── entities.py
+│   │    │    └── _config.py
+│   │    ├── data/
+│   │    └── tests...
+│   │
+│   ├── coupons/
+│   │    ├── conftest.py
+│   │    ├── plugins/
+│   │    └── tests...
+│   │
+│   └── shared/                ← optional shared tests (healthcheck)
+│
+├── pytest.ini
+├── pyproject.toml
+├── .env
+├── README.md
+└── CI configs...
+
+Each microservice gets exactly one conftest.py inside its service folder (e.g., tests/customers/conftest.py), shared
+fixtures live in the framework package under EcommerceAPI/plugins/, and entity-level conftest files are only created
+when strictly necessary.
+
+
+IN MY CASE IS:
+Microservice-specific assets live inside each microservice test suite
+
+For customers, your folder should look like this:
+
+├── tests/
+│   ├── customers/
+│   │    ├── conftest.py
+│   │    ├── plugins/
+│   │    │    ├── api_fixtures.py    ← customers-specific
+│   │    │    ├── entities.py        ← customers-specific
+│   │    │    └── _config.py         ← customers-specific
+│   │    ├── data/
+│   │    │   └── customer_payloads.json
+│   │    │
+│   │    ├── schemas/
+│   │    │   └── customer_schema.json
+│   │    │
+│   │    ├── constants/
+│   │    │   └── endpoints.py
+│   │    │
+│   │    ├── README.md
+│   │    │
+│   │    ├── test_create_customer.py
+│   │    ├── test_update_customer.py
+│   │    ├── test_get_customer.py
+│   │    └── test_delete_customer.py
+
+This is correct, scalable, and very professional.
+
+Why this is the correct placement
+
+✔ 1. Microservice-specific assets MUST live inside the service test suite
+       - Customer payloads are not relevant to Orders, Products, or Coupons
+       - Customer schemas should never be in the shared framework
+       - Customer endpoints/constants should be private to the team
+
+✔ 2. This prevents cross-team interference
+Each microservice folder is isolated:
+    customers/
+    products/
+    orders/
+    coupons/
+
+Teams don’t step on each other’s assets.
+
+
+✔ 3. Pytest fixtures stay clean
+Service test fixtures only load their own plugins and data:
+    pytest_plugins = [
+        "tests.customers.plugins.api_fixtures",
+        "tests.customers.plugins.entities",
+        "tests.customers.plugins._config",
+    ]
+
+✔ 4. CI/CD can run microservice tests independently
+You can run pipelines like:
+    pytest tests/customers
+    pytest tests/orders
+    pytest tests/products
+
+Teams can deploy independently.
+
+
+
+
+But this is optional—teams usually own their own repos.
+
+| File type                                                           | Belongs to Framework | Belongs to Team Repo |
+| ------------------------------------------------------------------- | -------------------- | -------------------- |
+| Common helper functions                                             | ✔                    |                      |
+| Payload examples for a specific microservice                        |                      | ✔                    |
+| Global JSON schema utilities                                        | ✔                    |                      |
+| Schema for a shared entity (e.g. customer DTO used by all services) | ✔                    |                      |
+| Schema only used by order-service                                   |                      | ✔                    |
+| Logging plugins                                                     | ✔                    |                      |
+| Test-specific fixtures                                              |                      | ✔                    |
+
+
+Allowed inside framework
+| Category                    | Allowed?               | Reason                                       |
+| --------------------------- | ---------------------- | -------------------------------------------- |
+| logging, reporting, cleanup | ✔                      | Shared logic                                 |
+| utility modules             | ✔                      | Used by all microservices                    |
+| shared schemas              | ✔                      | Only if cross-team                           |
+| shared DAOs                 | ⚠ only if DB is shared | Otherwise keep in team folder                |
+| shared configs              | ⚠ only base configs    | Team-specific configs belong in team folders |
+| manual cleanup scripts      | ✔                      | shared ops tools                             |
+
+NOT allowed inside framework
+| Item                                 | Where it *should* be             |
+| ------------------------------------ | -------------------------------- |
+| customer-specific DAO                | `tests/customers/plugins/dao/…`  |
+| orders-specific helpers              | `tests/orders/plugins/helpers/…` |
+| customer-specific endpoint constants | `tests/customers/constants/`     |
+| team-specific schemas                | `tests/customers/schemas/`       |
+
+
+=====================================================================================================================
+🌟 How to Decide Where Helpers Go
+If a helper is generic, reusable, and could be used by other microservices in the future:
+    - Put it in your shared framework, EcommerceAPItest.
+    - Examples: custom logging, DB utilities, Schema validation, authentication, context management, generic cleanup
+    utilities.
+
+If a helper is specific to ONE microservice (domain logic, API quirks, custom endpoints, etc.):
+    - Keep it in your per-project test suite (e.g. TestEcommerceAPI/tests/helpers/).
+    - Examples: customer_helper, orders_helper, coupons_helper if they only map to your ecommerce service’s
+    endpoints/payloads.
+
+As your framework matures:
+    - Move truly reusable helpers/utilities up into EcommerceAPItest so other teams/projects can benefit without copy-paste.
+    - Keep “business-specific” helpers in your microservice test repo.
+
+🏗️ Example: Evolving Helpers
+Suppose you have:
+Python
+# EcommerceAPItest/src/utilities/genericUtility.py    <- kept in framework
+def clean_db():
+    ...
+# TestEcommerceAPI/tests/helpers/customers_helper.py   <- kept in project suite
+def create_customer(api_client, email, password):
+    ...
+If another team starts needing create_customer, refactor just enough for genericity, then move it up!
+
+=====================================================================================================================
+
+Where to put schemas?
+
+For a project named TestEcommerceAPI, this is ideal:
+
+TestEcommerceAPI/
+│
+├── tests/
+│   ├── schemas/              # <- JSON/YAML/data schemas specific to this API
+│   ├── data/                 # <- Example payloads for this API
+│   └── ...                   # your test code
+│
+# Optional, if you want to separate further:
+│
+├── schemas/                  # sometimes at project root
+├── data/
+
+    Reference them from your test code, fixtures, helpers, etc, in the same repo.
+    Version them together with your API and test suite.
+
+=====================================================================================================================
+
+Final Summary (your optimized structure)
+Framework (shared by all teams)
+
+✔ logging.py
+✔ reporting.py
+✔ cleanup.py
+✔ helpers
+✔ dao
+✔ schemas
+✔ utilities
+
+Each test suite (owned by each team)
+
+✔ service-specific fixtures
+✔ service-specific plugins (entities.py, _config.py, api_fixtures.py)
+✔ service-specific data
+✔ test files
+
+This is now:
+
+✨ Enterprise-grade
+✨ Scalable
+✨ Clean
+✨ Pytest-compliant
+✨ CI-friendly
+✨ Multiple-team safe
+
+=====================================================================================================================
+
+=====================================================================================================================
+
+=====================================================================================================================
+
+TestEcommerceAPI (project suite/root)
+│
+├──.github/
+│       └── workflows/
+│             └── ci.yaml
+├── .gitlab/
+│     └──  ci.yaml
+├── .venv/...                                       ← shared virtual environment (optional)
+│
+├── docs/...                                        ← shared
+│
+├── build/...                                        ← produced during packaging
+│
+├── dist/...                                         ← produced during packaging
+│
+├── EcommerceAPI (installable framework package)/    ← SHARED INSTALLABLE FRAMEWORK
+│     ├── EcommerceAPItest.egg-info/..
+│     ├── plugins/                                   ← ⚠ ONLY shared plugins here
+│     │     ├── __init__.py
+│     │     ├── _config.py
+│     │     ├── allure_autogen.py
+│     │     ├── api_fixtures.py
+│     │     ├── db_fixtures.py
+│     │     ├── entities.py
+│     │     ├── logging_plugin.py
+│     │     └── _config.py
+│     │
+│     │── src/                                       ← ⚠ ONLY reusable/shared/global
+│     │     ├── configs/                             ← ⚠ ONLY shared/base config here
+│     │     │     └── config_loader.py
+│     │     ├── dao/                                 ← ⚠ only if DB is shared
+│     │     │     └── global_connection.py
+│     │     ├── helpers/                             ← one helper for each microservice
+│     │     │     │── cleanup_helpers.py
+│     │     │     │── coupons_helper.py
+│     │     │     │── customers_helper.py
+│     │     │     │── orders_helper.py
+│     │     │     └── products_helper.py
+│     │     │── manual_cleanup_scripts/...
+│     │     ├── utilities/                           ← ⚠ universal/reusable utilities
+│     │     │     └── __init__.py
+│     │     │     └── bulk_ops.py
+│     │     │     └── credentialsUtility.py
+│     │     │     └── custom_logger.py
+│     │     │     └── data_utils.py
+│     │     │     └── date_timestamp_utils.py
+│     │     │     └── dbUtility.py
+│     │     │     └── entities_registry.py
+│     │     │     └── env_utils.py
+│     │     │     └── exceptions.py
+│     │     │     └── genericUtility.py
+│     │     │     └── log._context.py
+│     │     │     └── pagination_utils.py
+│     │     │     └── requestUtility.py
+│     │     │     └── truncate_logging_utils.py
+│     │     └── __init__.py
+│     │
+│     │── __init__.py
+│     │── __main__.py
+│     ├── cli.py                                    ← Defines EcommerceAPItest as pip-installable
+│     └── pyproject.toml
+│
+│
+│─── reports/
+│      ├── allure-html/
+│      │    └── data/export/history/plugins/widgets etc...
+│      ├── allure-results/
+│      │    ├── 04af3878-18b7-4028-9c9d-6081964f70bd-result.json
+│      │    ├── 84fb7175-704e-4839-8998-33d4a95e927e-container.json
+│      │    ├── 2281ae1a-d91a-4316-b475-a2665d3edbf2-attachment.txt
+│      │    ├── ac0d7cb9-9fea-422d-b0e9-a0a8cbb08369-container.json
+│      │    └── etc...
+│      │
+│      └── logs
+│           ├── customers/
+│           │        ├── dev/
+│           │        │     └── test_debug_structured_20260109_195544.jsonl
+│           │        └── test/
+│           │              └── test_debug_structured_20260109_093007.jsonl
+│           └── shared/
+│                   ├── dev/
+│                   │     └── test_debug_structured_20260109_195544.jsonl
+│                   └── test/
+│                         └── test_debug_structured_20260109_093007.jsonl
+│
+├── tests/                                         ← The test suite root - Each team got its own file
+│     ├── customers/                               ← customers-specific
+│     │     ├── configs/
+│     │     │     └── config_customers.py          ← storing API_HOSTS
+│     │     ├── constants/
+│     │     │     └── endpoints.py
+│     │     ├── dao/
+│     │     │     └── customers_dao.py
+│     │     ├── data/
+│     │     │     └── create_customer_payload.json
+│     │     ├── helpers/
+│     │     │     └── customers_helper.py
+│     │     ├── schemas/
+│     │     │     └── error_schema.py
+│     │     │     └── customers_general.py
+│     │     ├── .gitlab-ci-template.yml
+│     │     ├── __init__.py
+│     │     ├── conftest.py
+│     │     ├── README.md
+│     │     ├── README_CONFTEST.md
+│     │     └── api/
+│     │           └── test_debug.log
+│     │           └── test_suite_summary.MD
+│     │           └── test_create_customer.py
+│     │           └── test_customer_deletion.py
+│     │           └── test_customer_filters.py
+│     │           └── test_customers_auth.py
+│     │           └── test_get_all_customers_smoke.py
+│     │           └── test_get_customer.py
+│     │           └── test_soft_deleted_customer_handling.py
+│     │           └── test_update_custom
+│     │           └── __init__.py
+│     ├── shared/
+│     │     ├── performance/
+│     │     │       ├── test_basic_response_times.py      ← API or framework-level healthcheck
+│     │     │       ├── __init__.py
+│     │     │       └── conftest.py
+│     │     └── preflight/
+│     │             ├── test_logging_globals.py           ← API or framework-level healthcheck
+│     │             ├── test_schema_validation_smoke.py   ← Lightweight schema validation for all entities
+│     │             ├── __init__.py
+│     │             ├── README_PREFLIGHT.md
+│     │             └── conftest.py
+│     │
+│     ├── orders/..                                ← orders-specific
+│     ├── coupons/..                               ← coupons-specific
+│     └── products/..                              ← products-specific
+│
+│─── .dockerignore                                 ← shared
+│─── .env                                          ← shared
+│─── .env.example                                  ← shared
+│─── .gitattributes                                ← shared
+│─── .gitignore                                    ← shared
+│─── CHANGELOG.md                                  ← shared
+│─── conftest.py                                 ← shared
+│─── docker-compose.matrix.yml                     ← shared
+│─── Dockerfile                                    ← shared
+└──  pytest.ini                                    ← shared
+
+

@@ -1,0 +1,41 @@
+[
+  {
+    "name": "50 percent discount",
+    "discount_type": "percent",
+    "amount": "50.00",
+    "minimum_amount": "35",
+    "product_price_offset": 5,
+    "expected_status_code": 201,
+    "expect_discount": true
+  },
+  {
+    "name": "Fixed cart discount",
+    "discount_type": "fixed_cart",
+    "amount": "10.00",
+    "minimum_amount": "20",
+    "product_price_offset": 10,
+    "expected_status_code": 201,
+    "expect_discount": true
+  },
+  {
+    "name": "Free shipping only",
+    "discount_type": "fixed_cart",
+    "amount": "0.00",
+    "minimum_amount": "0",
+    "product_price_offset": 5,
+    "expected_status_code": 201,
+    "expect_discount": false,
+    "free_shipping": true
+  },
+  {
+    "name": "Under minimum amount (should fail)",
+    "discount_type": "percent",
+    "amount": "30.00",
+    "minimum_amount": "50",
+    "product_price_offset": -10,
+    "expected_status_code": 400,
+    "expect_discount": false
+  }
+]
+
+

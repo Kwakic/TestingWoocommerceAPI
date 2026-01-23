@@ -1,0 +1,90 @@
+# GitLab CI — Matrix Testing via Dynamic Child Pipelines (Allure)
+# ------------------------------------------------------------
+# - Discovers folders under tests/ and generates a child matrix (one job per service).
+# - If SERVICE environment variable is set (CI variable), discovery emits only that service.
+# - Each child job runs pytest with --alluredir and generates an Allure HTML report when results exist.
+
+stages:
+  - discover
+  - test
+
+variables:
+  PYTHON_VERSION: "3.11"
+  REQUIRE_ENV: "true"
+
+  # Structured logging configuration
+  ENABLE_STRUCTURED_LOGS: "true"
+  ENABLE_JSON_PRETTY: "false"
+  KEEP_STRUCTURED_LOGS: "3"
+  LOG_DIR: "$CI_PROJECT_DIR/EcommerceAPI/tests/api/logs"
+
+  REDACT_SENSITIVE_FIELDS: "true"
+  LOG_PAYLOADS: "false"
+
+  AUTO_ALLURE_REPORT: "true"
+
+  PERF_ITERATIONS: "5"
+  FAIL_ON_EMPTY_LIST: "false"
+
+  # API entity discovery during a pytest collection
+  STRICT_ENTITY_DISCOVERY: "true"
+
+
+discover_services:
+  stage: discover
+  image: python:3.11
+  script:
+    - echo "🔍 Discovering microservices in tests/"
+    - |
+      if [ -n "$SERVICE" ]; then
+        services="$SERVICE"
+        echo "SERVICE env set; running single service: $services"
+      else
+        # List directories only
+        services=$(find tests -maxdepth 1 -mindepth 1 -type d -printf '%f\n' | tr '\n' ' ' | sed 's/ $//')
+        echo "Detected services: $services"
+      fi
+
+    # Create child pipeline YAML: each child job runs pytest producing Allure results
+    - |
+      echo "stages:" > matrix.yml
+      echo "  - test" >> matrix.yml
+
+      for s in $services; do
+        echo "" >> matrix.yml
+        echo "$s:" >> matrix.yml
+        echo "  stage: test" >> matrix.yml
+        echo "  image: python:3.11" >> matrix.yml
+        echo "  variables:" >> matrix.yml
+        echo "    TEAM: $s" >> matrix.yml
+        echo "    ENV: test" >> matrix.yml
+        echo "  script:" >> matrix.yml
+        echo "    - pip install --upgrade pip" >> matrix.yml
+        # Use the dev extra consistently
+        echo "    - pip install -e '.[dev]'" >> matrix.yml
+        echo "    - mkdir -p reports/$s/allure-results" >> matrix.yml
+        echo "    - pytest tests/$s -s --disable-warnings --maxfail=3 --alluredir=reports/$s/allure-results --junitxml=reports/$s/test-results.xml" >> matrix.yml
+        echo "    - |" >> matrix.yml
+        echo "      if [ \"$AUTO_ALLURE_REPORT\" = \"true\" ] && [ -d reports/$s/allure-results ] && [ \"\$(ls -A reports/$s/allure-results)\" ]; then" >> matrix.yml
+        echo "        ALLURE_VER=\"2.27.0\"" >> matrix.yml
+        echo "        curl -fsSL \"https://github.com/allure-framework/allure2/releases/download/\${ALLURE_VER}/allure-\${ALLURE_VER}.tgz\" | tar -xz" >> matrix.yml
+        echo "        mv \"allure-\${ALLURE_VER}\" /opt/allure-\${ALLURE_VER}" >> matrix.yml
+        echo "        ln -s /opt/allure-\${ALLURE_VER}/bin/allure /usr/bin/allure || true" >> matrix.yml
+        echo "        allure generate reports/$s/allure-results -o reports/$s/allure-report --clean || true" >> matrix.yml
+        echo "      else" >> matrix.yml
+        echo "        echo \"No Allure results for $s; skipping HTML generation.\" " >> matrix.yml
+        echo "      fi" >> matrix.yml
+        echo "  artifacts:" >> matrix.yml
+        echo "    when: always" >> matrix.yml
+        echo "    paths:" >> matrix.yml
+        echo "      - EcommerceAPI/tests/api/logs/**" >> matrix.yml
+        echo "      - reports/**" >> matrix.yml
+      done
+
+  artifacts:
+    paths:
+      - matrix.yml
+  # Note: You don’t need a committed matrix.yml in the repo. In your GitLab CI flow, the discover job dynamically
+  # generates matrix.yml and uploads it as an artifact. The child pipeline step (trigger) then downloads that artifact.
+  # So artifacts: paths: - matrix.yml in the discover job is correct — it refers to the generated file created at
+  # pipeline runtime, not a file in your repo.

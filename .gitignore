@@ -1,0 +1,90 @@
+# ------------------------------
+# 🐍 Python general
+# ------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+env/
+venv/
+ENV/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+.installed.cfg
+pip-wheel-metadata/
+pip-selfcheck.json
+
+# Wheel / installers
+*.whl
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+htmlcov/
+.pytest_cache/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+*.swp
+*.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.vscode/
+.idea/
+*.iml
+*.sublime-project
+*.sublime-workspace
+
+# Type check / linters
+.mypy_cache/
+.pyright/
+.vscode/
+
+# ------------------------------
+# 🧪 Project-specific
+# ------------------------------
+# Test reports and outputs (ignore both repo and package reports)
+reports/
+EcommerceAPI/reports/
+test-output/
+
+# Local environment configs (ignore secrets)
+.env
+.env.* 
+env.ps1
+
+# ------------------------------
+# 🔐 Secrets & credentials (examples)
+# ------------------------------
+# If you keep an example file in repo, ensure it's named .env.example (tracked)
+# Do NOT ignore the example file if present:
+# .env.example
+
+# ------------------------------
+# 🐳 Docker / CI
+# ------------------------------
+# Docker related
+*.pid
+*.seed
+*.pid.lock
+
+# Git / misc
+.git

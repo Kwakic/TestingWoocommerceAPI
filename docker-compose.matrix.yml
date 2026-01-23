@@ -1,0 +1,95 @@
+version: "3.9"
+
+# ---------------------------------------------------------------------------
+# Docker Compose matrix helper
+#
+# Purpose:
+# - One test container per microservice (profile-based selection).
+# - Tests are mounted read-only, reports are mounted read/write to the host.
+# - LOG_DIR standardized to /app/reports/logs so framework logs and CI artifacts
+#   are collected under the same host path ./reports.
+
+# Best practices applied:
+# - Use YAML anchors instead of `extends` for widest compatibility.
+# - Use canonical env var name `AUTO_ALLURE_REPORT` (matches plugins/CI).
+# - Use canonical LOG_DIR used by the framework.
+# - Mount tests read-only and reports read-write to avoid accidental host edits.
+# - Document how to run single/multiple services and recommended flags.
+# ---------------------------------------------------------------------------
+
+# Reusable template for test containers
+x-test-template: &test-template
+  build:
+    context: .
+    dockerfile: Dockerfile
+  image: ecommerceapi-tests:latest
+  # Use pytest as the entrypoint so service `command` provides pytest args
+  entrypoint: ["pytest"]
+  environment:
+    # Structured logs + Allure behavior
+    ENABLE_STRUCTURED_LOGS: "true"
+    AUTO_ALLURE_REPORT: "true"                      # plugin looks for this env var
+    # Standardized logs path used by the framework and CI artifacts
+    LOG_DIR: "/app/reports/logs"
+    # Keep other useful defaults; CI/compose override as needed
+    ENABLE_JSON_PRETTY: "false"
+    KEEP_STRUCTURED_LOGS: "3"
+    # Mount tests read-only to avoid accidental host edits, collect results in reports
+
+  volumes:
+    - ./tests:/app/tests:ro          # mount tests into container (read-only)
+    - ./reports:/app/reports         # collect results / reports back to host
+  profiles: ["dont-run"]             # template itself should not be started
+
+services:
+
+  # -------------------------------------------------------------------------
+  # Per-microservice test containers (use profiles to select what to run)
+  # - To run a specific service locally: add --profile <service>
+  # - You can specify multiple --profile flags to run several in parallel.
+  # Examples:
+  #   docker compose -f docker-compose.matrix.yml --profile customers up
+  #   docker compose -f docker-compose.matrix.yml --profile customers --profile orders up
+  # Recommended flags: --abort-on-container-exit --remove-orphans
+  # -------------------------------------------------------------------------
+
+  customers:
+    <<: *test-template
+    profiles: ["customers"]
+    # Command provides pytest args (entrypoint is pytest)
+    command:
+      - "tests/customers"
+      - "-s"
+      - "--disable-warnings"
+      - "--maxfail=3"
+      - "--alluredir=reports/customers/allure-results"
+
+  orders:
+    <<: *test-template
+    profiles: ["orders"]
+    command:
+      - "tests/orders"
+      - "-s"
+      - "--disable-warnings"
+      - "--maxfail=3"
+      - "--alluredir=reports/orders/allure-results"
+
+  billing:
+    <<: *test-template
+    profiles: ["billing"]
+    command:
+      - "tests/billing"
+      - "-s"
+      - "--disable-warnings"
+      - "--maxfail=3"
+      - "--alluredir=reports/billing/allure-results"
+
+# Usage examples:
+#  docker compose -f docker-compose.matrix.yml --profile customers up --abort-on-container-exit --remove-orphans
+#  docker compose -f docker-compose.matrix.yml --profile customers --profile orders up
+
+# Notes:
+# - The runtime image must have pytest and project deps preinstalled (see Dockerfile).
+# - If you want the container to generate Allure HTML you'll need an image with Allure CLI
+#   (CI installs Allure and generates HTML there; local dev can generate on host).
+# - Ensure ./reports exists and is writable by Docker user (or create it host-side first).

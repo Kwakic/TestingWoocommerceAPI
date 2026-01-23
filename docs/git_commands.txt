@@ -1,0 +1,18 @@
+git checkout -b chore/dev-setup-and-ci-fixes
+# add/update files (Dockerfile, .dockerignore, docker-compose.matrix.yml, .github/workflows/ci.yml, DEV_SETUP.md, CONTRIBUTING.md)
+git add Dockerfile docker-compose.matrix.yml .dockerignore .github/workflows/ci.yml DEV_SETUP.md CONTRIBUTING.md
+git commit -m "chore: improve Dockerfile, CI discovery, add DEV_SETUP and CONTRIBUTING docs"
+git push origin chore/dev-setup-and-ci-fixes
+# Then open a PR on GitHub and reference the changes
+
+
+Exact git commands to remove the old file safely:
+git checkout -b chore/merge-onboarding
+# add the merged file (if not already added)
+git add DEVELOPER_ONBOARDING.md
+# remove the duplicate
+git rm DEV_SETUP.md
+git commit -m "chore(docs): merge DEV_SETUP into DEVELOPER_ONBOARDING and remove duplicate"
+git push origin chore/merge-onboarding
+# open PR on GitHub comparing branch to main/develop
+
