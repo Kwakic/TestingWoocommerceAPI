@@ -1,90 +1,94 @@
-# ------------------------------
-# 🐍 Python general
-# ------------------------------
+# ==============================
+# 🐍 Python – general
+# ==============================
 __pycache__/
 *.py[cod]
 *$py.class
 
+# ==============================
 # Virtual environments
+# ==============================
 .venv/
-env/
 venv/
+env/
 ENV/
 
+# ==============================
 # Distribution / packaging
+# ==============================
 build/
 dist/
 *.egg-info/
 .eggs/
 .installed.cfg
 pip-wheel-metadata/
-pip-selfcheck.json
 
-# Wheel / installers
+# ==============================
+# Wheels / installers
+# ==============================
 *.whl
 
+# ==============================
 # PyInstaller
+# ==============================
 *.manifest
 *.spec
 
-# Unit test / coverage reports
+# ==============================
+# Test / coverage
+# ==============================
+.pytest_cache/
 .coverage
 .coverage.*
-.cache
-nosetests.xml
 coverage.xml
+htmlcov/
 *.cover
 *.py,cover
-htmlcov/
-.pytest_cache/
+nosetests.xml
 
-# Logs and temporary files
+# ==============================
+# Logs / temp / OS
+# ==============================
 *.log
 *.tmp
 *.bak
 *.swp
-*.DS_Store
+.DS_Store
 Thumbs.db
 
-# Editor / IDE
-.vscode/
+# ==============================
+# IDE / Editors
+# ==============================
 .idea/
+.vscode/
 *.iml
 *.sublime-project
 *.sublime-workspace
 
-# Type check / linters
+# ==============================
+# Type checking / linters
+# ==============================
 .mypy_cache/
 .pyright/
-.vscode/
 
-# ------------------------------
-# 🧪 Project-specific
-# ------------------------------
-# Test reports and outputs (ignore both repo and package reports)
+# ==============================
+# 🧪 Project-specific outputs
+# ==============================
 reports/
 EcommerceAPI/reports/
 test-output/
 
-# Local environment configs (ignore secrets)
+# ==============================
+# 🔐 Environment variables (IMPORTANT)
+# ==============================
 .env
-.env.* 
+.env.*
+!.env.example
 env.ps1
 
-# ------------------------------
-# 🔐 Secrets & credentials (examples)
-# ------------------------------
-# If you keep an example file in repo, ensure it's named .env.example (tracked)
-# Do NOT ignore the example file if present:
-# .env.example
-
-# ------------------------------
-# 🐳 Docker / CI
-# ------------------------------
-# Docker related
+# ==============================
+# 🐳 Docker / CI temp files
+# ==============================
 *.pid
 *.seed
 *.pid.lock
-
-# Git / misc
-.git
