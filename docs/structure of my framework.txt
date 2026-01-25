@@ -730,9 +730,9 @@ TestEcommerceAPI (project suite/root)
 │
 ├──.github/
 │       └── workflows/
-│             └── ci.yaml
+│             └── ci.yml
 ├── .gitlab/
-│     └──  ci.yaml
+│     └──  ci.yml
 ├── .venv/...                                       ← shared virtual environment (optional)
 │
 ├── docs/...                                        ← shared
