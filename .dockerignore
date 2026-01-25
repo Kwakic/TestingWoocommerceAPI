@@ -1,34 +1,48 @@
-# Python artifacts
+# ==============================
+# Python bytecode
+# ==============================
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 
-# Virtual env
+# ==============================
+# Virtual environments
+# ==============================
 .venv/
 venv/
 ENV/
 
-# Pytest / coverage / build artifacts
+# ==============================
+# Test / coverage / build artifacts
+# ==============================
 .pytest_cache/
 htmlcov/
 dist/
 build/
-*.egg-info
+*.egg-info/
 
-# Local reports and logs (we mount ./reports in compose)
+# ==============================
+# Reports (generated at runtime)
+# ==============================
 reports/
-reports/**
 
-# Git / editor
-.git
+# ==============================
+# Git / IDE
+# ==============================
+.git/
 .gitignore
 .vscode/
 .idea/
 
-# Environment files with secrets
+# ==============================
+# Environment secrets
+# ==============================
 .env
-.env.* 
+.env.*
 
-# Other unneeded directories
+# ==============================
+# OS junk
+# ==============================
 .DS_Store
+Thumbs.db
