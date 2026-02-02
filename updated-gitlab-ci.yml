@@ -1,0 +1,269 @@
+# ============================================================
+# GitLab CI — Enterprise Matrix Testing with Governance
+# ============================================================
+#
+# DESIGN GOALS
+# ------------------------------------------------------------
+# - Shared gates (preflight, verify) run ONCE
+# - Entity tests fan out dynamically via child pipeline
+# - Environments are visible in GitLab UI
+# - Deployments are manual & approval-gated
+# - Allure is generated centrally (not per job)
+# - No brittle YAML heredocs inside scripts
+#
+# FILE RESPONSIBILITY
+# ------------------------------------------------------------
+# gitlab-ci.yml
+#   - pipeline structure
+#   - governance & approvals
+#   - environment wiring
+#   - matrix generation
+#
+# matrix.yml (generated)
+#   - only pytest execution
+#   - per TEAM + ENV job definitions
+# ============================================================
+
+stages:
+  - preflight
+  - deploy
+  - discover
+  - test
+  - verify
+
+# ------------------------------------------------------------
+# Global variables (safe defaults)
+# ------------------------------------------------------------
+variables:
+  PYTHON_VERSION: "3.11"
+
+  # Space-separated list of environments to test.
+  # Overridable via:
+  # - Run pipeline UI
+  # - Schedules
+  # - Workflow rules (if you ever add them back)
+  TARGET_ENVS: "test"
+
+  # Enable/disable Allure HTML generation
+  AUTO_ALLURE_REPORT: "true"
+
+  # Central reports directory
+  LOG_DIR: "$CI_PROJECT_DIR/reports"
+
+# ============================================================
+# SHARED PREFLIGHT (RUNS ONCE — HARD GATE)
+# ============================================================
+# Purpose:
+# - Fast failure before ANY deploy or test fan-out
+# - Schema validation
+# - Contract checks
+# - Test data sanity
+#
+shared_preflight:
+  stage: preflight
+  image: python:3.11
+  script:
+    - echo "🚦 Running shared preflight checks"
+    - pip install --upgrade pip
+    - pip install -e '.[dev]'
+    - pytest tests/shared/preflight -s --maxfail=1
+  allow_failure: false
+
+# ============================================================
+# DEPLOYMENT TEMPLATE (MANUAL, APPROVAL-GATED)
+# ============================================================
+# All environments share the same logic.
+# GitLab Environments UI is wired via `environment.name`.
+#
+.deploy_template:
+  stage: deploy
+  image: alpine:3.19
+  needs: ["shared_preflight"]
+  when: manual
+  allow_failure: false
+  script:
+    - echo "🚀 Deploying to $CI_ENVIRONMENT_NAME"
+    - echo "Using API_BASE_URL=$API_BASE_URL"
+    # real deployment command goes here
+
+# -----------------------------
+# TEST ENVIRONMENT
+# -----------------------------
+deploy_test:
+  extends: .deploy_template
+  environment:
+    name: test
+  rules:
+    - if: '$TARGET_ENVS =~ /test/'
+
+# -----------------------------
+# STAGING ENVIRONMENT
+# -----------------------------
+deploy_staging:
+  extends: .deploy_template
+  environment:
+    name: staging
+  rules:
+    - if: '$TARGET_ENVS =~ /staging/'
+
+# -----------------------------
+# PRODUCTION (PROTECTED)
+# -----------------------------
+# - Only runs on tags
+# - Tag protection enforces approval + access control
+#
+deploy_prod:
+  extends: .deploy_template
+  environment:
+    name: prod
+  rules:
+    - if: '$CI_COMMIT_TAG'
+  only:
+    - tags
+
+# ============================================================
+# DISCOVER SERVICES & GENERATE MATRIX
+# ============================================================
+# Purpose:
+# - Detect entity test folders under tests/
+# - Generate matrix.yml dynamically
+# - One job per TEAM × ENV
+#
+discover_services:
+  stage: discover
+  image: python:3.11
+  needs:
+    - deploy_test
+    - deploy_staging
+    - deploy_prod
+
+  script:
+    - echo "🔍 Discovering entity test suites"
+
+    # ------------------------------------------
+    # Discover services (unless SERVICE override)
+    # ------------------------------------------
+    - |
+      if [ -n "$SERVICE" ]; then
+        services="$SERVICE"
+        echo "SERVICE override detected: $services"
+      else
+        services=$(find tests -maxdepth 1 -mindepth 1 -type d \
+          ! -name shared -printf '%f\n' | tr '\n' ' ')
+      fi
+      if [ -z "$services" ]; then
+        echo "❌ No entity services found"
+        exit 1
+      fi
+      echo "Detected services: $services"
+
+    # ------------------------------------------
+    # Generate matrix.yml (CHILD PIPELINE)
+    # ------------------------------------------
+    - |
+      echo "stages:" > matrix.yml
+      echo "  - test" >> matrix.yml
+
+      for env in $TARGET_ENVS
+      do
+        for s in $services
+        do
+          echo "Writing service: ${s}_${env} to matrix.yml"
+          echo "  ${s}_${env}:" >> matrix.yml
+          echo "    stage: test" >> matrix.yml
+          echo "    image: python:3.11" >> matrix.yml
+          echo "    environment:" >> matrix.yml
+          echo "      name: ${env}" >> matrix.yml
+          echo "    variables:" >> matrix.yml
+          echo "      TEAM: ${s}" >> matrix.yml
+          echo "      ENV: ${env}" >> matrix.yml
+          echo "    script:" >> matrix.yml
+          echo "      - pip install --upgrade pip" >> matrix.yml
+          echo "      - pip install -e '.[dev]'" >> matrix.yml
+          echo "      - mkdir -p reports/${env}/${s}/allure-results" >> matrix.yml
+          echo "      - pytest tests/${s} -s --maxfail=3 \\" >> matrix.yml
+          echo "          --alluredir=reports/${env}/${s}/allure-results \\" >> matrix.yml
+          echo "          --junitxml=reports/${env}/${s}/results.xml" >> matrix.yml
+          echo "    artifacts:" >> matrix.yml
+          echo "      when: always" >> matrix.yml
+          echo "      paths:" >> matrix.yml
+          echo "        - reports/${env}/${s}/" >> matrix.yml
+        done
+      done
+
+  artifacts:
+    paths:
+      - matrix.yml
+# ============================================================
+# RUN ENTITY MATRIX (CHILD PIPELINE)
+# ============================================================
+run_entity_matrix:
+  stage: test
+  trigger:
+    include:
+      - artifact: matrix.yml
+        job: discover_services
+    strategy: depend
+
+# ============================================================
+# ALLURE REPORT AGGREGATION (CENTRALIZED)
+# ============================================================
+# Purpose:
+# - Generate ONE Allure report per environment
+# - Avoid repeated installs in every matrix job
+# - Keep test jobs lightweight and fast
+#
+generate_allure_report:
+  stage: verify
+  image: python:3.11
+  needs: ["run_entity_matrix"]
+  rules:
+    - if: '$AUTO_ALLURE_REPORT == "true"'
+  script:
+    - echo "📊 Generating Allure HTML reports"
+
+    - pip install --upgrade pip
+    - pip install allure-pytest
+
+    - ALLURE_VER="2.27.0"
+    - curl -fsSL "https://github.com/allure-framework/allure2/releases/download/${ALLURE_VER}/allure-${ALLURE_VER}.tgz" | tar -xz
+    - mv "allure-${ALLURE_VER}" /opt/allure
+    - ln -s /opt/allure/bin/allure /usr/bin/allure
+
+    - |
+      for env in $TARGET_ENVS; do
+        if [ -d "reports/$env" ]; then
+          echo "Generating Allure report for $env"
+          allure generate reports/$env \
+            -o reports/$env/allure-report \
+            --clean || true
+        fi
+      done
+
+  artifacts:
+    when: always
+    paths:
+      - reports/**/allure-report
+
+# ============================================================
+# ENVIRONMENT VERIFICATION GATE
+# ============================================================
+# Purpose:
+# - Performance
+# - Smoke
+# - SLO / stability checks
+#
+verify_environment:
+  stage: verify
+  image: python:3.11
+  needs: ["generate_allure_report"]
+  when: manual
+  script:
+    - echo "✅ Running environment verification"
+    - pip install -e '.[dev]'
+    - pytest tests/shared/performance -s
+
+
+# NOTE:
+# Matrix generation uses echo-based YAML output
+# (avoids heredoc + IDE parsing issues)
