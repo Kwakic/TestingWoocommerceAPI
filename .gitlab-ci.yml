@@ -131,14 +131,15 @@ discover_services:
   stage: discover
   image: python:3.11
   needs:
-    - deploy_test
-    - deploy_staging
-    - deploy_prod
-
+    - job: deploy_test
+    - job: deploy_staging
+      optional: true
+    - job: deploy_prod
+      optional: true
   script:
     - echo "🔍 Discovering entity test suites"
 
-    # ------------------------------------------
+# ------------------------------------------
     # Discover services (unless SERVICE override)
     # ------------------------------------------
     - |
