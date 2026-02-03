@@ -63,7 +63,7 @@ shared_preflight:
   stage: preflight
   image: python:3.11
   tags:
-    - pytest-runner
+    - pytest
   script:
     - echo "🚦 Running shared preflight checks"
     - pip install --upgrade pip
