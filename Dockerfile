@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rm -rf /var/lib/apt/lists/*
 
 # Copy project files needed for installation (include package resources)
-COPY pyproject.toml README.md ./
+COPY pyproject_root.toml README.md ./
 COPY EcommerceAPI ./EcommerceAPI
 
 RUN pip install --upgrade pip setuptools wheel
@@ -32,7 +32,7 @@ COPY --from=builder /usr/local /usr/local
 # Copy full project for runtime execution & tests mounting in compose
 COPY EcommerceAPI ./EcommerceAPI
 COPY tests ./tests
-COPY pyproject.toml README.md ./
+COPY pyproject_root.toml README.md ./
 
 # ------------------------------------------------------------
 # Default environment — CI will override these

@@ -66,7 +66,6 @@ shared_preflight:
     - echo "🚦 Running shared preflight checks"
     - pip install --upgrade pip
     - pip install -e '.[dev]'
-    - pip install pytest
     - pytest tests/shared/preflight -s --maxfail=1
   allow_failure: false
 

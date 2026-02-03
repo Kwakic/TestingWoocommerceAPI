@@ -687,7 +687,7 @@ def _resolve_project_root() -> Path:
     """
     Attempt to locate the repository/project root by searching upward for repo markers:
     - .git
-    - pyproject.toml
+    - pyproject_root.toml
     - setup.cfg
     - README.md
 
@@ -696,7 +696,7 @@ def _resolve_project_root() -> Path:
     """
     p = Path(__file__).resolve()
     for parent in p.parents:
-        if ((parent / ".git").exists() or (parent / "pyproject.toml").exists() or (parent / "setup.cfg").exists() or
+        if ((parent / ".git").exists() or (parent / "pyproject_root.toml").exists() or (parent / "setup.cfg").exists() or
                 (parent / "README.md").exists()):
             return parent
     # fallback: try to move up 3 levels (typical layout: <repo>/EcommerceAPI/src/utilities/...)

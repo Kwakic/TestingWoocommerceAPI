@@ -742,7 +742,7 @@ TestEcommerceAPI (project suite/root)
 ├── dist/...                                         ← produced during packaging
 │
 ├── EcommerceAPI (installable framework package)/    ← SHARED INSTALLABLE FRAMEWORK
-│     ├── EcommerceAPItest.egg-info/..
+│     ├── ecommerceapitest.egg-info/..
 │     ├── plugins/                                   ← ⚠ ONLY shared plugins here
 │     │     ├── __init__.py
 │     │     ├── _config.py

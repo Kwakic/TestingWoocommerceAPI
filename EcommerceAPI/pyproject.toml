@@ -99,7 +99,16 @@ repository = "https://github.com/yourusername/TestEcommerceAPI"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["EcommerceAPI*"]
-exclude = ["*.egg-info", "build", "dist", "tests*", "reports", ".venv", "docs/_build"]
+exclude = [
+  "*.egg-info",      # Egg-info metadata
+  "build",           # Build artifacts
+  "dist",            # Distribution artifacts
+  "tests*",          # Test folders
+  "reports",         # Excludes the top-level reports folder
+  "reports*",        # Catches subfolders like reports/xyz
+  ".venv",           # Virtual environment directories
+  "docs/_build"      # Build output for documentation
+]
 # What each pattern means (easy)
 #    - "*.egg-info" — skip any egg-info metadata folders created by packaging tools (these are build/metadata files,
 #     not source code).

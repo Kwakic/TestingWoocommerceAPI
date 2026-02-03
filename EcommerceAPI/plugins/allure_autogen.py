@@ -157,7 +157,7 @@ def _locate_alluredir(config) -> Optional[Path]:
 
 def get_framework_version() -> str:
     """
-    It goes to pyproject.toml file and search the version which will return.
+    It goes to pyproject_root.toml file and search the version which will return.
     If not found, it returns "dev-local"
 
     """
