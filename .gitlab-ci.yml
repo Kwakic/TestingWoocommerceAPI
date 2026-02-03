@@ -262,7 +262,6 @@ verify_environment:
     - pip install -e './EcommerceAPI[dev]'
     - pytest tests/shared/performance -s
 
-
 # NOTE:
 # Matrix generation uses echo-based YAML output
 # (avoids heredoc + IDE parsing issues)
