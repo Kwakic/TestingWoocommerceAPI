@@ -17,7 +17,7 @@ RUN pip install --upgrade pip setuptools wheel
 
 
 # Install project + test/dev dependencies (use 'dev' extra consistently)
-RUN pip install -e '.[dev]'
+RUN pip install -e './EcommerceAPI[dev]'
 
 # -------------------------------------------------------------------
 # Stage 2: Runtime

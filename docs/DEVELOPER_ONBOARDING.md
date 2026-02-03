@@ -164,7 +164,7 @@ Notes:
 ## CI notes (summary)
 - GitHub Actions and GitLab dynamic pipelines should install dev extras:
 ```bash
-pip install -e '.[dev]'
+pip install -e './EcommerceAPI[dev]'
 ```
 - GitHub matrix discovery should output a JSON array of quoted service names (e.g. `["customers","orders"]`) to feed the matrix.
 - GitLab discover job dynamically creates `matrix.yml` at runtime; that artifact is referenced by the trigger.

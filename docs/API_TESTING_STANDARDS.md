@@ -110,7 +110,7 @@ assert validate_error_schema(resp.json())
 ## CI-specific expectations
 - Preflight: fast smoke checks (`@pytest.mark.preflight`) run before the full matrix.
 - Matrix jobs: one microservice per job; each job writes results to `reports/<service>/allure-results`.
-- CI should run tests with editable install: `pip install -e '.[dev]'` to ensure extras are available.
+- CI should run tests with editable install: ` - pip install -e './EcommerceAPI[dev]'` to ensure extras are available.
 - CI should set `REQUIRE_ENV=true` (fail fast for missing env) and `FAIL_ON_EMPTY_LIST=true` for strict preflight.
 
 ---

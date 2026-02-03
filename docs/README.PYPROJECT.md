@@ -69,11 +69,11 @@ Packaging notes (EcommerceAPI/pyproject.toml)
 
 Make extras consistent
 - Your package declares `dev` extras. Make sure CI, Dockerfile and any `pip install` commands use `.[dev]`. Either:
-  - Change `pip install -e '.[test]'` → `pip install -e '.[dev]'` everywhere; or
+  - Change `pip install -e './EcommerceAPI[test]'` → `pip install -e './EcommerceAPI[dev]'` everywhere; or
   - Add a `test` extras alias in package pyproject (less preferred).
 
 Docker / CI notes
-- Dockerfile must COPY package sources before running `pip install -e '.[dev]'` in builder stage (so editable install works during image build).
+- Dockerfile must COPY package sources before running `pip install -e './EcommerceAPI[dev]'` in builder stage (so editable install works during image build).
 - Keep the repo root pytest block — CI and docker runs will pick it up when tests are executed from repo root.
 - GitHub Actions matrix: discovery must emit a valid JSON array of quoted service names (e.g. `["customers","orders"]`) to use `fromJson()` correctly.
 - GitLab dynamic pipelines: the discover job generates a `matrix.yml` artifact at runtime — that artifact is referenced in `artifacts: paths: - matrix.yml`.
@@ -122,7 +122,7 @@ Suggested small edits you may want to make (quick list)
   dist/
   .git
   ```
-- Make Dockerfile copy package before `pip install -e '.[dev]'`.
+- Make Dockerfile copy package before `pip install -e './EcommerceAPI[dev]'`.
 
 Where to merge vs keep separate (decision guide)
 - Keep separate if:

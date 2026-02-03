@@ -1,7 +1,7 @@
 # TestEcommerceAPI CI/CD Overview
 
 This document explains the **GitLab CI/CD setup** for the TestEcommerceAPI framework.
-It includes details about **dynamic matrix testing**, **environment fan-out**, and **enterprise governance** (manual approvals, prod protection, secrets, GitLab Environments UI).
+It includes details about **dynamic matrix testing**, **environment fan-out**, **preflight checks**, and **enterprise governance** (manual approvals, prod protection, secrets, GitLab Environments UI).
 
 ---
 
@@ -17,6 +17,7 @@ It includes details about **dynamic matrix testing**, **environment fan-out**, a
 8. [Secrets Management](#secrets-management)
 9. [Pipeline Examples](#pipeline-examples)
 10. [Best Practices](#best-practices)
+11. [CI/CD Changes Summary](#ci-cd-changes-summary)
 
 ---
 
@@ -53,43 +54,7 @@ shared_preflight → deploy → discover → matrix → verify
 
 ## Dynamic Matrix Testing
 
-### 1️⃣ Are `TEAM` and `ENV` hardcoded?
-
-❌ **No — they are generated dynamically, not hardcoded.**
-
-In the generated `matrix.yml` you will see jobs like:
-
-```yaml
-variables:
-  TEAM: customers
-  ENV: test
-```
-
-Although these look static, they are **produced automatically** by the discovery logic in `gitlab-ci.yml`.
-
-They come from this nested loop in the `discover_services` job:
-
-```bash
-for env in $TARGET_ENVS; do
-  for s in $services; do
-```
-
-**Where the values come from:**
-
-| Variable | Source                                                        |
-| -------- | ------------------------------------------------------------- |
-| `TEAM`   | Directory name under `tests/` (e.g. `customers`, `orders`)    |
-| `ENV`    | Environment being deployed/tested (`test`, `staging`, `prod`) |
-
-This means:
-
-* Adding a new entity = create a new folder under `tests/`
-* Adding a new environment = add a new deploy job (or include it in `TARGET_ENVS`)
-* **No manual edits** to `matrix.yml` are required
-
----
-
-### 1️⃣ Are `TEAM` and `ENV` hardcoded?
+### Are `TEAM` and `ENV` hardcoded?
 
 ❌ **No — they are generated dynamically, not hardcoded.**
 
@@ -138,6 +103,8 @@ customers_test:
     TEAM: customers
     ENV: test
   script:
+    - pip install --upgrade pip
+    - pip install -e './EcommerceAPI[dev]'   # NEW STEP
     - pytest tests/customers
 ```
 
@@ -174,6 +141,8 @@ variables:
 * Runs once per pipeline (`shared_preflight`)
 * Hard failure blocks the pipeline
 * Validates pipeline setup and shared sanity
+* Uses **pip install -e './EcommerceAPI[dev]'** to install the framework in editable mode
+* ⚠ **Requires credentials**: `WC_KEY` and `WC_SECRET` must be set as environment variables or in `.env` for WooCommerce API access
 
 ### Performance / Verify
 
@@ -232,6 +201,8 @@ deploy_prod:
   * `API_BASE_URL`
   * `DB_PASSWORD`
   * `AUTH_TOKEN`
+  * `WC_KEY` (WooCommerce)
+  * `WC_SECRET` (WooCommerce)
 * Automatically injected per environment via `$ENV` and `$CI_ENVIRONMENT_NAME`
 
 ---
@@ -272,12 +243,15 @@ TARGET_ENVS="prod" git push origin v1.0.0
 
 ---
 
-### ✅ Summary
+## CI/CD Changes Summary
 
-* Single `gitlab-ci.yml` handles all entities and environments
-* Matrix testing scales automatically
-* Manual approvals and environment protection enforce safety
-* Preflight + verify stages provide strong safety gates
-* GitLab Environments UI gives full visibility
+* **New pip install step**:
 
-This setup is **enterprise-ready**, scalable, and flexible.
+```bash
+pip install -e './EcommerceAPI[dev]'
+```
+
+* Ensures framework is installed **editable** for CI runs
+* **WooCommerce credentials are required** (`WC_KEY` and `WC_SECRET`)
+* Framework imports remain **as-is** to avoid breaking the pipeline
+* Preflight and matrix tests now correctly **initialize the shared framework**

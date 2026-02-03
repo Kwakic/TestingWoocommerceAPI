@@ -178,7 +178,7 @@ discover_services:
           echo "      ENV: ${env}" >> matrix.yml
           echo "    script:" >> matrix.yml
           echo "      - pip install --upgrade pip" >> matrix.yml
-          echo "      - pip install -e '.[dev]'" >> matrix.yml
+          echo "      - pip install -e './EcommerceAPI[dev]'" >> matrix.yml
           echo "      - mkdir -p reports/${env}/${s}/allure-results" >> matrix.yml
           echo "      - pytest tests/${s} -s --maxfail=3 \\" >> matrix.yml
           echo "          --alluredir=reports/${env}/${s}/allure-results \\" >> matrix.yml
@@ -259,7 +259,7 @@ verify_environment:
   when: manual
   script:
     - echo "✅ Running environment verification"
-    - pip install -e '.[dev]'
+    - pip install -e './EcommerceAPI[dev]'
     - pytest tests/shared/performance -s
 
 

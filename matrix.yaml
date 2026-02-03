@@ -26,7 +26,7 @@ customers_test:
     TEAM: customers     # derived from folder name
     ENV: test           # derived from TARGET_ENVS
   script:
-    - pip install -e '.[dev]'
+    - pip install -e './EcommerceAPI[dev]'
     - mkdir -p reports/test/customers/allure-results
     - pytest tests/customers \
         --alluredir=reports/test/customers/allure-results \
@@ -45,7 +45,7 @@ orders_test:
     TEAM: orders
     ENV: test
   script:
-    - pip install -e '.[dev]'
+    - pip install -e './EcommerceAPI[dev]'
     - mkdir -p reports/test/orders/allure-results
     - pytest tests/orders \
         --alluredir=reports/test/orders/allure-results \
