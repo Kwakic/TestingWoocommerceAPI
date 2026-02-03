@@ -58,7 +58,7 @@ variables:
 # - Schema validation
 # - Contract checks
 # - Test data sanity
-#
+
 shared_preflight:
   stage: preflight
   image: python:3.11
