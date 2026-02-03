@@ -72,6 +72,15 @@ shared_preflight:
   variables:
     WC_KEY: $WC_KEY
     WC_SECRET: $WC_SECRET
+    WP_HOST: $WP_HOST
+    DB_DATABASE: $DB_DATABASE
+    DB_HOST: $DB_HOST
+    DB_PASSWORD: $DB_PASSWORD
+    DB_PORT: $DB_PORT
+    DB_TABLE_PREFIX: $DB_TABLE_PREFIX
+    DB_USER: $DB_USER
+
+
   allow_failure: false
 
 # ============================================================
