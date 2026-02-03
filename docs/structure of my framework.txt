@@ -731,15 +731,11 @@ TestEcommerceAPI (project suite/root)
 ├──.github/
 │       └── workflows/
 │             └── ci.yml
-├── .gitlab/
-│     └──  ci.yml
+│
 ├── .venv/...                                       ← shared virtual environment (optional)
 │
 ├── docs/...                                        ← shared
 │
-├── build/...                                        ← produced during packaging
-│
-├── dist/...                                         ← produced during packaging
 │
 ├── EcommerceAPI (installable framework package)/    ← SHARED INSTALLABLE FRAMEWORK
 │     ├── ecommerceapitest.egg-info/..
@@ -864,10 +860,12 @@ TestEcommerceAPI (project suite/root)
 │─── .env.example                                  ← shared
 │─── .gitattributes                                ← shared
 │─── .gitignore                                    ← shared
+│─── .gitlab-ci.yml                                ← shared
 │─── CHANGELOG.md                                  ← shared
-│─── conftest.py                                 ← shared
+│─── conftest.py                                   ← shared
 │─── docker-compose.matrix.yml                     ← shared
 │─── Dockerfile                                    ← shared
+│─── matrix.yaml                                   ← shared
 └──  pytest.ini                                    ← shared
 
 
