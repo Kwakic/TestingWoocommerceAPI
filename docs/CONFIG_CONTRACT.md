@@ -1,263 +1,177 @@
-# 📘 Test Framework Configuration Contract
+# 📘 Configuration Contract
 
-Authoritative definition of how configuration works in the EcommerceAPI test framework.
+**Authoritative and normative definition of configuration behavior in the EcommerceAPI test framework.**
+
+This document defines **what** configuration is, **where** it lives, **who** owns it, and **how** it may be consumed.  
+If behavior is unclear, **this document wins**.
 
 ---
 
 ## 1️⃣ Purpose
 
-This document defines:
+This contract exists to guarantee:
 
-- **how configuration is provided**
-- **where it is parsed**
-- **how precedence is resolved**
-- **what plugins may and may not do**
-- **which configuration flags are supported**
-- **how teams are expected to consume them**
+- ✅ **Deterministic framework behavior**
+- ✅ **Zero hidden environment coupling**
+- ✅ **Predictable CI runs**
+- ✅ **Strict ownership boundaries**
+- ✅ **Safe refactoring without behavioral drift**
 
-This contract ensures:
-
-- ✅ deterministic behavior  
-- ✅ consistent CI execution  
-- ✅ no hidden environment coupling  
-- ✅ predictable onboarding
+> **Configuration is not an implementation detail.**  
+> It is a **framework-level contract**.
 
 ---
 
-## 2️⃣ Configuration Architecture Overview
-
-Configuration flows through the framework in four layers:
+## 2️⃣ Configuration Architecture (Current)
 
 ```
-┌────────────────────────────┐
-│ User / CI / Local machine │
-│   (.env, GitHub Actions)  │
-└──────────────┬─────────────┘
-               ↓
-┌────────────────────────────┐
-│ Environment Variables      │
-│   (always strings)         │
-└──────────────┬─────────────┘
-               ↓
-┌────────────────────────────┐
-│ Framework Config Resolver  │
-│   plugins/_config.py       │
-└──────────────┬─────────────┘
-               ↓
-┌────────────────────────────┐
-│ Runtime Plugins & Fixtures │
-└────────────────────────────┘
+┌──────────────────────────────┐
+│ User / CI / OS               │
+│ (.env, CI variables, shell)  │
+└──────────────┬───────────────┘
+               ↓  (strings only)
+┌──────────────────────────────┐
+│ plugins/_config.py           │
+│  - env parsing               │
+│  - defaults                  │
+│  - validation                │
+│  - runtime metadata init     │
+└──────────────┬───────────────┘
+               ↓  (typed, frozen)
+┌─────────────────────��────────┐
+│ Runtime Plugins & Fixtures   │
+│  - logging                   │
+│  - allure                    │
+│  - pytest hooks              │
+└──────────────────────────────┘
 ```
 
-- Environment variables are always strings.
-- All parsing, normalization and validation happens in `plugins/_config.py`.
-- Plugins and tests consume resolved config values — not raw environment variables.
+### **Key rule**
+
+> All environment variables are interpreted **exactly once** — in `plugins/_config.py`.
 
 ---
 
-## 3️⃣ Configuration Ownership Model
+## 3️⃣ Ownership Model (Strict)
 
-- **.env** — Express intent only (do not implement logic here)  
-- **OS / CI** — Supply environment variables  
-- **_config.py** — Interpret, normalize, validate, log  
-- **Plugins** — Consume resolved config constants from `_config.py`  
-- **Tests** — Never read environment variables directly
-
----
-
-## 4️⃣ Rules (Strict)
-
-**✅ Allowed**
-
-- `.env` contains only values (no parsing).
-- `_config.py` parses environment variables.
-- Plugins import config constants from `_config.py`.
-- Startup banner logs the resolved config (shown once).
-
-**❌ Forbidden**
-
-- Plugins calling `os.getenv(...)` directly.
-- Tests reading environment variables.
-- Helpers parsing env vars directly.
-- Duplicate defaults spread across plugins.
-
-All environment access MUST go through `plugins/_config.py`.
+| Layer | Responsibility |
+|-------|----------------|
+| `.env` / CI | Declare intent only (values as strings) |
+| OS / Runner | Provide variables |
+| `_config.py` | Parse, normalize, validate, freeze |
+| Plugins | Consume resolved values |
+| Tests | **Never** read env vars directly |
 
 ---
 
-## 5️⃣ Configuration Precedence
+## 4️⃣ The Single Source of Truth
 
-When the same setting exists in multiple places, precedence is:
+`_config.py` is the **only place** allowed to:
 
-1. CLI options (highest)
-2. Environment variables (`.env` / CI)
-3. Framework defaults (lowest)
+- Call `os.getenv`
+- Parse booleans / ints
+- Apply defaults
+- Emit the startup configuration banner
+- Initialize runtime metadata (session id, env, CI info)
 
-Example:
+**If a value affects framework behavior:**
 
-- CLI: `pytest --fail-on-empty-list`  (wins)
-- Env: `FAIL_ON_EMPTY_LIST=false`  (overrides default)
-- Default: whatever `_config.py` sets
-
----
-
-## 6️⃣ Boolean Parsing Contract
-
-Environment variables are strings. Use the unified parser:
-
-```python
-env_bool("FLAG_NAME", default=False)
-```
-
-Truthy values (case-insensitive):
-
-- `1`
-- `true`
-- `yes`
-- `on`
-
-Everything else → interpreted as `False`.
-
-This keeps behavior consistent across Linux, Windows, Docker, and CI.
+> It **must** appear in `_config.py`. **No exceptions.**
 
 ---
 
-## 7️⃣ Supported Configuration Flags
+## 5️⃣ Forbidden Patterns (Hard Rules)
 
-Below are the supported flags, defaults, and short descriptions.
+| ❌ **Not Allowed** |
+|--------------------|
+| Plugins reading environment variables |
+| Tests calling `os.getenv()` |
+| Helpers parsing env vars |
+| Multiple defaults for the same flag |
+| "Convenience" config accessors outside `_config.py` |
 
-### 🔐 Entity Discovery
-| Variable | Default | Description |
-|---|---:|---|
-| `STRICT_ENTITY_DISCOVERY` | `false` | Fail-fast when entity helpers / DAOs are partially discovered |
-
-### 🧪 Test Behavior
-| Variable | Default | Description |
-|---|---:|---|
-| `FAIL_ON_EMPTY_LIST` | `false` | Fail schema tests if list endpoints return empty |
-| `PERF_ITERATIONS` | `5` | Default iterations for performance tests |
-
-### 📊 Logging
-| Variable | Default | Description |
-|---|---:|---|
-| `ENABLE_STRUCTURED_LOGS` | `true` | Enable JSONL structured logs |
-| `ENABLE_JSON_PRETTY` | `false` | Pretty-print structured logs |
-| `KEEP_STRUCTURED_LOGS` | `3` | Number of retained structured log files |
-| `LOG_PAYLOADS` | `false` | Include masked payloads in logs |
-| `REDACT_SENSITIVE_FIELDS` | `true` | Mask secrets in logs |
-| `DISABLE_LOG_EMOJIS` | `false` | Disable emoji output in logs |
-
-### 📁 Reporting
-| Variable | Default | Description |
-|---|---:|---|
-| `AUTO_ALLURE_REPORT` | `true` | Generate Allure HTML report automatically |
-
-### 🧱 Environment Safety
-| Variable | Default | Description |
-|---|---:|---|
-| `REQUIRE_ENV` | `false` | Fail startup if `.env` is missing |
+> **Violating these rules breaks determinism and CI parity.**
 
 ---
 
-## 8️⃣ Startup Configuration Banner
+## 6️⃣ Supported Configuration Flags
 
-At pytest startup, the framework logs a single, authoritative snapshot:
+*(unchanged list, but now explicitly frozen at startup)*
 
-```text
-⚙️ ================== TEST FRAMEWORK CONFIG ==================
-STRICT_ENTITY_DISCOVERY: False
-FAIL_ON_EMPTY_LIST:      False
-PERF_ITERATIONS:         5
-AUTO_ALLURE_REPORT:      True
+All flags are:
 
-STRUCTURED_LOGS:         True
-JSON_PRETTY:             False
-LOG_PAYLOADS:            False
-REDACT_SENSITIVE_FIELDS: True
+- ✅ Resolved **once** at session start
+- ✅ **Immutable** for the duration of the run
+- ✅ Logged in the startup banner
 
-LOG_DIR:                 reports/logs
-KEEP_STRUCTURED_LOGS:    3
-==============================================================
-```
+### **Example categories**
 
-- Emitted once per session  
-- Authoritative and immutable during execution  
-- Helpful for CI debugging
+- **Test behavior** (`FAIL_ON_EMPTY_LIST`, `PERF_ITERATIONS`)
+- **Logging** (`STRUCTURED_LOGS`, `LOG_DIR`, `KEEP_STRUCTURED_LOGS`)
+- **Reporting** (`AUTO_ALLURE_REPORT`)
+- **Safety** (`REQUIRE_ENV`)
 
 ---
 
-## 9️⃣ Plugin Integration Contract
+## 7️⃣ Runtime Metadata (Important Distinction)
 
-Plugins MUST import config values from `_config.py` and use them — never read the environment directly.
+The framework distinguishes between:
 
-✅ Correct (import resolved value)
-```python
-from EcommerceAPI.plugins._config import STRICT_ENTITY_DISCOVERY
+### **Configuration**
+- 🔒 Static
+- 🌍 Env-driven
+- ❄️ Frozen at startup
+- 📂 Lives in `_config.py`
 
-if STRICT_ENTITY_DISCOVERY:
-    raise pytest.UsageError("strict discovery enabled")
-```
+### **Runtime metadata**
+- ⚡ Dynamic
+- 🏃 Session-scoped
+- 📦 Lives in dedicated runtime modules
 
-❌ Incorrect (forbidden)
-```python
-# Bad: reading env in plugin
-os.getenv("STRICT_ENTITY_DISCOVERY")
-```
+**Examples:**
+- Session ID
+- CI metadata
+- Git metadata
 
-### 🔁 Example: Entity Discovery modes
-- `STRICT_ENTITY_DISCOVERY=false` → Log warnings only (friendly locally)
-- `STRICT_ENTITY_DISCOVERY=true` → Fail pytest collection (strict in CI)
-
----
-
-## 🔐 Guarantees Provided by the Framework
-
-- deterministic startup behavior  
-- visible configuration state in logs  
-- no hidden environment coupling  
-- no per-plugin env parsing  
-- reproducible CI runs
+> These are **not** configuration flags and must **not** be treated as such.
 
 ---
 
-## 🧭 Guidance for Teams
+## 8️⃣ Logging Context Is Not Configuration
 
-- Test authors:
-  - never read environment variables directly
-  - never change framework config inside tests
-  - rely on fixtures for needed behavior
+Contextual logging values (node id, correlation id):
 
-- Framework maintainers:
-  - add all new environment flags to `plugins/_config.py`
-  - document new flags here in the README
-  - include them in the startup banner
+- ✅ Are **runtime context**
+- ✅ Are **dynamic**
+- ❌ Must **NOT** be defined in `_config.py`
+- ❌ Must **NOT** read env vars
 
----
+They live in `utilities/log_context.py` and are populated by:
 
-## 📌 Summary
-
-Configuration is a contract, not an implementation detail. This framework enforces:
-
-- single source of truth (`plugins/_config.py`)  
-- explicit defaults  
-- observable behavior (startup banner)  
-- zero ambiguity
-
-✅ Final Principle:  
-If a value affects framework behavior, it must appear in `_config.py`. Nothing else is allowed.
+- pytest hooks
+- runtime plugins
 
 ---
 
-Resources:
-- Read more about pytest: [pytest docs](https://docs.pytest.org/)
-- Allure reporting: [Allure docs](https://docs.qameta.io/allure/)
+## 9️⃣ Guarantees Provided by This Contract
+
+By following this contract, the framework guarantees:
+
+- ✅ Identical behavior locally and in CI
+- ✅ Visible startup configuration
+- ✅ No hidden env coupling
+- ✅ Safe refactors
+- ✅ Predictable onboarding
+
 ---
-**Recap:**
 
-.env            → configuration input (human + CI)
+## 🔟 Final Principle (Non-Negotiable)
 
-env_utils.py    → configuration parsing (string → typed)
+> **If a value affects framework behavior,  
+> it must be defined, parsed, and logged in `_config.py`.**
 
-_config.py      → configuration contract (framework truth)
+**Everything else is runtime state.**
 
-plugins         → configuration consumers
+---
+
+✨ **This is the contract. Follow it religiously.**

@@ -37,19 +37,23 @@ COPY pyproject_root.toml README.md ./
 # ------------------------------------------------------------
 # Default environment — CI will override these
 # ------------------------------------------------------------
-ENV ENVIRONMENT=prod
+ENV ENVIRONMENT=test
 
 # Logging & Reporting (default: safe for local)
 ENV ENABLE_STRUCTURED_LOGS=false
 ENV ENABLE_JSON_PRETTY=false
 ENV KEEP_STRUCTURED_LOGS=3
-ENV LOG_DIR=/app/EcommerceAPI/tests/api/logs
-
+ENV LOG_DIR=/app/EcommerceAPI/reports/logs
 ENV REDACT_SENSITIVE_FIELDS=true
 ENV LOG_PAYLOADS=false
+ENV DISABLE_LOG_EMOJIS=true
 
 # Performance test defaults
 ENV PERF_ITERATIONS=5
+
+# Optional: enforce presence of .env in local runs (set to true only if you want fails locally)
+# In CI set REQUIRE_ENV=true to fail when .env is missing or required vars not present.
+ENV REQUIRE_ENV=true
 
 # Schema smoke test toggle
 ENV FAIL_ON_EMPTY_LIST=false

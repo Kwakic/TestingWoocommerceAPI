@@ -7,6 +7,13 @@ Purpose:
 
 This module is intentionally minimal: just contextvars and lightweight docstrings.
 It must NOT import pytest or perform I/O at module import time.
+
+log_context can grow over time e.g:
+    - request_id = ContextVar("request_id", default="-")
+    - span_id = ContextVar("span_id", default="-")
+    - retry_attempt = ContextVar("retry_attempt", default=0)
+    - step_name = ContextVar("step_name", default=None)
+
 """
 
 import contextvars

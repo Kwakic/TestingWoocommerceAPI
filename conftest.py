@@ -12,7 +12,7 @@ pytest_plugins = [
     # Shared Framework Plugins
     # -----------------------
     "EcommerceAPI.plugins.logging_plugin",   # MUST load first
-    "EcommerceAPI.plugins._config",
+    "EcommerceAPI.plugins.config_pytest",
     "EcommerceAPI.plugins.reporting",
     "EcommerceAPI.plugins.allure_autogen",
     "EcommerceAPI.plugins.entities",  # <-- defines shared_api_resources

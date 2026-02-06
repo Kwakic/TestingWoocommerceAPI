@@ -18,9 +18,8 @@ import os
 import sys
 import uuid
 import logging
-import subprocess
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Optional
 
 import pytest
 from dotenv import load_dotenv
@@ -43,50 +42,17 @@ from EcommerceAPI.src.utilities.env_utils import env_bool
 from EcommerceAPI.src.utilities.team_discovery import extract_team_from_nodeid
 
 # Use the single-session id from the framework config (single source of truth)
-from EcommerceAPI.plugins._config import SESSION_ID
+from EcommerceAPI.src.configs.runtime_config import SESSION_ID
+from EcommerceAPI.src.configs.runtime_metadata import SESSION_METADATA
 
 # --------------------------------------------------------------------------------------
 # Logger for this module
 # --------------------------------------------------------------------------------------
 log = logging.getLogger(__name__)
 
-
 # --------------------------------------------------------------------------------------
 # Session metadata collection (git / CI info)
 # --------------------------------------------------------------------------------------
-def _collect_session_metadata() -> Dict[str, Any]:
-    """
-    Best-effort collection of git + CI metadata for the session.
-
-    Safe to call at import time:
-    - All failures are swallowed
-    - Missing values resolve to None
-    """
-
-    def _run_git(cmd):
-        try:
-            return subprocess.check_output(cmd, stderr=subprocess.DEVNULL).decode().strip()
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            return None
-
-    git = {
-        "commit": _run_git(["git", "rev-parse", "--short", "HEAD"]),
-        "branch": _run_git(["git", "rev-parse", "--abbrev-ref", "HEAD"]),
-    }
-
-    ci = {"is_ci": False, "provider": None, "job_id": None}
-    if os.getenv("GITHUB_ACTIONS"):
-        ci.update({"is_ci": True, "provider": "github_actions", "job_id": os.getenv("GITHUB_RUN_ID")})
-    elif os.getenv("GITLAB_CI"):
-        ci.update({"is_ci": True, "provider": "gitlab", "job_id": os.getenv("CI_JOB_ID")})
-    elif os.getenv("JENKINS_HOME"):
-        ci.update({"is_ci": True, "provider": "jenkins", "job_id": os.getenv("BUILD_ID")})
-
-    return {"git": git, "ci": ci, "session_id": SESSION_ID}
-
-
-# Compute once at import time
-SESSION_METADATA = _collect_session_metadata()
 
 # --------------------------------------------------------------------------------------
 # LogRecord factory capture and override
@@ -371,6 +337,9 @@ def pytest_configure(config):
             os.environ["ENABLE_JSON_PRETTY"] = "1"
         if log_dir:
             os.environ["LOG_DIR"] = str(log_dir)
+
+        # propagate retention policy for structured logs
+        os.environ["KEEP_STRUCTURED_LOGS"] = str(keep_structured_logs)
 
         configure_logging()
     except (OSError, RuntimeError, ValueError) as cfg_err:

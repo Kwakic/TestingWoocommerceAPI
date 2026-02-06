@@ -44,10 +44,9 @@ from collections import defaultdict
 import pytest
 
 from EcommerceAPI.src.utilities.team_discovery import extract_team_from_nodeid
-from EcommerceAPI.plugins._config import get_config
-
-from EcommerceAPI.plugins.logging_plugin import SESSION_METADATA
-from EcommerceAPI.plugins._config import SESSION_ID as FRAMEWORK_SESSION_ID
+from EcommerceAPI.src.configs.runtime_config import get_config
+from EcommerceAPI.src.configs.runtime_config import SESSION_ID as FRAMEWORK_SESSION_ID
+from EcommerceAPI.src.configs.runtime_metadata import SESSION_METADATA
 
 from importlib.metadata import version, PackageNotFoundError
 
@@ -98,7 +97,7 @@ This gives you:
     - reusable across environment + attachment
 """
 
-# Prefer explicit env var override, then the framework SESSION_ID from _config.py
+# Prefer explicit env var override, then the framework SESSION_ID from config_pytest.py
 _SESSION_ID: str = os.getenv("SESSION_ID") or FRAMEWORK_SESSION_ID
 
 

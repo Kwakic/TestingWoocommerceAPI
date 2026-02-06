@@ -696,7 +696,8 @@ def _resolve_project_root() -> Path:
     """
     p = Path(__file__).resolve()
     for parent in p.parents:
-        if ((parent / ".git").exists() or (parent / "pyproject_root.toml").exists() or (parent / "setup.cfg").exists() or
+        if ((parent / ".git").exists() or (parent / "pyproject_root.toml").exists() or
+                (parent / "setup.cfg").exists() or
                 (parent / "README.md").exists()):
             return parent
     # fallback: try to move up 3 levels (typical layout: <repo>/EcommerceAPI/src/utilities/...)

@@ -1,5 +1,5 @@
 """
-config_orders.py
+config_customers.py
 
 Environment-specific host mappings for the CUSTOMERS microservice.
 
@@ -14,3 +14,4 @@ API_HOSTS = {
     "dev":     "http://localhost:8888/kwakiweb/wp-json/wc/v3/",
     "prod":    "",
 }
+
