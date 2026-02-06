@@ -66,6 +66,11 @@ shared_preflight:
     - pytest
   script:
     - echo "🚦 Running shared preflight checks"
+    - echo "CI=$CI"
+    - echo "GITLAB_CI=$GITLAB_CI"
+    - echo "CI_JOB_ID=$CI_JOB_ID"
+    - echo "CI_PIPELINE_URL=$CI_PIPELINE_URL"
+    - env | grep -E '^(CI|GITLAB)_'
     - pip install --upgrade pip
     - pip install -e './EcommerceAPI[dev]'
     - pytest tests/shared/preflight -s --maxfail=1
