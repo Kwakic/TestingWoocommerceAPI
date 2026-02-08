@@ -9,16 +9,12 @@ The shared config loader dynamically imports this module based on SERVICE=custom
 
 API_HOSTS = {
     "test":    "http://localhost:8888/kwakiweb/wp-json/wc/v3/",
-    # ✅ CRITICAL: Use service name 'wordpress' as hostname
-    # No port needed (internal Docker DNS)
-    # wordpress = the service name from docker-compose.wp.yml
-    "docker":  "http://wordpress/wp-json/wc/v3/",
-    "local":   "http://localhost:8888/wp-json/wc/v3/",
-    "dev":     "http://localhost:8888/kwakiweb/wp-json/wc/v3/",
+    "docker":  "http://wordpress/wp-json/wc/v3/",  # ✅ For GitLab CI (uses docker-compose)
+    "local":   "http://localhost:8888/kwakiweb/wp-json/wc/v3/",  # ✅ For local dev (no Docker)
+    "dev":     "http://host.docker.internal:8888/kwakiweb/wp-json/wc/v3/",  # ✅ For local Docker → local WordPress
     "staging": "",
     "prod":    "",
 }
-
 # """
 # config_customers.py
 #

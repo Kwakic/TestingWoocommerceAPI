@@ -31,6 +31,10 @@ WORKDIR /app
 # Copy installed dependencies from builder
 COPY --from=builder /usr/local /usr/local
 
+# Copy root config files (CRITICAL FOR PLUGIN LOADING) ← ADD THIS SECTION
+COPY conftest.py ./conftest.py
+COPY pytest.ini ./pytest.ini
+
 # Copy framework and tests
 COPY EcommerceAPI ./EcommerceAPI
 COPY tests ./tests

@@ -6,6 +6,8 @@ x-test-template: &test-template
     context: .
     dockerfile: Dockerfile
   image: ecommerceapi-tests:latest
+  env_file:
+    - .env          # ← ADD THIS LINE
   environment:
     ENV: docker
     ENABLE_STRUCTURED_LOGS: "true"
@@ -31,9 +33,20 @@ services:
   customers:
     <<: *test-template
     profiles: ["customers"]
+    environment:
+      ENV: docker
+      # ... existing vars ...
+
+      # Add database credentials
+      DB_HOST: db                    # ← Service name from docker-compose.wp.yml
+      DB_PORT: "3306"
+      DB_USER: wp
+      DB_PASSWORD: wp
+      DB_DATABASE: wordpress
     command:
       - pytest
       - tests/customers
+#      - --ignore=tests/shared   # ← ADD THIS LINE
       - -s
       - --disable-warnings
       - --maxfail=3

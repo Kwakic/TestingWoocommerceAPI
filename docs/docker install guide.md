@@ -2001,3 +2001,149 @@ In the final phase, we execute the tests to ensure the application functions as 
 | `docker build -t test-runner .`          | Phase 2 Build Test Image    | Build Docker image for tests                     |
 | `docker run --network=host test-runner`  | Phase 3 Run Tests           | Execute tests in the test runner container       |
 
+
+
+
+### Command Comparison
+Command 1: With Flags ✅ (Recommended for Tests)
+    bash
+    
+    docker compose -f docker-compose.matrix.yml \
+      --profile customers \
+      up --abort-on-container-exit --remove-orphans
+
+What it does:
+
+`--abort-on-container-exit `→ Stops all containers when the test container finishes
+`--remove-orphans` → Removes containers from other compose files (like wc-wp, wc-db)
+
+Behavior:
+Code
+
+1. Test container starts
+2. Test runs
+3. Test finishes (pass or fail)
+4. ✅ All containers stop automatically
+5. You get your terminal back
+
+Use when:
+
+    ✅ Running tests in CI/CD
+    ✅ Running tests locally and want auto-cleanup
+    ✅ You want the process to exit after tests complete
+
+Command 2: Without Flags (Interactive Mode)
+bash
+
+    `docker compose -f docker-compose.matrix.yml --profile customers up`
+
+What it does:
+
+    Starts containers and keeps them running
+    Shows live logs
+    You must press Ctrl+C to stop
+
+Behavior:
+Code
+
+1. Test container starts
+2. Test runs
+3. Test finishes
+4. ❌ Container keeps running (waiting for more tests)
+5. Logs keep streaming
+6. You must press Ctrl+C to stop
+
+Use when:
+
+    🔍 Debugging (you want to inspect logs after tests)
+    🔍 Running multiple test iterations manually
+    🔍 Need to exec into the container after tests
+
+⚠️ About --remove-orphans
+
+IMPORTANT: This flag is dangerous when you have docker-compose.wp.yml running!
+    `bash
+    
+    --remove-orphans  # ⚠️ Will STOP and REMOVE wc-wp and wc-db!`
+
+It considers wc-wp and wc-db as "orphans" because they're from a different compose file.
+
+### 🎯 Recommended Commands
+
+For Local Development (Keep WordPress Running)
+
+    `bash
+    
+    # Start WordPress (in background)
+    docker compose -f docker-compose.wp.yml up -d
+    
+    # Run tests WITHOUT --remove-orphans
+    docker compose -f docker-compose.matrix.yml \
+      --profile customers \
+      up --abort-on-container-exit`
+
+✅ Tests stop automatically
+✅ WordPress keeps running
+✅ You can run tests multiple times
+
+For CI/CD Pipeline
+
+    `bash
+    
+    # Start WordPress
+    docker compose -f docker-compose.wp.yml up -d
+    
+    # Run tests with cleanup
+    docker compose -f docker-compose.matrix.yml \
+      --profile customers \
+      up --abort-on-container-exit --remove-orphans`
+
+✅ Everything stops after tests
+✅ Clean environment
+
+For Debugging (See All Logs)
+    `
+    bash
+    
+    # Run without --abort-on-container-exit
+    docker compose -f docker-compose.matrix.yml \
+      --profile customers \
+      up
+    
+    # Press Ctrl+C when done`
+
+✅ See full logs
+✅ Can scroll through output
+✅ Manual control
+
+📋 Quick Reference
+Scenario	            Command
+Normal test run	        up --abort-on-container-exit
+Debugging	            up (no flags)
+CI/CD	                up --abort-on-container-exit --remove-orphans
+With WordPress running	up --abort-on-container-exit (NO --remove-orphans)
+
+### 🚀 What You Should Use Now
+
+Since you want to use your local WordPress, use this:
+
+    bash
+    
+    # Option 1: Use local WordPress (no Docker WordPress needed)
+    docker compose -f docker-compose.matrix.yml \
+      --profile customers \
+      up --abort-on-container-exit
+
+OR if you want to use Docker WordPress:
+
+    `bash
+    
+    # Start WordPress first
+    docker compose -f docker-compose.wp.yml up -d
+    
+    # Run tests (without --remove-orphans to keep WordPress running)
+    docker compose -f docker-compose.matrix.yml \
+      --profile customers \
+      up --abort-on-container-exit`
+
+TL;DR: Use --abort-on-container-exit ✅ but skip --remove-orphans ❌ when WordPress is running separately! 🎯
