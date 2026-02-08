@@ -37,10 +37,30 @@ def collect_session_metadata() -> Dict[str, Any]:
     - never depend on pytest
     - be safe at import time
     """
+
+    # ✅ Git branch: Prefer CI environment variable over git command
+    git_branch = (
+            os.getenv("CI_COMMIT_REF_NAME")  # GitLab
+            or os.getenv("GITHUB_REF_NAME")  # GitHub Actions
+            or os.getenv("GIT_BRANCH")  # Jenkins
+            or _run_git(["git", "rev-parse", "--abbrev-ref", "HEAD"])  # Local fallback
+    )
+
+    # ✅ Git commit: Prefer CI environment variable over git command
+    git_commit = (
+            os.getenv("CI_COMMIT_SHORT_SHA")  # GitLab
+            or os.getenv("GITHUB_SHA", "")[:7]  # GitHub Actions (short)
+            or _run_git(["git", "rev-parse", "--short", "HEAD"])  # Local fallback
+    )
+
     git = {
-        "commit": _run_git(["git", "rev-parse", "--short", "HEAD"]),
-        "branch": _run_git(["git", "rev-parse", "--abbrev-ref", "HEAD"]),
+        "commit": git_commit,
+        "branch": git_branch,
     }
+    # git = {
+    #     "commit": _run_git(["git", "rev-parse", "--short", "HEAD"]),
+    #     "branch": _run_git(["git", "rev-parse", "--abbrev-ref", "HEAD"]),
+    # }
 
     ci = {
         "is_ci": False,
