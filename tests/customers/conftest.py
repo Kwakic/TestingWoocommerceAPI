@@ -1,6 +1,6 @@
-import os
-import pytest
-from tests.customers.configs.config_customers import API_HOSTS
+# import os
+# import pytest
+# from tests.customers.configs.config_customers import API_HOSTS
 
 from typing import TYPE_CHECKING
 import pytest
@@ -10,51 +10,51 @@ if TYPE_CHECKING:
     from EcommerceAPI.src.dao.customers_dao import CustomersDAO
 
 
-@pytest.fixture(scope="session")
-def api_base_url() -> str:
-    """
-    Resolve and provide the base URL for the Customers API.
-
-    This session-scoped fixture determines which Customers API host to use
-    based on the current execution environment.
-
-    Resolution logic:
-    -----------------
-    - Reads the ENV environment variable (defaults to "test" if not set)
-    - Looks up the corresponding base URL in `API_HOSTS`
-    - Fails fast with a clear error if the environment is not defined
-
-    Why this fixture exists:
-    ------------------------
-    - Different microservices (customers, orders, products, etc.) use different base URLs
-    - Tests in folders like `preflight/` do not inherit customer-specific conftest files
-    - Defining this fixture locally ensures RequestUtility can always be constructed correctly
-
-    Expected ENV values:
-    --------------------
-    Values must match keys in `API_HOSTS`, for example:
-      - "test"
-      - "staging"
-      - "prod"
-
-    Raises:
-    -------
-    RuntimeError:
-        If ENV is set to a value that does not exist in API_HOSTS.
-
-    Returns:
-    --------
-    str
-        The resolved base URL for the Customers API.
-    """
-    env = os.getenv("ENV", "test").lower()
-
-    try:
-        return API_HOSTS[env]
-    except KeyError:
-        raise RuntimeError(
-            f"ENV='{env}' not found in customers API_HOSTS"
-        )
+# @pytest.fixture(scope="session")
+# def api_base_url() -> str:
+#     """
+#     Resolve and provide the base URL for the Customers API.
+#
+#     This session-scoped fixture determines which Customers API host to use
+#     based on the current execution environment.
+#
+#     Resolution logic:
+#     -----------------
+#     - Reads the ENV environment variable (defaults to "test" if not set)
+#     - Looks up the corresponding base URL in `API_HOSTS`
+#     - Fails fast with a clear error if the environment is not defined
+#
+#     Why this fixture exists:
+#     ------------------------
+#     - Different microservices (customers, orders, products, etc.) use different base URLs
+#     - Tests in folders like `preflight/` do not inherit customer-specific conftest files
+#     - Defining this fixture locally ensures RequestUtility can always be constructed correctly
+#
+#     Expected ENV values:
+#     --------------------
+#     Values must match keys in `API_HOSTS`, for example:
+#       - "test"
+#       - "staging"
+#       - "prod"
+#
+#     Raises:
+#     -------
+#     RuntimeError:
+#         If ENV is set to a value that does not exist in API_HOSTS.
+#
+#     Returns:
+#     --------
+#     str
+#         The resolved base URL for the Customers API.
+#     """
+#     env = os.getenv("ENV", "test").lower()
+#
+#     try:
+#         return API_HOSTS[env]
+#     except KeyError:
+#         raise RuntimeError(
+#             f"ENV='{env}' not found in customers API_HOSTS"
+#         )
 
 
 # ---------------------------------------------------------------------------

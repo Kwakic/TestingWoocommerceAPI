@@ -283,6 +283,39 @@ run_entity_matrix:
     strategy: depend
 
 # ============================================================
+# SHARED CONTRACT TESTS (SCHEMA / API CONTRACT)
+# ============================================================
+# Runs ONCE per environment after deploy.
+# Requires a live API but is independent of entity services.
+#
+shared_contract_test:
+  stage: test
+  image: python:3.11
+
+  # Wait until the environment is deployed
+  needs:
+    - job: deploy_test
+      optional: true
+    - job: deploy_staging
+      optional: true
+    - job: deploy_prod
+      optional: true
+
+  environment:
+    name: $ENV
+
+  script:
+    - echo "📐 Running shared contract (schema) tests"
+    - pip install --upgrade pip
+    - pip install -e './EcommerceAPI[dev]'
+    - pytest tests/shared/contract -s --maxfail=1
+
+  artifacts:
+    when: always
+    paths:
+      - reports/$ENV/shared-contract/
+
+# ============================================================
 # ALLURE REPORT AGGREGATION (CENTRALIZED)
 # ============================================================
 # Purpose:

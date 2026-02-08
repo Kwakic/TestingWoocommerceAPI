@@ -8,11 +8,16 @@ These tests validate:
 """
 
 import os
-import tempfile
 import shutil
+import pytest
 import logging
+from pathlib import Path
+
 
 from EcommerceAPI.src.utilities import custom_logger
+pytestmark = [pytest.mark.preflight]
+
+log = logging.getLogger(__name__)
 
 
 def test_attach_global_metadata_contains_expected_keys():
@@ -63,9 +68,13 @@ def test_last_structured_log_set_when_enabled(tmp_path, monkeypatch):
     monkeypatch.delenv("LOG_DIR", raising=False)
     monkeypatch.delenv("ENABLE_STRUCTURED_LOGS", raising=False)
     monkeypatch.delenv("KEEP_STRUCTURED_LOGS", raising=False)
-    # Optionally remove created logs
+    # Best-effort cleanup of temp logs directory
     try:
         shutil.rmtree(tmp_log_dir)
-    except Exception:
+    except FileNotFoundError:
+        # Directory was never created — safe to ignore
         pass
+    except PermissionError as e:
+        # Common on Windows / CI; log for visibility but don't fail preflight
+        log.warning("Could not remove temp log dir %s: %s", tmp_log_dir, e)
 

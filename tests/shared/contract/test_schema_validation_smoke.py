@@ -43,7 +43,7 @@ from EcommerceAPI.src.utilities.truncate_logging_utils import truncate_preview
 
 log = logging.getLogger(__name__)
 
-pytestmark = [pytest.mark.schema, pytest.mark.preflight]
+pytestmark = [pytest.mark.schema, pytest.mark.contract]
 
 
 # =====================================================================
