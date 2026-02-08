@@ -207,6 +207,7 @@ deploy_prod:
 # ============================================================
 # Purpose:
 # - Detect entity test folders under tests/
+# - Scan the tests/ folder for entity directories
 # - Generate matrix.yml dynamically
 # - One job per TEAM × ENV
 discover_services:
@@ -223,9 +224,6 @@ discover_services:
       optional: true
   script:
     - echo "🔍 Discovering entity test suites"
-
-    # Verify WordPress is accessible
-    - docker ps | grep wc-wp
 
     # ------------------------------------------
     # Discover services (unless SERVICE override)
