@@ -16,7 +16,9 @@ services:
       retries: 5
 
   wordpress:
-    image: wordpress:cli-php8.2  # ✅ CLI variant for wp commands
+    build:
+      context: .
+      dockerfile: Dockerfile.wordpress  # ✅ Use custom image with WP-CLI
     container_name: wc-wp
     depends_on:
       db:
@@ -26,6 +28,8 @@ services:
       WORDPRESS_DB_USER: wp
       WORDPRESS_DB_PASSWORD: wp
       WORDPRESS_DB_NAME: wordpress
+    ports:
+      - "8888:80"
     networks:
       - wc-net
 

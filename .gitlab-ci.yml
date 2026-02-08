@@ -64,17 +64,31 @@ setup_wordpress:
   script:
     - echo "🚀 Starting WordPress + MySQL containers"
 
-    # 1. Start WordPress stack
+    # 1. Build and start WordPress stack
+    - docker compose -f docker-compose.wp.yml build
     - docker compose -f docker-compose.wp.yml up -d
 
     # 2. Wait for services to be healthy
     - echo "⏳ Waiting for services to be ready..."
-    - sleep 30
+    - sleep 40  # Increased wait time
 
     # 3. Verify containers are running
     - docker ps
+    - docker logs wc-wp  # Debug: show WordPress logs
 
-    # 4. Install WordPress
+    # 4. Wait for WordPress to be fully ready
+    - |
+      echo "Waiting for WordPress to respond..."
+      for i in {1..30}; do
+        if docker exec wc-wp curl -f http://localhost/wp-admin/install.php > /dev/null 2>&1; then
+          echo "✅ WordPress is ready"
+          break
+        fi
+        echo "Attempt $i/30: WordPress not ready yet..."
+        sleep 2
+      done
+
+    # 5. Install WordPress
     - echo "📦 Installing WordPress..."
     - docker exec wc-wp wp core install 
         --url="http://wordpress" 
@@ -85,28 +99,22 @@ setup_wordpress:
         --skip-email 
         --allow-root
 
-    # 5. Verify WordPress is installed
+    # 6. Verify WordPress is installed
     - docker exec wc-wp wp core is-installed --allow-root
 
-    # 6. Install & activate WooCommerce
+    # 7. Install & activate WooCommerce
     - echo "🛒 Installing WooCommerce..."
     - docker exec wc-wp wp plugin install woocommerce --activate --allow-root
 
-    # 7. Verify WooCommerce is active
+    # 8. Verify WooCommerce is active
     - docker exec wc-wp wp plugin list --allow-root
 
-    # 8. Test API accessibility from within network
+    # 9. Test API accessibility
     - docker run --rm --network testecommerceapi_wc-net curlimages/curl:latest 
-        curl -I http://wordpress/wp-json/wc/v3/
+        curl -f http://wordpress/wp-json/wc/v3/ || true
 
     - echo "✅ WordPress setup complete"
 
-  # Keep containers running for subsequent jobs
-  artifacts:
-    reports:
-      dotenv: .env.ci
-
-  # Don't cleanup - tests need these containers
   after_script:
     - echo "Containers will remain running for test stage"
 

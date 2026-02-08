@@ -2202,3 +2202,256 @@ YAML
         - docker compose -f docker-compose.matrix.yml --profile customers up --abort-on-container-exit
 
 → Uses ENV=docker → http://wordpress/... ✅
+
+
+
+## 🚀 Running Docker Tests Locally
+Step 1: Start WordPress Stack
+
+    bash
+    
+    # Start WordPress + MySQL
+    docker compose -f docker-compose.wp.yml up -d
+    
+    # Wait for services to be ready
+    sleep 20
+    
+    # Verify containers are running
+    docker ps
+
+Step 2: Install WordPress + WooCommerce
+
+    bash
+    
+    # Install WordPress
+    docker exec wc-wp wp core install \
+      --url="http://localhost:8888" \
+      --title="Local Test Store" \
+      --admin_user="admin" \
+      --admin_password="admin" \
+      --admin_email="admin@test.com" \
+      --skip-email \
+      --allow-root
+    
+    # Verify installation
+    docker exec wc-wp wp core is-installed --allow-root
+    
+    # Install WooCommerce
+    docker exec wc-wp wp plugin install woocommerce --activate --allow-root
+    
+    # Verify WooCommerce is active
+    docker exec wc-wp wp plugin list --allow-root
+
+Step 3: Run Tests in Docker
+
+    bash
+    
+    # Run customer tests
+    docker compose -f docker-compose.matrix.yml \
+      --profile customers \
+      up --abort-on-container-exit
+    
+    # Or run all tests
+    docker compose -f docker-compose.matrix.yml \
+      --profile customers \
+      --profile orders \
+      up --abort-on-container-exit
+    
+    Step 4: Cleanup (When Done)
+
+    bash
+    
+    # Stop and remove all containers
+    docker compose -f docker-compose.wp.yml down -v
+    docker compose -f docker-compose.matrix.yml down -v
+
+#### 🔧 Create a Helper Script (Recommended)
+
+Create scripts/run-docker-tests.sh:
+
+    bash
+    
+    #!/bin/bash
+    set -e
+    
+    echo "🚀 Starting WordPress stack..."
+    docker compose -f docker-compose.wp.yml up -d
+    
+    echo "⏳ Waiting for services to be ready..."
+    sleep 30
+    
+    echo "📦 Installing WordPress..."
+    docker exec wc-wp wp core install \
+      --url="http://localhost:8888" \
+      --title="Local Test" \
+      --admin_user="admin" \
+      --admin_password="admin" \
+      --admin_email="admin@test.com" \
+      --skip-email \
+      --allow-root
+    
+    echo "🛒 Installing WooCommerce..."
+    docker exec wc-wp wp plugin install woocommerce --activate --allow-root
+    
+    echo "✅ WordPress setup complete!"
+    echo ""
+    echo "🧪 Running tests..."
+    
+    # Run tests with specified profile (default: customers)
+    PROFILE=${1:-customers}
+    docker compose -f docker-compose.matrix.yml \
+      --profile "$PROFILE" \
+      up --abort-on-container-exit
+    
+    # Capture exit code
+    EXIT_CODE=$?
+    
+    echo ""
+    echo "🧹 Cleaning up..."
+    docker compose -f docker-compose.wp.yml down -v
+    docker compose -f docker-compose.matrix.yml down -v
+    
+    exit $EXIT_CODE
+
+**Make it executable:**
+
+bash
+
+`chmod +x scripts/run-docker-tests.sh`
+
+**Verify it exists**
+
+bash
+
+    # Check the file
+    ls -la scripts/
+    
+    # Should show:
+    # -rwxr-xr-x ... run-docker-tests.sh
+    #  ^^^
+    #  executable
+
+
+
+**Run it - Usage:**
+
+    bash
+    
+    # Run customer tests From project root (TestEcommerceAPI/)
+    ./scripts/run-docker-tests.sh customers
+    
+    # Run order tests
+    ./scripts/run-docker-tests.sh orders
+    
+    # Run product tests
+    ./scripts/run-docker-tests.sh products
+
+**🔍 If You Get "Permission Denied"**
+
+bash
+
+    # Make sure you're in the project root
+    pwd  # Should show: /c/Users/kwaki/TestEcommerceAPI
+    
+    # Check if file exists
+    ls -la scripts/run-docker-tests.sh
+    
+    # If it shows -rw-r--r-- (not executable), run:
+    chmod +x scripts/run-docker-tests.sh
+    
+    # Now run:
+    ./scripts/run-docker-tests.sh customers
+
+
+
+**📋 Quick Reference**
+
+Manual Commands:
+
+    bash
+    
+    # 1. Start WordPress
+    docker compose -f docker-compose.wp.yml up -d
+    
+    # 2. Setup (one-time)
+    docker exec wc-wp wp core install --url="http://localhost:8888" --title="Test" --admin_user="admin" --admin_password="admin" --admin_email="test@test.com" --skip-email --allow-root
+    docker exec wc-wp wp plugin install woocommerce --activate --allow-root
+    
+    # 3. Run tests
+    docker compose -f docker-compose.matrix.yml --profile customers up --abort-on-container-exit
+    
+    # 4. Cleanup
+    docker compose -f docker-compose.wp.yml down -v
+
+Using Script:
+
+bash
+
+`./scripts/run-docker-tests.sh customers`
+
+### 🎯 Local Development Workflow
+
+Option 1: Use Local WordPress (Fast)
+
+    bash
+    
+    # No Docker needed!
+    pytest -v -m tcid333 -r s
+
+    ✅ Fastest
+    ✅ No container overhead
+    ✅ Uses your existing WordPress
+    ⚠️ Requires local WordPress running
+
+Option 2: Use Docker (CI Simulation)
+bash
+
+    ./scripts/run-docker-tests.sh customers
+
+* ✅ Exact same as GitLab CI
+* ✅ Isolated environment
+* ✅ Tests Docker networking
+* ⚠️ Slower (container startup)
+
+🔧 Update docker-compose.wp.yml for Local CLI
+
+Make sure you're using the CLI image:
+YAML
+
+    services:
+      wordpress:
+        image: wordpress:cli-php8.2  # ✅ Has wp command
+        container_name: wc-wp
+        # ... rest of config
+
+📁 Project Structure
+Code
+
+`TestEcommerceAPI/
+├── docker-compose.wp.yml          # WordPress stack
+├── docker-compose.matrix.yml      # Test containers
+├── scripts/
+│   └── run-docker-tests.sh       # ✅ Helper script
+├── .gitlab-ci.yml                 # CI pipeline
+└── tests/
+    ├── customers/
+    ├── orders/
+    └── products/`
+
+🎯 Summary
+
+Scenario	         Command	                             WordPress
+Quick local test	 pytest -v -m tcid333	                 Your local WordPress
+Docker test (CLI)	./scripts/run-docker-tests.sh customers	 Docker WordPress
+GitLab CI	        (automatic)                              Docker WordPress
+
+Create the script and try it! 🚀
+    `bash
+    
+    # Create script
+    mkdir -p scripts
+    # Copy the script content above to scripts/run-docker-tests.sh
+    chmod +x scripts/run-docker-tests.sh
+    
+    # Run it
+    ./scripts/run-docker-tests.sh customers`

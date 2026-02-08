@@ -92,3 +92,6 @@ env.ps1
 *.pid
 *.seed
 *.pid.lock
+
+# Optional: ignore local scripts
+# scripts/
