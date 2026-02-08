@@ -1,0 +1,47 @@
+# WordPress + MySQL docker-compose
+version: "3.9"
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: wc-db
+    environment:
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wp
+      MYSQL_PASSWORD: wp
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - wc-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      retries: 10
+
+  wordpress:
+    image: wordpress:6.4-php8.2-apache
+    container_name: wc-wp
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_DB_USER: wp
+      WORDPRESS_DB_PASSWORD: wp
+    networks:
+      - wc-net
+    # Only expose port if you want browser access from host
+    ports:
+      - "8888:80"
+    volumes:
+      - wp_data:/var/www/html
+
+volumes:
+  db_data:
+  wp_data:
+
+networks:
+  wc-net:
+    driver: bridge
