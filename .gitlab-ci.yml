@@ -131,26 +131,16 @@ shared_preflight:
   image: python:3.11
   tags:
     - pytest
-  services:
-    - docker:dind
   needs: ["setup_wordpress"]  # ✅ Wait for WordPress
-  before_script:
-    - apk add --no-cache docker-compose
-  script:
-    - echo "🚦 Running shared preflight checks"
-
-    # Verify WordPress is still running
-    - docker ps | grep wc-wp || (echo "WordPress container not found" && exit 1)
-
-    - pip install --upgrade pip
-    - pip install -e './EcommerceAPI[dev]'
-    - pytest tests/shared/preflight -s --maxfail=1
-
   variables:
     WC_KEY: $WC_KEY
     WC_SECRET: $WC_SECRET
     ENV: docker
-
+  script:
+    - echo "🚦 Running shared preflight checks"
+    - pip install --upgrade pip
+    - pip install -e './EcommerceAPI[dev]'
+    - pytest tests/shared/preflight -s --maxfail=1
   allow_failure: false
 
 # ============================================================

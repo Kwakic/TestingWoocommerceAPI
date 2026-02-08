@@ -52,10 +52,7 @@
 # 🔴 The Core Issue
 #
 # The all_resources fixture is not available because:
-#
-#     all_resources (entities.py) depends on...
-#     shared_api_resources (entities.py) depends on...
-#     request_utility (api_fixtures.py) depends on...
+
 #     api_base_url ← Multiple definitions cause plugin load failure
 #
 # The duplicate api_base_url fixtures are causing the entire plugin chain to fail silently.
