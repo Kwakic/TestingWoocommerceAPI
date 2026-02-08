@@ -6,3 +6,22 @@
 *.yaml   text eol=lf
 *.md     text eol=lf
 Dockerfile text eol=lf
+
+
+#$ git add . warning: in the working copy of 'docs/docker install guide.md',
+#CRLF will be replaced by LF the next time Git touches it warning: in the working copy of
+#'tests/customers/configs/config_customers.py', CRLF will be replaced by LF the next time Git touches it warning:
+#in the working copy of 'tests/shared/performance/conftest.py', CRLF will be replaced by LF the next time Git touches
+#it warning: in the working copy of 'tests/shared/preflight/conftest.py', CRLF will be replaced by LF the next time
+#Git touches it
+
+#What the warning actually means
+ #CRLF will be replaced by LF the next time Git touches it
+ #CRLF = Windows line endings (\r\n)
+ #LF = Unix/Linux line endings (\n)
+ #Git is telling you:
+ #👉 “These files currently have Windows line endings, but according to your Git config, they’ll be stored in the repo with Unix line endings.”
+
+#Then normalize once:
+#git add --renormalize .
+#git commit -m "Normalize line endings"

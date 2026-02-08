@@ -2070,23 +2070,21 @@ It considers wc-wp and wc-db as "orphans" because they're from a different compo
 
 ### 🎯 Recommended Commands
 
-For Local Development (Keep WordPress Running)
+**For Local Development** (Keep WordPress Running)
 
-    `bash
+    bash
     
     # Start WordPress (in background)
     docker compose -f docker-compose.wp.yml up -d
     
     # Run tests WITHOUT --remove-orphans
-    docker compose -f docker-compose.matrix.yml \
-      --profile customers \
-      up --abort-on-container-exit`
+    docker compose -f docker-compose.matrix.yml --profile customers up --abort-on-container-exit
 
 ✅ Tests stop automatically
 ✅ WordPress keeps running
 ✅ You can run tests multiple times
 
-For CI/CD Pipeline
+**For CI/CD Pipeline**
 
     `bash
     
@@ -2117,11 +2115,13 @@ For Debugging (See All Logs)
 ✅ Manual control
 
 📋 Quick Reference
-Scenario	            Command
-Normal test run	        up --abort-on-container-exit
-Debugging	            up (no flags)
-CI/CD	                up --abort-on-container-exit --remove-orphans
-With WordPress running	up --abort-on-container-exit (NO --remove-orphans)
+
+|Scenario                |Command
+| :---                   | :--- 
+|Normal test run	     |up --abort-on-container-exit
+|Debugging	             |up (no flags)
+|CI/CD	                 |up --abort-on-container-exit --remove-orphans
+|With WordPress running	 |up --abort-on-container-exit (NO --remove-orphans)
 
 ### 🚀 What You Should Use Now
 
@@ -2147,3 +2147,58 @@ OR if you want to use Docker WordPress:
       up --abort-on-container-exit`
 
 TL;DR: Use --abort-on-container-exit ✅ but skip --remove-orphans ❌ when WordPress is running separately! 🎯
+
+
+
+
+## 📋 Summary: What We Learned
+The Problem:
+
+* Docker WordPress (wc-wp) was running on port 8888
+* It was uninstalled → redirecting all requests to /wp-admin/install.php
+* Your local WordPress couldn't use port 8888 at the same time
+* Tests were hitting the wrong WordPress (Docker, uninstalled) instead of your local one (installed)
+
+The Solution:
+Scenario	                What to Run	                                                         Port 8888 Used By
+Local pytest tests	        pytest -v -m tcid333	                                             Your local WordPress (XAMPP/WAMP) ✅
+Docker tests (local dev)	docker compose -f docker-compose.matrix.yml --profile customers up   Your local WordPress (use host.docker.internal) ✅
+GitLab CI	                Docker Compose pipeline	                                             Docker WordPress (containerized) ✅
+
+#### 🎯 Your Workflow Going Forward
+For Local Development (pytest on Windows):
+
+    bash
+    
+    # Make sure Docker WordPress is NOT running
+    docker compose -f docker-compose.wp.yml down
+    
+    # Run tests locally
+    pytest -v -m tcid333 -r s
+
+→ Uses ENV=test → http://localhost:8888/kwakiweb/... ✅
+
+
+For Docker Tests (testing containerization locally):
+
+    bash
+    
+    # Stop Docker WordPress (if running)
+    docker compose -f docker-compose.wp.yml down
+    
+    # Use ENV=dev to point to local WordPress
+    docker compose -f docker-compose.matrix.yml --profile customers up --abort-on-container-exit
+
+→ Uses ENV=dev → http://host.docker.internal:8888/kwakiweb/... ✅
+
+For GitLab CI:
+YAML
+
+    # .gitlab-ci.yml
+    script:
+      - docker compose -f docker-compose.wp.yml up -d  # Start Docker WordPress
+        - docker exec wc-wp wp core install ...          # Install WordPress
+        - docker exec wc-wp wp plugin install woocommerce --activate --allow-root
+        - docker compose -f docker-compose.matrix.yml --profile customers up --abort-on-container-exit
+
+→ Uses ENV=docker → http://wordpress/... ✅

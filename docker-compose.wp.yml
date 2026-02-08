@@ -7,8 +7,6 @@ services:
       MYSQL_DATABASE: wordpress
       MYSQL_USER: wp
       MYSQL_PASSWORD: wp
-    volumes:
-      - db_data:/var/lib/mysql
     networks:
       - wc-net
     healthcheck:
@@ -18,7 +16,7 @@ services:
       retries: 5
 
   wordpress:
-    image: wordpress:cli-php8.2  # ✅ Use CLI variant with WP-CLI
+    image: wordpress:cli-php8.2  # ✅ CLI variant for wp commands
     container_name: wc-wp
     depends_on:
       db:
@@ -28,16 +26,8 @@ services:
       WORDPRESS_DB_USER: wp
       WORDPRESS_DB_PASSWORD: wp
       WORDPRESS_DB_NAME: wordpress
-    volumes:
-      - wp_data:/var/www/html
-    ports:
-      - "8888:80"
     networks:
       - wc-net
-
-volumes:
-  db_data:
-  wp_data:
 
 networks:
   wc-net:

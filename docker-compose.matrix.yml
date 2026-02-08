@@ -9,7 +9,8 @@ x-test-template: &test-template
   env_file:
     - .env          # ← ADD THIS LINE
   environment:
-    ENV: docker
+#    SERVICE: customers
+    ENV: ${ENV:-docker}  # ✅ Defaults to "docker", can override with ENV=dev
     ENABLE_STRUCTURED_LOGS: "true"
     AUTO_ALLURE_REPORT: "true"
     LOG_DIR: "/app/reports/logs"
@@ -21,6 +22,7 @@ x-test-template: &test-template
   volumes:
     - ./tests:/app/tests:ro
     - ./reports:/app/reports
+  # ❌ Remove networks section for local dev
   networks:
     - wc-net
   # ❌ REMOVE depends_on — WordPress is in different compose file
@@ -28,6 +30,8 @@ x-test-template: &test-template
   #   - wordpress
   # ❌ REMOVE THIS LINE — it prevents build without profile
   # profiles: ["dont-run"]
+    #- customers
+
 
 services:
   customers:
@@ -63,8 +67,8 @@ services:
 #      - --alluredir=reports/orders/allure-results
 
 # ✅ Use external network created by docker-compose.wp.yml
-# ✅ Use external network created by docker-compose.wp.yml
+# ❌ Remove or comment out the networks section if you want to run locally only
 networks:
   wc-net:
     name: testecommerceapi_wc-net
-    external: true
+    external: true  # Keep this for GitLab CI
