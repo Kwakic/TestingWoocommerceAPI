@@ -1,24 +1,28 @@
+version: "3.9"
+
+# =============================================================================
+# WordPress + WooCommerce stack for API testing
+# =============================================================================
+
 services:
+
   db:
     image: mysql:8.0
     container_name: wc-db
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: wordpress
       MYSQL_USER: wp
       MYSQL_PASSWORD: wp
-    networks:
-      - wc-net
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 5s
-      timeout: 3s
-      retries: 5
+      timeout: 5s
+      retries: 10
 
   wordpress:
-    build:
-      context: .
-      dockerfile: Dockerfile.wordpress  # ✅ Use custom image with WP-CLI
+    image: wordpress:6.8-php8.2-apache
     container_name: wc-wp
     depends_on:
       db:
@@ -29,10 +33,9 @@ services:
       WORDPRESS_DB_PASSWORD: wp
       WORDPRESS_DB_NAME: wordpress
     ports:
-      - "8888:80"
-    networks:
-      - wc-net
-
-networks:
-  wc-net:
-    name: testecommerceapi_wc-net
+      - "8080:80"        # for local debugging ONLY
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 20

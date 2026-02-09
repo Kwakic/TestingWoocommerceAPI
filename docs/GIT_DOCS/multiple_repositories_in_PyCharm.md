@@ -121,3 +121,76 @@ _(Replace <remote_name> with your remote name and <branch_name> with your branch
 
 #### How to verify it worked:
 Next time you press your push shortcut, the dialog should automatically suggest the new remote.
+
+## TROUBLESHOOTING 
+
+If you receive this error:
+
+      `$ git push
+      fatal: The current branch main has no upstream branch.
+      To push the current branch and set the remote as upstream, use
+      
+      git push --set-upstream origin main
+      
+      To have this happen automatically for branches without a tracking
+      upstream, see 'push.autoSetupRemote' in 'git help config'`
+
+That error just means your local
+main branch is "homeless"—it doesn't know which remote (GitLab or GitHub) should be its default partner.
+Since you want to be able to choose or set a default, here is how to fix that:
+
+### 1. To set GitLab as the default
+Run this in your terminal:   
+
+`git push -u origin main`
+
+### 2. To set GitHub as the default
+Run this in your terminal:
+
+`git push -u github main`
+
+_(Note: -u is shorthand for --set-upstream. Once you do this once, you can just type git push in the future and it will 
+remember your choice.)_
+
+### 3. To push to Both (if you set up the 'both' remote earlier)
+Run this:
+bash
+
+`git push -u both main`
+
+### How to check who is the "Default" partner now:
+If you ever forget who your branch is talking to, type:
+bash
+
+`git branch -vv`
+
+It will show something like main [github/main] or main [origin/main]. The name in the brackets is your permanent default.
+
+#### Pro Tip: Make Git smarter
+
+If you want Git to automatically set up this "partnership" every time you create a new branch in the future, run this:
+bash
+
+`git config --global push.autoSetupRemote true`
+
+`This command
+tells Git to automatically create and link remote branches the first time you push them, so you never have to see the 
+"fatal: The current branch has no upstream branch" error again. `
+
+**How it works:**
+
+- The Problem: Normally, when you create a new local branch and try to run git push, Git stops you because it doesn't 
+know where on the server to put it. You are forced to type git push --set-upstream origin your-branch-name.
+- The Fix: With this setting enabled, you can just type git push. Git will automatically:
+  - Create a branch with the same name on your remote (like GitHub or GitLab).
+  - Set up "tracking," meaning your local branch is now officially "linked" to that remote version. 
+
+**Breaking down the command:**
+
+- `git config:` Accesses your Git settings.
+- `--global:` Applies this change to every repository on your computer, not just the current one.
+- `push.autoSetupRemote true:` Enables the specific feature that assumes `--set-upstream` on your behalf. 
+
+**Why use it?**
+It is a "set it and forget it" quality-of-life improvement introduced in Git 2.37.
+It saves you from having to copy-paste that long "fatal" error message every time you start a new branch. 

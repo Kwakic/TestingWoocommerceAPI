@@ -1,20 +1,111 @@
 🐳 Complete Docker Setup Guide for WooCommerce API Testing
 
+Your real requirements (you stated them clearly)
+You need:
+
+* ✅ Run WooCommerce API tests
+* ✅ Validate DB state
+* ✅ No real public domain
+* ✅ Secure credentials
+* ✅ CI-ready
+* ✅ QA-grade setup
+* ✅ Docker-friendly
+
+### The correct architecture (this is the key decision)
+
+There are only two sane architectures for your project.
+
+I’ll be blunt about what not to do.
+
+❌ What you should NOT do
+
+❌ Shared setup_wordpress job
+
+❌ Expecting other jobs to “see” it
+
+❌ Using localhost in CI
+
+❌ Trying to skip contract tests forever
+
+❌ Docker Swarm (overkill, wrong tool)
+
+### ✅ What you SHOULD do (recommended)
+**Each test job starts its own WordPress**
+
+That’s it.
+
+That’s the whole fix.
+
+This means:
+
+* WordPress
+* MySQL
+* WooCommerce
+* Tests
+
+👉 All inside the same job
+
+### Final recommendation (clear + confident)
+
+1. [ ] ✅ Use Docker Compose inside each matrix job
+2. [ ] ✅ Remove shared WordPress setup job
+3. [ ] ✅ Never use localhost in CI
+4. [ ] ✅ No Docker Swarm
+5. [ ] ✅ GitLab variables for secrets
+
+This is exactly how serious API + DB contract testing is done in CI.
+
+### 👉 Each job that runs tests MUST start its own WordPress
+**There is no workaround. This is fundamental GitLab CI behavior.**
+
+**Let's lock this into a clean, best-practice architecture that:**
+
+✅ Works locally
+
+✅ Works in GitLab CI
+
+✅ Uses Docker correctly
+
+✅ Keeps entity tests, contract tests, and performance tests cleanly separated
+
+✅ Avoids “shared WordPress across jobs” footguns
+
+✅ Matches how a QA automation framework should look
+
+### Big picture (what we’re standardizing on)
+
+Final decisions
+
+| Area                      | Decision                               |
+| ------------------------- | -------------------------------------- |
+| WordPress lifecycle       | **Started per job** (Docker-in-Docker) |
+| Entity tests              | Each job starts **its own WP + Woo**   |
+| Contract tests            | Same logic as entity tests             |
+| Performance tests         | Same WP startup, different markers     |
+| Dockerfile.wordpress      | ❌ **DELETE**                           |
+| docker-compose.wp.yml     | ✅ **KEEP**                             |
+| docker-compose.matrix.yml | ❌ **NOT used in CI**                   |
+| discover_services         | **Simplified**                         |
+| API_HOSTS                 | You already did it right ✅             |
+
+
+========================================================================
+
 A comprehensive guide to running WooCommerce tests in Docker containers
 📋 Table of Contents
 
-    Introduction
-    Why Docker for Testing?
-    Architecture Overview
-    Prerequisites
-    Project Structure
-    Configuration Files Explained
-    Step-by-Step Setup
-    Running Tests
-    Common Issues & Troubleshooting
-    CI/CD Integration
-    Quick Reference
-
+1. [ ] Introduction
+2. [ ] Why Docker for Testing?
+3. [ ] Architecture Overview
+4. [ ] Prerequisites
+5. [ ] Project Structure
+6. [ ] Configuration Files Explained
+7. [ ] Step-by-Step Setup
+8. [ ] Running Tests
+9. [ ] Common Issues & Troubleshooting
+10. [ ] CI/CD Integration
+11. [ ] Quick Reference
+[ ] 
 🎯 Introduction
 
 This guide teaches you how to run a complete WooCommerce API test suite using Docker. Instead of testing against 
@@ -22,12 +113,12 @@ production or requiring a local XAMPP/MAMP setup, everything runs in isolated Do
 What You'll Build
 
 
-    ✅ WordPress + WooCommerce running in Docker
-    ✅ MySQL database in Docker
-    ✅ Pytest test runner in Docker
-    ✅ All containers communicating on a private network
-    ✅ Automated test reports (Allure)
-    ✅ CI/CD ready configuration
+* ✅ WordPress + WooCommerce running in Docker
+* ✅ MySQL database in Docker
+* ✅ Pytest test runner in Docker
+* ✅ All containers communicating on a private network
+* ✅ Automated test reports (Allure)
+* ✅ CI/CD ready configuration
 
 🤔 Why Docker for Testing?
 The Problem Without Docker

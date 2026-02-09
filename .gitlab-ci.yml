@@ -1,409 +1,76 @@
-# ============================================================
-# GitLab CI — Enterprise Matrix Testing with Governance
-# ============================================================
-
-# DESIGN GOALS
-# ------------------------------------------------------------
-# - Shared gates (preflight, verify) run ONCE
-# - Entity tests fan out dynamically via child pipeline
-# - Environments are visible in GitLab UI
-# - Deployments are manual & approval-gated
-# - Allure is generated centrally (not per job)
-# - No brittle YAML heredocs inside scripts
-#
-# FILE RESPONSIBILITY
-# ------------------------------------------------------------
-# .gitlab-ci.yml
-#   - pipeline structure
-#   - governance & approvals
-#   - environment wiring
-#   - matrix generation
-#
-# matrix.yml (generated)
-#   - only pytest execution
-#   - per TEAM + ENV job definitions
-# ============================================================
 stages:
-  - setup          # ✅ Setup WordPress + WooCommerce
-  - preflight
-  - deploy
   - discover
   - test
-  - verify
-  - cleanup        # ✅ Cleanup Docker resources
 
-# ------------------------------------------------------------
-# Global variables
-# ------------------------------------------------------------
-variables:
-  PYTHON_VERSION: "3.11"
-  TARGET_ENVS: "test"
-  AUTO_ALLURE_REPORT: "true"
-  LOG_DIR: "$CI_PROJECT_DIR/reports"
-
-  # Docker-specific
-  DOCKER_DRIVER: overlay2
-  ENV: docker  # ✅ Use docker config for CI
-
-# ============================================================
-# SETUP WORDPRESS
-# ============================================================
-# Purpose:
-# - Start WordPress + MySQL containers
-# - Install WordPress
-# - Install & activate WooCommerce
-# - Make WooCommerce API available for tests
-#
-setup_wordpress:
-  stage: setup
-  image: docker:latest
+# -----------------------------------------------------------------------------
+# Global defaults
+# -----------------------------------------------------------------------------
+.default-python:
+  image: docker:27
   services:
     - docker:dind
-  before_script:
-    - apk add --no-cache docker-compose curl
-  script:
-    - echo "🚀 Starting WordPress + MySQL containers"
-
-    # 1. Build and start WordPress stack
-    - docker compose -f docker-compose.wp.yml build
-    - docker compose -f docker-compose.wp.yml up -d
-
-    # 2. Wait for services to be healthy
-    - echo "⏳ Waiting for services to be ready..."
-    - sleep 40  # Increased wait time
-
-    # 3. Verify containers are running
-    - docker ps
-    - docker logs wc-wp  # Debug: show WordPress logs
-
-    # 4. Wait for WordPress to be fully ready
-    - |
-      echo "Waiting for WordPress to respond..."
-      for i in {1..30}; do
-        if docker exec wc-wp curl -f http://localhost/wp-admin/install.php > /dev/null 2>&1; then
-          echo "✅ WordPress is ready"
-          break
-        fi
-        echo "Attempt $i/30: WordPress not ready yet..."
-        sleep 2
-      done
-
-    # 5. Install WordPress
-    - echo "📦 Installing WordPress..."
-    - docker exec wc-wp wp core install 
-        --url="http://wordpress" 
-        --title="CI Test Store" 
-        --admin_user="admin" 
-        --admin_password="admin123" 
-        --admin_email="ci@test.com" 
-        --skip-email 
-        --allow-root
-
-    # 6. Verify WordPress is installed
-    - docker exec wc-wp wp core is-installed --allow-root
-
-    # 7. Install & activate WooCommerce
-    - echo "🛒 Installing WooCommerce..."
-    - docker exec wc-wp wp plugin install woocommerce --activate --allow-root
-
-    # 8. Verify WooCommerce is active
-    - docker exec wc-wp wp plugin list --allow-root
-
-    # 9. Test API accessibility
-    - docker run --rm --network testecommerceapi_wc-net curlimages/curl:latest 
-        curl -f http://wordpress/wp-json/wc/v3/ || true
-
-    - echo "✅ WordPress setup complete"
-
-  after_script:
-    - echo "Containers will remain running for test stage"
-
-# ============================================================
-# SHARED PREFLIGHT (UPDATED)
-# ============================================================
-# Purpose:
-# - Fast failure before ANY deploy or test fan-out
-# - No API connectivity required
-# - Contract checks
-# - Test data sanity
-shared_preflight:
-  stage: preflight
-  image: python:3.11
-  tags:
-    - pytest
-#  needs: ["setup_wordpress"]  # ✅ Wait for WordPress
-  needs:
-    - setup_wordpress
   variables:
-    WC_KEY: $WC_KEY
-    WC_SECRET: $WC_SECRET
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
     ENV: docker
-  script:
-    - echo "🚦 Running shared preflight checks"
-    - pip install --upgrade pip
-    - pip install -e './EcommerceAPI[dev]'
-    - pytest tests/shared/preflight -s --maxfail=1
-  allow_failure: false
+  before_script:
+    - apk add --no-cache python3 py3-pip docker-compose curl
+    - pip3 install --upgrade pip
 
-# ============================================================
-# DEPLOYMENT TEMPLATE (MANUAL, APPROVAL-GATED)
-# ============================================================
-.deploy_template:
-  stage: deploy
-  image: alpine:3.19
-#  needs: ["shared_preflight"]
-  needs:
-    - shared_preflight
-#  when: manual # If You Want It to Run Automatically leave it commented out
-  allow_failure: false
-#  allow_failure: true  # ✅ Let pipeline continue even if skipped
-#  rules:
-#    - if: '$CI_COMMIT_BRANCH == "main"'
-#      when: on_success  # ✅ Auto-deploy on main
-#    - if: '$TARGET_ENVS =~ /test/'
-#      when: manual      # ✅ Manual otherwise
-  script:
-    - echo "🚀 Deploying to $CI_ENVIRONMENT_NAME"
-    - echo "Using API_BASE_URL=$API_BASE_URL"
-# -----------------------------
-# TEST ENVIRONMENT
-# -----------------------------
-deploy_test:
-  extends: .deploy_template
-  environment:
-    name: test
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      when: on_success
-    - if: '$TARGET_ENVS =~ /test/'
-      when: manual
-
-
-# ------------------------------
-# STAGING ENVIRONMENT
-# ------------------------------
-deploy_staging:
-  extends: .deploy_template
-  environment:
-    name: staging
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      when: on_success
-    - if: '$TARGET_ENVS =~ /staging/'
-      when: manual
-# -----------------------------
-# PRODUCTION (PROTECTED)
-# -----------------------------
-deploy_prod:
-  extends: .deploy_template
-  environment:
-    name: prod
-  rules:
-    - if: '$CI_COMMIT_TAG'
-      when: manual
-
-# ============================================================
-# DISCOVER SERVICES & GENERATE MATRIX
-# ============================================================
-# Purpose:
-# - Detect entity test folders under tests/
-# - Scan the tests/ folder for entity directories
-# - Generate matrix.yml dynamically
-# - One job per TEAM × ENV
+# -----------------------------------------------------------------------------
+# Discover entity test folders dynamically
+# -----------------------------------------------------------------------------
 discover_services:
   stage: discover
   image: python:3.11
-  tags:
-    - pytest
-  needs:
-    - job: shared_preflight
-    - job: deploy_test
-    - job: deploy_staging
-      optional: true
-    - job: deploy_prod
-      optional: true
   script:
-    - echo "🔍 Discovering entity test suites"
-
-    # ------------------------------------------
-    # Discover services (unless SERVICE override)
-    # ------------------------------------------
     - |
-      if [ -n "$SERVICE" ]; then
-        services="$SERVICE"
-        echo "SERVICE override detected: $services"
-      else
-        services=$(find tests -maxdepth 1 -mindepth 1 -type d \
-          ! -name shared -printf '%f\n' | tr '\n' ' ')
-      fi
+      services=$(find tests -maxdepth 1 -mindepth 1 -type d \
+        ! -name shared -printf '%f\n')
       if [ -z "$services" ]; then
-        echo "❌ No entity services found"
+        echo "No services found"
         exit 1
       fi
-      echo "Detected services: $services"
 
-    # ------------------------------------------
-    # Generate matrix.yml (CHILD PIPELINE)
-    # ------------------------------------------
+      echo "stages: [test]" > matrix.yml
+
+      for s in $services; do
+        cat >> matrix.yml <<EOF
+${s}_tests:
+  stage: test
+  extends: .default-python
+  variables:
+    SERVICE: ${s}
+  script:
+    - docker compose -f docker-compose.wp.yml up -d
+    - echo "Waiting for WordPress…"
     - |
-      echo "stages:" > matrix.yml
-      echo "  - test" >> matrix.yml
-
-      for env in $TARGET_ENVS
-      do
-        for s in $services
-        do
-          echo "Writing service: ${s}_${env} to matrix.yml"
-          echo "${s}_${env}:" >> matrix.yml
-          echo "  stage: test" >> matrix.yml
-          echo "  image: python:3.11" >> matrix.yml
-          echo "  tags:" >> matrix.yml
-          echo "    - pytest" >> matrix.yml
-          echo "  environment:" >> matrix.yml
-          echo "    name: ${env}" >> matrix.yml
-          echo "  variables:" >> matrix.yml
-          echo "    TEAM: ${s}" >> matrix.yml
-          echo "    ENV: docker" >> matrix.yml  # ✅ Force docker config
-          echo "    WC_KEY: \$WC_KEY" >> matrix.yml
-          echo "    WC_SECRET: \$WC_SECRET" >> matrix.yml
-          echo "  script:" >> matrix.yml
-          echo "    - pip install --upgrade pip" >> matrix.yml
-          echo "    - pip install -e './EcommerceAPI[dev]'" >> matrix.yml
-          echo "    - mkdir -p reports/${env}/${s}/allure-results" >> matrix.yml
-          echo "    - pytest tests/${s} -s --maxfail=3 \\" >> matrix.yml
-          echo "        --alluredir=reports/${env}/${s}/allure-results \\" >> matrix.yml
-          echo "        --junitxml=reports/${env}/${s}/results.xml" >> matrix.yml
-          echo "  artifacts:" >> matrix.yml
-          echo "    when: always" >> matrix.yml
-          echo "    paths:" >> matrix.yml
-          echo "      - reports/${env}/${s}/" >> matrix.yml
-        done
+      for i in {1..40}; do
+        curl -f http://wordpress >/dev/null 2>&1 && break
+        sleep 3
       done
-
+    - pip3 install -e './EcommerceAPI[dev]'
+    - mkdir -p reports/${s}
+    - pytest tests/${s} -s --maxfail=3 \
+        --alluredir=reports/${s}/allure-results
+  after_script:
+    - docker compose -f docker-compose.wp.yml down -v
   artifacts:
+    when: always
     paths:
-      - matrix.yml
+      - reports/${s}/
 
-# ============================================================
-# RUN ENTITY MATRIX (CHILD PIPELINE)
-# ============================================================
-run_entity_matrix:
+EOF
+      done
+  artifacts:
+    paths: [matrix.yml]
+
+# -----------------------------------------------------------------------------
+# Run generated matrix
+# -----------------------------------------------------------------------------
+entity_tests:
   stage: test
   trigger:
     include:
       - artifact: matrix.yml
         job: discover_services
-    strategy: depend
-
-# ============================================================
-# SHARED CONTRACT TESTS (SCHEMA / API CONTRACT)
-# ============================================================
-# Runs ONCE per environment after deploy.
-# Requires a live API but is independent of entity services.
-#
-shared_contract_test:
-  stage: test
-  image: python:3.11
-
-  # Wait until the environment is deployed
-  needs:
-    - job: deploy_test
-      optional: true
-    - job: deploy_staging
-      optional: true
-    - job: deploy_prod
-      optional: true
-
-  environment:
-    name: $ENV
-
-  script:
-    - echo "📐 Running shared contract (schema) tests"
-    - pip install --upgrade pip
-    - pip install -e './EcommerceAPI[dev]'
-    - pytest tests/shared/contract -s --maxfail=1
-
-  artifacts:
-    when: always
-    paths:
-      - reports/$ENV/shared-contract/
-
-# ============================================================
-# ALLURE REPORT AGGREGATION (CENTRALIZED)
-# ============================================================
-# Purpose:
-# - Generate ONE Allure report per environment
-# - Avoid repeated installs in every matrix job
-# - Keep test jobs lightweight and fast
-#
-generate_allure_report:
-  stage: verify
-  image: python:3.11
-#  needs: ["run_entity_matrix"]
-  needs:
-    - run_entity_matrix
-  rules:
-    - if: '$AUTO_ALLURE_REPORT == "true"'
-  script:
-    - echo "📊 Generating Allure HTML reports"
-    - pip install --upgrade pip
-    - pip install allure-pytest
-    - ALLURE_VER="2.27.0"
-    - curl -fsSL "https://github.com/allure-framework/allure2/releases/download/${ALLURE_VER}/allure-${ALLURE_VER}.tgz" | tar -xz
-    - mv "allure-${ALLURE_VER}" /opt/allure
-    - ln -s /opt/allure/bin/allure /usr/bin/allure
-    - |
-      for env in $TARGET_ENVS; do
-        if [ -d "reports/$env" ]; then
-          echo "Generating Allure report for $env"
-          allure generate reports/$env \
-            -o reports/$env/allure-report \
-            --clean || true
-        fi
-      done
-  artifacts:
-    when: always
-    paths:
-      - reports/**/allure-report
-
-# ============================================================
-# ENVIRONMENT VERIFICATION GATE
-# ============================================================
-verify_environment:
-  stage: verify
-  image: python:3.11
-#  needs: ["generate_allure_report"]
-  needs:
-    - generate_allure_report
-  when: manual
-  script:
-    - echo "✅ Running environment verification"
-    - pip install -e './EcommerceAPI[dev]'
-    - pytest tests/shared/performance -s
-# NOTE:
-# Matrix generation uses echo-based YAML output
-# (avoids heredoc + IDE parsing issues)
-
-# ============================================================
-# CLEANUP (NEW STAGE)
-# ============================================================
-# Purpose:
-# - Stop and remove WordPress containers
-# - Clean up Docker networks
-#
-cleanup_docker:
-  stage: cleanup
-  image: docker:latest
-  services:
-    - docker:dind
-#  needs: ["verify_environment"]
-  needs:
-    - verify_environment
-  when: always  # Run even if tests fail
-  before_script:
-    - apk add --no-cache docker-compose
-  script:
-    - echo "🧹 Cleaning up Docker resources"
-    - docker compose -f docker-compose.wp.yml down -v || true
-    - docker network prune -f || true
-  allow_failure: true
