@@ -54,22 +54,39 @@ discover_services:
         echo "${s}_test:" >> matrix.yml
         echo "  stage: test" >> matrix.yml
         echo "  image: python:3.11" >> matrix.yml
+        echo "  services:" >> matrix.yml
+        echo "    - name: mysql:8.0" >> matrix.yml
+        echo "      alias: db" >> matrix.yml
+        echo "    - name: wordpress:6.8-php8.2-apache" >> matrix.yml
+        echo "      alias: wordpress" >> matrix.yml
         echo "  variables:" >> matrix.yml
         echo "    SERVICE: ${s}" >> matrix.yml
         echo "    ENV: docker" >> matrix.yml
-        echo "  script:" >> matrix.yml
-        echo "    - python -m pip install --upgrade pip"
+        echo "    MYSQL_ROOT_PASSWORD: root" >> matrix.yml
+        echo "    MYSQL_DATABASE: wordpress" >> matrix.yml
+        echo "    MYSQL_USER: wp" >> matrix.yml
+        echo "    MYSQL_PASSWORD: wp" >> matrix.yml
+        echo "    WORDPRESS_DB_HOST: db:3306" >> matrix.yml
+        echo "    WORDPRESS_DB_USER: wp" >> matrix.yml
+        echo "    WORDPRESS_DB_PASSWORD: wp" >> matrix.yml
+        echo "    WORDPRESS_DB_NAME: wordpress" >> matrix.yml
+        echo "  before_script:" >> matrix.yml
+        echo "    - pip install --upgrade pip" >> matrix.yml
         echo "    - pip install -e './EcommerceAPI[dev]'" >> matrix.yml
-        echo "    - mkdir -p reports/${s}/allure-results" >> matrix.yml
+        echo "    - echo '⏳ Waiting for WordPress…'" >> matrix.yml
         echo "    - |" >> matrix.yml
-        echo "      pytest tests/${s} \\" >> matrix.yml
-        echo "        -s \\" >> matrix.yml
-        echo "        --maxfail=3 \\" >> matrix.yml
-        echo "        --alluredir=reports/${s}/allure-results" >> matrix.yml
+        echo "      for i in {1..40}; do" >> matrix.yml
+        echo "        if curl -sf http://wordpress >/dev/null; then echo '✅ WP ready'; break; fi" >> matrix.yml
+        echo "        sleep 2" >> matrix.yml
+        echo "      done" >> matrix.yml
+        echo "  script:" >> matrix.yml
+        echo "    - mkdir -p reports/${s}/allure-results" >> matrix.yml
+        echo "    - pytest tests/${s} -s --maxfail=3 --alluredir=reports/${s}/allure-results" >> matrix.yml
         echo "  artifacts:" >> matrix.yml
         echo "    when: always" >> matrix.yml
         echo "    paths:" >> matrix.yml
         echo "      - reports/${s}/" >> matrix.yml
+
       done
 
   artifacts:
