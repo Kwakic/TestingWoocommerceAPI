@@ -59,11 +59,12 @@ discover_services:
         echo "  image: python:3.11" >> matrix.yml
 
         # **FIX**: Better service configuration with explicit defaults
-        echo "  services:" >> matrix.yml
+           echo "  services:" >> matrix.yml
         echo "    - name: mysql:8.0" >> matrix.yml
         echo "      alias: db" >> matrix.yml
         echo "      command:" >> matrix.yml
         echo "        - --default-authentication-plugin=mysql_native_password" >> matrix.yml
+        echo "        - --ssl=0" >> matrix.yml
         echo "        - --character-set-server=utf8mb4" >> matrix.yml
         echo "        - --collation-server=utf8mb4_unicode_ci" >> matrix.yml
         
@@ -78,6 +79,7 @@ discover_services:
         echo "    MYSQL_USER: wp" >> matrix.yml
         echo "    MYSQL_PASSWORD: wp" >> matrix.yml
         echo "    MYSQL_HOST_AUTHENTICATION_PLUGIN: mysql_native_password" >> matrix.yml
+        echo "    MYSQL_SSL_MODE: DISABLED" >> matrix.yml
         echo "    WORDPRESS_DB_HOST: db:3306" >> matrix.yml
         echo "    WORDPRESS_DB_USER: wp" >> matrix.yml
         echo "    WORDPRESS_DB_PASSWORD: wp" >> matrix.yml
@@ -89,11 +91,10 @@ discover_services:
         echo "    - pip install -e './EcommerceAPI[dev]'" >> matrix.yml
         echo "    - apt-get update && apt-get install -y default-mysql-client curl" >> matrix.yml
 
-        # **CRITICAL**: Check MySQL connectivity properly
         echo "    - echo '⏳ Waiting for MySQL to accept connections…'" >> matrix.yml
         echo "    - |" >> matrix.yml
         echo "      for i in {1..45}; do" >> matrix.yml
-        echo "        if mysql -h db -P 3306 -u wp -pwp -D wordpress -e 'SELECT 1' >/dev/null 2>&1; then" >> matrix.yml
+        echo "        if mysql -h db -P 3306 -u wp -pwp --ssl-mode=DISABLED -D wordpress -e 'SELECT 1' >/dev/null 2>&1; then" >> matrix.yml
         echo "          echo '✅ MySQL is ready'" >> matrix.yml
         echo "          break" >> matrix.yml
         echo "        fi" >> matrix.yml
@@ -101,10 +102,8 @@ discover_services:
         echo "        sleep 2" >> matrix.yml
         echo "      done" >> matrix.yml
 
-        # **DIAGNOSTIC**: Show MySQL version to verify connectivity
-        echo "    - mysql -h db -u wp -pwp -e 'SELECT VERSION();'" >> matrix.yml
+        echo "    - mysql -h db -P 3306 -u wp -pwp --ssl-mode=DISABLED -e 'SELECT VERSION();'" >> matrix.yml
 
-        # **WAIT**: Actually wait for WordPress to become healthy
         echo "    - echo '⏳ Waiting for WordPress to initialize…'" >> matrix.yml
         echo "    - sleep 10" >> matrix.yml
         echo "    - |" >> matrix.yml
@@ -118,7 +117,6 @@ discover_services:
         echo "        sleep 3" >> matrix.yml
         echo "      done" >> matrix.yml
 
-        # **FINAL CHECK**: Verify database connectivity from WordPress
         echo "    - curl -s http://wordpress/ | grep -q 'WordPress' && echo '✅ WordPress HTML loaded' || echo '⚠️ WordPress not fully ready'" >> matrix.yml
 
         echo "  script:" >> matrix.yml
