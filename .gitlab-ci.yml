@@ -23,47 +23,54 @@ stages:
 discover_services:
   stage: discover
   image: python:3.11
+  tags:
+    - pytest
+
   script:
+    - echo "🔍 Discovering entity test suites"
+
     - |
-      services=$(find tests -maxdepth 1 -mindepth 1 -type d \
-        ! -name shared -printf '%f\n')
+      set -e
+
+      if [ -n "$SERVICE" ]; then
+        services="$SERVICE"
+        echo "SERVICE override detected: $services"
+      else
+        services=$(find tests -maxdepth 1 -mindepth 1 -type d \
+          ! -name shared -printf '%f\n' | tr '\n' ' ')
+      fi
+
       if [ -z "$services" ]; then
-        echo "No services found"
+        echo "❌ No entity services found"
         exit 1
       fi
 
-      echo "stages: [test]" > matrix.yml
+      echo "Detected services: $services"
+
+      echo "stages:" > matrix.yml
+      echo "  - test" >> matrix.yml
 
       for s in $services; do
-        cat >> matrix.yml <<EOF
-${s}_tests:
-  stage: test
-  extends: .default-python
-  variables:
-    SERVICE: ${s}
-  script:
-    - docker compose -f docker-compose.wp.yml up -d
-    - echo "Waiting for WordPress…"
-    - |
-      for i in {1..40}; do
-        curl -f http://wordpress >/dev/null 2>&1 && break
-        sleep 3
+        echo "${s}_test:" >> matrix.yml
+        echo "  stage: test" >> matrix.yml
+        echo "  image: python:3.11" >> matrix.yml
+        echo "  variables:" >> matrix.yml
+        echo "    SERVICE: ${s}" >> matrix.yml
+        echo "    ENV: docker" >> matrix.yml
+        echo "  script:" >> matrix.yml
+        echo "    - pip install -e './EcommerceAPI[dev]'" >> matrix.yml
+        echo "    - mkdir -p reports/${s}/allure-results" >> matrix.yml
+        echo "    - pytest tests/${s} -s --maxfail=3 \\" >> matrix.yml
+        echo "        --alluredir=reports/${s}/allure-results" >> matrix.yml
+        echo "  artifacts:" >> matrix.yml
+        echo "    when: always" >> matrix.yml
+        echo "    paths:" >> matrix.yml
+        echo "      - reports/${s}/" >> matrix.yml
       done
-    - pip3 install -e './EcommerceAPI[dev]'
-    - mkdir -p reports/${s}
-    - pytest tests/${s} -s --maxfail=3 \
-        --alluredir=reports/${s}/allure-results
-  after_script:
-    - docker compose -f docker-compose.wp.yml down -v
-  artifacts:
-    when: always
-    paths:
-      - reports/${s}/
 
-EOF
-      done
   artifacts:
-    paths: [matrix.yml]
+    paths:
+      - matrix.yml
 
 # -----------------------------------------------------------------------------
 # Run generated matrix
