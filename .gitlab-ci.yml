@@ -1,3 +1,34 @@
+# -----------------------------------------------------------------------------
+# GitLab CI: WooCommerce API + DB Tests
+# -----------------------------------------------------------------------------
+
+# -----------------------------
+# Define stages first (GitLab requires this at top-level)
+# -----------------------------
+stages:
+  - discover
+  - test
+
+# -----------------------------------------------------------------------------
+# Global defaults for Python jobs with Docker-in-Docker
+# -----------------------------------------------------------------------------
+.default-python:
+  image: docker:27
+  services:
+    - docker:dind
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+    ENV: docker
+  before_script:
+    # Install Python, pip, docker-compose, curl
+    - apk add --no-cache python3 py3-pip docker-compose curl
+    - pip3 install --upgrade pip
+
+# -----------------------------------------------------------------------------
+# Discover entity test folders dynamically
+# Generates a matrix.yml to trigger one job per entity
+# -----------------------------------------------------------------------------
 discover_services:
   stage: discover
   image: python:3.11
@@ -7,6 +38,7 @@ discover_services:
     - echo "🔍 Discovering entity test suites"
     - set -e
 
+    # Determine which services to run
     - |
       if [ -n "$SERVICE" ]; then
         services="$SERVICE"
@@ -22,16 +54,20 @@ discover_services:
 
       echo "Detected services: $services"
 
+    # Start matrix.yml generation
     - echo "stages:" > matrix.yml
     - echo "  - test" >> matrix.yml
 
+    # Loop through detected entities and create jobs dynamically
     - |
       for s in $services; do
         echo "${s}_test:" >> matrix.yml
         echo "  stage: test" >> matrix.yml
         echo "  image: python:3.11" >> matrix.yml
 
-        # Services
+        # -----------------------------
+        # Services configuration
+        # -----------------------------
         echo "  services:" >> matrix.yml
         echo "    - name: mysql:8.0" >> matrix.yml
         echo "      alias: db" >> matrix.yml
@@ -43,7 +79,9 @@ discover_services:
         echo "    - name: wordpress:6.8-php8.2-apache" >> matrix.yml
         echo "      alias: wordpress" >> matrix.yml
 
-        # Variables
+        # -----------------------------
+        # Environment variables
+        # -----------------------------
         echo "  variables:" >> matrix.yml
         echo "    SERVICE: \${s}" >> matrix.yml
         echo "    ENV: docker" >> matrix.yml
@@ -57,43 +95,56 @@ discover_services:
         echo "    WORDPRESS_DB_NAME: wordpress" >> matrix.yml
         echo "    WORDPRESS_TABLE_PREFIX: wp_" >> matrix.yml
 
-        # before_script
+        # -----------------------------
+        # Setup Python environment + clients
+        # -----------------------------
         echo "  before_script:" >> matrix.yml
         echo "    - pip install --upgrade pip" >> matrix.yml
         echo "    - pip install -e './EcommerceAPI[dev]'" >> matrix.yml
         echo "    - apt-get update && apt-get install -y default-mysql-client curl" >> matrix.yml
 
-        # Wait for MySQL
+        # -----------------------------
+        # Wait for MySQL to be ready
+        # -----------------------------
         echo "    - echo '⏳ Waiting for MySQL to accept connections…'" >> matrix.yml
         echo "    - |" >> matrix.yml
         echo "      for i in {1..45}; do" >> matrix.yml
-        echo "        if mysql -h db -P 3306 -u wp -pwp -D wordpress -e 'SELECT 1;' >/dev/null 2>&1; then" >> matrix.yml
+        echo "        if mysql -h db -P 3306 -u wp -pwp -D wordpress -e 'SELECT 1' >/dev/null 2>&1; then" >> matrix.yml
         echo "          echo '✅ MySQL is ready'" >> matrix.yml
         echo "          break" >> matrix.yml
         echo "        fi" >> matrix.yml
         echo "        echo \"⏳ Attempt \$i/45: MySQL not ready yet...\"" >> matrix.yml
         echo "        sleep 2" >> matrix.yml
         echo "      done" >> matrix.yml
+        echo "    - mysql -h db -P 3306 -u wp -pwp -e 'SELECT VERSION();'" >> matrix.yml
 
-        # Wait for WordPress DB initialization
-        echo "    - echo '⏳ Waiting for WordPress to initialize DB tables…'" >> matrix.yml
+        # -----------------------------
+        # Wait for WordPress to respond
+        # -----------------------------
+        echo "    - echo '⏳ Waiting for WordPress to initialize…'" >> matrix.yml
+        echo "    - sleep 10" >> matrix.yml
         echo "    - |" >> matrix.yml
         echo "      for i in {1..30}; do" >> matrix.yml
-        echo "        count=\$(mysql -h db -P 3306 -u wp -pwp -D wordpress -e \"SHOW TABLES LIKE 'wp_%';\" | wc -l || echo 0)" >> matrix.yml
-        echo "        if [ \$count -gt 0 ]; then" >> matrix.yml
-        echo "          echo \"✅ WordPress DB initialized (\$count tables detected)\"" >> matrix.yml
+        echo "        http_code=\$(curl -s -o /dev/null -w '%{http_code}' http://wordpress/ 2>/dev/null || echo '000')" >> matrix.yml
+        echo "        if [ \"\$http_code\" != \"500\" ] && [ \"\$http_code\" != \"000\" ]; then" >> matrix.yml
+        echo "          echo \"✅ WordPress responding (HTTP \$http_code)\"" >> matrix.yml
         echo "          break" >> matrix.yml
         echo "        fi" >> matrix.yml
-        echo "        echo \"⏳ Attempt \$i/30: WordPress DB not ready yet...\"" >> matrix.yml
+        echo "        echo \"⏳ Attempt \$i/30: WordPress HTTP \$http_code\"" >> matrix.yml
         echo "        sleep 3" >> matrix.yml
         echo "      done" >> matrix.yml
+        echo "    - curl -s http://wordpress/ | grep -q 'WordPress' && echo '✅ WordPress HTML loaded' || echo '⚠️ WordPress not fully ready'" >> matrix.yml
 
-        # script
+        # -----------------------------
+        # Run the tests
+        # -----------------------------
         echo "  script:" >> matrix.yml
         echo "    - mkdir -p reports/${s}/allure-results" >> matrix.yml
         echo "    - pytest tests/${s} -s --maxfail=3 --alluredir=reports/${s}/allure-results" >> matrix.yml
 
-        # artifacts
+        # -----------------------------
+        # Artifacts for reports
+        # -----------------------------
         echo "  artifacts:" >> matrix.yml
         echo "    when: always" >> matrix.yml
         echo "    paths:" >> matrix.yml
@@ -103,3 +154,13 @@ discover_services:
   artifacts:
     paths:
       - matrix.yml
+
+# -----------------------------------------------------------------------------
+# Trigger the dynamically created jobs per entity
+# -----------------------------------------------------------------------------
+entity_tests:
+  stage: test
+  trigger:
+    include:
+      - artifact: matrix.yml
+        job: discover_services
