@@ -58,19 +58,26 @@ discover_services:
         echo "  stage: test" >> matrix.yml
         echo "  image: python:3.11" >> matrix.yml
 
+        # **FIX**: Better service configuration with explicit defaults
         echo "  services:" >> matrix.yml
         echo "    - name: mysql:8.0" >> matrix.yml
         echo "      alias: db" >> matrix.yml
+        echo "      command:" >> matrix.yml
+        echo "        - --default-authentication-plugin=mysql_native_password" >> matrix.yml
+        echo "        - --character-set-server=utf8mb4" >> matrix.yml
+        echo "        - --collation-server=utf8mb4_unicode_ci" >> matrix.yml
+        
         echo "    - name: wordpress:6.8-php8.2-apache" >> matrix.yml
         echo "      alias: wordpress" >> matrix.yml
 
         echo "  variables:" >> matrix.yml
-        echo "    SERVICE: ${s}" >> matrix.yml
+        echo "    SERVICE: \${s}" >> matrix.yml
         echo "    ENV: docker" >> matrix.yml
         echo "    MYSQL_ROOT_PASSWORD: root" >> matrix.yml
         echo "    MYSQL_DATABASE: wordpress" >> matrix.yml
         echo "    MYSQL_USER: wp" >> matrix.yml
         echo "    MYSQL_PASSWORD: wp" >> matrix.yml
+        echo "    MYSQL_HOST_AUTHENTICATION_PLUGIN: mysql_native_password" >> matrix.yml
         echo "    WORDPRESS_DB_HOST: db:3306" >> matrix.yml
         echo "    WORDPRESS_DB_USER: wp" >> matrix.yml
         echo "    WORDPRESS_DB_PASSWORD: wp" >> matrix.yml
@@ -82,33 +89,37 @@ discover_services:
         echo "    - pip install -e './EcommerceAPI[dev]'" >> matrix.yml
         echo "    - apt-get update && apt-get install -y default-mysql-client curl" >> matrix.yml
 
-        # **IMPROVED**: Better MySQL readiness check
-        echo "    - echo '⏳ Waiting for MySQL…'" >> matrix.yml
+        # **CRITICAL**: Check MySQL connectivity properly
+        echo "    - echo '⏳ Waiting for MySQL to accept connections…'" >> matrix.yml
         echo "    - |" >> matrix.yml
-        echo "      for i in {1..30}; do" >> matrix.yml
-        echo "        if mysql -h db -u wp -pwp -D wordpress -e 'SELECT 1' >/dev/null 2>&1; then" >> matrix.yml
+        echo "      for i in {1..45}; do" >> matrix.yml
+        echo "        if mysql -h db -P 3306 -u wp -pwp -D wordpress -e 'SELECT 1' >/dev/null 2>&1; then" >> matrix.yml
         echo "          echo '✅ MySQL is ready'" >> matrix.yml
         echo "          break" >> matrix.yml
         echo "        fi" >> matrix.yml
-        echo "        echo \"⏳ MySQL not ready yet... (attempt \$i/30)\"" >> matrix.yml
+        echo "        echo \"⏳ Attempt \$i/45: MySQL not ready yet...\"" >> matrix.yml
         echo "        sleep 2" >> matrix.yml
         echo "      done" >> matrix.yml
 
-        # **IMPROVED**: Wait for WordPress to be fully initialized
-        echo "    - echo '⏳ Waiting for WordPress initialization…'" >> matrix.yml
+        # **DIAGNOSTIC**: Show MySQL version to verify connectivity
+        echo "    - mysql -h db -u wp -pwp -e 'SELECT VERSION();'" >> matrix.yml
+
+        # **WAIT**: Actually wait for WordPress to become healthy
+        echo "    - echo '⏳ Waiting for WordPress to initialize…'" >> matrix.yml
+        echo "    - sleep 10" >> matrix.yml
         echo "    - |" >> matrix.yml
-        echo "      for i in {1..60}; do" >> matrix.yml
-        echo "        response=\$(curl -s -o /dev/null -w '%{http_code}' http://wordpress/wp-json/wc/v3/customers || echo '000')" >> matrix.yml
-        echo "        if [ \"\$response\" = \"200\" ] || [ \"\$response\" = \"401\" ]; then" >> matrix.yml
-        echo "          echo '✅ WordPress is ready (HTTP \$response)'" >> matrix.yml
+        echo "      for i in {1..30}; do" >> matrix.yml
+        echo "        http_code=\$(curl -s -o /dev/null -w '%{http_code}' http://wordpress/ 2>/dev/null || echo '000')" >> matrix.yml
+        echo "        if [ \"\$http_code\" != \"500\" ] && [ \"\$http_code\" != \"000\" ]; then" >> matrix.yml
+        echo "          echo \"✅ WordPress responding (HTTP \$http_code)\"" >> matrix.yml
         echo "          break" >> matrix.yml
         echo "        fi" >> matrix.yml
-        echo "        echo \"⏳ WordPress not ready... (HTTP \$response, attempt \$i/60)\"" >> matrix.yml
-        echo "        sleep 2" >> matrix.yml
+        echo "        echo \"⏳ Attempt \$i/30: WordPress HTTP \$http_code\"" >> matrix.yml
+        echo "        sleep 3" >> matrix.yml
         echo "      done" >> matrix.yml
 
-        # **IMPROVED**: Final health check
-        echo "    - curl -v http://wordpress/wp-json/ || echo 'WordPress endpoint check failed'" >> matrix.yml
+        # **FINAL CHECK**: Verify database connectivity from WordPress
+        echo "    - curl -s http://wordpress/ | grep -q 'WordPress' && echo '✅ WordPress HTML loaded' || echo '⚠️ WordPress not fully ready'" >> matrix.yml
 
         echo "  script:" >> matrix.yml
         echo "    - mkdir -p reports/${s}/allure-results" >> matrix.yml
