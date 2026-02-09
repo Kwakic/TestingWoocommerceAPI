@@ -140,4 +140,4 @@ entity_tests:
   trigger:
     include:
       - artifact: matrix.yml
-        job: discover_services
+        job: discover_service
