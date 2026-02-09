@@ -32,17 +32,13 @@ discover_services:
     - pytest
   script:
     - echo "🔍 Discovering entity test suites"
-
-    # Fail on error
     - set -e
 
-    # SERVICE override: allows running only a specific test folder
     - |
       if [ -n "$SERVICE" ]; then
         services="$SERVICE"
         echo "SERVICE override detected: $services"
       else
-        # Find all top-level test directories except "shared"
         services=$(find tests -maxdepth 1 -mindepth 1 -type d ! -name shared -printf '%f\n' | tr '\n' ' ')
       fi
 
@@ -53,25 +49,21 @@ discover_services:
 
       echo "Detected services: $services"
 
-    # Start generating matrix.yml
     - echo "stages:" > matrix.yml
     - echo "  - test" >> matrix.yml
 
-    # Generate a job for each service
     - |
       for s in $services; do
         echo "${s}_test:" >> matrix.yml
         echo "  stage: test" >> matrix.yml
         echo "  image: python:3.11" >> matrix.yml
 
-        # Each job starts its own MySQL + WordPress services
         echo "  services:" >> matrix.yml
         echo "    - name: mysql:8.0" >> matrix.yml
         echo "      alias: db" >> matrix.yml
         echo "    - name: wordpress:6.8-php8.2-apache" >> matrix.yml
         echo "      alias: wordpress" >> matrix.yml
 
-        # Environment variables for WP + MySQL
         echo "  variables:" >> matrix.yml
         echo "    SERVICE: ${s}" >> matrix.yml
         echo "    ENV: docker" >> matrix.yml
@@ -83,37 +75,41 @@ discover_services:
         echo "    WORDPRESS_DB_USER: wp" >> matrix.yml
         echo "    WORDPRESS_DB_PASSWORD: wp" >> matrix.yml
         echo "    WORDPRESS_DB_NAME: wordpress" >> matrix.yml
+        echo "    WORDPRESS_TABLE_PREFIX: wp_" >> matrix.yml
 
-        # -----------------------------------------------------------------------------
-        # Before script for each job
-        # - Install Python deps
-        # - Wait for MySQL + WordPress to be ready
-        # -----------------------------------------------------------------------------
         echo "  before_script:" >> matrix.yml
         echo "    - pip install --upgrade pip" >> matrix.yml
         echo "    - pip install -e './EcommerceAPI[dev]'" >> matrix.yml
+        echo "    - apt-get update && apt-get install -y default-mysql-client curl" >> matrix.yml
 
-        # Wait for MySQL
+        # **IMPROVED**: Better MySQL readiness check
         echo "    - echo '⏳ Waiting for MySQL…'" >> matrix.yml
         echo "    - |" >> matrix.yml
-        echo "      for i in {1..20}; do" >> matrix.yml
-        echo "        if mysql -h db -u wp -pwp -e 'SELECT 1' >/dev/null 2>&1; then echo '✅ MySQL ready'; break; fi" >> matrix.yml
-        echo "        echo 'Waiting for MySQL… ($i)'" >> matrix.yml
+        echo "      for i in {1..30}; do" >> matrix.yml
+        echo "        if mysql -h db -u wp -pwp -D wordpress -e 'SELECT 1' >/dev/null 2>&1; then" >> matrix.yml
+        echo "          echo '✅ MySQL is ready'" >> matrix.yml
+        echo "          break" >> matrix.yml
+        echo "        fi" >> matrix.yml
+        echo "        echo \"⏳ MySQL not ready yet... (attempt \$i/30)\"" >> matrix.yml
         echo "        sleep 2" >> matrix.yml
         echo "      done" >> matrix.yml
 
-        # Wait for WordPress
-        echo "    - echo '⏳ Waiting for WordPress…'" >> matrix.yml
+        # **IMPROVED**: Wait for WordPress to be fully initialized
+        echo "    - echo '⏳ Waiting for WordPress initialization…'" >> matrix.yml
         echo "    - |" >> matrix.yml
-        echo "      for i in {1..40}; do" >> matrix.yml
-        echo "        if curl -sf http://wordpress >/dev/null; then echo '✅ WP ready'; break; fi" >> matrix.yml
-        echo "        echo 'Waiting for WP… ($i)'" >> matrix.yml
+        echo "      for i in {1..60}; do" >> matrix.yml
+        echo "        response=\$(curl -s -o /dev/null -w '%{http_code}' http://wordpress/wp-json/wc/v3/customers || echo '000')" >> matrix.yml
+        echo "        if [ \"\$response\" = \"200\" ] || [ \"\$response\" = \"401\" ]; then" >> matrix.yml
+        echo "          echo '✅ WordPress is ready (HTTP \$response)'" >> matrix.yml
+        echo "          break" >> matrix.yml
+        echo "        fi" >> matrix.yml
+        echo "        echo \"⏳ WordPress not ready... (HTTP \$response, attempt \$i/60)\"" >> matrix.yml
         echo "        sleep 2" >> matrix.yml
         echo "      done" >> matrix.yml
 
-        # -----------------------------------------------------------------------------
-        # Run pytest and collect Allure reports
-        # -----------------------------------------------------------------------------
+        # **IMPROVED**: Final health check
+        echo "    - curl -v http://wordpress/wp-json/ || echo 'WordPress endpoint check failed'" >> matrix.yml
+
         echo "  script:" >> matrix.yml
         echo "    - mkdir -p reports/${s}/allure-results" >> matrix.yml
         echo "    - pytest tests/${s} -s --maxfail=3 --alluredir=reports/${s}/allure-results" >> matrix.yml
@@ -128,10 +124,6 @@ discover_services:
     paths:
       - matrix.yml
 
-# -----------------------------------------------------------------------------
-# Run the generated matrix
-# Each job now starts its own WordPress + MySQL
-# -----------------------------------------------------------------------------
 entity_tests:
   stage: test
   trigger:
