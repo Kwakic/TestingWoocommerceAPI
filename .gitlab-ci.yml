@@ -58,9 +58,13 @@ discover_services:
         echo "    SERVICE: ${s}" >> matrix.yml
         echo "    ENV: docker" >> matrix.yml
         echo "  script:" >> matrix.yml
+        echo "     - python -m pip install --upgrade pip
         echo "    - pip install -e './EcommerceAPI[dev]'" >> matrix.yml
         echo "    - mkdir -p reports/${s}/allure-results" >> matrix.yml
-        echo "    - pytest tests/${s} -s --maxfail=3 \\" >> matrix.yml
+        echo "    - |" >> matrix.yml
+        echo "      pytest tests/${s} \\" >> matrix.yml
+        echo "        -s \\" >> matrix.yml
+        echo "        --maxfail=3 \\" >> matrix.yml
         echo "        --alluredir=reports/${s}/allure-results" >> matrix.yml
         echo "  artifacts:" >> matrix.yml
         echo "    when: always" >> matrix.yml
