@@ -18,7 +18,7 @@ from jsonschema.exceptions import ValidationError
 from EcommerceAPI.src.utilities.requestsUtility import RequestUtility
 from EcommerceAPI.src.utilities.exceptions import APIRequestException
 from EcommerceAPI.src.dao.coupons_dao import CouponsDAO
-from tests.customers.schemas import coupon_schema, error_schema
+from tests.shared.schemas import coupon_schema, error_schema
 
 logger = logging.getLogger(__name__)
 

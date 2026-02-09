@@ -35,10 +35,10 @@ from jsonschema import ValidationError
 
 from EcommerceAPI.src.utilities.requestsUtility import RequestUtility
 
-from tests.customers.schemas.customer import customer_schema
-from tests.customers.schemas.order import order_schema
-from tests.customers.schemas.product import product_schema
-from tests.customers.schemas.coupon import coupon_schema
+from tests.shared.schemas.customer import customer_schema
+from tests.shared.schemas.order import order_schema
+from tests.shared.schemas.product import product_schema
+from tests.shared.schemas.coupon import coupon_schema
 from EcommerceAPI.src.utilities.truncate_logging_utils import truncate_preview
 
 log = logging.getLogger(__name__)

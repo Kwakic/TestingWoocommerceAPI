@@ -819,9 +819,6 @@ TestEcommerceAPI (project suite/root)
 │     │     │     └── create_customer_payload.json
 │     │     ├── helpers/
 │     │     │     └── customers_helper.py
-│     │     ├── schemas/
-│     │     │     └── error_schema.py
-│     │     │     └── customers_general.py
 │     │     ├── .gitlab-ci-template.yml
 │     │     ├── __init__.py
 │     │     ├── conftest.py
@@ -840,16 +837,24 @@ TestEcommerceAPI (project suite/root)
 │     │           └── test_update_custom
 │     │           └── __init__.py
 │     ├── shared/
-│     │     ├── performance/
-│     │     │       ├── test_basic_response_times.py      ← API or framework-level healthcheck
+│     │     ├── schemas/
+│     │     │       ├── coupon.py
+│     │     │       ├── customers.py
+│     │     │       ├── order.py.py
+│     │     │       └── product.py.py
+│     │     ├── contract/
+│     │     │       ├── test_schema_validation_smoke.py
 │     │     │       ├── __init__.py
-│     │     │       └── conftest.py
+│     │     │       └── README_CONTRACT.md
+│     │     ├── performance/
+│     │     │       ├── test_basic_response_times.py
+│     │     │       └── __init__.py
 │     │     └── preflight/
-│     │             ├── test_logging_globals.py           ← API or framework-level healthcheck
-│     │             ├── test_schema_validation_smoke.py   ← Lightweight schema validation for all entities
+│     │             ├── test_logging_globals.py
+│     │             ├── test_config_contract.py
+│     │             ├── test_pytest_bootstrap.py
 │     │             ├── __init__.py
-│     │             ├── README_PREFLIGHT.md
-│     │             └── conftest.py
+│     │             └── README_PREFLIGHT.md
 │     │
 │     ├── orders/..                                ← orders-specific
 │     ├── coupons/..                               ← coupons-specific

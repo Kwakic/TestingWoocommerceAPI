@@ -5,8 +5,8 @@ Covers test purpose, structure, naming, fixtures, validation, failure handling, 
 
 Related docs
 - Developer setup & onboarding: [DEVELOPER_ONBOARDING.md](./DEVELOPER_ONBOARDING.md)  
-- Schema guidance: [SCHEMA_VALIDATION_GUIDE.md](./SCHEMA_VALIDATION_GUIDE.md)  
-- Environment & CI: [README_ENV_AND_CI.md](./README_ENV_AND_CI.md)  
+- Schema guidance: [SCHEMA_VALIDATION_GUIDE.md](../tests/shared/schemas/SCHEMA_VALIDATION_GUIDE.md)  
+- Environment & CI: [README_ENV_AND_CI.md](README_ENV_AND_CI.md)  
 - High-level overview: [FRAMEWORK_OVERVIEW.md](./FRAMEWORK_OVERVIEW.md)  
 - Changelog policy: [CHANGELOG_GUIDELINES.md](./CHANGELOG_GUIDELINES.md)
 

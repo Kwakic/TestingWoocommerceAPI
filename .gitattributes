@@ -1,3 +1,9 @@
+# This ensures:
+  #
+  #    ✅ All text files use LF (Unix line endings) in the repository
+  #    ✅ Git auto-converts CRLF → LF when committing from Windows
+  #    ✅ Scripts work correctly in Linux CI runners
+
 * text=auto
 
 *.py     text eol=lf
@@ -7,6 +13,31 @@
 *.md     text eol=lf
 Dockerfile text eol=lf
 
+# # Refresh the file to apply the .gitattributes rules
+  #git add --renormalize .gitlab-ci.yml
+
+  ## Commit
+  #git commit -m "Normalize line endings for .gitlab-ci.yml"
+
+  ## Push
+  #git push
+
+# ✅ Optional: Full Cleanup (If You Want)
+
+  #If you want to normalize all files in your repo:
+  #bash
+
+  ## Add .gitattributes
+  #git add .gitattributes
+
+  ## Renormalize all tracked files
+  #git add --renormalize .
+
+  ## Commit
+  #git commit -m "Add .gitattributes and normalize line endings"
+
+  ## Push
+  #git push
 
 #$ git add . warning: in the working copy of 'docs/docker install guide.md',
 #CRLF will be replaced by LF the next time Git touches it warning: in the working copy of

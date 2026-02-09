@@ -29,7 +29,7 @@ from typing import Optional, List, Dict, Any
 
 from jsonschema import validate
 
-from tests.customers.schemas.customer import customer_schema, error_schema
+from tests.shared.schemas.customer import customer_schema, error_schema
 from EcommerceAPI.src.utilities.pagination_utils import paginate_all_results
 from EcommerceAPI.src.utilities.genericUtilities import generate_random_email_and_password
 from EcommerceAPI.src.utilities.requestsUtility import RequestUtility
