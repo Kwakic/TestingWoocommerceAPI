@@ -169,3 +169,4 @@ def raw_customer_api(request_utility):
         - Uses the shared session-scoped request_utility fixture.
     """
     return request_utility
+EcommerceAPI

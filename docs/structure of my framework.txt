@@ -732,10 +732,9 @@ TestEcommerceAPI (project suite/root)
 │       └── workflows/
 │             └── ci.yml
 │
-├── .venv/...                                       ← shared virtual environment (optional)
+├── .venv/...                                        ← shared virtual environment (optional)
 │
-├── docs/...                                        ← shared
-│
+├── docs/...                                         ← shared
 │
 ├── EcommerceAPI (installable framework package)/    ← SHARED INSTALLABLE FRAMEWORK
 │     ├── ecommerceapitest.egg-info/..
@@ -748,18 +747,38 @@ TestEcommerceAPI (project suite/root)
 │     │     ├── entities.py
 │     │     ├── logging_plugin.py
 │     │     └── _config.py
-│     │
 │     │── src/                                       ← ⚠ ONLY reusable/shared/global
 │     │     ├── configs/                             ← ⚠ ONLY shared/base config here
 │     │     │     └── config_loader.py
 │     │     ├── dao/                                 ← ⚠ only if DB is shared
 │     │     │     └── global_connection.py
-│     │     ├── helpers/                             ← one helper for each microservice
-│     │     │     │── cleanup_helpers.py
-│     │     │     │── coupons_helper.py
-│     │     │     │── customers_helper.py
-│     │     │     │── orders_helper.py
-│     │     │     └── products_helper.py
+│     │     ├── api/
+│     │     │     │── customers_api.py
+│     │     │     │── coupons_api.py
+│     │     │     │── orders_api.py
+│     │     │     └── products_api.py
+│     │     ├── helpers/                            ← one helper for each microservice
+│     │     │     ├── customers/
+│     │     │     │      │── customers_helper.py    ← DOMAIN assertions only
+│     │     │     │      └── __init__.py
+│     │     │     ├── coupons/
+│     │     │     │      │── coupons_helper.py      ← DOMAIN assertions only
+│     │     │     │      └── __init__.py
+│     │     │     ├── orders/
+│     │     │     │      │── orders_helper.py       ← DOMAIN assertions only
+│     │     │     │      └── __init__.py
+│     │     │     ├── products/
+│     │     │     │      │── products_helper.py     ← DOMAIN assertions only
+│     │     │     │      └── __init__.py
+│     │     │     └── shared/
+│     │     │             │── cleanup_helpers.py     ← DOMAIN assertions only
+│     │     │             └── __init__.py
+│     │     ├── validators/
+│     │     │     │── customers_validator.py
+│     │     │     │── coupons_validator.py
+│     │     │     │── orders_validator.py
+│     │     │     └── products_validator.py
+│     │     │
 │     │     │── manual_cleanup_scripts/...
 │     │     ├── utilities/                           ← ⚠ universal/reusable utilities
 │     │     │     └── __init__.py
@@ -811,19 +830,12 @@ TestEcommerceAPI (project suite/root)
 │     ├── customers/                               ← customers-specific
 │     │     ├── configs/
 │     │     │     └── config_customers.py          ← storing API_HOSTS
-│     │     ├── constants/
-│     │     │     └── endpoints.py
-│     │     ├── dao/
-│     │     │     └── customers_dao.py
 │     │     ├── data/
 │     │     │     └── create_customer_payload.json
-│     │     ├── helpers/
-│     │     │     └── customers_helper.py
 │     │     ├── .gitlab-ci-template.yml
 │     │     ├── __init__.py
 │     │     ├── conftest.py
 │     │     ├── README.md
-│     │     ├── README_CONFTEST.md
 │     │     └── api/
 │     │           └── test_debug.log
 │     │           └── test_suite_summary.MD
@@ -870,7 +882,6 @@ TestEcommerceAPI (project suite/root)
 │─── conftest.py                                   ← shared
 │─── docker-compose.matrix.yml                     ← shared
 │─── Dockerfile                                    ← shared
-│─── matrix.yaml                                   ← shared
 └──  pytest.ini                                    ← shared
 
 
