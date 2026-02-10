@@ -1,5 +1,5 @@
 """
-Pytest logging plugin (refactored).
+Pytest logging plugin.
 
 This plugin configures logging for pytest runs:
 - Installs a LogRecord factory that enriches records with ContextVar-based fields

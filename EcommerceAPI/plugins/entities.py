@@ -232,10 +232,14 @@ def discover_entities(request_utility: RequestUtility) -> Dict[str, EntityBundle
     }
     protocol_utils = {"request_utility": request_utility}
 
-    # Dynamically import all modules
+    # Dynamically import all helper modules (supports subpackages, e.g. helpers/customers/customers_helper.py)
     helper_modules = {
-        modname: importlib.import_module(f"EcommerceAPI.src.helpers.{modname}")
-        for _, modname, _ in pkgutil.iter_modules(helpers_path)
+        modname.rsplit(".", 1)[-1]: importlib.import_module(modname)
+        for _, modname, _ in pkgutil.walk_packages(
+            helpers_path,
+            prefix="EcommerceAPI.src.helpers.",
+        )
+        if modname.endswith("_helper")
     }
     dao_modules = {
         modname: importlib.import_module(f"EcommerceAPI.src.dao.{modname}")
@@ -515,7 +519,7 @@ def shared_api_resources(request_utility: RequestUtility) -> SharedAPIResources:
             already_deleted_ids = deleted_resources.get(resource_type, set())
             total_created = len(set(resource_ids))
             # Import cleanup_items only when needed (to avoid import cycles)
-            from EcommerceAPI.src.helpers.cleanup_helpers import cleanup_items
+            from EcommerceAPI.src.helpers.shared.cleanup_helpers import cleanup_items
             cleanup_items(
                 resource_type=resource_type,
                 resource_ids=resource_ids,

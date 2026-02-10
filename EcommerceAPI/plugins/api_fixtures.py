@@ -42,13 +42,13 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     # IDE-only: point to the test-level fixture so PyCharm can navigate to it. Do NOT import conftest at runtime!
     # TYPE_CHECKING imports are ignored at runtime, so they’re safe to add into framework code.
-    from tests.customers.conftest import api_base_url as _api_base_url_fixture
+    from tests.conftest import api_base_url as _api_base_url_fixture
 
 from EcommerceAPI.src.utilities.exceptions import (
     SchemaValidationError,
     UnexpectedStatusCodeError,
 )
-from EcommerceAPI.src.helpers.cleanup_helpers import set_default_request_utility
+from EcommerceAPI.src.helpers.shared.cleanup_helpers import set_default_request_utility
 
 log = logging.getLogger(__name__)
 
@@ -169,4 +169,3 @@ def raw_customer_api(request_utility):
         - Uses the shared session-scoped request_utility fixture.
     """
     return request_utility
-EcommerceAPI

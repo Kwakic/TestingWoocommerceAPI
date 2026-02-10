@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 if TYPE_CHECKING:
-    from EcommerceAPI.src.helpers.customers_helper import CustomersHelper
+    from EcommerceAPI.src.helpers.customers.customers_helper import CustomersHelper
     from EcommerceAPI.src.dao.customers_dao import CustomersDAO
 
 
