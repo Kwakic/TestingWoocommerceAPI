@@ -30,9 +30,9 @@ from typing import Optional, List, Dict, Any
 from jsonschema import validate
 
 from tests.shared.schemas.customer import customer_schema, error_schema
+from EcommerceAPI.src.api.customers_api import CustomersApi
 from EcommerceAPI.src.utilities.pagination_utils import paginate_all_results
 from EcommerceAPI.src.utilities.genericUtilities import generate_random_email_and_password
-from EcommerceAPI.src.utilities.requestsUtility import RequestUtility
 from EcommerceAPI.src.utilities.exceptions import UnexpectedStatusCodeError, SchemaValidationError
 from EcommerceAPI.src.utilities.date_timestamp_utils import safe_parse_utc_datetime
 
@@ -44,73 +44,26 @@ logger = logging.getLogger(__name__)
 
 class CustomersHelper(object):
     """
-    CustomersHelper — helper for working with WooCommerce customer endpoints.
+    Domain-level helper for Customers.
 
-    This helper is intended to be used from tests and higher-level fixtures. It expects a configured RequestUtility
-    instance to be injected (via the session-scoped pytest fixture `request_utility` defined in conftest). The helper
-    provides convenience methods for creating, retrieving, deleting and listing customers, plus schema validation and
-    DB-backed verification.
-
-    Design notes / goals
-    - Dependency injection: the helper does NOT create its own RequestUtility. A single shared, configured client
-    should be created in conftest and passed in. This avoids duplicate config/auth and makes monkeypatching simpler.
-    - Positive vs negative flows:
-      - For positive flows use the helper methods (they assert expected status codes and return parsed JSON).
-      - For negative flows (inspecting raw responses, headers, or unexpected codes), use RequestUtility.request_raw
-        or RequestUtility.post(..., return_raw=True) from tests or the raw_api fixture.
-    - Error handling: when RequestUtility raises UnexpectedStatusCodeError or SchemaValidationError the helper will
-    attempt to extract and return the parsed JSON error body (response_json). This makes it easy for tests to assert
-    on error payloads without parsing raw text from logs.
-    - DB verification: helper can validate API results against the DB using CustomersDao.
-
-    Usage example (positive flow):
-        helper = CustomersHelper(request_utility=request_utility)
-        customer = helper.create_customer(email="alice@example.com")
-        assert customer["email"] == "alice@example.com"
-
-    Usage example (negative flow):
-        # In tests where you expect a 400 you can:
-        err = helper.create_customer(email="", expected_status_code=400)
-        assert err["code"] == "some_error_code"
-
-    Note: adjust the DAO class name import if your repo uses a different class name (CustomersDao vs CustomersDAO).
-
-    Some other features are:
-        - Parameterizes test input: flexible for both positive and negative tests.
-        - Schema validation: leverages jsonschema to ensure contract compliance.
-        - Centralized assertions: domain assertions are not duplicated in tests.
-        - Integration with utilities: uses pagination, random email/password, etc.
-        - Logging: leverages logger for traceability.
+    Responsibilities:
+    - Build customer payloads (including auto-generation)
+    - Call CustomersApi (NO raw HTTP here)
+    - Handle positive + negative flows consistently
+    - Return parsed JSON on success OR expected failure
+    - Expose clean, test-friendly behavior
     """
 
     ENDPOINT = "customers"
 
-    def __init__(self, request_utility: RequestUtility):  # The type hint: RequestUtility suggests that this argument
-        # should be an instance of a class named RequestUtility
+    def __init__(self, customers_api: CustomersApi):
         """
-        Require an injected RequestUtility for consistent configuration and testability.
-        Enforces injection (raises if None) and uses `self.request_utility` as the canonical attribute.
-
-        Rationale:
-          - Ensures helpers use the single, session-scoped RequestUtility from conftest
-            (so auth/base_url/retries/monkeypatching behave consistently).
-
         Args:
-            request_utility: A configured RequestUtility instance (session-scoped fixture).
+            customers_api: Positive-path API client (wraps RequestUtility)
 
-        Raises:
-            ValueError: If request_utility is None.
-            TypeError: If request_utility is not an instance of RequestUtility.
         """
-        if request_utility is None:
-            raise ValueError(
-                "CustomersHelper requires a RequestUtility instance. Pass `request_utility` from conftest."
-            )
-        if not isinstance(request_utility, RequestUtility):
-            raise TypeError("request_utility must be an instance of RequestUtility")
-
         # Use the injected client
-        self.request_utility = request_utility
+        self.customers_api = customers_api
 
     # ------------------------
     # Create / CRUD helpers
@@ -127,12 +80,13 @@ class CustomersHelper(object):
         Create a new customer via POST /customers.
 
         Behavior:
-        - If auto_generate=True and email/password are not provided, a random email is generated, and a default
-          password is used. This is convenient for positive tests that need unique customers.
-        - On success (status == expected_status_code) returns parsed JSON (dict).
-        - On failure where RequestUtility raises UnexpectedStatusCodeError or SchemaValidationError the helper
-          will attempt to return the parsed error JSON (attached as `response_json` on the exception). If parsing
-          fails or no JSON was attached, the original exception is re-raised.
+        - If auto_generate=True and email/password are missing:
+            - generate random email
+            - use default password
+        - On success → return parsed JSON dict
+        - On expected failure:
+            - return parsed error JSON (if available)
+            - otherwise re-raise original exception
 
         Args:
             email: Optional email to create the customer with.
@@ -148,6 +102,7 @@ class CustomersHelper(object):
             UnexpectedStatusCodeError, SchemaValidationError: Re-raised if no parsed error body is available.
             On expected failures (4xx/5xx) this helper will attempt to return the parsed error JSON
             attached by RequestUtility so tests can assert on error payloads.
+
         Note:
             - RequestUtility._handle_response already parses the response and attaches:
                 - response_json (parsed body)
@@ -168,9 +123,9 @@ class CustomersHelper(object):
             negative assertions.
 
         """
-
-        # Auto-generate credentials for convenience in positive flows. Skip auto-generation if explicitly turned
-        # off (e.g., for negative test cases)
+        # --------------------------------------------------------------
+        # Auto-generate credentials (POSITIVE FLOW ERGONOMICS)
+        # --------------------------------------------------------------
         if auto_generate:
             if not email:
                 ep = generate_random_email_and_password()
@@ -178,7 +133,11 @@ class CustomersHelper(object):
             if not password:
                 password = 'Password1'
 
-        # Build payload — skip adding None values
+        # --------------------------------------------------------------
+        # Build payload (skip None values)
+        # --------------------------------------------------------------
+        # Skip auto-generation if explicitly turned off (e.g., for negative test cases where you don't need these)
+
         # payload = {k: v for k, v in {'email': email, 'password': password, **kwargs}.items() if v is not None} # or:
         payload: Dict[str, Any] = {}
         if email is not None:
@@ -188,15 +147,20 @@ class CustomersHelper(object):
         # payload.update(kwargs) adds all those extra key-value pairs to the payload
         payload.update(kwargs)
 
-        logger.debug(f"🟢 Creating customer with payload: {payload}")
-        # logger.debug("🟢 Creating customer with payload keys: %s", list(payload.keys()))  # only keys no values
+        # logger.debug(f"🟢 Creating customer with payload: {payload}")
+        logger.debug("🟢 Creating customer with payload keys: %s", list(payload.keys()))
 
+        # --------------------------------------------------------------
+        # Call API + preserve negative-path behavior
+        # --------------------------------------------------------------
         # Make the request and handle expected failure shapes.
         # RequestUtility._handle_response will:
         # - attach parsed JSON to exception.response_json when it raises UnexpectedStatusCodeError/SchemaValidationError
         # - attach the raw requests.Response as exception.response
         try:
-            return self.request_utility.post(self.ENDPOINT, payload=payload, expected_status_code=expected_status_code)
+            return self.customers_api.create_customer(payload)
+        # try: return self.request_utility.post(self.ENDPOINT, payload=payload,
+        # expected_status_code=expected_status_code)
         except (UnexpectedStatusCodeError, SchemaValidationError) as e:
             # Log a short warning so the failure is visible in the structured logs (CustomFormatter will redact
             # sensitive info/fields).

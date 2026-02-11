@@ -771,13 +771,25 @@ TestEcommerceAPI (project suite/root)
 │     │     │     │      │── products_helper.py     ← DOMAIN assertions only
 │     │     │     │      └── __init__.py
 │     │     │     └── shared/
-│     │     │             │── cleanup_helpers.py     ← DOMAIN assertions only
-│     │     │             └── __init__.py
+│     │     │            │── cleanup_helpers.py     ← DOMAIN assertions only
+│     │     │            └── __init__.py
 │     │     ├── validators/
-│     │     │     │── customers_validator.py
-│     │     │     │── coupons_validator.py
-│     │     │     │── orders_validator.py
-│     │     │     └── products_validator.py
+│     │     │     ├── customers/
+│     │     │     │      │── customer_schema_validator.py
+│     │     │     │      │── customer_assertions.py
+│     │     │     │      └── __init__.py
+│     │     │     ├── orders/
+│     │     │     │      │── order_schema_validator.py
+│     │     │     │      │── order_assertions.pyy
+│     │     │     │      └── __init__.py
+│     │     │     ├── coupons/
+│     │     │     │      │── coupon_schema_validator.py
+│     │     │     │      │── coupon_assertions.py
+│     │     │     │      └── __init__.py
+│     │     │     └── products/
+│     │     │            │── product_schema_validator.py
+│     │     │            │── product_assertions.py
+│     │     │            └── __init__.py
 │     │     │
 │     │     │── manual_cleanup_scripts/...
 │     │     ├── utilities/                           ← ⚠ universal/reusable utilities
