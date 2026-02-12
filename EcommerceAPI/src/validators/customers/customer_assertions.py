@@ -5,51 +5,44 @@ This module contains semantic assertions for customer objects.
 Assertions here are reusable across helpers and tests.
 """
 
-from typing import Dict, Any
 import logging
-
-from EcommerceAPI.src.utilities.date_timestamp_utils import safe_parse_utc_datetime
 
 logger = logging.getLogger(__name__)
 
 
-def assert_valid_customer_response(
-    customer: Dict[str, Any],
-    expected_payload: Dict[str, Any] | None = None,
-) -> None:
+def assert_valid_customer_response(customer: dict) -> None:
+    # It tells readers (and type checkers like mypy/pyright) that the function does not return anything.
     """
-    Assert that a customer response is structurally and semantically valid.
+    ✅ Validates the structure and schema of a successful customer creation response (id, email, username present).
+    Useful to centralize repeated checks across tests.
+
+    - Raises AssertionError if invalid.
+    - It ensures schema and domain rules are never forgotten or duplicated.
+    - Centralizes your happy-path response validation in one place.
+    - It reduces clutter in tests.
+    - It honors separation of concerns (test ≠ validation logic).
+    - It keeps your test code clean-no need to separately call the schema validator and then structural/assertion
+    checks.
 
     Args:
-        customer (dict): Parsed customer response from API.
-        expected_payload (dict, optional):
-            Original payload used to create the customer.
-            If provided, critical fields are compared.
+        customer (dict): API response for created customer
 
     Raises:
-        AssertionError: If validation fails.
-
-    Note:
-        Still NO HTTP, NO fixtures
-        Semantic assertions
+        AssertionError or jsonschema.ValidationError on failure.
     """
-    assert isinstance(customer, dict), "Customer response must be a dict"
-    assert "id" in customer, "Customer response missing 'id'"
+    # ------------------------------------------------------------------
+    # 📋 Schema Validation first (It checks that the POST response is valid)
+    # ------------------------------------------------------------------
 
-    # Basic identity checks
-    assert customer["id"], "Customer id is empty"
+    if not isinstance(customer, dict):
+        raise AssertionError(f"Response is not a dict. Got: {type(customer)}")
 
-    # Timestamp sanity checks (if present)
-    if "date_created" in customer:
-        safe_parse_utc_datetime(customer["date_created"])
+    if "id" not in customer or not isinstance(customer["id"], int):
+        raise AssertionError(f"Invalid or missing customer ID. Got: {customer.get('id')}")
+    if "email" not in customer or not isinstance(customer["email"], str):
+        raise AssertionError(f"Invalid or missing email. Got: {customer.get('email')}")
+    if "username" not in customer:
+        raise AssertionError(f"Missing username. Got: {customer.get('username')}")
 
-    if "date_modified" in customer:
-        safe_parse_utc_datetime(customer["date_modified"])
-
-    # Cross-check payload vs response (if provided)
-    if expected_payload:
-        for field in ("email",):
-            if field in expected_payload:
-                assert customer.get(field) == expected_payload[field], (
-                    f"Customer field mismatch: {field}"
-                )
+    logger.info("✅ Customer ID and email validated: %s, %s", customer["id"], customer["email"])
+    

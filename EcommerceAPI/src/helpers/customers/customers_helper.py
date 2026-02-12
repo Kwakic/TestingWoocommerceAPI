@@ -1,25 +1,23 @@
 # CUSTOMER HELPER - (TO CREATE PAYLOAD API CALL)
 
 """
-RECOMMENDED DESIGN
-✔ Helper: API logic only --> Helper = talks to the API and DAO = talks to the database
-✔ Tests: pass DAO dependencies through fixture
-✔ No importing DAO inside helper!!! # dao must be provided by caller (fixture or mock)"
-✔ No instantiating DAO inside helper
-This is the enterprise-standard architecture.
+Domain-level orchestration layer for Customers.
 
-HELPER METHODS SHOULD NOT SWALLOW DB ERRORS!
-- When you're writing a test helper, your goal is: if something goes wrong → fail FAST and LOUD
-- If the DAO throws:
-    - connection errors
-    - SQL syntax errors
-    - logic errors
-    - unexpected DB issues
-You want the exception to propagate, because:
-✔ It points directly to the failing line
-✔ Pytest shows full traceback
-✔ You don't hide root causes
-✔ CI logs are cleaner
+Responsibilities:
+-----------------
+✔ Build payloads (including auto-generation ergonomics)
+✔ Delegate HTTP calls to CustomersApi
+✔ Handle positive + expected-negative flows
+✔ Delegate validation to validators layer
+✔ Return parsed JSON (success OR error body)
+
+Non-responsibilities:
+---------------------
+✘ No raw HTTP calls
+✘ No schema logic (delegated to validators)
+✘ No business assertions inside this file
+✘ No fixtures
+✘ No DB access
 """
 
 from __future__ import annotations
@@ -35,6 +33,12 @@ from EcommerceAPI.src.utilities.pagination_utils import paginate_all_results
 from EcommerceAPI.src.utilities.genericUtilities import generate_random_email_and_password
 from EcommerceAPI.src.utilities.exceptions import UnexpectedStatusCodeError, SchemaValidationError
 from EcommerceAPI.src.utilities.date_timestamp_utils import safe_parse_utc_datetime
+
+from EcommerceAPI.src.validators.customers.customer_schema_validator import (validate_customer_response_schema,
+                                                                             validate_customer_error_response_schema)
+from EcommerceAPI.src.validators.customers.customer_assertions import (
+    assert_valid_customer_response as assert_customer_fields,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +56,15 @@ class CustomersHelper(object):
     - Handle positive + negative flows consistently
     - Return parsed JSON on success OR expected failure
     - Expose clean, test-friendly behavior
+
+    This layer sits between:
+        Tests/fixtures
+            ↓
+        CustomersHelper
+            ↓
+        CustomersApi
+            ↓
+        RequestUtility
     """
 
     ENDPOINT = "customers"
@@ -74,29 +87,30 @@ class CustomersHelper(object):
             password: Optional[str] = None,
             expected_status_code: int = 201,
             auto_generate: bool = True,
+            validate_response: bool = True,
             **kwargs,
     ) -> Dict[str, Any]:
         """
-        Create a new customer via POST /customers.
+        Create a customer via CustomersApi.
 
         Behavior:
-        - If auto_generate=True and email/password are missing:
-            - generate random email
-            - use default password
+        - Auto-generate email/password for positive tests
+        - Supports negative testing via expected_status_code
         - On success → return parsed JSON dict
         - On expected failure:
             - return parsed error JSON (if available)
             - otherwise re-raise original exception
 
         Args:
-            email: Optional email to create the customer with.
-            password: Optional password.
-            expected_status_code: Expected HTTP status code for the positive flow (default 201).
-            auto_generate: If true, auto-generate missing email/password for positive tests.
-            **kwargs: Additional fields to include in the payload (billing, shipping, metadata, etc).
+            email: Optional email
+            password: Optional password
+            expected_status_code: Expected HTTP status
+            auto_generate: Auto-generate credentials for positive tests
+            validate_response: Whether to run validators
+            **kwargs: Additional payload fields
 
         Returns:
-            dict: Parsed JSON response (success or error body).
+            dict: Parsed API response (success or error JSON)
 
         Raises:
             UnexpectedStatusCodeError, SchemaValidationError: Re-raised if no parsed error body is available.
@@ -148,19 +162,23 @@ class CustomersHelper(object):
         payload.update(kwargs)
 
         # logger.debug(f"🟢 Creating customer with payload: {payload}")
-        logger.debug("🟢 Creating customer with payload keys: %s", list(payload.keys()))
+        logger.debug("🟢 Creating customer with payload keys: %r", list(payload.keys()))
 
         # --------------------------------------------------------------
         # Call API + preserve negative-path behavior
         # --------------------------------------------------------------
-        # Make the request and handle expected failure shapes.
         # RequestUtility._handle_response will:
         # - attach parsed JSON to exception.response_json when it raises UnexpectedStatusCodeError/SchemaValidationError
         # - attach the raw requests.Response as exception.response
+
+        # The exception logic is:
+        #  - Tries to extract response_json from exception
+        #  - Falls back gracefully if parsing fails
+        #  - Re-raises only when truly necessary
+        #  - One responsibility: return response OR fail loudly
+
         try:
-            return self.customers_api.create_customer(payload)
-        # try: return self.request_utility.post(self.ENDPOINT, payload=payload,
-        # expected_status_code=expected_status_code)
+            return self.customers_api.create_customer(payload=payload, expected_status_code=expected_status_code)
         except (UnexpectedStatusCodeError, SchemaValidationError) as e:
             # Log a short warning so the failure is visible in the structured logs (CustomFormatter will redact
             # sensitive info/fields).
@@ -189,38 +207,40 @@ class CustomersHelper(object):
             # Nothing parseable attached — re-raise so caller/test sees the original exception
             raise
 
-    def call_get_customer_by_id(self, customer_id: int, expected_status_code: int = 200) -> Dict[str, Any]:
-        """
-         Retrieve a customer by their ID.
-
-         Args:
-             customer_id (int): Customer ID.
-             expected_status_code (int): Expected HTTP status code.
-
-         Returns:
-             dict: Parsed customer JSON response.
-         """
-        # logger.debug(f"🟢 Calling 'Get Customer' for ID {customer_id}.")
-        logger.debug("🟢 Calling 'Get Customer' for ID %s.", customer_id)
-        return self.request_utility.get(f'{self.ENDPOINT}/{customer_id}', expected_status_code=expected_status_code)
-
-    def call_delete_customer(self, customer_id: int, expected_status_code: int = 200) -> Dict[str, Any]:
-        """
-        Delete (hard delete_it.py) a customer by ID using force=true.
-
-        Args:
-            customer_id (int): Customer ID.
-            expected_status_code (int): Expected HTTP status code.
-
-        Returns:
-            dict: Parsed JSON response from delete_it.py.
-        """
-        # Including into DELETE API the force=true query parameter otherwise it will be soft deleted and an error
-        # triggered
-        # logger.debug(f"🟢 Calling 'Delete Customer' for ID {customer_id}.")
-        logger.debug("🟢 Calling 'Delete Customer' for ID %s.", customer_id)
-        return self.request_utility.delete(f"{self.ENDPOINT}/{customer_id}", params={"force": True},
-                                           expected_status_code=expected_status_code)
+    #
+    # def call_get_customer_by_id(self, customer_id: int, expected_status_code: int = 200) -> Dict[str, Any]:
+    #     """
+    #      Retrieve a customer by their ID.
+    #
+    #      Args:
+    #          customer_id (int): Customer ID.
+    #          expected_status_code (int): Expected HTTP status code.
+    #
+    #      Returns:
+    #          dict: Parsed customer JSON response.
+    #      """
+    #     # logger.debug(f"🟢 Calling 'Get Customer' for ID {customer_id}.")
+    #     logger.debug("🟢 Calling 'Get Customer' for ID %s.", customer_id)
+    #     return self.request_utility.get(f'{self.ENDPOINT}/{customer_id}', expected_status_code=expected_status_code)
+    #
+    # def call_delete_customer(self, customer_id: int, expected_status_code: int = 200) -> Dict[str, Any]:
+    #     """
+    #     Delete (hard delete_it.py) a customer by ID using force=true.
+    #
+    #     Args:
+    #         customer_id (int): Customer ID.
+    #         expected_status_code (int): Expected HTTP status code.
+    #
+    #     Returns:
+    #         dict: Parsed JSON response from delete_it.py.
+    #     """
+    #     # Including into DELETE API the force=true query parameter otherwise it will be soft deleted and an error
+    #     # triggered
+    #     # logger.debug(f"🟢 Calling 'Delete Customer' for ID {customer_id}.")
+    #     logger.debug("🟢 Calling 'Delete Customer' for ID %s.", customer_id)
+    #     return self.request_utility.delete(f"{self.ENDPOINT}/{customer_id}", params={"force": True},
+    #                                        expected_status_code=expected_status_code)
+    #
 
     # ------------------------
     # Listing / Pagination
@@ -247,6 +267,11 @@ class CustomersHelper(object):
         Returns:
             List[dict]: List of filtered customers.
 
+        Enterprise responsibilities:
+        - Delegates HTTP to CustomersApi layer (via request_utility)
+        - Applies post-fetch filtering
+        - Does NOT perform schema validation here
+
         Notes:
             - paginate_all_results takes care of the page loop and returns a flat list.
             - This method applies post-fetch date filtering using safe_parse_utc_datetime.
@@ -267,11 +292,12 @@ class CustomersHelper(object):
         # -------------------------------------------
         # 🚀 Paginate through all pages using the utility
         # -------------------------------------------
+        # Use injected API client's request utility
         all_customers = paginate_all_results(
-            request_utility=self.request_utility,
-            endpoint=self.ENDPOINT,
+            request_utility=self.customers_api.request_utility,
+            endpoint=self.customers_api.ENDPOINT,
             params=params,
-            max_pages=max_pages
+            max_pages=max_pages,
         )
 
         # -------------------------------------------
@@ -318,7 +344,11 @@ class CustomersHelper(object):
                 # ✅ Keep customer — passed all time filters
                 filtered_customers.append(customer)
             except Exception as e:
-                logger.warning(f"⚠️ Could not parse 'date_created_gmt' for customer ID {customer.get('id')}: {e}")
+                logger.warning(
+                    "⚠️ Could not parse 'date_created_gmt' for customer ID %s: %s",
+                    customer.get("id"),
+                    e,
+                )
                 continue
 
         # 🔁 Shortcut: If filtering by email, return only first match
@@ -328,97 +358,6 @@ class CustomersHelper(object):
 
         # ✅ Return all valid customers that passed date filter
         return filtered_customers
-
-    # ------------------------
-    # Schema Validation / Helpers
-    # ------------------------
-    @staticmethod
-    def validate_customer_error_response_schema(response: dict) -> None:
-        """
-        📋 Validates the structure of a failed customer creation response using error schema.
-
-        This static helper is useful in tests that assert on error payload structure.
-
-        Args:
-            response (dict): The JSON response from the API.
-
-        Raises:
-            AssertionError: If schema is invalid or required fields are missing.
-        """
-        # It uses: TypeError for incorrect types and AssertionError for missing fields. These are explicit and
-        # semantically correct, which improves debugging and integrates better with pytest error reporting.
-        # It avoids emojis, noisy messages and unnecessary verbosity.
-        if not isinstance(response, dict):
-            raise TypeError(f"Expected dict error response, got {type(response)}")
-        if not response.get("code"):
-            raise AssertionError(f"Missing 'code' in error response: {type(response)}")
-        if not response.get("message"):
-            raise AssertionError(f"Missing 'message' in error response: {type(response)}")
-        validate(instance=response, schema=error_schema)
-        # validate comes from the jsonschema Python library. It’s used to validate a JSON object against a predefined
-        # schema.
-        # instance: the actual JSON data you want to validate.
-        # schema: the JSON Schema that defines the structure, required fields, types, and constraints.
-
-    @staticmethod
-    def validate_customer_response_schema(customer: dict) -> None:
-        # It tells readers (and type checkers like mypy/pyright) that the function does not return anything.
-        """
-        Validates the structure of a single customer object against the customer JSON schema.
-        Ensures your API returned valid data upon creation. Useful for unit test level.
-        Immediately after customer creation, you're validating that the response structure from the creation endpoint
-        is correct — i.e., all required fields (id, email, billing, shipping, etc.) are present and typed correctly.
-
-         Args:
-            customer (dict): Customer data to validate.
-
-        Raises:
-            jsonschema.ValidationError: If validation fails.
-        """
-        validate(instance=customer, schema=customer_schema)  # validate comes from the jsonschema Python library.
-        # It’s used to validate a JSON object against a predefined schema.
-        # instance: the actual JSON data you want to validate. In your code, customer is a Python dictionary
-        # returned by the API.
-        # schema: the JSON Schema that defines the structure, required fields, types, and constraints.
-        # In your code, this is customer_schema.
-        logger.info("📦 Customer response schema validated successfully")
-
-    def assert_valid_customer_response(self, customer: dict) -> None:
-        # It tells readers (and type checkers like mypy/pyright) that the function does not return anything.
-        """
-        ✅ Validates the structure and schema of a successful customer creation response (id, email, username present).
-        Useful to centralize repeated checks across tests.
-
-        - Raises AssertionError if invalid.
-        - It ensures schema and domain rules are never forgotten or duplicated.
-        - Centralizes your happy-path response validation in one place.
-        - It reduces clutter in tests.
-        - It honors separation of concerns (test ≠ validation logic).
-        - It keeps your test code clean-no need to separately call the schema validator and then structural/assertion
-        checks.
-
-        Args:
-            customer (dict): API response for created customer
-
-        Raises:
-            AssertionError or jsonschema.ValidationError on failure.
-        """
-        # ------------------------------------------------------------------
-        # 📋 Schema Validation first (It checks that the POST response is valid)
-        # ------------------------------------------------------------------
-        self.validate_customer_response_schema(customer)
-
-        if not isinstance(customer, dict):
-            raise AssertionError(f"Response is not a dict. Got: {type(customer)}")
-
-        if "id" not in customer or not isinstance(customer["id"], int):
-            raise AssertionError(f"Invalid or missing customer ID. Got: {customer.get('id')}")
-        if "email" not in customer or not isinstance(customer["email"], str):
-            raise AssertionError(f"Invalid or missing email. Got: {customer.get('email')}")
-        if "username" not in customer:
-            raise AssertionError(f"Missing username. Got: {customer.get('username')}")
-
-        logger.info("✅ Customer ID and email validated: %s, %s", customer["id"], customer["email"])
 
     def validate_customer_exists_and_matches(self, email: str, dao) -> None:
         """
@@ -451,7 +390,7 @@ class CustomersHelper(object):
         logger.info(f"✅ Assertion passed: Customer found calling API GET all customers paginated")
 
         # 📋 Validates API response schema using existing method GET /customers response (first result in search).
-        self.validate_customer_response_schema(customer=result[0])
+        validate_customer_response_schema(customer=result[0])
 
         # 🧠 Validate DB presence
         db_customer = dao.get_customer_by_email(email)
@@ -464,13 +403,36 @@ class CustomersHelper(object):
         # logger.info(f"Assertion passed: Customer found in the DB and record validated for ID={db_customer['ID']}")
         logger.info("✅ Assertion passed: Customer record validated in DB for ID=%s", db_customer["ID"])
 
-        # 🔍 Why both validations are needed?
-        # Even though the schema is the same, you're validating:
-        #    - That the create endpoint returns a well-formed customer
-        #    - That the list/retrieve endpoint also returns that customer correctly
-        # It’s entirely possible for one to pass and the other to fail if there's a bug in the API's data handling
-        # logic (e.g., bad serialization in GET, missing fields in POST).
+    # 🔍 Why both validations are needed?
+    # Even though the schema is the same, you're validating:
+    #    - That the create endpoint returns a well-formed customer
+    #    - That the list/retrieve endpoint also returns that customer correctly
+    # It’s entirely possible for one to pass and the other to fail if there's a bug in the API's data handling
+    # logic (e.g., bad serialization in GET, missing fields in POST).
 
+
+# # ---------------------------------------------------------
+# # VALIDATION (delegates to validators package)
+# # ---------------------------------------------------------
+# def assert_valid_customer_response(self, customer: dict) -> None:
+#     """
+#     Validate a happy-path customer response.
+#
+#     This method intentionally delegates validation logic to:
+#         - customer_schema_validator
+#         - customer_assertions
+#
+#     Why this exists:
+#     ----------------
+#     The fixture layer expects a helper-level validation entrypoint.
+#     The helper does NOT implement validation itself — it orchestrates it.
+#     """
+#
+#     # 1️⃣ Schema-level validation
+#     validate_customer_response_schema(customer)
+#
+#     # 2️⃣ Field-level/business assertions
+#     assert_customer_fields(customer)
 
 # # NOTE!! Keep this main block for local debugging only. Remove or guard it before committing if you prefer to avoid
 # # leaving ad-hoc debug code in the main branch.

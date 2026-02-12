@@ -10,15 +10,18 @@
 
 ### 🧱 Design contract (locked)
 
-      RequestUtility
-         ↓
-      CustomersApi        ← HTTP only
-         ↓
-      CustomersHelper     ← domain + assertions
-         ↓
-      Plugins / fixtures
-         ↓
-      Tests
+    Tests
+      ↓
+    Create_valid_customer fixture
+      ↓
+    CustomersHelper (customers_api=CustomersApi)
+      ↓
+    validators (schema + asserts)
+      ↓
+    CustomersApi.create_customer()
+      ↓
+    RequestUtility
+
 
 ### 🧱 Target internal structure (after refactor)
 

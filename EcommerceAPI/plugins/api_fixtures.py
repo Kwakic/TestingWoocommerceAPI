@@ -49,6 +49,8 @@ from EcommerceAPI.src.utilities.exceptions import (
     UnexpectedStatusCodeError,
 )
 from EcommerceAPI.src.helpers.shared.cleanup_helpers import set_default_request_utility
+from EcommerceAPI.src.validators.customers.customer_schema_validator import validate_customer_response_schema
+from EcommerceAPI.src.validators.customers.customer_assertions import assert_valid_customer_response
 
 log = logging.getLogger(__name__)
 
@@ -138,9 +140,12 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
 
         # For truly unexpected errors (network, coding bug, etc.), allow them to surface so tests/CI can fail fast.
 
-        # Validate critical fields for happy-path tests
+        # Validate response schema and critical fields for happy-path tests
+        # 1. First schema
+        # 2. Then domain assertions
         if validate_response:
-            customer_helper.assert_valid_customer_response(customer)
+            validate_customer_response_schema(customer)
+            assert_valid_customer_response(customer)
 
         if not skip_cleanup:
             register("customers", customer["id"])

@@ -1,186 +1,154 @@
-"""
-CustomersApi
-============
-
-Customers API client (happy-path, thin wrapper).
-
-This module is a thin HTTP wrapper around RequestUtility.
-It is intentionally dumb.
-
-Responsibilities:
------------------
-✔ Build correct endpoints
-✔ Call RequestUtility with expected success statuses
-✔ Return parsed response data
-
-Non-responsibilities:
----------------------
-✘ No assertions
-✘ No schema validation
-✘ No business rules
-✘ No DB access
-✘ No fixtures
-✘ No retries / auth logic (delegated to RequestUtility)
-
-Any unexpected HTTP status is handled by RequestUtility,
-which raises UnexpectedStatusCodeError / SchemaValidationError.
-
-Design notes:
--------------
-- This client is used by domain helpers (CustomersHelper), NOT by tests.
-- Negative / raw testing must bypass this layer and use RequestUtility directly.
-
-!!!!my notes: CustomersHelper no longer calls request_utility.post("/customers", …) directly
-It delegates HTTP calls to CustomersApi
-"""
-
 import logging
 from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
-# from typing import TYPE_CHECKING
-# if TYPE_CHECKING:
-#     # IDE-only: point to the test-level fixture so PyCharm can navigate to it. Do NOT import conftest at runtime!
-#     # TYPE_CHECKING imports are ignored at runtime, so they’re safe to add into framework code.
-#     from EcommerceAPI.plugins.entities import RequestUtility
-#
-
 
 class CustomersApi:
     """
-    Positive-path Customers API client.
+    Customers API client (happy-path, thin wrapper).
 
-    This class assumes that calls are expected to succeed.
-    If an unexpected HTTP status is returned, RequestUtility will raise an exception (UnexpectedStatusCodeError).
+    This layer is intentionally dumb.
+
+    Responsibilities:
+    -----------------
+    ✔ Know endpoint paths
+    ✔ Know HTTP verbs
+    ✔ Delegate calls to RequestUtility
+    ✔ Return parsed JSON on success
+
+    Non-responsibilities:
+    ---------------------
+    ✘ No assertions
+    ✘ No schema validation
+    ✘ No fixtures
+    ✘ No database access
+    ✘ No business rules
+    ✘ No test ergonomics (auto-generation, retries, etc.)
+
+    Any unexpected HTTP status is handled by RequestUtility,
+    which raises UnexpectedStatusCodeError / SchemaValidationError.
     """
-    ENDPOINT = "customers"
+
+    ENDPOINT = "/customers"
 
     def __init__(self, request_utility):
         """
-        Raises:
-            ValueError: If request_utility is None.
-            TypeError: If request_utility is not an instance of RequestUtility.
-
         Parameters
         ----------
         request_utility : RequestUtility
-            Preconfigured HTTP client injected by plugin/fixture.
+            Pre-configured HTTP client injected by fixture/plugin.
         """
-        if request_utility is None:
-            raise ValueError(
-                "Customers_api.py requires a RequestUtility instance managed by fixture ...x...."
-            )
-        if not isinstance(request_utility):
-            raise TypeError("request_utility must be an instance of RequestUtility")
-
         self.request_utility = request_utility
 
     # ------------------------------------------------------------------
     # CREATE
     # ------------------------------------------------------------------
-    def create_customer(self, payload: Dict[str, Any], *, expected_status_code: int = 201) -> Dict[str, Any]:
+    def create_customer(
+        self,
+        payload: Dict[str, Any],
+        *,
+        expected_status_code: int = 201,
+    ) -> Dict[str, Any]:
         """
-        Create a customer via POST /customers.
+        POST /customers
 
-        Expected behavior:
-        - HTTP 201 Created
-        - Returns parsed customer object
+        Create a new customer.
 
-        Parameters
-        ----------
-        payload : dict
-            Valid customer payload.
+        Args:
+            payload (dict):
+                Fully prepared request body.
+            expected_status_code (int):
+                Expected HTTP status code (default: 201).
 
-        Returns
-        -------
-        dict
-            Created a customer object.
+        Returns:
+            dict: Parsed JSON response.
+
+        Raises:
+            UnexpectedStatusCodeError
+            SchemaValidationError
         """
-        response = self.request_utility.post(
+        logger.debug("📡 POST %s payload_keys=%s", self.ENDPOINT, list(payload.keys()))
+
+        return self.request_utility.post(
             self.ENDPOINT,
-            json=payload,
-            expected_status=201,
+            payload=payload,
+            expected_status_code=expected_status_code,
         )
-        return response.json()
 
     # ------------------------------------------------------------------
-    # READ
+    # READ (single)
     # ------------------------------------------------------------------
-    def get_customer_by_id(self, customer_id: int) -> Dict[str, Any]:
+    def get_customer(
+        self,
+        customer_id: Any,
+        *,
+        expected_status_code: int = 200,
+    ) -> Dict[str, Any]:
         """
-        Fetch a customer by ID via GET /customers/{id}.
+        GET /customers/{id}
 
-        Expected behavior:
-        - HTTP 200 OK
+        Fetch a single customer by ID.
         """
-        response = self.request_utility.get(
-            path=f"/customers/{customer_id}",
-            expected_status=200,
+        endpoint = f"{self.ENDPOINT}/{customer_id}"
+        logger.debug("📡 GET %s", endpoint)
+
+        return self.request_utility.get(
+            endpoint,
+            expected_status_code=expected_status_code,
         )
-        return response.json()
 
+    # ------------------------------------------------------------------
+    # READ (list)
+    # ------------------------------------------------------------------
     def list_customers(
         self,
-        email: Optional[str] = None,
-        per_page: int = 100,
-        page: int = 1,
-    ) -> List[Dict[str, Any]]:
+        *,
+        params: Optional[Dict[str, Any]] = None,
+        expected_status_code: int = 200,
+    ) -> Dict[str, Any]:
         """
-        List customers via GET /customers.
+        GET /customers
 
-        Supports basic filtering (email) and pagination.
-
-        Parameters
-        ----------
-        email : str, optional
-            Filter customers by email.
-        per_page : int
-            Number of items per page.
-        page : int
-            Page number.
-
-        Returns
-        -------
-        list[dict]
-            List of customer objects.
+        List customers with optional query parameters
+        (pagination, filters, etc.).
         """
-        params: Dict[str, Any] = {
-            "per_page": per_page,
-            "page": page,
-        }
-        if email:
-            params["email"] = email
+        logger.debug("📡 GET %s params=%s", self.ENDPOINT, params)
 
-        response = self.request_utility.get(
-            path="/customers",
+        return self.request_utility.get(
+            self.ENDPOINT,
             params=params,
-            expected_status=200,
+            expected_status_code=expected_status_code,
         )
-        return response.json()
 
     # ------------------------------------------------------------------
     # DELETE
     # ------------------------------------------------------------------
-    def delete_customer(self, customer_id: int, force: bool = True) -> Dict[str, Any]:
+    def delete_customer(
+        self,
+        customer_id: Any,
+        *,
+        force: bool = True,
+        expected_status_code: int = 200,
+    ) -> Dict[str, Any]:
         """
-        Delete a customer via DELETE /customers/{id}.
+        DELETE /customers/{id}
 
-        Parameters
-        ----------
-        customer_id : int
-            Customer ID.
-        force : bool
-            Whether to force deletion.
+        Delete a customer.
 
-        Returns
-        -------
-        dict
-            API response payload.
+        Args:
+            customer_id:
+                ID of the customer to delete.
+            force (bool):
+                Whether to force deletion (API-specific).
+            expected_status_code (int):
+                Expected HTTP status code (default: 200).
         """
-        response = self.request_utility.delete(
-            path=f"/customers/{customer_id}",
+        endpoint = f"{self.ENDPOINT}/{customer_id}"
+        logger.debug("📡 DELETE %s force=%s", endpoint, force)
+
+        return self.request_utility.delete(
+            endpoint,
             params={"force": force},
-            expected_status=200,
+            expected_status_code=expected_status_code,
         )
-        return response.json()

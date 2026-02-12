@@ -382,13 +382,38 @@ def discover_entities(request_utility: RequestUtility) -> Dict[str, EntityBundle
 
         # Instantiate helper + DAO
         try:
-            # Instantiate helper (prefer dependency injection)
+            # Step 1: Try to load the dedicated API client (new refactored pattern)
+            api_instance = None
             try:
-                helper_instance = helper_cls(request_utility)
-            except TypeError:
-                helper_instance = helper_cls()
+                api_module_name = f"{entity}_api"
+                api_module = importlib.import_module(f"EcommerceAPI.src.api.{api_module_name}")
+                api_class_name = f"{_to_camel(entity)}Api"
+                api_cls = getattr(api_module, api_class_name, None)
 
-            # Instantiate DAO if it's a class
+                if api_cls:
+                    api_instance = api_cls(request_utility)
+                    log.debug("✅ [%s] Loaded API client: %s", entity, api_class_name)
+                else:
+                    log.info("⏭️  [%s] API class '%s' not found — skipping", entity,
+                             api_class_name)
+                    continue
+
+            except ImportError:
+                log.info("⏭️  [%s] API module not found — skipping", entity)
+                continue
+            except Exception as e:
+                log.info("⏭️  [%s] Failed to load API: %s — skipping", entity, e)
+                continue
+
+            # Step 2: Instantiate helper with API client
+            try:
+                helper_instance = helper_cls(api_instance)
+                log.debug("✅ [%s] Instantiated helper with API client", entity)
+            except TypeError as e:
+                log.error("❌ [%s] Helper signature incompatible with API client: %s", entity, e)
+                continue
+
+            # Step 3: Instantiate DAO if it's a class
             if isinstance(dao_cls, type):
                 try:
                     dao_instance = dao_cls()
@@ -403,6 +428,7 @@ def discover_entities(request_utility: RequestUtility) -> Dict[str, EntityBundle
             else:
                 dao_instance = dao_cls
 
+            # Step 4: Register the entity bundle
             entities[entity] = EntityBundle(
                 helper=helper_instance, dao=dao_instance, delete_method=delete_method
             )
