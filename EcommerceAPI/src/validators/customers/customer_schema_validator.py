@@ -10,13 +10,11 @@ Note:
     Raises SchemaValidationError
 """
 
-from typing import Dict, Any
 import logging
 
 from jsonschema import validate
 
 from tests.shared.schemas.customer import customer_schema, error_schema
-from EcommerceAPI.src.utilities.exceptions import SchemaValidationError
 
 logger = logging.getLogger(__name__)
 

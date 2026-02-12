@@ -1,44 +1,18 @@
 # CUSTOMER HELPER - (TO CREATE PAYLOAD API CALL)
 
-"""
-Domain-level orchestration layer for Customers.
-
-Responsibilities:
------------------
-✔ Build payloads (including auto-generation ergonomics)
-✔ Delegate HTTP calls to CustomersApi
-✔ Handle positive + expected-negative flows
-✔ Delegate validation to validators layer
-✔ Return parsed JSON (success OR error body)
-
-Non-responsibilities:
----------------------
-✘ No raw HTTP calls
-✘ No schema logic (delegated to validators)
-✘ No business assertions inside this file
-✘ No fixtures
-✘ No DB access
-"""
-
 from __future__ import annotations
 
 import logging
 from typing import Optional, List, Dict, Any
 
-from jsonschema import validate
-
-from tests.shared.schemas.customer import customer_schema, error_schema
 from EcommerceAPI.src.api.customers_api import CustomersApi
 from EcommerceAPI.src.utilities.pagination_utils import paginate_all_results
 from EcommerceAPI.src.utilities.genericUtilities import generate_random_email_and_password
 from EcommerceAPI.src.utilities.exceptions import UnexpectedStatusCodeError, SchemaValidationError
 from EcommerceAPI.src.utilities.date_timestamp_utils import safe_parse_utc_datetime
 
-from EcommerceAPI.src.validators.customers.customer_schema_validator import (validate_customer_response_schema,
-                                                                             validate_customer_error_response_schema)
-from EcommerceAPI.src.validators.customers.customer_assertions import (
-    assert_valid_customer_response as assert_customer_fields,
-)
+from EcommerceAPI.src.validators.customers.customer_schema_validator import validate_customer_response_schema
+
 
 logger = logging.getLogger(__name__)
 
@@ -48,23 +22,23 @@ logger = logging.getLogger(__name__)
 
 class CustomersHelper(object):
     """
-    Domain-level helper for Customers.
+    Domain-level orchestration layer for Customers.
 
     Responsibilities:
-    - Build customer payloads (including auto-generation)
-    - Call CustomersApi (NO raw HTTP here)
-    - Handle positive + negative flows consistently
-    - Return parsed JSON on success OR expected failure
-    - Expose clean, test-friendly behavior
+    -----------------
+    ✔ Build payloads (including auto-generation ergonomics)
+    ✔ Delegate HTTP calls to CustomersApi (NO raw HTTP here)
+    ✔ Handle positive + expected-negative flows
+    ✔ Delegate validation to validators layer
+    ✔ Return parsed JSON (success OR error body)
 
-    This layer sits between:
-        Tests/fixtures
-            ↓
-        CustomersHelper
-            ↓
-        CustomersApi
-            ↓
-        RequestUtility
+    Non-responsibilities:
+    ---------------------
+    ✘ No raw HTTP calls
+    ✘ No schema logic (delegated to validators)
+    ✘ No business assertions inside this file
+    ✘ No fixtures
+    ✘ No DB access
     """
 
     ENDPOINT = "customers"
@@ -207,22 +181,22 @@ class CustomersHelper(object):
             # Nothing parseable attached — re-raise so caller/test sees the original exception
             raise
 
-    #
-    # def call_get_customer_by_id(self, customer_id: int, expected_status_code: int = 200) -> Dict[str, Any]:
-    #     """
-    #      Retrieve a customer by their ID.
-    #
-    #      Args:
-    #          customer_id (int): Customer ID.
-    #          expected_status_code (int): Expected HTTP status code.
-    #
-    #      Returns:
-    #          dict: Parsed customer JSON response.
-    #      """
-    #     # logger.debug(f"🟢 Calling 'Get Customer' for ID {customer_id}.")
-    #     logger.debug("🟢 Calling 'Get Customer' for ID %s.", customer_id)
-    #     return self.request_utility.get(f'{self.ENDPOINT}/{customer_id}', expected_status_code=expected_status_code)
-    #
+    def call_get_customer_by_id(self, customer_id: int, expected_status_code: int = 200) -> Dict[str, Any]:
+        """
+         Retrieve a customer by their ID.
+
+         Args:
+             customer_id (int): Customer ID.
+             expected_status_code (int): Expected HTTP status code.
+
+         Returns:
+             dict: Parsed customer JSON response.
+         """
+        # logger.debug(f"🟢 Calling 'Get Customer' for ID {customer_id}.")
+        logger.debug("🟢 Calling 'Get Customer' for ID %s.", customer_id)
+        return self.customers_api.get_customer(f'{self.ENDPOINT}/{customer_id}',
+                                               expected_status_code=expected_status_code)
+
     # def call_delete_customer(self, customer_id: int, expected_status_code: int = 200) -> Dict[str, Any]:
     #     """
     #     Delete (hard delete_it.py) a customer by ID using force=true.
@@ -267,7 +241,7 @@ class CustomersHelper(object):
         Returns:
             List[dict]: List of filtered customers.
 
-        Enterprise responsibilities:
+        Responsibilities:
         - Delegates HTTP to CustomersApi layer (via request_utility)
         - Applies post-fetch filtering
         - Does NOT perform schema validation here
@@ -410,29 +384,6 @@ class CustomersHelper(object):
     # It’s entirely possible for one to pass and the other to fail if there's a bug in the API's data handling
     # logic (e.g., bad serialization in GET, missing fields in POST).
 
-
-# # ---------------------------------------------------------
-# # VALIDATION (delegates to validators package)
-# # ---------------------------------------------------------
-# def assert_valid_customer_response(self, customer: dict) -> None:
-#     """
-#     Validate a happy-path customer response.
-#
-#     This method intentionally delegates validation logic to:
-#         - customer_schema_validator
-#         - customer_assertions
-#
-#     Why this exists:
-#     ----------------
-#     The fixture layer expects a helper-level validation entrypoint.
-#     The helper does NOT implement validation itself — it orchestrates it.
-#     """
-#
-#     # 1️⃣ Schema-level validation
-#     validate_customer_response_schema(customer)
-#
-#     # 2️⃣ Field-level/business assertions
-#     assert_customer_fields(customer)
 
 # # NOTE!! Keep this main block for local debugging only. Remove or guard it before committing if you prefer to avoid
 # # leaving ad-hoc debug code in the main branch.
