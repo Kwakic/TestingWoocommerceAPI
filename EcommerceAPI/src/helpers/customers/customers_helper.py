@@ -61,7 +61,6 @@ class CustomersHelper(object):
             password: Optional[str] = None,
             expected_status_code: int = 201,
             auto_generate: bool = True,
-            validate_response: bool = True,
             **kwargs,
     ) -> Dict[str, Any]:
         """
@@ -80,7 +79,6 @@ class CustomersHelper(object):
             password: Optional password
             expected_status_code: Expected HTTP status
             auto_generate: Auto-generate credentials for positive tests
-            validate_response: Whether to run validators
             **kwargs: Additional payload fields
 
         Returns:

@@ -45,4 +45,8 @@ def assert_valid_customer_response(customer: dict) -> None:
         raise AssertionError(f"Missing username. Got: {customer.get('username')}")
 
     logger.info("✅ Customer ID and email validated: %s, %s", customer["id"], customer["email"])
-    
+
+    # # Early assert for id and email ensures immediate failure if response is malformed.
+    # assert customer_id is not None, "❌ Customer ID not returned"
+    # assert email is not None, "❌ Customer Email not returned"
+    # logger.info(f"✅ Assertion passed: Customer created: ID={customer_id}, Email={email}")

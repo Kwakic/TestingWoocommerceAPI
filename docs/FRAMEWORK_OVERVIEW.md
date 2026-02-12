@@ -43,7 +43,7 @@ Who should read this
    ```
 4. Run a single test:
    ```bash
-   pytest tests/customers/api/test_create_customer_single.py::test_create_single_customer_with_email_and_password_only -q -vv
+   pytest tests/customers/api/test_create_customer_negative.py::test_create_single_customer_with_email_and_password_only -q -vv
    ```
 5. Run matrix locally with Docker:
    ```bash
