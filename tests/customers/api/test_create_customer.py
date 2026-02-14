@@ -402,46 +402,8 @@ def test_create_customer_email_field_validation(customer_helper, customers_dao, 
         customers_dao: Fixture providing customer DAO.
         customer_helper: Fixture providing customer API helper.
         raw_customer_api (Callable): .Fixture providing low-level access t tests that need to inspect raw responses.
-        payload (dict): Test input parameterized payload with malformed or missing email/password fields.
+        payload (dict): Test input payload with malformed or missing email/password fields.
         expected_status_code (int): Expected HTTP response code.
-
-
-    🏗 Full Architecture View
-    Here’s the entire execution pipeline:
-
-    pytest CLI
-       ↓
-    Test Collection
-       ↓
-    Parametrization (6 test cases)
-       ↓
-    pytest_runtest_protocol hook
-       ↓
-    Fixture Injection (raw_customer_api)
-       ↓
-    Test Function
-       ↓
-    CustomersApi.post()
-       ↓
-    RequestUtility.post()
-       ↓
-    requests.post()
-       ↓
-    WooCommerce
-       ↓
-    Response 400
-       ↓
-    RequestUtility status validation
-       ↓
-    Return JSON
-       ↓
-    Schema Validation
-       ↓
-    Logging
-       ↓
-    Allure attachment
-       ↓
-    Next parameter case
     """
 
     # -------------------------------------------
@@ -454,39 +416,15 @@ def test_create_customer_email_field_validation(customer_helper, customers_dao, 
     # -------------------------------------------
     # 📞 Call customer creation using factory method
     # -------------------------------------------
-    # response = raw_customer_api.post(endpoint="customers", payload=payload,
-    #                                  expected_status_code=expected_status_code, return_raw=False)
-    #
-    # # --------------------------------------------
-    # # 📋 Validate error schema and contents
-    # # --------------------------------------------
-    #
-    # validate_customer_error_response_schema(response)
-    #
-    # logger.info(f"✅ Proper error returned for payload: {payload} → {response['code']}: {response['message']}")
+    response = raw_customer_api.post(endpoint="customers", payload=payload,
+                                     expected_status_code=expected_status_code)
 
-    # 🧪 Proper Raw Version of Your Test
-    # If you're testing the flag purely for curiosity, this is the fully correct raw-compatible version.
-    # response.status_code
-    # response.headers
-    # response.cookies
-    # response.elapsed
-    # response.text
-    # response.url
-    # response.request.headers
-    response = raw_customer_api.post(
-        "customers",
-        payload=payload,
-        expected_status_code=expected_status_code,
-        return_raw=True
-    )
-    body = response.json()
-    validate_customer_error_response_schema(body)
-    assert response.headers["Content-Type"] == "application/json; charset=UTF-8"
-    # assert "sessionid" in response.cookies
-    # assert "Internal Server Error" in response.text
-    # assert response.elapsed.total_seconds() < 1.0
-    logger.info(f"✅ Proper error returned for payload: {payload} → {body['code']}: {body['message']}")
+    # --------------------------------------------
+    # 📋 Validate error schema and contents
+    # --------------------------------------------
+    validate_customer_error_response_schema(response)
+
+    logger.info(f"✅ Proper error returned for payload: {payload} → {response['code']}: {response['message']}")
 
 
 # @pytest.mark.negative_test
