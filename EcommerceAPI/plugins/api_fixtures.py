@@ -164,8 +164,6 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
 @pytest.fixture(scope="function")
 def raw_customer_api(request_utility):
     """
-    It simply returns the already-created request_utility object.
-
     Fixture providing low-level access to the customer API for negative tests and tests that need to inspect raw
     responses.
 
