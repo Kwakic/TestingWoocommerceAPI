@@ -356,9 +356,14 @@ class CustomersHelper(object):
         # ✅ Return all valid customers that passed date filter
         return filtered_customers
 
-    def validate_customer_exists_and_matches(self, email: str, dao) -> None:
+    def validate_customer_exists_fast(self, email: str, dao) -> None:
         """
         Checks that customer exists in GET /customers, validates schema, and matches DB record.
+        - fast API call - API returns result for this query
+        - minimal overhead
+        - Blind trust in API
+        - Cannot detect duplicates
+        - API filter → 1 result → OK
 
         After fetching data from the API with GET /customers you're validating that the customer returned by the GET
         API also conforms to the expected schema. Helps catch bugs where POST works fine, but GET returns malformed data
@@ -406,6 +411,58 @@ class CustomersHelper(object):
     #    - That the list/retrieve endpoint also returns that customer correctly
     # It’s entirely possible for one to pass and the other to fail if there's a bug in the API's data handling
     # logic (e.g., bad serialization in GET, missing fields in POST).
+
+    def validate_customer_uniqueness_and_consistency(self, email: str, dao) -> None:
+        """
+        Validates that:
+        - Exactly ONE customer exists with given email (full dataset scan)
+        - API response is valid (schema)
+        - DB record matches API data
+        - Detects duplicates
+        - Independent of API correctness (filter in Python)
+
+        You are testing the SYSTEM, not the endpoint:
+        - Is my system data correct regardless of API behavior?
+        """
+
+        logger.debug("🟢 Validating uniqueness of customer by email: %s", email)
+
+        # 🔍 FULL DATASET SCAN (no API filtering)
+        # You scan the whole dataset, and you stop trusting API filtering
+        all_customers = self.call_list_all_customers_paginated()
+
+        matches = [c for c in all_customers if c.get("email") == email]
+
+        if len(matches) != 1:
+            raise AssertionError(
+                f"❌ Expected exactly 1 customer with email {email}, found {len(matches)}"
+            )
+
+        customer = matches[0]
+
+        # ✅ Basic validation
+        # Uniqueness already guarantees existence and email match already guaranteed by filtering.
+        if "id" not in customer or not isinstance(customer["id"], int) or customer["id"] <= 0:
+            raise AssertionError("❌ Invalid or missing customer ID")
+
+        logger.info("✅ Assertion passed: Exactly one customer found in full dataset scan")
+
+        # 📋 Schema validation
+        validate_customer_response_schema(customer=customer)
+
+        # 🧠 DB validation
+        db_customer = dao.get_customer_by_email(email)
+
+        if not db_customer:
+            raise AssertionError(f"No DB record found for email {email}")
+
+        if str(db_customer["ID"]) != str(customer["id"]):
+            raise AssertionError("DB ID does not match API ID")
+
+        if db_customer.get("user_email") != customer["email"]:
+            raise AssertionError("DB email does not match API email")
+
+        logger.info("✅ Assertion passed: Customer record validated in DB for ID=%s", db_customer["ID"])
 
 
 # # NOTE!! Keep this main block for local debugging only. Remove or guard it before committing if you prefer to avoid

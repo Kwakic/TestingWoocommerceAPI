@@ -20,23 +20,52 @@ It follows the unified test framework architecture, enables CI autodiscovery, an
 ## 1. 📁 Directory Structure
 
 ```
-tests/customers/
+├── tests/                                         ← The test suite root - Each team got its own file
+│     ├── customers/                               ← customers-specific
+│     │     ├── configs/
+│     │     │     └── config_customers.py          ← storing API_HOSTS
+│     │     ├── data/
+│     │     │     └── create_customer_payload.json
+│     │     ├── .gitlab-ci-template.yml
+│     │     ├── __init__.py
+│     │     ├── conftest.py
+│     │     ├── README.md
+│     │     └── api/
+│     │           └── test_debug.log
+│     │           └── test_suite_summary.MD
+│     │           └── test_create_customer.py
+│     │           └── test_customer_deletion.py
+│     │           └── test_customer_filters.py
+│     │           └── test_customers_auth.py
+│     │           └── test_get_all_customers_smoke.py
+│     │           └── test_get_customer.py
+│     │           └── test_soft_deleted_customer_handling.py
+│     │           └── test_update_custom
+│     │           └── __init__.py
+│     ├── shared/
+│     │     ├── schemas/
+│     │     │       ├── coupon.py
+│     │     │       ├── customers.py
+│     │     │       ├── order.py.py
+│     │     │       └── product.py.py
+│     │     ├── contract/
+│     │     │       ├── test_schema_validation_smoke.py
+│     │     │       ├── __init__.py
+│     │     │       └── README_CONTRACT.md
+│     │     ├── performance/
+│     │     │       ├── test_basic_response_times.py
+│     │     │       └── __init__.py
+│     │     └── preflight/
+│     │             ├── test_logging_globals.py
+│     │             ├── test_config_contract.py
+│     │             ├── test_pytest_bootstrap.py
+│     │             ├── __init__.py
+│     │             └── README_PREFLIGHT.md
+│     │
+│     ├── orders/..                                ← orders-specific
+│     ├── coupons/..                               ← coupons-specific
+│     └── products/..                              ← products-specific
 │
-├── api/                  # API test cases for Customers
-│   ├── test_create_customer.py
-│   ├── test_update_customer.py
-│   └── ...
-│
-├── constants/            # endpoints, enums, identifiers
-├── configs/              # customer-specific config, host URLs
-├── dao/                  # DB/data-access helpers (per-team)
-├── data/                 # payloads, input JSON, scenario-driven cases
-├── helpers/              # utilities only the Customers service needs
-├── plugins/              # pytest plugins: factories, fixtures, config
-│   ├── api_fixtures.py
-│   ├── entities.py
-│   └── _config.py
-├── schemas/              # response/request validation schemas
 └── conftest.py           # registers Customers-specific plugins
 ```
 

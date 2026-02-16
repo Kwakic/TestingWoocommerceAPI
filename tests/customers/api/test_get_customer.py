@@ -60,7 +60,7 @@ def test_get_customer_by_email(customer_helper, customers_dao, create_valid_cust
     # 🔍 Confirm customer exists in DB and API GET response matches DB.
     # 🧩 Schema Validation (it checks that the GET response is valid).
     # ---------------------------------------------------------------------------------------------------------
-    customer_helper.validate_customer_exists_and_matches(email=email, dao=customers_dao)
+    customer_helper.validate_customer_exists_fast(email=email, dao=customers_dao)
     logger.info("🎯 Full validation complete for customer ID: %r", customer_id)
 
 
@@ -127,7 +127,7 @@ def test_get_customer_by_id(customer_helper, customers_dao, create_valid_custome
     # 🔍 Confirm customer exists in DB and API GET response matches DB.
     # 🧩 Schema Validation (it checks that the GET response is valid).
     # ---------------------------------------------------------------------------------------------------------
-    customer_helper.validate_customer_exists_and_matches(email=email, dao=customers_dao)
+    customer_helper.validate_customer_exists_fast(email=email, dao=customers_dao)
     logger.info("🎯 Full validation complete for customer ID: %r", customer_id)
 
 

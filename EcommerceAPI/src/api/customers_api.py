@@ -77,7 +77,7 @@ class CustomersApi:
         )
 
     # ------------------------------------------------------------------
-    # READ (single)
+    # READ (single, by ID - filtered list shortcut))
     # ------------------------------------------------------------------
     def get_customer(
         self,
@@ -95,29 +95,6 @@ class CustomersApi:
 
         return self.request_utility.get(
             endpoint,
-            expected_status_code=expected_status_code,
-        )
-
-    # ------------------------------------------------------------------
-    # READ (list)
-    # ------------------------------------------------------------------
-    def list_customers(
-        self,
-        *,
-        params: Optional[Dict[str, Any]] = None,
-        expected_status_code: int = 200,
-    ) -> Dict[str, Any]:
-        """
-        GET /customers
-
-        List customers with optional query parameters
-        (pagination, filters, etc.).
-        """
-        logger.debug("📡 GET %s params=%s", self.ENDPOINT, params)
-
-        return self.request_utility.get(
-            self.ENDPOINT,
-            params=params,
             expected_status_code=expected_status_code,
         )
 
@@ -140,6 +117,29 @@ class CustomersApi:
         """
         params = {"email": email.lower()}
 
+        logger.debug("📡 GET %s params=%s", self.ENDPOINT, params)
+
+        return self.request_utility.get(
+            self.ENDPOINT,
+            params=params,
+            expected_status_code=expected_status_code,
+        )
+
+    # ------------------------------------------------------------------
+    # READ (list)
+    # ------------------------------------------------------------------
+    def list_customers(
+        self,
+        *,
+        params: Optional[Dict[str, Any]] = None,
+        expected_status_code: int = 200,
+    ) -> Dict[str, Any]:
+        """
+        GET /customers
+
+        List customers with optional query parameters
+        (pagination, filters, etc.).
+        """
         logger.debug("📡 GET %s params=%s", self.ENDPOINT, params)
 
         return self.request_utility.get(

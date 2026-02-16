@@ -142,17 +142,19 @@ Test creating a minimal customer and validating API + DB.
 """
 
 import pytest
+
 logger = logging.getLogger(__name__)
 
 pytestmark = [pytest.mark.customers, pytest.mark.api]
 
-def test_create_minimal_customer(create_valid_customer, customer_helper, customers_dao):
-    # Create (factory validates schema by default)
-    cust = create_valid_customer()
-    assert isinstance(cust["id"], int)
 
-    # DB check via DAO helper
-    customer_helper.validate_customer_exists_and_matches(email=cust["email"], dao=customers_dao)
+def test_create_minimal_customer(create_valid_customer, customer_helper, customers_dao):
+  # Create (factory validates schema by default)
+  cust = create_valid_customer()
+  assert isinstance(cust["id"], int)
+
+  # DB check via DAO helper
+  customer_helper.validate_customer_exists_fast(email=cust["email"], dao=customers_dao)
 ```
 
 ---
