@@ -122,6 +122,33 @@ class CustomersApi:
         )
 
     # ------------------------------------------------------------------
+    # READ (by email - filtered list shortcut)
+    # ------------------------------------------------------------------
+    def get_customer_by_email(
+            self,
+            email: str,
+            *,
+            expected_status_code: int = 200,
+    ) -> Dict[str, Any]:
+        """
+        GET /customers?email={email}
+
+        Fetch customer(s) filtered by email.
+
+        Note:
+            WooCommerce returns a list. This method returns raw list response.
+        """
+        params = {"email": email.lower()}
+
+        logger.debug("📡 GET %s params=%s", self.ENDPOINT, params)
+
+        return self.request_utility.get(
+            self.ENDPOINT,
+            params=params,
+            expected_status_code=expected_status_code,
+        )
+
+    # ------------------------------------------------------------------
     # DELETE
     # ------------------------------------------------------------------
     def delete_customer(

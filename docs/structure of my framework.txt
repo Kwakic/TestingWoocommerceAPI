@@ -752,6 +752,8 @@ TestEcommerceAPI (project suite/root)
 │     │     │     └── config_loader.py
 │     │     ├── dao/                                 ← ⚠ only if DB is shared
 │     │     │     └── global_connection.py
+│     │     ├── core/
+│     │     │     └── http_client.py
 │     │     ├── api/
 │     │     │     │── customers_api.py
 │     │     │     │── coupons_api.py

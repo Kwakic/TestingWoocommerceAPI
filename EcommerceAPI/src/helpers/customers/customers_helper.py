@@ -192,8 +192,7 @@ class CustomersHelper(object):
          """
         # logger.debug(f"🟢 Calling 'Get Customer' for ID {customer_id}.")
         logger.debug("🟢 Calling 'Get Customer' for ID %s.", customer_id)
-        return self.customers_api.get_customer(f'{self.ENDPOINT}/{customer_id}',
-                                               expected_status_code=expected_status_code)
+        return self.customers_api.get_customer(customer_id, expected_status_code=expected_status_code)
 
     # def call_delete_customer(self, customer_id: int, expected_status_code: int = 200) -> Dict[str, Any]:
     #     """
@@ -213,6 +212,32 @@ class CustomersHelper(object):
     #     return self.request_utility.delete(f"{self.ENDPOINT}/{customer_id}", params={"force": True},
     #                                        expected_status_code=expected_status_code)
     #
+
+    def call_get_customer_by_email(
+            self,
+            email: str,
+            expected_status_code: int = 200,
+    ) -> Dict[str, Any]:
+        """
+        Retrieve a customer by email.
+
+        Returns:
+            dict: First matching customer (assumes email uniqueness)
+
+        Raises:
+            AssertionError if no customer found.
+        """
+        logger.debug("🟢 Calling 'Get Customer by Email' for %s.", email)
+
+        result = self.customers_api.get_customer_by_email(
+            email=email,
+            expected_status_code=expected_status_code,
+        )
+
+        if not result:
+            raise AssertionError(f"❌ No customer found for email {email}")
+
+        return result[0]  # Woo returns list → we take first
 
     # ------------------------
     # Listing / Pagination
