@@ -18,12 +18,11 @@ from __future__ import annotations
 import copy
 import logging
 import random
-from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
 from EcommerceAPI.src.utilities.requestsUtility import RequestUtility
 from EcommerceAPI.src.utilities.exceptions import APIRequestException
-from EcommerceAPI.src.dao.products_dao import ProductsDAO
+from EcommerceAPI.src.dao.products.products_dao import ProductsDAO
 
 logger = logging.getLogger(__name__)
 

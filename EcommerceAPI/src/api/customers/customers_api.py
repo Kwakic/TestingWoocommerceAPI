@@ -155,8 +155,8 @@ class CustomersApi:
         self,
         customer_id: Any,
         *,
-        force: bool = True,
         expected_status_code: int = 200,
+        force: bool = True
     ) -> Dict[str, Any]:
         """
         DELETE /customers/{id}
@@ -172,10 +172,10 @@ class CustomersApi:
                 Expected HTTP status code (default: 200).
         """
         endpoint = f"{self.ENDPOINT}/{customer_id}"
-        logger.debug("📡 DELETE %s force=%s", endpoint)
+        logger.debug("📡 DELETE %s force=%s", endpoint, force)
 
         return self.request_utility.delete(
             endpoint,
-            params={"force": True},
+            params={"force": force},
             expected_status_code=expected_status_code,
         )

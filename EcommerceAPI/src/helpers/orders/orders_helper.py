@@ -10,7 +10,7 @@ from typing import Any, Dict, List
 from EcommerceAPI.src.utilities.requestsUtility import RequestUtility  # Importing the RequestUtility class does not
 # instantiate anything — it only gives the helper the type, so it can optionally create one if none is supplied.
 from EcommerceAPI.src.utilities.exceptions import APIRequestException
-from EcommerceAPI.src.dao.orders_dao import OrdersDao
+from EcommerceAPI.src.dao.orders.orders_dao import OrdersDao
 
 logger = logging.getLogger(__name__)
 

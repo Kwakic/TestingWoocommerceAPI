@@ -112,6 +112,7 @@ import pkgutil
 from dataclasses import dataclass
 from enum import Enum
 
+import EcommerceAPI.src.api
 from EcommerceAPI.src.utilities.requestsUtility import RequestUtility
 from EcommerceAPI.src.utilities.entities_registry import EntitiesRegistry
 
@@ -241,10 +242,25 @@ def discover_entities(request_utility: RequestUtility) -> Dict[str, EntityBundle
         )
         if modname.endswith("_helper")
     }
-
+    # Dynamically import all dao's modules (supports subpackages, e.g. dao/customers/customers_dao.py)
     dao_modules = {
-        modname: importlib.import_module(f"EcommerceAPI.src.dao.{modname}")
-        for _, modname, _ in pkgutil.iter_modules(dao_path)
+        modname.rsplit(".", 1)[-1]: importlib.import_module(modname)
+        for _, modname, _ in pkgutil.walk_packages(
+            dao_path,
+            prefix="EcommerceAPI.src.dao.",
+        )
+        if modname.endswith("_dao")
+    }
+    # Dynamically import all API modules (supports subpackages)
+    api_path = EcommerceAPI.src.api.__path__
+
+    api_modules = {
+        modname.rsplit(".", 1)[-1]: importlib.import_module(modname)
+        for _, modname, _ in pkgutil.walk_packages(
+            api_path,
+            prefix="EcommerceAPI.src.api.",
+        )
+        if modname.endswith("_api")
     }
 
     # ---------------------------------------------------------------------
@@ -308,24 +324,22 @@ def discover_entities(request_utility: RequestUtility) -> Dict[str, EntityBundle
             if non_class_candidate is not None:
                 return non_class_candidate
 
-        # Step 3: fallback - exact CamelCase class name like <EntityName>DAO
+        # Step 3: exact match first (fast + deterministic)
         exact_name = f"{_to_camel(entity_name)}DAO"
-        found = []
         for mod in dao_modules.values():
             if hasattr(mod, exact_name):
-                found.append(getattr(mod, exact_name))
+                return getattr(mod, exact_name)
 
-        if not found:
-            return None
+        # Step 4: flexible fallback (folder-agnostic)
+        for mod in dao_modules.values():
+            for attr in dir(mod):
+                name = attr.lower()
+                if name.startswith(prefix) and name.endswith("dao"):
+                    val = getattr(mod, attr)
+                    if isinstance(val, type):
+                        return val
 
-        if len(found) > 1:
-            logging.getLogger(__name__).debug(
-                "Multiple DAO candidates found for exact name %s: using the first one. Candidates: %s",
-                exact_name,
-                [getattr(f, "__name__", str(f)) for f in found],
-            )
-
-        return found[0]
+        return None
 
     # ---------------------------------------------------------------------
     # Core entity discovery loop
@@ -382,11 +396,15 @@ def discover_entities(request_utility: RequestUtility) -> Dict[str, EntityBundle
 
         # Instantiate helper + DAO
         try:
-            # Step 1: Try to load the dedicated API client (new refactored pattern)
+            # Step 1: Try to load the dedicated API client
             api_instance = None
             try:
                 api_module_name = f"{entity}_api"
-                api_module = importlib.import_module(f"EcommerceAPI.src.api.{api_module_name}")
+                api_module = api_modules.get(api_module_name)
+
+                if not api_module:
+                    continue
+
                 api_class_name = f"{_to_camel(entity)}Api"
                 api_cls = getattr(api_module, api_class_name, None)
 
@@ -394,15 +412,10 @@ def discover_entities(request_utility: RequestUtility) -> Dict[str, EntityBundle
                     api_instance = api_cls(request_utility)
                     log.debug("✅ [%s] Loaded API client: %s", entity, api_class_name)
                 else:
-                    log.info("⏭️  [%s] API class '%s' not found — skipping", entity,
-                             api_class_name)
                     continue
 
-            except ImportError:
-                log.info("⏭️  [%s] API module not found — skipping", entity)
-                continue
             except Exception as e:
-                log.info("⏭️  [%s] Failed to load API: %s — skipping", entity, e)
+                log.warning("⚠️  [%s] Failed to load API: %s — skipping", entity, e)
                 continue
 
             # Step 2: Instantiate helper with API client
@@ -430,7 +443,9 @@ def discover_entities(request_utility: RequestUtility) -> Dict[str, EntityBundle
 
             # Step 4: Register the entity bundle
             entities[entity] = EntityBundle(
-                helper=helper_instance, dao=dao_instance, delete_method=delete_method
+                helper=helper_instance,
+                dao=dao_instance,
+                delete_method=delete_method
             )
 
         except (ImportError, TypeError, ValueError, RuntimeError) as e:
@@ -438,7 +453,41 @@ def discover_entities(request_utility: RequestUtility) -> Dict[str, EntityBundle
                 "Discovery: failed to prepare entity bundle for '%s': %s", entity, e
             )
 
-    log.info("🔍 Discovered API entities: %s", ", ".join(sorted(entities.keys())) or "NONE", )
+    # Build discovery summary
+    summary_lines = []
+
+    for helper_name in sorted(helper_modules.keys()):
+        entity_clean = helper_name.replace("_helper", "")
+
+        # Determine actual status FIRST
+        is_ready = entity_clean in entities
+
+        if is_ready:
+            status = "✅  READY"
+            details = ""
+        else:
+            # Diagnose WHY it was skipped
+            api_module_name = f"{entity_clean}_api"
+            api_module = api_modules.get(api_module_name)
+            api_class_name = f"{_to_camel(entity_clean)}Api"
+
+            if not api_module:
+                reason = "missing API module"
+            elif not hasattr(api_module, api_class_name):
+                reason = f"{api_class_name} class not found in {api_module_name}"
+            elif not _find_dao_class(entity_clean):
+                reason = "missing DAO"
+            else:
+                reason = "unknown"
+
+            status = f"⏭️ SKIPPED ({reason})"
+            details = ""
+
+        summary_lines.append(f"{entity_clean:<12} | {status}")
+
+    log.info("🔍 ENTITY DISCOVERY SUMMARY")
+    for line in summary_lines:
+        log.info("   %s", line)
 
     return entities
 

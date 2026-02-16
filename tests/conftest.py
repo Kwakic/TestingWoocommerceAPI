@@ -7,7 +7,7 @@ import pytest
 @pytest.fixture(scope="session")
 def api_base_url() -> str:
     """
-    Global API base URL resolver.
+    Global API global URL resolver.
 
     Controlled via:
       SERVICE=customers|orders|products|...

@@ -127,7 +127,7 @@ class RequestUtility:
         Initializes the RequestUtility.
 
         Args:
-            base_url (str): Fully-qualified base URL for the API
+            base_url (str): Fully-qualified global URL for the API
                 (e.g. http://localhost:8888/wp-json/wc/v3).
             retries (int): Number of retry attempts for transient errors.
             backoff (float): Exponential backoff factor between retries.
@@ -376,7 +376,7 @@ class RequestUtility:
         self.status_code = response.status_code
         self.expected_status_code = expected_status_code
 
-        # Extract endpoint name for readability (avoid long base URLs)
+        # Extract endpoint name for readability (avoid long global URLs)
         endpoint_name = response.request.url.replace(self.base_url, "")
 
         # Attempt to parse the response as JSON. If that fails, fallback to plain text.

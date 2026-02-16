@@ -747,18 +747,44 @@ TestEcommerceAPI (project suite/root)
 │     │     ├── entities.py
 │     │     ├── logging_plugin.py
 │     │     └── _config.py
-│     │── src/                                       ← ⚠ ONLY reusable/shared/global
-│     │     ├── configs/                             ← ⚠ ONLY shared/base config here
+│     │── src/                                      ← ⚠ ONLY reusable/shared/global
+│     │     ├── configs/
 │     │     │     └── config_loader.py
-│     │     ├── dao/                                 ← ⚠ only if DB is shared
-│     │     │     └── global_connection.py
+│     │     ├── dao/
+│     │     │     ├── global/                       ← ⚠ only if DB is shared
+│     │     │     │      │── global_connection.py
+│     │     │     │      └── __init__.py
+│     │     │     ├── coupons/                      ← DOMAIN only
+│     │     │     │      │── coupons_dao.py
+│     │     │     │      └── __init__.py
+│     │     │     ├── orders/                       ← DOMAIN only
+│     │     │     │      │── orders_dao.py
+│     │     │     │      └── __init__.py
+│     │     │     ├── products/                     ← DOMAIN only
+│     │     │     │      │── products_dao.py
+│     │     │     │      └── __init__.py
+│     │     │     └── customers/                    ← DOMAIN only
+│     │     │            │── customers_dao.py
+│     │     │            └── __init__.py
 │     │     ├── core/
 │     │     │     └── http_client.py
 │     │     ├── api/
-│     │     │     │── customers_api.py
-│     │     │     │── coupons_api.py
-│     │     │     │── orders_api.py
-│     │     │     └── products_api.py
+│     │     │     ├── base/
+│     │     │     │      │── base_api.py            ← shared
+│     │     │     │      └── __init__.py
+│     │     │     ├── customers/
+│     │     │     │      │── customers_api.py       ← DOMAIN assertions only
+│     │     │     │      └── __init__.py
+│     │     │     ├── coupons/
+│     │     │     │      │── coupons_api.py         ← DOMAIN assertions only
+│     │     │     │      └── __init__.py
+│     │     │     ├── orders/
+│     │     │     │      │── orders_api.py          ← DOMAIN assertions only
+│     │     │     │      └── __init__.py
+│     │     │     └── products/
+│     │     │            │── products_api.py        ← DOMAIN assertions only
+│     │     │            └── __init__.py
+│     │     │
 │     │     ├── helpers/                            ← one helper for each microservice
 │     │     │     ├── customers/
 │     │     │     │      │── customers_helper.py    ← DOMAIN assertions only

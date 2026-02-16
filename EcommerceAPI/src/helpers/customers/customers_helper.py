@@ -5,13 +5,20 @@ from __future__ import annotations
 import logging
 from typing import Optional, List, Dict, Any
 
-from EcommerceAPI.src.api.customers_api import CustomersApi
+from EcommerceAPI.src.api.customers.customers_api import CustomersApi
 from EcommerceAPI.src.utilities.pagination_utils import paginate_all_results
 from EcommerceAPI.src.utilities.genericUtilities import generate_random_email_and_password
 from EcommerceAPI.src.utilities.exceptions import UnexpectedStatusCodeError, SchemaValidationError
 from EcommerceAPI.src.utilities.date_timestamp_utils import safe_parse_utc_datetime
 
 from EcommerceAPI.src.validators.customers.customer_schema_validator import validate_customer_response_schema
+
+from EcommerceAPI.src.validators.customers.customer_assertions import (
+    assert_customer_exists_in_api,
+    assert_customer_matches_db,
+    assert_single_customer_with_email,
+)
+
 
 logger = logging.getLogger(__name__)
 
@@ -208,8 +215,11 @@ class CustomersHelper(object):
         # triggered
         # logger.debug(f"🟢 Calling 'Delete Customer' for ID {customer_id}.")
         logger.debug("🟢 Calling 'Delete Customer' for ID %s.", customer_id)
-        return self.customers_api.delete_customer(f"{self.ENDPOINT}/{customer_id}", force=True,
-                                                  expected_status_code=expected_status_code)
+        return self.customers_api.delete_customer(
+            customer_id,
+            force=True,
+            expected_status_code=expected_status_code
+        )
 
     def call_get_customer_by_email(
             self,
@@ -379,26 +389,18 @@ class CustomersHelper(object):
 
         # 🔍 Call API to get customers
         result = self.call_list_all_customers_paginated(email=email)
-        if not result:
-            raise AssertionError(f"❌ Customer not found via API for email {email}")
-        if result[0]["email"] != email:
-            raise AssertionError(f"❌ Email mismatch for {email}")
-        if "id" not in result[0] or not isinstance(result[0]["id"], int) or result[0]["id"] <= 0:
-            raise AssertionError("❌ Invalid or missing customer ID")
-        logger.info(f"✅ Assertion passed: Customer found calling API GET all customers paginated")
 
-        # 📋 Validates API response schema using existing method GET /customers response (first result in search).
-        validate_customer_response_schema(customer=result[0])
+        # ✅ API validation
+        customer = assert_customer_exists_in_api(result, email)
+        logger.info("✅ Assertion passed: Customer found calling API GET all customers paginated")
 
-        # 🧠 Validate DB presence
+        # ✅ Schema validation - Validates API response schema using existing method GET /customers response.
+        validate_customer_response_schema(customer=customer)
+
+        # ✅ DB validation
         db_customer = dao.get_customer_by_email(email)
-        if not db_customer:
-            raise AssertionError(f"No DB record found for email {email}")
-        if str(db_customer["ID"]) != str(result[0]["id"]):
-            raise AssertionError("DB ID does not match API ID")
-        if db_customer.get("user_email") != result[0]["email"]:
-            raise AssertionError("DB email does not match API email")
-        # logger.info(f"Assertion passed: Customer found in the DB and record validated for ID={db_customer['ID']}")
+        assert_customer_matches_db(customer, db_customer)
+
         logger.info("✅ Assertion passed: Customer record validated in DB for ID=%s", db_customer["ID"])
 
     # 🔍 Why both validations are needed?
@@ -434,40 +436,20 @@ class CustomersHelper(object):
 
         logger.debug("🟢 Validating uniqueness of customer by email: %s", email)
 
-        # 🔍 FULL DATASET SCAN (no API filtering)
-        # You scan the whole dataset, and you stop trusting API filtering
+        # 🔍 FULL DATASET SCAN (no API filtering) Scan the whole dataset, and stop trusting API filtering.
         all_customers = self.call_list_all_customers_paginated()
 
-        matches = [c for c in all_customers if c.get("email") == email]
-
-        if len(matches) != 1:
-            raise AssertionError(
-                f"❌ Expected exactly 1 customer with email {email}, found {len(matches)}"
-            )
-
-        customer = matches[0]
-
-        # ✅ Basic validation
-        # Uniqueness already guarantees existence and email match already guaranteed by filtering.
-        if "id" not in customer or not isinstance(customer["id"], int) or customer["id"] <= 0:
-            raise AssertionError("❌ Invalid or missing customer ID")
+        # ✅ Uniqueness validation
+        customer = assert_single_customer_with_email(all_customers, email)
 
         logger.info("✅ Assertion passed: Exactly one customer found in full dataset scan")
 
-        # 📋 Schema validation
+        # ✅ Schema validation
         validate_customer_response_schema(customer=customer)
 
-        # 🧠 DB validation
+        # ✅ DB validation
         db_customer = dao.get_customer_by_email(email)
-
-        if not db_customer:
-            raise AssertionError(f"No DB record found for email {email}")
-
-        if str(db_customer["ID"]) != str(customer["id"]):
-            raise AssertionError("DB ID does not match API ID")
-
-        if db_customer.get("user_email") != customer["email"]:
-            raise AssertionError("DB email does not match API email")
+        assert_customer_matches_db(customer, db_customer)
 
         logger.info("✅ Assertion passed: Customer record validated in DB for ID=%s", db_customer["ID"])
 
