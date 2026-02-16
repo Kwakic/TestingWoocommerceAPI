@@ -154,7 +154,7 @@ def test_create_minimal_customer(create_valid_customer, customer_helper, custome
   assert isinstance(cust["id"], int)
 
   # DB check via DAO helper
-  customer_helper.validate_customer_exists_fast(email=cust["email"], dao=customers_dao)
+  customer_helper.validate_customer_exists_and_matches_api(email=cust["email"], dao=customers_dao)
 ```
 
 ---

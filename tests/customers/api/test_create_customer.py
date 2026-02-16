@@ -52,10 +52,11 @@ def test_bulk_create_customers(qty, customer_helper, customers_dao, create_valid
     - Generates unique correlation ID for logs for better traceability
 
      Args: qty: This test will run multiple times: once with qty = 1, once with qty = 3, once with qty = 5.
-           all_resources: provides access to helpers and DAOs (database access).
-           create_valid_customer: The test will call it inside create_fn.It creates a single customer with unique
-           name/email. Automatically registered for teardown inside the fixture. It handles both happy and error paths.
-           Validates POST schema.
+            customer_helper: Provides customer's helper
+            customers_dao: Provides customer's DAOs
+            create_valid_customer: The test will call it inside create_fn.It creates a single customer with unique
+            name/email. Automatically registered for teardown inside the fixture. It handles both happy and error paths.
+            Validates POST schema.
 
     🔁 DRY design pattern: Uses externalized create/validate/register functions to keep test reusable and clean.
 
@@ -126,7 +127,7 @@ def test_bulk_create_customers(qty, customer_helper, customers_dao, create_valid
         Args:
             email (str): Unique identifier used to search for the customer
         """
-        customer_helper.validate_customer_exists_fast(email=email, dao=customers_dao)
+        customer_helper.validate_customer_exists_and_matches_api(email=email, dao=customers_dao)
 
     # -------------------------------------------------------
     # 🚀 Run the bulk utility: create + validate + teardown
@@ -139,73 +140,91 @@ def test_bulk_create_customers(qty, customer_helper, customers_dao, create_valid
     )
 
 
-# # ---------------------------
-# # ⚠️ Test: Edge Cases for Bulk Create
-# # ---------------------------
-# @pytest.mark.tcid02
-# @pytest.mark.bulk
-# @pytest.mark.skip(reason="Edge case validation for qty=0 and qty=101; run manually when needed")
-# @pytest.mark.parametrize("qty", [0, 101])
-# def test_bulk_create_customers_edge_cases(qty, all_resources, create_valid_customer):
-#     """
-#     📌 Edge Case Test: Bulk creation with 0 and 101 customers.
-#
-#     This test uses a generic bulk utility to:
-#     - Create 0 or 101 customers via API
-#     - Validate POST response schema immediately after creation
-#     - Confirm presence via GET /customers
-#     - Assert correct data is stored in the database via DAO
-#     - Handles pagination if applicable
-#     - Logs with correlation IDs for traceability
-#     - Parametrized to run with edge quantities: 0 and 101
-#
-#     Args:
-#         qty: Number of customers to create (0 and 101 for edge cases)
-#         all_resources: Provides helpers and DAOs
-#         create_valid_customer: Fixture that creates a single customer and registers teardown
-#     """
-#
-#     # --------------------------------------
-#     # 🔧 Setup: Access customer helper + DAO
-#     # --------------------------------------
-#     helper = all_resources.entities["customers"].helper  # High-level API helper
-#     dao = all_resources.entities["customers"].dao  # DAO: Database Access Object for direct DB queries
-#
-#     # ------------------------
-#     # ✅ Create function
-#     # ------------------------
-#     def create_fn():
-#         customer = create_valid_customer()
-#
-#         email = customer["email"]
-#         customer_id = customer["id"]
-#
-#         assert customer_id is not None, "❌ Customer ID not returned"
-#         assert email is not None, "❌ Customer Email not returned"
-#         logger.info(f"✅ Assertion passed: Customer created: ID={customer_id}, Email={email}")
-#
-#         # 📋 Validate the POST response schema immediately after creation
-#         helper.validate_customer_response_schema(customer=customer)
-#
-#         return email, {"id": customer_id, "resource_type": "customers"}
-#
-#     # ------------------------
-#     # ✅ Validate function
-#     # ------------------------
-#     def validate_fn(email):
-#         helper.validate_customer_exists_and_matches(email=email, dao=dao)
-#
-#     # -------------------------------------------------------
-#     # 🚀 Run the bulk utility: create + validate + teardown
-#     # -------------------------------------------------------
-#     bulk_create_and_validate_resources(
-#         create_fn=create_fn,
-#         validate_fn=validate_fn,
-#         qty=qty,
-#         label=f"customer_edge_case_{qty}"
-#     )
-#
-#
+# ---------------------------
+# ⚠️ Test: Edge Cases for Bulk Create
+# ---------------------------
+@pytest.mark.tcid02
+@pytest.mark.bulk
+@pytest.mark.skip(reason="Edge case validation for qty=0 and qty=101; run manually when needed")
+@pytest.mark.parametrize("qty", [0, 101])
+def test_bulk_create_customers_edge_cases(qty, customer_helper, customers_dao, create_valid_customer):
+    """
+    📌 Edge Case Test: Bulk creation with 0 and 101 customers.
+
+    This test uses a generic bulk utility to:
+    - Create 0 or 101 customers via API
+    - Validate POST response schema immediately after creation
+    - Confirm presence via GET /customers
+    - Assert correct data is stored in the database via DAO
+    - Handles pagination if applicable
+    - Logs with correlation IDs for traceability
+    - Parametrized to run with edge quantities: 0 and 101
+
+    Args:
+        qty: Number of customers to create (0 and 101 for edge cases)
+        customer_helper: Provides customer's helper
+        customers_dao: Provides customer's DAOs
+        create_valid_customer: Fixture that creates a single customer and registers teardown
+
+        It validates the following aspects:
+        - API response structure (schema validation) after POST /customers
+        - Critical fields (`id`, `email`, etc.) are present and correct
+        - Customer appears in GET /customers endpoint and matches DB
+        - API response matches DB record
+        - Logging and traceability (via logger + correlation_id where applicable)
+        - Cleanup is automatic unless explicitly skipped
+
+    🔧 Behind the scenes:
+    - It uses a factory fixture: `create_valid_customer(...)` which calls:
+        - `customer_helper.create_customer(...)` → handles API POST
+        - Automatically validates:
+            - Response schema via `validate_customer_response_schema(...)`
+            - Critical fields via `assert_valid_customer_response(...) such as email and ID`
+            - Registers the customer for teardown (unless skip_cleanup=True)
+    - Returns full customer dict (e.g., `{"id": 123, "email": ..., "username": ...}`)
+    """
+
+    # ------------------------
+    # ✅ Create function
+    # ------------------------
+    def create_fn():
+        customer = create_valid_customer()  # Default: skip_cleanup=False, validate_response=True
+        # No need to assert ID/email. The fixture already does it: customer_helper.assert_valid_customer_response()
+
+        email = customer["email"]
+        customer_id = customer["id"]
+
+        # 📦 Return identifiers and metadata (for teardown registration). Email: used as identifier to later validate
+        # that customer exists. Metadata (like ID) is optional, but useful for debugging or future logging.
+        return email, {"id": customer_id, "resource_type": "customers"}
+
+    # ------------------------
+    # ✅ Validate function
+    # ------------------------
+    # It encapsulates/summarize the logic to check that the created customer is visible via GET /customers and matches
+    # DB (via DAO).
+    def validate_fn(email):
+        """
+        Validates that the customer:
+        - API GET /customers can find the customer.
+        - The response is valid JSON/schema.
+        - The data matches what’s stored in the DB.
+        Args:
+            email (str): Unique identifier used to search for the customer
+        """
+        customer_helper.validate_customer_exists_and_matches_api(email=email, dao=customers_dao)
+
+    # -------------------------------------------------------
+    # 🚀 Run the bulk utility: create + validate + teardown
+    # -------------------------------------------------------
+    bulk_create_and_validate_resources(
+        create_fn=create_fn,
+        validate_fn=validate_fn,
+        qty=qty,
+        label=f"customer_edge_case_{qty}"
+    )
+
+
 # ---------------------------
 # 🧪 Test: Minimal Customer Creation
 # ---------------------------
@@ -261,7 +280,7 @@ def test_create_single_customer_with_email_and_password_only(customer_helper, cu
     # 🔍 Confirm customer exists in DB and API GET response matches DB.
     # 🧩 Schema Validation (it checks that the GET response is valid).
     # ---------------------------------------------------------------------------------------------------------
-    customer_helper.validate_customer_exists_fast(email=email, dao=customers_dao)
+    customer_helper.validate_customer_exists_and_matches_api(email=email, dao=customers_dao)
     logger.info("🎯 Full validation complete for customer ID: %r", customer_id)
 
 
@@ -311,68 +330,55 @@ def generate_address_pairs():
     ]
 
 
-# @pytest.mark.skip(reason="Billing/shipping fields optional — no functional difference tested.")
-# @pytest.mark.tcid04
-# @pytest.mark.parametrize("billing, shipping", generate_address_pairs())
-# def test_create_customer_with_varied_addresses(
-#         all_resources,
-#         billing,
-#         shipping,
-#         create_valid_customer
-# ):
-#     """
-#     Validates:
-#     - Customer created via factory fixture with randomized address data
-#     - API response schema
-#     - That the customer exists via GET
-#     - That DB record matches using DAO
-#     - Schema Validation (managed via customer_helper)
-#     - Cleanup is handled automatically
-#     - Parameterized address formats
-#     - Logger.info() logs for visibility during test runs.
-#     """
-#
-#     # -------------------------------------------
-#     # 🔧 Access helpers and DAOs from test setup
-#     # -------------------------------------------
-#     helper = all_resources.entities["customers"].helper  # High-level API helper
-#     dao = all_resources.entities["customers"].dao  # DAO: Database Access Object for direct DB queries
-#
-#     # ✅ Create customer using fixture factory
-#     logger.debug(f"📦 Billing data: {billing}")
-#     logger.debug(f"📦 Shipping data: {shipping}")
-#     # # 🧠 Optional: Pretty Print for Readability
-#     # # If the billing/shipping data is large, consider formatting them with json.dumps():
-#     # import json
-#     # logger.debug(f"📦 Billing data: {json.dumps(billing, indent=2)}")
-#     # # This makes the logs more readable, especially for nested or complex payloads
-#
-#     # -------------------------------------------
-#     # ✅ Create customer via fixture factory
-#     # -------------------------------------------
-#     logger.info("🛠 Creating a test customer via factory fixture with parameterized billing and shipping addresses")
-#     # To keep the customer in the DB (i.e., skip deletion), pass: customer = create_customer_for_test(skip_cleanup=True)
-#     customer = create_valid_customer(billing=billing, shipping=shipping)
-#     customer_id = customer["id"]
-#     customer_email = customer["email"]
-#     # Early assert for id and email ensures immediate failure if response is malformed.
-#     assert customer_id is not None, "❌ Customer ID not returned"
-#     assert customer_email is not None, "❌ Customer Email not returned"
-#     logger.info(f"✅ Assertion passed: Customer created: ID={customer_id}, Email={customer_email}")
-#
-#     # ------------------------------------------------------------------
-#     # 📋 Schema Validation (It checks that the POST response is valid)
-#     # ------------------------------------------------------------------
-#     customer_helper.validate_customer_response_schema(customer=customer)
-#
-#     # ---------------------------------------------------------------------------------------------------------
-#     # 🔍 Confirm customer exists in DB and API GET response matches DB.
-#     # 🧩 Schema Validation (it checks that the GET response is valid).
-#     # ---------------------------------------------------------------------------------------------------------
-#     customer_helper.validate_customer_exists_and_matches(email=customer_email, dao=dao)
-#     logger.info(f"🎯 Full validation complete for customer ID={customer_id}")
-#
-#
+@pytest.mark.skip(reason="Billing/shipping fields optional — no functional difference tested.")
+@pytest.mark.tcid04
+@pytest.mark.parametrize("billing, shipping", generate_address_pairs())
+def test_create_customer_with_varied_addresses(
+        customer_helper,
+        customers_dao,
+        billing,
+        shipping,
+        create_valid_customer
+):
+    """
+    Validates:
+    - Customer created via factory fixture with randomized address data
+    - Parameterized address formats
+    - API response structure (schema validation) after POST /customers
+    - Critical fields (`id`, `email`, etc.) are present and correct
+    - Customer appears in GET /customers endpoint and matches DB
+    - API response matches DB record
+    - Logging and traceability (via logger + correlation_id where applicable)
+    - Cleanup is automatic unless explicitly skipped
+    - Generates unique correlation ID for logs for better traceability
+    """
+
+    # ✅ Create customer using fixture factory
+    logger.debug(f"📦 Billing data: {billing}")
+    logger.debug(f"📦 Shipping data: {shipping}")
+    # # 🧠 Optional: Pretty Print for Readability
+    # # If the billing/shipping data is large, consider formatting them with json.dumps():
+    # import json
+    # logger.debug(f"📦 Billing data: {json.dumps(billing, indent=2)}")
+    # # This makes the logs more readable, especially for nested or complex payloads
+
+    # -------------------------------------------
+    # ✅ Create customer via fixture factory
+    # -------------------------------------------
+    logger.info("🛠 Creating a test customer via factory fixture with parameterized billing and shipping addresses")
+    # To keep the customer in the DB (i.e., skip deletion), pass: customer = create_customer_for_test(skip_cleanup=True)
+    customer = create_valid_customer(billing=billing, shipping=shipping)
+    customer_id = customer["id"]
+    customer_email = customer["email"]
+
+    # ---------------------------------------------------------------------------------------------------------
+    # 🔍 Confirm customer exists in DB and API GET response matches DB.
+    # 🧩 Schema Validation (it checks that the GET response is valid).
+    # ---------------------------------------------------------------------------------------------------------
+    customer_helper.validate_customer_exists_and_matches_api(email=customer_email, dao=customers_dao)
+    logger.info("🎯 Full validation complete for customer ID: %r", customer_id)
+
+
 @pytest.mark.negative_test
 @pytest.mark.tcid15
 @pytest.mark.parametrize("payload, expected_status_code", INVALID_EMAIL_PAYLOADS)
@@ -427,72 +433,78 @@ def test_create_customer_email_field_validation(customer_helper, customers_dao, 
     logger.info(f"✅ Proper error returned for payload: {payload} → {response['code']}: {response['message']}")
 
 
-# @pytest.mark.negative_test
-# @pytest.mark.tcid16
-# def test_create_customer_fail_for_existing_email(create_valid_customer, raw_customer_api, all_resources):
-#     """
-#     ❌ Negative Test: Attempt to create a customer with an email that already exists.
-#
-#     Test verifies:
-#     - HTTP 400 returned for duplicate email
-#     - Error code: 'registration-error-email-exists'
-#     - The Error message is informative and matches expected
-#
-#     Args:
-#         create_valid_customer (Callable): Factory fixture to create valid WooCommerce customers
-#         raw_customer_api (RawAPIClient): Fixture for low-level API calls used for negative testing
-#         all_resources (CustomerResources): Full resource fixture providing helper, DAO, etc.
-#
-#     🔧 Behind the scenes:
-#     - It uses a factory fixture: `create_valid_customer(...)` which calls:
-#         - `customer_helper.create_customer(...)` → handles API POST
-#         - Automatically validates:
-#             - Response schema via `validate_customer_response_schema(...)`
-#             - Critical fields via `assert_valid_customer_response(...) such as email and ID`
-#             - Registers the customer for teardown (unless skip_cleanup=True)
-#     - Returns full customer dict (e.g., `{"id": 123, "email": ..., "username": ...}`)
-#
-#     """
-#
-#     # -------------------------------------------
-#     # 🔧 Access helpers
-#     # -------------------------------------------
-#     customer_helper = all_resources.entities["customers"].helper  # High-level API helper
-#
-#     # -------------------------------
-#     #  ✅ Create customer via fixture factory
-#     # -------------------------------
-#     logger.info("🛠 Creating a negative test when it is expected to fail for existing email.")
-#     existing_customer = create_valid_customer()  # Default: skip_cleanup=False, validate_response=True
-#     # To keep the customer in the DB (i.e., skip deletion), pass: customer = create_customer_for_test(skip_cleanup=True)
-#
-#     email = existing_customer['email']
-#
-#     # -------------------------------
-#     #  ✅ Re-create customer via fixture factory
-#     # -------------------------------
-#     logger.info(f"⚠️ Attempt to re-create the customer using existing email: {email}")
-#
-#     payload = {
-#         "email": email,
-#         "password": "Password1"  # must pass something, doesn't need to match
-#     }
-#
-#     response = raw_customer_api.post(
-#         entity="customers",
-#         payload=payload,  # or inline--> payload = {"email": "invalid", "password": "Password1"}
-#         expected_status_code=400  # Expect failure
-#     )
-#
-#     logger.info("🧪 Validating response for duplicate email error...")
-#
-#     # --------------------------------------------
-#     # 📋 Validate error schema and contents
-#     # --------------------------------------------
-#     customer_helper.validate_customer_error_response_schema(response)
-#
-#     logger.info(f"✅ Proper error returned for payload: {payload} → {response['code']}: {response['message']}")
-#
+@pytest.mark.negative_test
+@pytest.mark.tcid16
+def test_create_customer_fail_for_existing_email(create_valid_customer, raw_customer_api, customer_helper,
+                                                 customers_dao):
+    """
+    ❌ Negative Test: Attempt to create a customer with an email that already exists.
+
+    Test verifies:
+    - HTTP 400 returned for duplicate email
+    - Error code: 'registration-error-email-exists'
+    - The Error message is informative and matches expected
+
+    Args:
+        create_valid_customer (Callable): Factory fixture to create valid WooCommerce customers
+        raw_customer_api (RawAPIClient): Fixture for low-level API calls used for negative testing
+        customer_helper: Provides customer's helper
+        customers_dao: Provides customer's DAOs
+
+    🔧 Behind the scenes:
+    - It uses a factory fixture: `create_valid_customer(...)` which calls:
+        - `customer_helper.create_customer(...)` → handles API POST
+        - Automatically validates:
+            - Response schema via `validate_customer_response_schema(...)`
+            - Critical fields via `assert_valid_customer_response(...) such as email and ID`
+            - Registers the customer for teardown (unless skip_cleanup=True)
+    - Returns full customer dict (e.g., `{"id": 123, "email": ..., "username": ...}`)
+
+    """
+
+    # -------------------------------
+    #  ✅ Create customer via fixture factory
+    # -------------------------------
+    logger.info("🛠 Creating a negative test when it is expected to fail for existing email.")
+    existing_customer = create_valid_customer()  # Default: skip_cleanup=False, validate_response=True
+    # To keep the customer in the DB (i.e., skip deletion), pass: customer = create_customer_for_test(skip_cleanup=True)
+
+    email = existing_customer['email']
+
+    # -------------------------------
+    #  ✅ Re-create customer via fixture factory
+    # -------------------------------
+    logger.info(f"⚠️ Attempt to re-create the customer using existing email: {email}")
+
+    payload = {
+        "email": email,
+        "password": "Password1"  # must pass something, doesn't need to match
+    }
+
+    # -------------------------------------------
+    # 📞 Call customer creation using factory method
+    # -------------------------------------------
+    response = raw_customer_api.post(
+        endpoint="customers",
+        payload=payload,  # or inline--> payload = {"email": "invalid", "password": "Password1"}
+        expected_status_code=400  # Expect failure
+    )
+
+    logger.info("🧪 Validating response for duplicate email error...")
+
+    # ---------------------------------------------------------------------------------------------------------
+    # 🔍 Confirm customer exists in DB and API GET response matches DB.
+    # 🧩 Schema Validation (it checks that the GET response is valid).
+    # ---------------------------------------------------------------------------------------------------------
+    # The method "validate_customer_uniqueness_and_consistency" ensures only 1 exists and detects backend bugs
+    customer_helper.validate_customer_uniqueness_and_consistency(email, customers_dao)
+
+    # --------------------------------------------
+    # 📋 Validate error schema and contents
+    # --------------------------------------------
+    validate_customer_error_response_schema(response)
+    logger.info(f"✅ Proper error returned for payload: {payload} → {response['code']}: {response['message']}")
+
 # # Calls:
 # # test
 # #  └─ create_valid_customer()
@@ -502,7 +514,7 @@ def test_create_customer_email_field_validation(customer_helper, customers_dao, 
 # #                  └─ POST /wc/v3/customers
 # #                      └─ WooCommerce API
 # #                          └─ 201 + { id: ... }
-#
+
 # # Test
 # #   ↓
 # # Helper (customers)
@@ -510,14 +522,14 @@ def test_create_customer_email_field_validation(customer_helper, customers_dao, 
 # # RequestUtility
 # #   ↓   base_url + endpoint
 # # HTTP request
-#
-#
+
+
 # # High-Level Flow (One Sentence)
-# #
+
 # # Pytest discovers the test → loads conftests by directory ancestry → builds fixtures → injects RequestUtility →
 # # helper builds endpoint → RequestUtility builds URL → HTTP POST → response validated → test asserts
-#
-#
+
+
 # # 🧠 FULL CONSOLIDATED CALL STACK (ONE DIAGRAM)
 # # pytest
 # #  │
@@ -528,7 +540,13 @@ def test_create_customer_email_field_validation(customer_helper, customers_dao, 
 # # create_valid_customer (fixture)
 # #  │
 # #  ▼
+# # Validators (customer_schema_validator + customer_assertions)
+# #  │
+# #  ▼
 # # CustomersHelper.create_customer()
+# #  │
+# #  ▼
+# # CustomersApi()
 # #  │
 # #  ▼
 # # RequestUtility.post()

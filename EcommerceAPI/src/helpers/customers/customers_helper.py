@@ -13,7 +13,6 @@ from EcommerceAPI.src.utilities.date_timestamp_utils import safe_parse_utc_datet
 
 from EcommerceAPI.src.validators.customers.customer_schema_validator import validate_customer_response_schema
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -194,28 +193,28 @@ class CustomersHelper(object):
         logger.debug("🟢 Calling 'Get Customer' for ID %s.", customer_id)
         return self.customers_api.get_customer(customer_id, expected_status_code=expected_status_code)
 
-    # def call_delete_customer(self, customer_id: int, expected_status_code: int = 200) -> Dict[str, Any]:
-    #     """
-    #     Delete (hard delete_it.py) a customer by ID using force=true.
-    #
-    #     Args:
-    #         customer_id (int): Customer ID.
-    #         expected_status_code (int): Expected HTTP status code.
-    #
-    #     Returns:
-    #         dict: Parsed JSON response from delete_it.py.
-    #     """
-    #     # Including into DELETE API the force=true query parameter otherwise it will be soft deleted and an error
-    #     # triggered
-    #     # logger.debug(f"🟢 Calling 'Delete Customer' for ID {customer_id}.")
-    #     logger.debug("🟢 Calling 'Delete Customer' for ID %s.", customer_id)
-    #     return self.request_utility.delete(f"{self.ENDPOINT}/{customer_id}", params={"force": True},
-    #                                        expected_status_code=expected_status_code)
-    #
+    def call_delete_customer(self, customer_id: int, expected_status_code: int = 200) -> Dict[str, Any]:
+        """
+        Delete (hard delete_it.py) a customer by ID using force=true.
+
+        Args:
+            customer_id (int): Customer ID.
+            expected_status_code (int): Expected HTTP status code.
+
+        Returns:
+            dict: Parsed JSON response from delete_it.py.
+        """
+        # Including into DELETE API the force=true query parameter otherwise it will be soft deleted and an error
+        # triggered
+        # logger.debug(f"🟢 Calling 'Delete Customer' for ID {customer_id}.")
+        logger.debug("🟢 Calling 'Delete Customer' for ID %s.", customer_id)
+        return self.customers_api.delete_customer(f"{self.ENDPOINT}/{customer_id}", force=True,
+                                                  expected_status_code=expected_status_code)
 
     def call_get_customer_by_email(
             self,
             email: str,
+            *,
             expected_status_code: int = 200,
     ) -> Dict[str, Any]:
         """
@@ -233,9 +232,6 @@ class CustomersHelper(object):
             email=email,
             expected_status_code=expected_status_code,
         )
-
-        if not result:
-            raise AssertionError(f"❌ No customer found for email {email}")
 
         return result[0]  # Woo returns list → we take first
 
@@ -356,7 +352,7 @@ class CustomersHelper(object):
         # ✅ Return all valid customers that passed date filter
         return filtered_customers
 
-    def validate_customer_exists_fast(self, email: str, dao) -> None:
+    def validate_customer_exists_and_matches_api(self, email: str, dao) -> None:
         """
         Checks that customer exists in GET /customers, validates schema, and matches DB record.
         - fast API call - API returns result for this query
@@ -423,6 +419,17 @@ class CustomersHelper(object):
 
         You are testing the SYSTEM, not the endpoint:
         - Is my system data correct regardless of API behavior?
+
+        When to use it:
+        Deep method (10% of tests)
+        🧠 Deep → System correctness
+            ✔ duplicate detection
+            ✔ regression
+            ✔ data integrity
+            ✔ Migration / cleanup tests
+                - import data
+                - restore DB
+                - run cleanup jobs
         """
 
         logger.debug("🟢 Validating uniqueness of customer by email: %s", email)
@@ -463,7 +470,6 @@ class CustomersHelper(object):
             raise AssertionError("DB email does not match API email")
 
         logger.info("✅ Assertion passed: Customer record validated in DB for ID=%s", db_customer["ID"])
-
 
 # # NOTE!! Keep this main block for local debugging only. Remove or guard it before committing if you prefer to avoid
 # # leaving ad-hoc debug code in the main branch.

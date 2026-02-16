@@ -5,7 +5,8 @@
 #
 # from EcommerceAPI.src.utilities.date_timestamp_utils import get_customers_in_window
 #
-# from tests.customers.schemas.customer import customer_schema
+# from tests.shared.schemas.customer import customer_schema
+#
 # # from EcommerceAPI.src.utilities.raw_requests import RawAPIClient
 #
 # logger = logging.getLogger(__name__)
@@ -16,7 +17,7 @@
 #
 #
 # @pytest.mark.tcid05
-# def test_customer_deletion_removes_resource(all_resources, create_valid_customer):
+# def test_customer_deletion_removes_resource(all_resources, customer_helper, customers_dao, create_valid_customer):
 #     """
 #     🎯 Test to validate end-to-end customer deletion:
 #     - Customer is created successfully.
@@ -26,15 +27,15 @@
 #     - Deletion is tracked to avoid double cleanup.
 #
 #     Args:
-#         all_resources (CustomerResources): Fixture providing DAOs and helper methods for customer operations.
+#         all_resources: mark_deleted
+#         customer_helper: Provides customer's helper
+#         customers_dao: Provides customer's DAOs
 #         create_valid_customer (Callable): Factory fixture to create test customer.
 #     """
 #
 #     # -------------------------------------------
-#     # 🔧 Access helpers and DAOs from test setup
+#     # 🔧 Access helpers
 #     # -------------------------------------------
-#     customer_helper = all_resources.customer.helper
-#     dao = all_resources.customer.dao
 #     mark_deleted = all_resources.mark_deleted
 #
 #     # -------------------------------------------
@@ -42,18 +43,11 @@
 #     # -------------------------------------------
 #     logger.info("🛠 Creating a test customer via factory fixture for deletion.")
 #     # To keep the customer in the DB (i.e., skip deletion), pass: customer = create_customer_for_test(skip_cleanup=True)
-#     customer = create_valid_customer()
+#     customer = create_valid_customer()  # Default: skip_cleanup=False, validate_response=True
+#     # No need to assert ID/email. The fixture already does it: customer_helper.assert_valid_customer_response(customer)
+#
 #     customer_id = customer["id"]
 #     email = customer["email"]
-#     # Early assert for id and email ensures immediate failure if response is malformed.
-#     assert customer_id is not None, "❌ Customer ID not returned"
-#     assert email is not None, "❌ Customer Email not returned"
-#     logger.info(f"✅ Assertion passed: Customer created: ID={customer_id}, Email={email}")
-#
-#     # ------------------------------------------------------------------
-#     # 📋 Schema Validation (It checks that the POST response is valid)
-#     # ------------------------------------------------------------------
-#     customer_helper.validate_customer_response_schema(customer=customer)
 #
 #     # -------------------------------
 #     #  🗑️ Step 2:  Delete customer and validate deletion response
@@ -96,11 +90,11 @@
 #     # 🧠 Step 4: DB Validation: Ensure deletion from database
 #     # -------------------------------------------
 #     logger.info(f"🗃️ Validating DB deletion for email={email}")
-#     db_customer = dao.get_customer_by_email(email)
+#     db_customer = customers_dao.get_customer_by_email(email)
 #     assert not db_customer, f"❌ Customer still exists in DB for email={email}"
 #     logger.info(f"✅ Assertion passed: DB confirms customer deletion for ID={customer_id}")
-#
-#
+
+
 # @pytest.mark.negative_test
 # @pytest.mark.tcid18
 # @pytest.mark.parametrize("minute_offset", [1, 2])

@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +106,7 @@ class CustomersApi:
             email: str,
             *,
             expected_status_code: int = 200,
-    ) -> Dict[str, Any]:
+    ) -> List[Dict[str, Any]]:
         """
         GET /customers?email={email}
 
@@ -172,10 +172,10 @@ class CustomersApi:
                 Expected HTTP status code (default: 200).
         """
         endpoint = f"{self.ENDPOINT}/{customer_id}"
-        logger.debug("📡 DELETE %s force=%s", endpoint, force)
+        logger.debug("📡 DELETE %s force=%s", endpoint)
 
         return self.request_utility.delete(
             endpoint,
-            params={"force": force},
+            params={"force": True},
             expected_status_code=expected_status_code,
         )

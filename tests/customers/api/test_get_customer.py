@@ -56,11 +56,28 @@ def test_get_customer_by_email(customer_helper, customers_dao, create_valid_cust
     customer_id = customer["id"]
     email = customer["email"]
 
+    # ------------------------------------------------------------
+    # 🔍 Get customer by EMAIL and validate
+    # ------------------------------------------------------------
+    logger.info(f"🔎 Fetching customer by email: {email}")
+    customer_from_get = customer_helper.call_get_customer_by_email(email=email)
+
+    assert customer_from_get["id"] == customer_id, (f"❌ Mismatched ID: Expected {customer_id}, "
+                                                    f"got {customer_from_get['id']}")
+    assert customer_from_get["email"] == email, (f"❌ Mismatched email: Expected {email}, "
+                                                 f"got {customer_from_get['email']}")
+    logger.info(f"✅ Fetched customer by email matches created one: ID={customer_id}, Email={email}")
+    # ------------------------------------------------------------------
+    # 📋 Schema Validation (GET response)
+    # ------------------------------------------------------------------
+    # The validate_customer_response_schema(customer_from_get) is validating the response from:GET /customers/{id}
+    validate_customer_response_schema(customer=customer_from_get)
+
     # ---------------------------------------------------------------------------------------------------------
     # 🔍 Confirm customer exists in DB and API GET response matches DB.
     # 🧩 Schema Validation (it checks that the GET response is valid).
     # ---------------------------------------------------------------------------------------------------------
-    customer_helper.validate_customer_exists_fast(email=email, dao=customers_dao)
+    customer_helper.validate_customer_exists_and_matches_api(email=email, dao=customers_dao)
     logger.info("🎯 Full validation complete for customer ID: %r", customer_id)
 
 
@@ -127,19 +144,19 @@ def test_get_customer_by_id(customer_helper, customers_dao, create_valid_custome
     # 🔍 Confirm customer exists in DB and API GET response matches DB.
     # 🧩 Schema Validation (it checks that the GET response is valid).
     # ---------------------------------------------------------------------------------------------------------
-    customer_helper.validate_customer_exists_fast(email=email, dao=customers_dao)
+    customer_helper.validate_customer_exists_and_matches_api(email=email, dao=customers_dao)
     logger.info("🎯 Full validation complete for customer ID: %r", customer_id)
 
 
 @pytest.mark.negative_test
 @pytest.mark.tcid17
-def test_retrieve_nonexistent_customer_returns_404(all_resources, create_valid_customer):
+def test_retrieve_nonexistent_customer_returns_404(customer_helper, customers_dao, create_valid_customer):
     """
-     🚫  Attempt to GET a nonexistent customer.
+     🚫 Attempt to GET a nonexistent customer.
     - Expect 404
     - Validate error schema
     """
-    customer_helper = all_resources.customer.helper
+
     fake_customer_id = 99999999
 
     logger.info(f"🚫 Retrieving non-existent customer ID: {fake_customer_id}")
@@ -153,7 +170,3 @@ def test_retrieve_nonexistent_customer_returns_404(all_resources, create_valid_c
 
     validate(instance=response, schema=error_schema)
     logger.info("✅ Error response schema validated for non-existent customer fetch")
-
-
-
-
