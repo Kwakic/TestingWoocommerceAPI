@@ -14,11 +14,10 @@ from EcommerceAPI.src.utilities.date_timestamp_utils import safe_parse_utc_datet
 from EcommerceAPI.src.validators.customers.customer_schema_validator import validate_customer_response_schema
 
 from EcommerceAPI.src.validators.customers.customer_assertions import (
-    assert_customer_exists_in_api,
-    assert_customer_matches_db,
-    assert_single_customer_with_email,
+    assert_valid_customer_in_api,
+    assert_valid_customer_matches_db,
+    assert_single_customer_by_email,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -200,27 +199,6 @@ class CustomersHelper(object):
         logger.debug("🟢 Calling 'Get Customer' for ID %s.", customer_id)
         return self.customers_api.get_customer(customer_id, expected_status_code=expected_status_code)
 
-    def call_delete_customer(self, customer_id: int, expected_status_code: int = 200) -> Dict[str, Any]:
-        """
-        Delete (hard delete_it.py) a customer by ID using force=true.
-
-        Args:
-            customer_id (int): Customer ID.
-            expected_status_code (int): Expected HTTP status code.
-
-        Returns:
-            dict: Parsed JSON response from delete_it.py.
-        """
-        # Including into DELETE API the force=true query parameter otherwise it will be soft deleted and an error
-        # triggered
-        # logger.debug(f"🟢 Calling 'Delete Customer' for ID {customer_id}.")
-        logger.debug("🟢 Calling 'Delete Customer' for ID %s.", customer_id)
-        return self.customers_api.delete_customer(
-            customer_id,
-            force=True,
-            expected_status_code=expected_status_code
-        )
-
     def call_get_customer_by_email(
             self,
             email: str,
@@ -244,6 +222,27 @@ class CustomersHelper(object):
         )
 
         return result[0]  # Woo returns list → we take first
+
+    def call_delete_customer(self, customer_id: int, expected_status_code: int = 200) -> Dict[str, Any]:
+        """
+        Delete (hard delete_it.py) a customer by ID using force=true.
+
+        Args:
+            customer_id (int): Customer ID.
+            expected_status_code (int): Expected HTTP status code.
+
+        Returns:
+            dict: Parsed JSON response from delete_it.py.
+        """
+        # Including into DELETE API the force=true query parameter otherwise it will be soft deleted and an error
+        # triggered
+        # logger.debug(f"🟢 Calling 'Delete Customer' for ID {customer_id}.")
+        logger.debug("🟢 Calling 'Delete Customer' for ID %s.", customer_id)
+        return self.customers_api.delete_customer(
+            customer_id,
+            force=True,
+            expected_status_code=expected_status_code
+        )
 
     # ------------------------
     # Listing / Pagination
@@ -391,7 +390,7 @@ class CustomersHelper(object):
         result = self.call_list_all_customers_paginated(email=email)
 
         # ✅ API validation
-        customer = assert_customer_exists_in_api(result, email)
+        customer = assert_valid_customer_in_api(result, email)
         logger.info("✅ Assertion passed: Customer found calling API GET all customers paginated")
 
         # ✅ Schema validation - Validates API response schema using existing method GET /customers response.
@@ -399,7 +398,7 @@ class CustomersHelper(object):
 
         # ✅ DB validation
         db_customer = dao.get_customer_by_email(email)
-        assert_customer_matches_db(customer, db_customer)
+        assert_valid_customer_matches_db(customer, db_customer)
 
         logger.info("✅ Assertion passed: Customer record validated in DB for ID=%s", db_customer["ID"])
 
@@ -440,7 +439,7 @@ class CustomersHelper(object):
         all_customers = self.call_list_all_customers_paginated()
 
         # ✅ Uniqueness validation
-        customer = assert_single_customer_with_email(all_customers, email)
+        customer = assert_single_customer_by_email(all_customers, email)
 
         logger.info("✅ Assertion passed: Exactly one customer found in full dataset scan")
 
@@ -449,7 +448,7 @@ class CustomersHelper(object):
 
         # ✅ DB validation
         db_customer = dao.get_customer_by_email(email)
-        assert_customer_matches_db(customer, db_customer)
+        assert_valid_customer_matches_db(customer, db_customer)
 
         logger.info("✅ Assertion passed: Customer record validated in DB for ID=%s", db_customer["ID"])
 

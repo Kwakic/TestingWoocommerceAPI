@@ -769,7 +769,7 @@ TestEcommerceAPI (project suite/root)
 │     │     ├── core/
 │     │     │     └── http_client.py
 │     │     ├── api/
-│     │     │     ├── base/
+│     │     │     ├── shared/
 │     │     │     │      │── base_api.py            ← shared
 │     │     │     │      └── __init__.py
 │     │     │     ├── customers/
@@ -801,6 +801,7 @@ TestEcommerceAPI (project suite/root)
 │     │     │     └── shared/
 │     │     │            │── cleanup_helpers.py     ← DOMAIN assertions only
 │     │     │            └── __init__.py
+│     │     │
 │     │     ├── validators/
 │     │     │     ├── customers/
 │     │     │     │      │── customer_schema_validator.py
@@ -814,9 +815,12 @@ TestEcommerceAPI (project suite/root)
 │     │     │     │      │── coupon_schema_validator.py
 │     │     │     │      │── coupon_assertions.py
 │     │     │     │      └── __init__.py
-│     │     │     └── products/
-│     │     │            │── product_schema_validator.py
-│     │     │            │── product_assertions.py
+│     │     │     ├── products/
+│     │     │     │      │── product_schema_validator.py
+│     │     │     │      │── product_assertions.py
+│     │     │     │      └── __init__.py
+│     │     │     └── shared/                        ← reusable for ALL entities
+│     │     │            │── base_validators.py
 │     │     │            └── __init__.py
 │     │     │
 │     │     │── manual_cleanup_scripts/...

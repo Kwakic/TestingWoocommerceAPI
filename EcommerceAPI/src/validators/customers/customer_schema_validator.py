@@ -4,6 +4,18 @@ Customer schema validators.
 This module contains ONLY JSON schema validation logic.
 It knows nothing about HTTP, helpers, or test fixtures.
 
+✔ Purpose
+    - Validate API contract (JSON schema)
+    - Types, required fields, format
+
+✔ Used when
+    - After API call (POST/GET)
+    - Contract testing
+
+❗ Rule
+    ❌ No business logic
+    ❌ No DB logic
+
 Note:
     JSON Schema validation only
     No “business meaning”
