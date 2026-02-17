@@ -39,7 +39,7 @@ from EcommerceAPI.src.utilities.exceptions import (
 
 from EcommerceAPI.src.configs.config_loader import ENV
 
-# Module logger (uses global configuration from conftest/custom_logger)
+# Module logger (uses shared configuration from conftest/custom_logger)
 logger = logging.getLogger(__name__)
 
 

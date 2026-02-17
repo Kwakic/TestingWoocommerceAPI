@@ -139,7 +139,7 @@ def assert_single_resource_by_field(
 
     This is used for deep validation scenarios where:
     - You fetch ALL resources (pagination)
-    - You validate global uniqueness (not trusting API filters)
+    - You validate shared uniqueness (not trusting API filters)
 
     Example flow:
         GET /customers?page=1...N

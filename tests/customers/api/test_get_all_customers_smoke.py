@@ -11,7 +11,7 @@ from EcommerceAPI.src.utilities.date_timestamp_utils import get_now_utc_floor, t
 logger = logging.getLogger(__name__)
 #  logger.setLevel(logging.DEBUG)  # already set in pytest.ini
 
-# Apply global markers for the test module
+# Apply shared markers for the test module
 pytestmark = [pytest.mark.customers, pytest.mark.smoke]
 
 

@@ -84,7 +84,7 @@ GLOBAL_METADATA: Dict[str, Any] = {}
 
 def attach_global_logging_metadata(env: str, session_id: str, ci_info: dict, git_info: dict) -> None:
     """
-    Attach global metadata that will be injected into every structured JSON log entry.
+    Attach shared metadata that will be injected into every structured JSON log entry.
 
     Called once from conftest after configure_logging to populate metadata included in every structured log entry.
 
@@ -467,7 +467,7 @@ class JSONFormatter(logging.Formatter):
             "message": message,
         }
 
-        # Inject global metadata (ci/git/session/env etc.)
+        # Inject shared metadata (ci/git/session/env etc.)
         if GLOBAL_METADATA:
             # Do not overwrite core keys if GLOBAL_METADATA contains them unintentionally.
             for k, v in GLOBAL_METADATA.items():

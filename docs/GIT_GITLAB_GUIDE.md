@@ -97,8 +97,8 @@ Welcome to GitLab, @yourusername!
 
 ### 3.1 Configure Your Git Identity
 ```bash
-git config --global user.name "Your Name"
-git config --global user.email "your.email@example.com"
+git config --shared user.name "Your Name"
+git config --shared user.email "your.email@example.com"
 ```
 
 ### 3.2 Initialize the Local Repository

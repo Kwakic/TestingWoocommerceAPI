@@ -104,7 +104,7 @@
 #     1. Update 'sale_price' to a positive value less than 'regular_price' → 'on_sale' should become True.
 #     2. Clear 'sale_price' → 'on_sale' should become False.
 #     """
-#     global updated_product_no_sale
+#     shared updated_product_no_sale
 #     product_helper = ProductsHelper()
 #     product_dao = ProductsDAO()
 #

@@ -8,7 +8,7 @@
 # logger = logging.getLogger(__name__)
 # #  logger.setLevel(logging.DEBUG)  # already set in pytest.ini
 #
-# # Apply global markers for the test module
+# # Apply shared markers for the test module
 # pytestmark = [pytest.mark.customers, pytest.mark.regression, pytest.mark.EndtoEnd]
 #
 #
@@ -28,7 +28,7 @@
 #     **Steps:**
 #     1. ✅ Create a new customer via POST (fixture-based).
 #     2. ✅ Validate POST response conforms to the expected schema.
-#     3. ✅ Use server-generated `date_created_gmt` timestamp as the filter global.
+#     3. ✅ Use server-generated `date_created_gmt` timestamp as the filter shared.
 #     4. ✅ Build a buffer window using `build_created_after_before_window` with `negative=False`.
 #     5. ✅ Call GET /customers using the time filters.
 #     6. ✅ Assert the created customer is included in the filtered results.

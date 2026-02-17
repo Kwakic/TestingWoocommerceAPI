@@ -148,7 +148,7 @@ class CustomersDAO(object):  # object in the parenthesis will inherit objects by
             "display_name", "user_activation_key"
         }
 
-        # It prepares the global query. If you want to filter by something like user_status = 0, the where_clauses will
+        # It prepares the shared query. If you want to filter by something like user_status = 0, the where_clauses will
         # contain "user_status = %s" and params will contain [0].
         base_sql = f"SELECT * FROM {self.table_name}"
         where_clauses = []

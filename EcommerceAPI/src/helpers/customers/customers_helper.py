@@ -23,7 +23,7 @@ from EcommerceAPI.src.validators.customers.customer_assertions import (
 logger = logging.getLogger(__name__)
 
 
-# The global logging level and handlers are configured by the project's logging bootstrap (custom_logger).
+# The shared logging level and handlers are configured by the project's logging bootstrap (custom_logger).
 
 
 class CustomersHelper(object):

@@ -205,7 +205,7 @@ def load_service_config(service: str):
 
 def get_api_host(service: Optional[str] = None) -> str:
     """
-    Returns the global API URL for the given microservice and active ENV.
+    Returns the shared API URL for the given microservice and active ENV.
 
     Args:
         service: optional override. If not provided, auto-detect is used.

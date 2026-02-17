@@ -6,12 +6,12 @@ This module provides a minimal, well-documented set of fixtures used by API test
 Fixtures
 --------
 - request_utility (session):
-    Constructs a shared RequestUtility client using a service-specific global URL
+    Constructs a shared RequestUtility client using a service-specific shared URL
     provided by the test layer (e.g. customers/orders/products).
 
     Design notes:
     * The plugin itself is service-agnostic.
-    * The actual API global URL is injected via the `api_base_url` fixture,
+    * The actual API shared URL is injected via the `api_base_url` fixture,
       which is defined in the microservice-level conftest (e.g. tests/customers/conftest.py).
     * This avoids hardcoding service names or doing brittle path-based detection.
 
@@ -66,7 +66,7 @@ def request_utility(api_base_url: "_api_base_url_fixture"):
     Parameters
     ----------
     api_base_url : str
-        Service-specific API global URL injected from the test layer
+        Service-specific API shared URL injected from the test layer
         (e.g. tests/customers/conftest.py).
 
     What it does:

@@ -451,7 +451,7 @@ def pytest_configure(config):
 def pytest_unconfigure(config):
     """
     Restore logging state modified during pytest_configure to avoid leaking handles or
-    altering the global logging behavior after pytest completes.
+    altering the shared logging behavior after pytest completes.
 
     - Restore the original LogRecord factory.
     - Remove any temporary startup handler that might remain.

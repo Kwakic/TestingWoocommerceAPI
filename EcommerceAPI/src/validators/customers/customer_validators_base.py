@@ -1,6 +1,6 @@
 from typing import List, Dict, Any
 
-from EcommerceAPI.src.validators.base.base_validators import (
+from EcommerceAPI.src.validators.shared.base_validators import (
     assert_resource_exists,
     assert_resource_matches_db,
     assert_single_resource_by_field,
