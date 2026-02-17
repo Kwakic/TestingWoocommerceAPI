@@ -4,10 +4,8 @@ from jsonschema import validate
 from dateutil.parser import isoparse  # For robust ISO date parsing
 
 from EcommerceAPI.src.utilities.date_timestamp_utils import get_customers_in_window
-
 from tests.shared.schemas.customer import customer_schema
 
-# from EcommerceAPI.src.utilities.raw_requests import RawAPIClient
 
 logger = logging.getLogger(__name__)
 #  logger.setLevel(logging.DEBUG)  # already set in pytest.ini
@@ -127,16 +125,27 @@ def test_deleted_customer_not_in_created_after_filter(customer_helper, customers
     6. ✅ Assert that the deleted customer is NOT included in the API response.
     7. ✅ Validate schema for all remaining returned customers.
 
-    **Why use server-side timestamp for filtering?**
+    Why use server-side timestamp for filtering?
     - Ensures the deleted customer technically *should* fall within the filter range.
     - Confirms that deletion logic is respected by the filtering mechanism.
 
-    **Why this test matters: **
+    Why this test matters:
     - Guarantees soft-deleted or fully removed records are not exposed in public/customer-facing APIs.
     - Prevents stale, deleted, or logically orphaned data from leaking into clients, dashboards, or integrations.
     - Strengthens data integrity and trust in time-based filters.
 
     Parameterized with different minute offsets to test consistency across varied filtering windows.
+
+            TIME WINDOW
+        ┌─────────────────┐
+        │                 │
+       09:59   10:00   10:02
+                ↑
+           customer created
+
+    BUT customer was deleted ❌
+    → must NOT appear in results
+
     """
 
     # -------------------------------------------

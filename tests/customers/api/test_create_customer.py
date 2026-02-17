@@ -260,12 +260,6 @@ def test_create_single_customer_with_email_and_password_only(customer_helper, cu
     """
 
     # -------------------------------------------
-    # 🔧 Access helpers and DAOs from test setup
-    # -------------------------------------------
-    # customer_helper = all_resources.entities["customers"].helper  # High-level API helper
-    # dao = all_resources.entities["customers"].dao  # DAO: Database Access Object for direct DB queries
-
-    # -------------------------------------------
     # ✅ Create customer using factory fixture
     # -------------------------------------------
     logger.info("🛠 Creating a test customer via factory fixture.")
