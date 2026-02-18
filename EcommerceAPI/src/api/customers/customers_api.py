@@ -7,6 +7,7 @@ logger = logging.getLogger(__name__)
 class CustomersApi:
     """
     Customers API client (happy-path, thin wrapper).
+    Source of truth for endpoints.
 
     This layer is intentionally dumb.
 
@@ -16,6 +17,7 @@ class CustomersApi:
     ✔ Know HTTP verbs
     ✔ Delegate calls to RequestUtility
     ✔ Return parsed JSON on success
+    ✔ It keeps tests clean and consistent
 
     Non-responsibilities:
     ---------------------
@@ -113,7 +115,7 @@ class CustomersApi:
         Fetch customer(s) filtered by email.
 
         Note:
-            WooCommerce returns a list. This method returns raw list response.
+            WooCommerce returns a list. This method returns a raw list response.
         """
         params = {"email": email.lower()}
 
@@ -177,5 +179,24 @@ class CustomersApi:
         return self.request_utility.delete(
             endpoint,
             params={"force": force},
+            expected_status_code=expected_status_code,
+        )
+
+    def update_customer(
+        self,
+        customer_id: Any,
+        payload: Dict[str, Any],
+        *,
+        expected_status_code: int = 200,
+    ) -> Dict[str, Any]:
+        """
+        PUT /customers/{id}
+        """
+        endpoint = f"{self.ENDPOINT}/{customer_id}"
+        logger.debug("📡 PUT %s payload_keys=%s", endpoint, list(payload.keys()))
+
+        return self.request_utility.put(
+            endpoint,
+            payload=payload,
             expected_status_code=expected_status_code,
         )

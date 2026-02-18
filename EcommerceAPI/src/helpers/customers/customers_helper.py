@@ -184,6 +184,56 @@ class CustomersHelper(object):
             # Nothing parseable attached — re-raise so caller/test sees the original exception
             raise
 
+    def update_customer(
+            self,
+            customer_id: int,
+            payload: Optional[Dict[str, Any]] = None,
+            expected_status_code: int = 200,
+            **kwargs,
+    ) -> Dict[str, Any]:
+        """
+        Update customer fields.
+        - Accepts full payload (same as API)
+        - Does NOT modify payload
+        - It supports positive + negative flows (This allows: update_customer(customer_id, first_name=None))
+
+        Supports:
+        - payload: for full/complex updates
+        - kwargs: for simple updates
+        """
+        final_payload: Dict[str, Any] = {}
+
+        # ✅ Start with payload if provided
+        if payload:
+            final_payload.update(payload)
+
+        # ✅ Then merge kwargs (same behavior as create_customer)
+        final_payload.update(kwargs)
+
+        logger.debug("🟢 Updating customer %s with payload keys: %r", customer_id, list(final_payload.keys()))
+
+        try:
+            return self.customers_api.update_customer(
+                customer_id=customer_id,
+                payload=final_payload,
+                expected_status_code=expected_status_code,
+            )
+
+        except (UnexpectedStatusCodeError, SchemaValidationError) as e:
+            logger.warning("⚠️ Customer update raised %s: %s", type(e).__name__, e)
+
+            response_json = getattr(e, "response_json", None)
+
+            if response_json is None:
+                resp = getattr(e, "response", None)
+                if resp is not None:
+                    response_json = resp.json()
+
+            if response_json is not None:
+                return response_json
+
+            raise
+
     def call_get_customer_by_id(self, customer_id: int, expected_status_code: int = 200) -> Dict[str, Any]:
         """
          Retrieve a customer by their ID.
