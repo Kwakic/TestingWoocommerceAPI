@@ -4,8 +4,8 @@ from jsonschema import validate
 from dateutil.parser import isoparse  # For robust ISO date parsing
 
 from EcommerceAPI.src.utilities.date_timestamp_utils import get_customers_in_window
+from EcommerceAPI.src.validators.customers.customer_assertions import assert_customer_not_found_error
 from tests.shared.schemas.customer import customer_schema
-
 
 logger = logging.getLogger(__name__)
 #  logger.setLevel(logging.DEBUG)  # already set in pytest.ini
@@ -82,17 +82,9 @@ def test_customer_deletion_removes_resource(all_resources, customer_helper, cust
     logger.info(f"🔎 Verifying GET after deletion returns 404 for ID={customer_id}")
     response = customer_helper.call_get_customer_by_id(customer_id=customer_id, expected_status_code=404)
     # Validating deleted customer's error message"
-    assert response['code'] == "woocommerce_rest_invalid_id", (f"Invalid Error code. Current: '{response['code']}', "
-                                                               f"Expected: 'woocommerce_rest_invalid_id'")
-    assert response['message'] == "Invalid resource ID.", (f"Invalid Error message. Current: '{response['message']}', "
-                                                           f"Expected: 'Invalid resource ID'")
-    assert response['data'] == {'status': 404}, (f"Invalid data. Current: {response['data']}, "
-                                                 f"Expected: {{'status': 404}}")
-    # Optional): Extract the post-deletion response validation into a reusable utility method:
-    # def assert_customer_deleted_response(response):
-    #     assert response['code'] == "woocommerce_rest_invalid_id"
-    #     assert response['message'] == "Invalid resource ID."
-    #     assert response['data'] == {'status': 404}
+
+    assert_customer_not_found_error(response)   # It validates: data: status 404, code, error message
+
     # Then reuse across deletion-related tests.
     logger.info(f"✅ Assertion passed: API confirms customer ID={customer_id} is deleted")
 
@@ -204,6 +196,3 @@ def test_deleted_customer_not_in_created_after_filter(customer_helper, customers
     # 🔐 Why This Matters
     # Ensures GET /customers doesn’t return deleted entries
     # Prevents stale or logical removed data from leaking into client apps
-
-
-

@@ -11,6 +11,7 @@ from jsonschema import validate, ValidationError
 from EcommerceAPI.src.utilities.credentialsUtility import get_wc_api_keys
 # Import exception classes from centralized exceptions module and re-export them
 from EcommerceAPI.src.utilities.exceptions import SchemaValidationError, UnexpectedStatusCodeError
+from EcommerceAPI.src.core.http_client import HttpClient
 
 # Use central logging/redaction configuration and helpers to avoid duplication
 from EcommerceAPI.src.utilities.custom_logger import (
@@ -141,22 +142,29 @@ class RequestUtility:
 
         # Environment name (test/dev/staging/prod)
         self.env = os.getenv("ENV", "test").lower()
-        self.session = requests.Session()  # Reuse TCP connections for speed. Using requests.Session() improves
-        # performance by reusing TCP connections. This is helpful if you're hitting the API repeatedly during tests.
-        # It allows us to access to speed up our code when sending requests to the same server. This is perfect for
-        # scraping data or accessing APIs
+        self.http_client = HttpClient()
+
+        # self.session = requests.Session()  # Reuse TCP connections for speed. Using requests.Session() improves
+        # # performance by reusing TCP connections. This is helpful if you're hitting the API repeatedly during tests.
+        # # It allows us to access to speed up our code when sending requests to the same server. This is perfect for
+        # # scraping data or accessing APIs
 
         # Retry/backoff configuration
         self.max_attempts = retries
         self.backoff_factor = backoff
 
         # State tracking for debugging & logging
-        self.status_code = None
-        self.expected_status_code = None
+        # self.status_code = None
+        # self.rs_json = None
         self.url = None
         self.payload = None
         self.headers = None
-        self.rs_json = None
+        self.expected_status_code = None
+        # 👉 These are dangerous in enterprise frameworks because:
+        # ❌ Not thread-safe (pytest-xdist risk)
+        # ❌ Hidden side effects
+        # ❌ Harder debugging
+        # ❌ Not needed
 
     # -----------------------------------------
     # URL construction
@@ -195,8 +203,16 @@ class RequestUtility:
             """
         for attempt in range(1, self.max_attempts + 1):
             try:
-                response = self.session.request(method=method, auth=self.auth, **kwargs)  # It returns raw
-                # requests.Response
+                response = self.http_client.request(
+                    method=method,
+                    url=kwargs.get("url"),
+                    headers=kwargs.get("headers"),
+                    params=kwargs.get("params"),
+                    json=kwargs.get("json"),
+                    auth=self.auth,  # ✅ ADD THIS LINE
+                )
+
+                # It returns raw requests.Response
                 # This response is a full requests.Response object from the requests library, which includes:
                 #     .status_code → e.g., 200, 400
                 #     .text → raw response body as a string
@@ -373,7 +389,7 @@ class RequestUtility:
         """
 
         # Store actual and expected status codes for later reference (for potential test assertion context)
-        self.status_code = response.status_code
+        status_code = response.status_code
         self.expected_status_code = expected_status_code
 
         # Extract endpoint name for readability (avoid long shared URLs)
@@ -381,9 +397,9 @@ class RequestUtility:
 
         # Attempt to parse the response as JSON. If that fails, fallback to plain text.
         try:
-            self.rs_json = response.json()
+            response_json = response.json()
         except ValueError:
-            self.rs_json = response.text  # Not JSON — could be plain HTML error page, etc.
+            response_json = response.text  # Not JSON — could be plain HTML error page, etc.
 
         # Prepare masked payload if allowed
         masked_payload = None
@@ -394,7 +410,7 @@ class RequestUtility:
         extra_meta = {
             "method": method.upper() if method else None,
             "endpoint": endpoint_name,
-            "status": self.status_code,
+            "status": status_code,
             "duration": duration,
             "payload": masked_payload,
             "event": "request.response",
@@ -406,14 +422,14 @@ class RequestUtility:
         # logger.info(f"📡 {method.upper()} {endpoint_name} → completed in {duration:.3f}s")
 
         # Unified human-readable log lines (these remain for console/human files)
-        logger.debug(f"📡 {method.upper()} {endpoint_name} → {self.status_code}", extra=extra_meta)
-        logger.debug(f"✅ {method.upper()} {endpoint_name} → Status {self.status_code} ({duration:.3f}s)",
+        logger.debug(f"📡 {method.upper()} {endpoint_name} → {status_code}", extra=extra_meta)
+        logger.debug(f"✅ {method.upper()} {endpoint_name} → Status {status_code} ({duration:.3f}s)",
                      extra=extra_meta)
         logger.info(f"📡 {method.upper()} {endpoint_name} → completed in {duration:.3f}s", extra=extra_meta)
 
         # 🚨 Raise error if the status code did not match expectations.
         # Log payload and query params only on mismatch)
-        if self.status_code != expected_status_code:
+        if status_code != expected_status_code:
             # 🔍 Log query parameters (GET, DELETE), if provided
             if log_params:
                 try:
@@ -438,54 +454,54 @@ class RequestUtility:
         # 🧪 If a schema is provided, validate the response structure.
         if schema:
             try:
-                validate(instance=self.rs_json, schema=schema)
+                validate(instance=response_json, schema=schema)
             except ValidationError as e:
                 raise SchemaValidationError(
                     f"Schema validation failed: {e.message}",
                     response=response,
-                    response_json=self.rs_json
+                    response_json=response_json
                 )
 
         # 🐞 If response is a 4xx or 5xx, log the actual response body for inspection.
         # Log response body if error
-        if self.status_code >= 400:
+        if status_code >= 400:
             try:
-                if isinstance(self.rs_json, (dict, list)):
-                    body_str = json.dumps(self.rs_json, indent=2, ensure_ascii=False)
+                if isinstance(response_json, (dict, list)):
+                    body_str = json.dumps(response_json, indent=2, ensure_ascii=False)
                 else:
                     # Prefer str(), but guard against known narrow errors
                     try:
-                        body_str = str(self.rs_json)
+                        body_str = str(response_json)
                     except (TypeError, ValueError, AttributeError) as e:
                         logger.debug("str() failed for response body: %s", e, exc_info=True)
                         # Fallback to repr() which is more robust for many objects
                         try:
-                            body_str = repr(self.rs_json)
+                            body_str = repr(response_json)
                         except (TypeError, ValueError, AttributeError) as e2:
                             logger.debug("repr() also failed for response body: %s", e2, exc_info=True)
                             body_str = "<unserializable-response-body>"
             except (TypeError, ValueError, AttributeError) as ser_exc:
                 logger.debug("Failed serializing response body to JSON: %s", ser_exc, exc_info=True)
                 try:
-                    body_str = repr(self.rs_json)
+                    body_str = repr(response_json)
                 except (TypeError, ValueError, AttributeError):
                     body_str = "<unserializable-response-body>"
 
             logger.debug(body_str, extra={**extra_meta, "event": "request.error_body"})
 
         # 🚨 Raise error if the status code did not match expectations
-        if self.status_code != expected_status_code:
+        if status_code != expected_status_code:
             raise UnexpectedStatusCodeError(
-                message=f"Expected {expected_status_code}, got {self.status_code}",
+                message=f"Expected {expected_status_code}, got {status_code}",
                 response=response,
-                response_json=self.rs_json
+                response_json=response_json
             )
         # Optionally return the raw response object for advanced inspection
         if return_raw:
             return response
 
         # ✅ Success: return parsed JSON or raw text if non-JSON
-        return self.rs_json
+        return response_json
 
     # -----------------------------------------
     # ⚙️ Internal: Shared request logic for all verbs

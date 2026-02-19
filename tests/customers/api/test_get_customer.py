@@ -7,7 +7,7 @@ from json import loads
 
 from tests.shared.schemas.customer import error_schema
 from EcommerceAPI.src.validators.customers.customer_schema_validator import validate_customer_response_schema
-
+from EcommerceAPI.src.validators.customers.customer_assertions import assert_customer_not_found_error
 logger = logging.getLogger(__name__)
 #  logger.setLevel(logging.DEBUG)  # already set in pytest.ini
 
@@ -165,8 +165,7 @@ def test_retrieve_nonexistent_customer_returns_404(customer_helper, customers_da
     if isinstance(response, str):
         response = loads(response)
 
-    assert response['code'] == 'woocommerce_rest_invalid_id', "❌ Error 'code' should not be empty"
-    assert response['message'], "❌ Error 'message' should not be empty"
+    assert_customer_not_found_error(response)   # It validates: data: status 404, code, error message
 
     validate(instance=response, schema=error_schema)
     logger.info("✅ Error response schema validated for non-existent customer fetch")

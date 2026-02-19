@@ -569,3 +569,14 @@ def test_create_customer_fail_for_existing_email(create_valid_customer, raw_cust
 # #  ▼
 # # TEST ASSERTS ✅
 #
+
+
+# HttpClient (LOW LEVEL)
+#     ↓
+# RequestUtility (ORCHESTRATOR)
+#     ↓
+# CustomersApi (ENDPOINTS ONLY)
+#     ↓
+# CustomersHelper (PAYLOAD + FLOW)
+#     ↓
+# Validators (ASSERTIONS)

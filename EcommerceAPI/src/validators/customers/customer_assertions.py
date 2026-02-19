@@ -165,3 +165,30 @@ def assert_single_customer_by_email(customers: List[Dict[str, Any]], email: str)
     assert_valid_customer_response(customer)
 
     return customer
+
+
+def assert_customer_not_found_error(response):
+    """
+    It validates:
+        - data: status 404
+        - code
+        - error message
+
+    :param response: customer response
+    """
+
+    assert response["code"] in {
+        "woocommerce_rest_invalid_id",
+        "wc_user_invalid_id"
+    }
+
+    assert response['code'] == "wc_user_invalid_id", (f"Invalid Error code. Current: '{response['code']}', "
+                                                      f"Expected: 'wc_user_invalid_id' ")
+
+    # assert response['message'], "❌ Error 'message' should not be empty"
+
+    assert response['message'] == "Invalid user ID.", (f"Invalid Error message. Current: '{response['message']}', "
+                                                       f"Expected: 'Invalid user ID'")
+
+    assert response['data'] == {'status': 404}, (f"Invalid data. Current: {response['data']}, "
+                                                 f"Expected: {{'status': 404}}")
