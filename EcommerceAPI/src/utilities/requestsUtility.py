@@ -319,6 +319,16 @@ class RequestUtility:
     # -----------------------------------------
     # 📋 Internal: Handle & log the response, validate, optionally return raw
     # -----------------------------------------
+    @staticmethod
+    def _parse_response_body(response: requests.Response):
+        """
+        Attempt to parse the response as JSON. If that fails, fallback to plain text.
+        """
+        try:
+            return response.json()
+        except ValueError:
+            return response.text
+
     def _handle_response(
             self,
             response: requests.Response,
@@ -376,14 +386,10 @@ class RequestUtility:
         # Store actual and expected status codes for later reference (for potential test assertion context)
         status_code = response.status_code
 
+        response_json = self._parse_response_body(response)
+
         # Extract endpoint name for readability (avoid long shared URLs)
         endpoint_name = response.request.url.replace(self.base_url, "")
-
-        # Attempt to parse the response as JSON. If that fails, fallback to plain text.
-        try:
-            response_json = response.json()
-        except ValueError:
-            response_json = response.text  # Not JSON — could be plain HTML error page, etc.
 
         # Prepare masked payload if allowed
         masked_payload = None
