@@ -139,32 +139,11 @@ class RequestUtility:
 
         # Base url
         self.base_url = base_url
-
-        # Environment name (test/dev/staging/prod)
         self.env = os.getenv("ENV", "test").lower()
         self.http_client = HttpClient()
-
-        # self.session = requests.Session()  # Reuse TCP connections for speed. Using requests.Session() improves
-        # # performance by reusing TCP connections. This is helpful if you're hitting the API repeatedly during tests.
-        # # It allows us to access to speed up our code when sending requests to the same server. This is perfect for
-        # # scraping data or accessing APIs
-
         # Retry/backoff configuration
         self.max_attempts = retries
         self.backoff_factor = backoff
-
-        # State tracking for debugging & logging
-        # self.status_code = None
-        # self.rs_json = None
-        self.url = None
-        self.payload = None
-        self.headers = None
-        self.expected_status_code = None
-        # 👉 These are dangerous in enterprise frameworks because:
-        # ❌ Not thread-safe (pytest-xdist risk)
-        # ❌ Hidden side effects
-        # ❌ Harder debugging
-        # ❌ Not needed
 
     # -----------------------------------------
     # URL construction
@@ -310,11 +289,17 @@ class RequestUtility:
                 print(raw_resp.headers)
 
         """
-        # self.url = f"{self.base_url}{endpoint}"
-        self.url = self._build_url(endpoint)
-        headers = headers or {"Content-Type": "application/json"}
+        url = self._build_url(endpoint)
+        request_headers = headers or {"Content-Type": "application/json"}
+
         start = time.perf_counter()
-        resp = self._request_with_backoff(method=method, url=self.url, headers=headers, params=params, json=payload)
+        resp = self._request_with_backoff(
+            method=method,
+            url=url,
+            headers=request_headers,
+            params=params,
+            json=payload
+        )
         elapsed = time.perf_counter() - start
         return resp, elapsed
 
@@ -390,7 +375,6 @@ class RequestUtility:
 
         # Store actual and expected status codes for later reference (for potential test assertion context)
         status_code = response.status_code
-        self.expected_status_code = expected_status_code
 
         # Extract endpoint name for readability (avoid long shared URLs)
         endpoint_name = response.request.url.replace(self.base_url, "")
@@ -415,11 +399,6 @@ class RequestUtility:
             "payload": masked_payload,
             "event": "request.response",
         }
-
-        # # Unified logging style -->OLD AND REPLACED
-        # logger.debug(f"📡 {method.upper()} {endpoint_name} → {self.status_code}")
-        # logger.debug(f"✅ {method.upper()} {endpoint_name} → Status {self.status_code} ({duration:.3f}s)")
-        # logger.info(f"📡 {method.upper()} {endpoint_name} → completed in {duration:.3f}s")
 
         # Unified human-readable log lines (these remain for console/human files)
         logger.debug(f"📡 {method.upper()} {endpoint_name} → {status_code}", extra=extra_meta)
@@ -567,16 +546,14 @@ class RequestUtility:
                 UnexpectedStatusCodeError, SchemaValidationError, requests.RequestException
 
             """
-        # self.url = f"{self.base_url}{endpoint}"
-        self.url = self._build_url(endpoint)
-        self.payload = payload
-        self.headers = headers or {"Content-Type": "application/json"}
+        url = self._build_url(endpoint)
+        request_headers = headers or {"Content-Type": "application/json"}
 
         start = time.perf_counter()
         response = self._request_with_backoff(
             method=method,
-            url=self.url,
-            headers=self.headers,
+            url=url,
+            headers=request_headers,
             params=params,
             json=payload
         )

@@ -19,6 +19,10 @@ class HttpClient:
     """
 
     def __init__(self):
+        # self.session = requests.Session()  # Reuse TCP connections for speed. Using requests.Session() improves
+        # # performance by reusing TCP connections. This is helpful if you're hitting the API repeatedly during tests.
+        # # It allows us to access to speed up our code when sending requests to the same server. This is perfect for
+        # # scraping data or accessing APIs
         self.session = requests.Session()
 
     def request(
