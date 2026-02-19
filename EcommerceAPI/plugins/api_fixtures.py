@@ -149,9 +149,9 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
 
         if not skip_cleanup:
             register("customers", customer["id"])
-            log.debug("Registered customer with ID: %s for cleanup.", customer["id"])
+            log.debug("ℹ️ Registered customer with ID: %s for cleanup.", customer["id"])
         else:
-            log.debug("Skipped registering customer %s for cleanup.", customer["id"])
+            log.debug("ℹ️ Skipped registering customer %s for cleanup.", customer["id"])
 
         return customer
 

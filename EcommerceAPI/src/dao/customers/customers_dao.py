@@ -54,7 +54,7 @@ class CustomersDAO(object):  # object in the parenthesis will inherit objects by
                 return None
 
             customer = rs_sql[0]  # Return the first (and only) result from the list
-            logger.debug(f"Found customer for email '{email}': {customer}")  # Log the result at debug level
+            logger.debug(f"ℹ️ Found customer for email '{email}': {customer}")  # Log the result at debug level
             return customer  # Always returns a single dict or None (not a list)
 
         except Exception as e:  # Log and re-raise any database or logic error

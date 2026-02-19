@@ -16,6 +16,12 @@ class BaseApi:
         self.request_utility = request_utility
         self.endpoint = endpoint
 
+    # def _endpoint(self, suffix: str = ""):
+    # """
+    # 👉 Avoid repeating self.ENDPOINT
+    # """
+    #     return f"{self.endpoint}/{suffix}" if suffix else self.endpoint
+
     # ------------------------
     # GENERIC: GET (list)
     # ------------------------

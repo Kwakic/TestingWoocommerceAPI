@@ -139,7 +139,7 @@ class CustomersHelper(object):
         payload.update(kwargs)
 
         # logger.debug(f"🟢 Creating customer with payload: {payload}")
-        logger.debug("🟢 Creating customer with payload keys: %r", list(payload.keys()))
+        logger.debug("⚙️ Creating customer with payload keys: %r", list(payload.keys()))
 
         # --------------------------------------------------------------
         # Call API + preserve negative-path behavior
@@ -330,7 +330,7 @@ class CustomersHelper(object):
 
         """
 
-        logger.debug("🟢 Calling 'List All Customers' via pagination utility")
+        logger.debug("⚙️ Calling 'List All Customers' via pagination utility")
 
         # -------------------------------------------
         # 🔧 Prepare and sanitize query parameters
@@ -434,7 +434,7 @@ class CustomersHelper(object):
 
         Note: dao must be provided by caller (fixture or mock)"
         """
-        logger.debug("🟢 Validating existence of customer by email: %s", email)
+        logger.debug("⚙️ Validating existence of customer by email: %s", email)
 
         # 🔍 Call API to get customers
         result = self.call_list_all_customers_paginated(email=email)

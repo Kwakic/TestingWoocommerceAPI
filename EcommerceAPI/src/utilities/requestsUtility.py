@@ -320,6 +320,16 @@ class RequestUtility:
     # 📋 Internal: Handle & log the response, validate, optionally return raw
     # -----------------------------------------
     @staticmethod
+    def _format_error_body(response_json):
+        try:
+            if isinstance(response_json, (dict, list)):
+                return json.dumps(response_json, indent=2, ensure_ascii=False)
+            return str(response_json)
+        except (TypeError, ValueError) as e:
+            logger.debug(f"Failed to serialize response body: {e}")
+            return "<unserializable-response-body>"
+
+    @staticmethod
     def _parse_response_body(response: requests.Response):
         """
         Attempt to parse the response as JSON. If that fails, fallback to plain text.
@@ -339,8 +349,7 @@ class RequestUtility:
             log_payload: dict = None,
             log_params: dict = None,
             return_raw: bool = False
-    ) -> typing.Union[dict, str, requests.Response]:  # is a type hint in Python that means: The return value (or
-        # variable, parameter, etc.) can be any one of these types: a dict, a str or a requests.Response object.
+    ) -> typing.Union[dict, str, requests.Response]:
         # The function may return a dictionary, or a string, or a requests.Response object (from the requests library).
         # Why is this used?
         # In the context of your RequestUtility methods:
@@ -353,6 +362,10 @@ class RequestUtility:
         # requests.Response	  If return_raw=True
 
         """
+        1. parse response
+        2. log
+        3. validate
+        4. return / raise
         Parses, validates, logs, and (optionally) returns the response.
 
         It:
@@ -407,10 +420,10 @@ class RequestUtility:
         }
 
         # Unified human-readable log lines (these remain for console/human files)
-        logger.debug(f"📡 {method.upper()} {endpoint_name} → {status_code}", extra=extra_meta)
-        logger.debug(f"✅ {method.upper()} {endpoint_name} → Status {status_code} ({duration:.3f}s)",
-                     extra=extra_meta)
-        logger.info(f"📡 {method.upper()} {endpoint_name} → completed in {duration:.3f}s", extra=extra_meta)
+        logger.info(
+            f"✅ {method.upper()} {endpoint_name} → {status_code} (completed in {duration:.3f}s)",
+            extra=extra_meta
+        )
 
         # 🚨 Raise error if the status code did not match expectations.
         # Log payload and query params only on mismatch)
@@ -419,22 +432,34 @@ class RequestUtility:
             if log_params:
                 try:
                     formatted_params = json.dumps(log_params, indent=2, ensure_ascii=False)
-                except Exception as e:
+                except (TypeError, ValueError):
                     formatted_params = str(log_params)
-                    logger.debug(f"⚠️ Failed to serialize query params: {e}",
-                                 extra={**extra_meta, "event": "request.params_serialization_error"})
-                logger.debug(f"🔎 [Query Params] {method.upper()} {endpoint_name}:\n{formatted_params}",
-                             extra={**extra_meta, "event": "request.params"})
+                logger.debug(
+                    f"🔎 [Query Params] {method.upper()} {endpoint_name}:\n{formatted_params}",
+                    extra={**extra_meta, "event": "request.params"}
+                )
             # 📦 Log payload/body (POST, PUT), if provided
             if log_payload:
                 try:
                     formatted_payload = json.dumps(_mask_sensitive(log_payload), indent=2, ensure_ascii=False)
-                except Exception as e:
+                except (TypeError, ValueError):
                     formatted_payload = str(_mask_sensitive(log_payload))
-                    logger.debug(f"⚠️ Failed to serialize payload: {e}",
-                                 extra={**extra_meta, "event": "request.payload_serialization_error"})
-                logger.debug(f"📦 [Payload] {method.upper()} {endpoint_name}:\n{formatted_payload}",
-                             extra={**extra_meta, "event": "request.payload"})
+                logger.debug(
+                    f"📦 [Payload] {method.upper()} {endpoint_name}:\n{formatted_payload}",
+                    extra={**extra_meta, "event": "request.payload"}
+                )
+            # 🐞 Log response body if error (very important)
+            # If response is a 4xx or 5xx, log the actual response body for inspection.
+            if status_code >= 400:
+                body_str = self._format_error_body(response_json)
+                logger.debug(body_str, extra={**extra_meta, "event": "request.error_body"})
+
+            # ❌ FAIL FAST -  Raise error if the status code did not match expectations
+            raise UnexpectedStatusCodeError(
+                message=f"Expected {expected_status_code}, got {status_code}",
+                response=response,
+                response_json=response_json
+            )
 
         # 🧪 If a schema is provided, validate the response structure.
         if schema:
@@ -447,40 +472,6 @@ class RequestUtility:
                     response_json=response_json
                 )
 
-        # 🐞 If response is a 4xx or 5xx, log the actual response body for inspection.
-        # Log response body if error
-        if status_code >= 400:
-            try:
-                if isinstance(response_json, (dict, list)):
-                    body_str = json.dumps(response_json, indent=2, ensure_ascii=False)
-                else:
-                    # Prefer str(), but guard against known narrow errors
-                    try:
-                        body_str = str(response_json)
-                    except (TypeError, ValueError, AttributeError) as e:
-                        logger.debug("str() failed for response body: %s", e, exc_info=True)
-                        # Fallback to repr() which is more robust for many objects
-                        try:
-                            body_str = repr(response_json)
-                        except (TypeError, ValueError, AttributeError) as e2:
-                            logger.debug("repr() also failed for response body: %s", e2, exc_info=True)
-                            body_str = "<unserializable-response-body>"
-            except (TypeError, ValueError, AttributeError) as ser_exc:
-                logger.debug("Failed serializing response body to JSON: %s", ser_exc, exc_info=True)
-                try:
-                    body_str = repr(response_json)
-                except (TypeError, ValueError, AttributeError):
-                    body_str = "<unserializable-response-body>"
-
-            logger.debug(body_str, extra={**extra_meta, "event": "request.error_body"})
-
-        # 🚨 Raise error if the status code did not match expectations
-        if status_code != expected_status_code:
-            raise UnexpectedStatusCodeError(
-                message=f"Expected {expected_status_code}, got {status_code}",
-                response=response,
-                response_json=response_json
-            )
         # Optionally return the raw response object for advanced inspection
         if return_raw:
             return response

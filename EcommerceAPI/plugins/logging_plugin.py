@@ -633,4 +633,4 @@ def pytest_runtest_logreport(report):
     if duration_ms is not None:
         extra["duration_ms"] = duration_ms
 
-    logging.getLogger().info("Test completed", extra=extra)
+    logging.getLogger().info("✨ Test completed", extra=extra)

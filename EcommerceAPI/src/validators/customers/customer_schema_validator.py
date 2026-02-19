@@ -51,7 +51,7 @@ def validate_customer_response_schema(customer: dict) -> None:
     # returned by the API.
     # schema: the JSON Schema that defines the structure, required fields, types, and constraints.
     # In your code, this is customer_schema.
-    logger.info("📦 Customer response schema validated successfully")
+    logger.info("✅ Customer response schema validated successfully")
 
 
 def validate_customer_error_response_schema(response: dict) -> None:
