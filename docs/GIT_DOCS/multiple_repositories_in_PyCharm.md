@@ -194,3 +194,27 @@ know where on the server to put it. You are forced to type git push --set-upstre
 **Why use it?**
 It is a "set it and forget it" quality-of-life improvement introduced in Git 2.37.
 It saves you from having to copy-paste that long "fatal" error message every time you start a new branch. 
+
+## Switch between GitLab and GitHub
+If you prefer using the PyCharm buttons:
+
+1. Press Ctrl + Shift + K (or Git > Push).
+2. Look at the top of the popup where it says origin. Click the word origin and a dropdown will appear.
+3. Select GitHub from the list.
+4. Click Push.
+
+
+1. Check your current branch by running:: `git branch -vv`
+2. List all the remote servers : `git remote -v`
+3. Switching: Run this to tell Git that, from now on, main should point to your GitHub remote by default:
+`git push -u GitHub main` or `git push -u origin main` for GitLab.
+4. To make sure it has changed check your current branch again by running:: `git branch -vv`
+
+- Using GitLab add (or manually in Pycharm: Menu/git/manage remotes):
+   - `git remote set-url origin git@gitlab.com:kwakino/ecommerce.git`
+   - `git push origin main`
+
+- Using GitHub add (or manually in Pycharm: Menu/git/manage remotes):
+   - `git remote set-url origin git@github.com:Kwakic/TestingWoocommerceAPI.git`
+   - `git push GitHub main`
+

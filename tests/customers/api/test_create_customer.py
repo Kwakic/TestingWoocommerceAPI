@@ -416,8 +416,14 @@ def test_create_customer_email_field_validation(customer_helper, customers_dao, 
     # -------------------------------------------
     # 📞 Call customer creation using factory method
     # -------------------------------------------
-    response = raw_customer_api.post(endpoint="customers", payload=payload,
-                                     expected_status_code=expected_status_code)
+
+    http_response = raw_customer_api.post(
+        endpoint="customers",
+        payload=payload,
+        expected_status_code=expected_status_code
+    )
+
+    response = http_response.json
 
     # --------------------------------------------
     # 📋 Validate error schema and contents
@@ -478,11 +484,13 @@ def test_create_customer_fail_for_existing_email(create_valid_customer, raw_cust
     # -------------------------------------------
     # 📞 Call customer creation using factory method
     # -------------------------------------------
-    response = raw_customer_api.post(
+    http_response = raw_customer_api.post(
         endpoint="customers",
         payload=payload,  # or inline--> payload = {"email": "invalid", "password": "Password1"}
         expected_status_code=400  # Expect failure
     )
+    response = http_response.json
+    # You can also write instead: response = raw_customer_api.post(...).json
 
     logger.info("🧪 Validating response for duplicate email error...")
 
@@ -580,3 +588,10 @@ def test_create_customer_fail_for_existing_email(create_valid_customer, raw_cust
 # CustomersHelper (PAYLOAD + FLOW)
 #     ↓
 # Validators (ASSERTIONS)
+
+
+# RequestUtility → HttpResponse ✅
+# API → extracts .json ✅
+# Helper → dict ✅
+# Validator → dict ✅
+# Tests → unchanged ✅

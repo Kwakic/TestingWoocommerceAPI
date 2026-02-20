@@ -72,11 +72,13 @@ class CustomersApi:
         """
         logger.debug("📡 POST %s payload_keys=%s", self.ENDPOINT, list(payload.keys()))
 
-        return self.request_utility.post(
+        response = self.request_utility.post(
             self.ENDPOINT,
             payload=payload,
             expected_status_code=expected_status_code,
         )
+
+        return response.json
 
     # ------------------------------------------------------------------
     # READ (single, by ID - filtered list shortcut))
@@ -95,10 +97,12 @@ class CustomersApi:
         endpoint = f"{self.ENDPOINT}/{customer_id}"
         logger.debug("📡 GET %s", endpoint)
 
-        return self.request_utility.get(
+        response = self.request_utility.get(
             endpoint,
-            expected_status_code=expected_status_code,
+            expected_status_code=expected_status_code
         )
+
+        return response.json
 
     # ------------------------------------------------------------------
     # READ (by email - filtered list shortcut)
@@ -121,11 +125,13 @@ class CustomersApi:
 
         logger.debug("📡 GET %s params=%s", self.ENDPOINT, params)
 
-        return self.request_utility.get(
+        response = self.request_utility.get(
             self.ENDPOINT,
             params=params,
             expected_status_code=expected_status_code,
         )
+
+        return response.json
 
     # ------------------------------------------------------------------
     # READ (list)
@@ -144,11 +150,13 @@ class CustomersApi:
         """
         logger.debug("📡 GET %s params=%s", self.ENDPOINT, params)
 
-        return self.request_utility.get(
+        response = self.request_utility.get(
             self.ENDPOINT,
             params=params,
             expected_status_code=expected_status_code,
         )
+
+        return response.json
 
     # ------------------------------------------------------------------
     # DELETE
@@ -176,11 +184,13 @@ class CustomersApi:
         endpoint = f"{self.ENDPOINT}/{customer_id}"
         logger.debug("📡 DELETE %s force=%s", endpoint, force)
 
-        return self.request_utility.delete(
+        response = self.request_utility.delete(
             endpoint,
             params={"force": force},
             expected_status_code=expected_status_code,
         )
+
+        return response.json
 
     def update_customer(
         self,
@@ -195,8 +205,10 @@ class CustomersApi:
         endpoint = f"{self.ENDPOINT}/{customer_id}"
         logger.debug("📡 PUT %s payload_keys=%s", endpoint, list(payload.keys()))
 
-        return self.request_utility.put(
+        response = self.request_utility.put(
             endpoint,
             payload=payload,
             expected_status_code=expected_status_code,
         )
+
+        return response.json

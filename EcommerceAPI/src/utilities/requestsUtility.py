@@ -12,6 +12,7 @@ from EcommerceAPI.src.utilities.credentialsUtility import get_wc_api_keys
 # Import exception classes from centralized exceptions module and re-export them
 from EcommerceAPI.src.utilities.exceptions import SchemaValidationError, UnexpectedStatusCodeError
 from EcommerceAPI.src.core.http_client import HttpClient
+from EcommerceAPI.src.core.http_response import HttpResponse
 
 # Use central logging/redaction configuration and helpers to avoid duplication
 from EcommerceAPI.src.utilities.custom_logger import (
@@ -349,7 +350,7 @@ class RequestUtility:
             log_payload: dict = None,
             log_params: dict = None,
             return_raw: bool = False
-    ) -> typing.Union[dict, str, requests.Response]:
+    ) -> HttpResponse:
         # The function may return a dictionary, or a string, or a requests.Response object (from the requests library).
         # Why is this used?
         # In the context of your RequestUtility methods:
@@ -472,12 +473,13 @@ class RequestUtility:
                     response_json=response_json
                 )
 
+        http_response = HttpResponse.from_requests(response, duration)
+
         # Optionally return the raw response object for advanced inspection
         if return_raw:
-            return response
+            return http_response
 
-        # ✅ Success: return parsed JSON or raw text if non-JSON
-        return response_json
+        return http_response
 
     # -----------------------------------------
     # ⚙️ Internal: Shared request logic for all verbs
@@ -492,7 +494,7 @@ class RequestUtility:
             headers: dict = None,
             schema: dict = None,
             return_raw: bool = False
-    ) -> typing.Union[dict, str, requests.Response]:
+    ) -> HttpResponse:
         """
             It constructs and executes an HTTP request (any verb).
 
@@ -581,7 +583,7 @@ class RequestUtility:
             expected_status_code: int = 200,
             schema: dict = None,
             return_raw: bool = False
-    ) -> typing.Union[dict, str, requests.Response]:
+    ) -> HttpResponse:
         """
         Performs a GET request.
         Args:
@@ -612,7 +614,7 @@ class RequestUtility:
             expected_status_code: int = 201,
             schema: dict = None,
             return_raw: bool = False
-    ) -> typing.Union[dict, str, requests.Response]:
+    ) -> HttpResponse:
         """
         Performs a POST request.
         Args:
@@ -643,7 +645,7 @@ class RequestUtility:
             expected_status_code: int = 200,
             schema: dict = None,
             return_raw: bool = False
-    ) -> typing.Union[dict, str, requests.Response]:
+    ) -> HttpResponse:
         """
         Performs a PUT request.
         Args:
@@ -674,7 +676,7 @@ class RequestUtility:
             expected_status_code: int = 200,
             schema: dict = None,
             return_raw: bool = False
-    ) -> typing.Union[dict, str, requests.Response]:
+    ) -> HttpResponse:
         """
         Performs a DELETE request.
         Args:

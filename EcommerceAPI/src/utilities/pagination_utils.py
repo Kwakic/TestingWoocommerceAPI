@@ -43,7 +43,17 @@ def paginate_all_results(request_utility, endpoint, params=None, max_pages=1000,
         while attempt < retries and not success:
             try:
                 logger.debug(f"📦 Fetching {endpoint} page {i} (attempt {attempt + 1}/{retries})")
-                response = request_utility.get(endpoint, params=params)
+                http_response = request_utility.get(endpoint, params=params)
+                response = http_response.json
+
+                # Safety: ensure response is an iterable list. Stop pagination if no response or empty list is returned
+                if not response:
+                    logger.info(f"⛔ No more results at page {i}. Ending pagination for '{endpoint}'")
+                    return all_items  # ✅ STOP EVERYTHING
+
+                if not isinstance(response, list):
+                    raise TypeError(f"Expected list response for pagination, got {type(response)}")
+
                 success = True
             except Exception as e:
                 attempt += 1
@@ -54,16 +64,11 @@ def paginate_all_results(request_utility, endpoint, params=None, max_pages=1000,
                     logger.error(f"❌ Giving up on page {i} after {retries} failed attempts.")
                     break
 
-        # Stop pagination if no response or empty list returned
-        if not response:
-            logger.info(f"⛔ No more results at page {i}. Ending pagination for '{endpoint}'")
-            break
-
-        all_items.extend(response)
+        if success and response:
+            all_items.extend(response)
 
     logger.debug(f"✅ Completed paginated fetch for '{endpoint}' — Total items: {len(all_items)}")
     return all_items
 
 # NOTE: You can to make this retry logic configurable via environment variable (e.g. PAGINATION_RETRY_COUNT)?
 # That’s sometimes handy when you run tests on unstable remote WooCommerce hosts.
-
