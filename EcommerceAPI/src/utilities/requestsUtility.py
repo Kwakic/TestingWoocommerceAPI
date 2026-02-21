@@ -6,11 +6,8 @@ import typing
 from random import uniform  # Adds random jitter to exponential backoff.
 import requests
 from requests_oauthlib import OAuth1
-from jsonschema import validate, ValidationError
 
 from EcommerceAPI.src.utilities.credentialsUtility import get_wc_api_keys
-# Import exception classes from centralized exceptions module and re-export them
-from EcommerceAPI.src.utilities.exceptions import SchemaValidationError, UnexpectedStatusCodeError
 from EcommerceAPI.src.core.http_client import HttpClient
 from EcommerceAPI.src.core.http_response import HttpResponse
 
@@ -111,7 +108,6 @@ class RequestUtility:
       - Uses requests.Session() for connection reuse.
       - Automatic retries with exponential backoff & jitter for robustness.
       - Detailed, structured logging for diagnostics & debugging.
-      - Validates response status code and (optionally) JSON schema.
       - Supports returning either parsed JSON/text or the raw Response object.
       - Logging calls emit structured metadata via the `extra` parameter (method, endpoint, status, duration, payload).
         This enables the JSONFormatter in custom_logger to produce structured events for ingestion.
@@ -343,12 +339,9 @@ class RequestUtility:
     def _handle_response(
             self,
             response: requests.Response,
-            expected_status_code: int,
-            schema: dict = None,
             duration: float = None,
             method: str = None,
             log_payload: dict = None,
-            log_params: dict = None,
             return_raw: bool = False
     ) -> HttpResponse:
         # The function may return a dictionary, or a string, or a requests.Response object (from the requests library).
@@ -370,7 +363,7 @@ class RequestUtility:
         Parses, validates, logs, and (optionally) returns the response.
 
         It:
-            - Checks status code and (optionally) schema.
+            - Checks status code.
             - Logs request/response context, including on failure.
             - On error, raises informative custom exception.
             - If return_raw, returns the raw response object for advanced tests.
@@ -382,19 +375,14 @@ class RequestUtility:
 
         Args:
             response (requests.Response): The HTTP response from requests.
-            expected_status_code (int): The status code the caller expects.
-            schema (dict, optional): JSON schema to validate the response.
             duration (float, optional): Time taken for the request (for logging).
             method (str, optional): HTTP method (for log formatting).
             log_payload (dict, optional): The request body for logging.
-            log_params (dict, optional): The query params for logging.
             return_raw (bool): If True, return the raw Response object.
 
-        Returns:
-            dict, str, or requests.Response: Parsed JSON/text, or raw Response if requested.
+       Returns:
+            HttpResponse: Parsed JSON/text, or raw Response if requested.
 
-        Raises:
-            UnexpectedStatusCodeError, SchemaValidationError
         """
 
         # Store actual and expected status codes for later reference (for potential test assertion context)
@@ -425,53 +413,10 @@ class RequestUtility:
             f"✅ {method.upper()} {endpoint_name} → {status_code} (completed in {duration:.3f}s)",
             extra=extra_meta
         )
-
-        # 🚨 Raise error if the status code did not match expectations.
-        # Log payload and query params only on mismatch)
-        if status_code != expected_status_code:
-            # 🔍 Log query parameters (GET, DELETE), if provided
-            if log_params:
-                try:
-                    formatted_params = json.dumps(log_params, indent=2, ensure_ascii=False)
-                except (TypeError, ValueError):
-                    formatted_params = str(log_params)
-                logger.debug(
-                    f"🔎 [Query Params] {method.upper()} {endpoint_name}:\n{formatted_params}",
-                    extra={**extra_meta, "event": "request.params"}
-                )
-            # 📦 Log payload/body (POST, PUT), if provided
-            if log_payload:
-                try:
-                    formatted_payload = json.dumps(_mask_sensitive(log_payload), indent=2, ensure_ascii=False)
-                except (TypeError, ValueError):
-                    formatted_payload = str(_mask_sensitive(log_payload))
-                logger.debug(
-                    f"📦 [Payload] {method.upper()} {endpoint_name}:\n{formatted_payload}",
-                    extra={**extra_meta, "event": "request.payload"}
-                )
-            # 🐞 Log response body if error (very important)
-            # If response is a 4xx or 5xx, log the actual response body for inspection.
-            if status_code >= 400:
-                body_str = self._format_error_body(response_json)
-                logger.debug(body_str, extra={**extra_meta, "event": "request.error_body"})
-
-            # ❌ FAIL FAST -  Raise error if the status code did not match expectations
-            raise UnexpectedStatusCodeError(
-                message=f"Expected {expected_status_code}, got {status_code}",
-                response=response,
-                response_json=response_json
-            )
-
-        # 🧪 If a schema is provided, validate the response structure.
-        if schema:
-            try:
-                validate(instance=response_json, schema=schema)
-            except ValidationError as e:
-                raise SchemaValidationError(
-                    f"Schema validation failed: {e.message}",
-                    response=response,
-                    response_json=response_json
-                )
+        # 🐞 Always log error body for 4xx/5xx responses (transport-level observability)
+        if status_code >= 400:
+            body_str = self._format_error_body(response_json)
+            logger.debug(body_str, extra={**extra_meta, "event": "request.error_body"})
 
         http_response = HttpResponse.from_requests(response, duration)
 
@@ -488,11 +433,9 @@ class RequestUtility:
             self,
             method: str,
             endpoint: str,
-            expected_status_code: int = 200,
             params: dict = None,
             payload: dict = None,
             headers: dict = None,
-            schema: dict = None,
             return_raw: bool = False
     ) -> HttpResponse:
         """
@@ -510,7 +453,6 @@ class RequestUtility:
                 - Returns the raw response object from requests.
             - Then it calls _handle_response(), passing:
                 - The raw response
-                - The expected_status_code
             - And finally the _handle_response():
                 - Saves the actual status code and response JSON.
                 - Compares actual vs. expected status code.
@@ -531,19 +473,13 @@ class RequestUtility:
             Args:
                 method (str): HTTP verb ('get', 'post', etc.)
                 endpoint (str): API endpoint path (relative to base_url).
-                expected_status_code (int): Status code to expect/assert.
                 params (dict, optional): Query parameters for GET/DELETE.
                 payload (dict, optional): JSON body for POST/PUT.
                 headers (dict, optional): HTTP headers.
-                schema (dict, optional): JSON schema to validate response.
                 return_raw (bool): If True, return raw requests.Response.
 
             Returns:
-                dict, str, or requests.Response.
-
-            Raises:
-                UnexpectedStatusCodeError, SchemaValidationError, requests.RequestException
-
+                HttpResponse
             """
         url = self._build_url(endpoint)
         request_headers = headers or {"Content-Type": "application/json"}
@@ -560,12 +496,9 @@ class RequestUtility:
 
         return self._handle_response(
             response=response,
-            expected_status_code=expected_status_code,
-            schema=schema,
             duration=duration,
             method=method,
             log_payload=payload,
-            log_params=params,
             return_raw=return_raw
         )
 
@@ -580,8 +513,6 @@ class RequestUtility:
             endpoint: str,
             params: dict = None,
             headers: dict = None,
-            expected_status_code: int = 200,
-            schema: dict = None,
             return_raw: bool = False
     ) -> HttpResponse:
         """
@@ -590,19 +521,15 @@ class RequestUtility:
             endpoint (str): API path.
             params (dict, optional): Query parameters.
             headers (dict, optional): HTTP headers.
-            expected_status_code (int): Status code to expect.
-            schema (dict, optional): JSON schema to validate.
             return_raw (bool): If True, return requests.Response.
         Returns:
-            dict, str, or requests.Response
+            HttpResponse
         """
         return self._request(
             "get",
             endpoint,
-            expected_status_code,
             params=params,
             headers=headers,
-            schema=schema,
             return_raw=return_raw
         )
 
@@ -611,8 +538,6 @@ class RequestUtility:
             endpoint: str,
             payload: dict = None,
             headers: dict = None,
-            expected_status_code: int = 201,
-            schema: dict = None,
             return_raw: bool = False
     ) -> HttpResponse:
         """
@@ -621,19 +546,15 @@ class RequestUtility:
             endpoint (str): API path.
             payload (dict, optional): JSON body.
             headers (dict, optional): HTTP headers.
-            expected_status_code (int): Status code to expect.
-            schema (dict, optional): JSON schema to validate.
             return_raw (bool): If True, return requests.Response.
         Returns:
-            dict, str, or requests.Response
+            HttpResponse
         """
         return self._request(
             "post",
             endpoint,
-            expected_status_code,
             payload=payload,
             headers=headers,
-            schema=schema,
             return_raw=return_raw
         )
 
@@ -642,8 +563,6 @@ class RequestUtility:
             endpoint: str,
             payload: dict = None,
             headers: dict = None,
-            expected_status_code: int = 200,
-            schema: dict = None,
             return_raw: bool = False
     ) -> HttpResponse:
         """
@@ -652,19 +571,15 @@ class RequestUtility:
             endpoint (str): API path.
             payload (dict, optional): JSON body.
             headers (dict, optional): HTTP headers.
-            expected_status_code (int): Status code to expect.
-            schema (dict, optional): JSON schema to validate.
             return_raw (bool): If True, return requests.Response.
         Returns:
-            dict, str, or requests.Response
+            HttpResponse
         """
         return self._request(
             "put",
             endpoint,
-            expected_status_code,
             payload=payload,
             headers=headers,
-            schema=schema,
             return_raw=return_raw
         )
 
@@ -673,8 +588,6 @@ class RequestUtility:
             endpoint: str,
             params: dict = None,
             headers: dict = None,
-            expected_status_code: int = 200,
-            schema: dict = None,
             return_raw: bool = False
     ) -> HttpResponse:
         """
@@ -683,19 +596,15 @@ class RequestUtility:
             endpoint (str): API path.
             params (dict, optional): Query parameters.
             headers (dict, optional): HTTP headers.
-            expected_status_code (int): Status code to expect.
-            schema (dict, optional): JSON schema to validate.
             return_raw (bool): If True, return requests.Response.
         Returns:
-            dict, str, or requests.Response
+            HttpResponse
 
         """
         return self._request(
             "delete",
             endpoint,
-            expected_status_code,
             params=params,
             headers=headers,
-            schema=schema,
             return_raw=return_raw
         )

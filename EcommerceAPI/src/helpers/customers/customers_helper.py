@@ -64,7 +64,6 @@ class CustomersHelper(object):
             self,
             email: Optional[str] = None,
             password: Optional[str] = None,
-            expected_status_code: int = 201,
             auto_generate: bool = True,
             **kwargs,
     ) -> Dict[str, Any]:
@@ -82,7 +81,6 @@ class CustomersHelper(object):
         Args:
             email: Optional email
             password: Optional password
-            expected_status_code: Expected HTTP status
             auto_generate: Auto-generate credentials for positive tests
             **kwargs: Additional payload fields
 
@@ -155,7 +153,7 @@ class CustomersHelper(object):
         #  - One responsibility: return response OR fail loudly
 
         try:
-            return self.customers_api.create_customer(payload=payload, expected_status_code=expected_status_code)
+            return self.customers_api.create_customer(payload=payload)
         except (UnexpectedStatusCodeError, SchemaValidationError) as e:
             # Log a short warning so the failure is visible in the structured logs (CustomFormatter will redact
             # sensitive info/fields).
@@ -188,7 +186,6 @@ class CustomersHelper(object):
             self,
             customer_id: int,
             payload: Optional[Dict[str, Any]] = None,
-            expected_status_code: int = 200,
             **kwargs,
     ) -> Dict[str, Any]:
         """
@@ -215,8 +212,7 @@ class CustomersHelper(object):
         try:
             return self.customers_api.update_customer(
                 customer_id=customer_id,
-                payload=final_payload,
-                expected_status_code=expected_status_code,
+                payload=final_payload
             )
 
         except (UnexpectedStatusCodeError, SchemaValidationError) as e:
@@ -234,27 +230,21 @@ class CustomersHelper(object):
 
             raise
 
-    def call_get_customer_by_id(self, customer_id: int, expected_status_code: int = 200) -> Dict[str, Any]:
+    def call_get_customer_by_id(self, customer_id: int) -> Dict[str, Any]:
         """
          Retrieve a customer by their ID.
 
          Args:
              customer_id (int): Customer ID.
-             expected_status_code (int): Expected HTTP status code.
 
          Returns:
              dict: Parsed customer JSON response.
          """
         # logger.debug(f"🟢 Calling 'Get Customer' for ID {customer_id}.")
         logger.debug("🟢 Calling 'Get Customer' for ID %s.", customer_id)
-        return self.customers_api.get_customer(customer_id, expected_status_code=expected_status_code)
+        return self.customers_api.get_customer(customer_id)
 
-    def call_get_customer_by_email(
-            self,
-            email: str,
-            *,
-            expected_status_code: int = 200,
-    ) -> Dict[str, Any]:
+    def call_get_customer_by_email(self, email: str) -> Dict[str, Any]:
         """
         Retrieve a customer by email.
 
@@ -266,20 +256,16 @@ class CustomersHelper(object):
         """
         logger.debug("🟢 Calling 'Get Customer by Email' for %s.", email)
 
-        result = self.customers_api.get_customer_by_email(
-            email=email,
-            expected_status_code=expected_status_code,
-        )
+        result = self.customers_api.get_customer_by_email(email=email)
 
         return result[0]  # Woo returns list → we take first
 
-    def call_delete_customer(self, customer_id: int, expected_status_code: int = 200) -> Dict[str, Any]:
+    def call_delete_customer(self, customer_id: int) -> Dict[str, Any]:
         """
         Delete (hard delete_it.py) a customer by ID using force=true.
 
         Args:
             customer_id (int): Customer ID.
-            expected_status_code (int): Expected HTTP status code.
 
         Returns:
             dict: Parsed JSON response from delete_it.py.
@@ -288,11 +274,7 @@ class CustomersHelper(object):
         # triggered
         # logger.debug(f"🟢 Calling 'Delete Customer' for ID {customer_id}.")
         logger.debug("🟢 Calling 'Delete Customer' for ID %s.", customer_id)
-        return self.customers_api.delete_customer(
-            customer_id,
-            force=True,
-            expected_status_code=expected_status_code
-        )
+        return self.customers_api.delete_customer(customer_id, force=True)
 
     # ------------------------
     # Listing / Pagination

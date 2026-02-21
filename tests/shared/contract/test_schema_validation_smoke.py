@@ -67,7 +67,25 @@ def _fetch_list_and_validate_item(api: RequestUtility, endpoint: str, item_schem
     """
     # ---- Step 1: Fetch list ----
     try:
-        items = api.get(endpoint, expected_status_code=200, schema={"type": "array"})
+        http_response = api.get(endpoint)
+
+        # ✅ Validate status at test level
+        assert http_response.status_code == 200, (
+            f"{endpoint}: Expected 200, got {http_response.status_code}"
+        )
+        # 💡 OPTIONAL (VERY NICE IMPROVEMENT)
+        # Instead of inline validation, you could later create
+        # def assert_response_list(http_response):
+        #     assert http_response.status_code == 200
+        #     assert isinstance(http_response.json, list)
+
+        # ✅ Extract JSON
+        items = http_response.json
+
+        # Optional safety
+        if not isinstance(items, list):
+            pytest.fail(f"{endpoint}: Expected list response, got {type(items)}")
+
         list_len = len(items)
     except Exception as e:
         log.exception("%s: failed to fetch list.", endpoint)
@@ -94,7 +112,17 @@ def _fetch_list_and_validate_item(api: RequestUtility, endpoint: str, item_schem
 
     # ---- Step 4: GET /<endpoint>/<id> with schema validation ----
     try:
-        api.get(f"{endpoint}/{first_id}", expected_status_code=200, schema=item_schema)
+        http_response = api.get(f"{endpoint}/{first_id}")
+
+        assert http_response.status_code == 200, (
+            f"{endpoint}/{first_id}: Expected 200, got {http_response.status_code}"
+        )
+
+        response_json = http_response.json
+
+        # ✅ Schema validation MOVED HERE
+        from jsonschema import validate
+        validate(instance=response_json, schema=item_schema)
 
     except ValidationError as ve:
         log.exception("%s: schema validation error for id=%s", endpoint, first_id)

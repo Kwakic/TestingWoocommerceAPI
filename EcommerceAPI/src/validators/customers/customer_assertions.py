@@ -142,7 +142,7 @@ def assert_valid_customer_matches_db(customer: Dict[str, Any], db_customer: Dict
 # ------------------------------------------------------------------
 def assert_single_customer_by_email(customers: List[Dict[str, Any]], email: str) -> Dict[str, Any]:
     """
-    Ensure exactly ONE customer exists for given email.
+    Ensure exactly ONE customer exists for a given email.
 
     Use this ONLY when validating full dataset (pagination).
 

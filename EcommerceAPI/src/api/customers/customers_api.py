@@ -49,8 +49,6 @@ class CustomersApi:
     def create_customer(
         self,
         payload: Dict[str, Any],
-        *,
-        expected_status_code: int = 201,
     ) -> Dict[str, Any]:
         """
         POST /customers
@@ -60,8 +58,6 @@ class CustomersApi:
         Args:
             payload (dict):
                 Fully prepared request body.
-            expected_status_code (int):
-                Expected HTTP status code (default: 201).
 
         Returns:
             dict: Parsed JSON response.
@@ -75,7 +71,6 @@ class CustomersApi:
         response = self.request_utility.post(
             self.ENDPOINT,
             payload=payload,
-            expected_status_code=expected_status_code,
         )
 
         return response.json
@@ -85,9 +80,7 @@ class CustomersApi:
     # ------------------------------------------------------------------
     def get_customer(
         self,
-        customer_id: Any,
-        *,
-        expected_status_code: int = 200,
+        customer_id: Any
     ) -> Dict[str, Any]:
         """
         GET /customers/{id}
@@ -97,10 +90,7 @@ class CustomersApi:
         endpoint = f"{self.ENDPOINT}/{customer_id}"
         logger.debug("📡 GET %s", endpoint)
 
-        response = self.request_utility.get(
-            endpoint,
-            expected_status_code=expected_status_code
-        )
+        response = self.request_utility.get(endpoint)
 
         return response.json
 
@@ -110,8 +100,6 @@ class CustomersApi:
     def get_customer_by_email(
             self,
             email: str,
-            *,
-            expected_status_code: int = 200,
     ) -> List[Dict[str, Any]]:
         """
         GET /customers?email={email}
@@ -125,11 +113,7 @@ class CustomersApi:
 
         logger.debug("📡 GET %s params=%s", self.ENDPOINT, params)
 
-        response = self.request_utility.get(
-            self.ENDPOINT,
-            params=params,
-            expected_status_code=expected_status_code,
-        )
+        response = self.request_utility.get(self.ENDPOINT, params=params)
 
         return response.json
 
@@ -139,8 +123,7 @@ class CustomersApi:
     def list_customers(
         self,
         *,
-        params: Optional[Dict[str, Any]] = None,
-        expected_status_code: int = 200,
+        params: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
         GET /customers
@@ -152,8 +135,7 @@ class CustomersApi:
 
         response = self.request_utility.get(
             self.ENDPOINT,
-            params=params,
-            expected_status_code=expected_status_code,
+            params=params
         )
 
         return response.json
@@ -161,13 +143,7 @@ class CustomersApi:
     # ------------------------------------------------------------------
     # DELETE
     # ------------------------------------------------------------------
-    def delete_customer(
-        self,
-        customer_id: Any,
-        *,
-        expected_status_code: int = 200,
-        force: bool = True
-    ) -> Dict[str, Any]:
+    def delete_customer(self, customer_id: Any, force: bool = True) -> Dict[str, Any]:
         """
         DELETE /customers/{id}
 
@@ -178,17 +154,11 @@ class CustomersApi:
                 ID of the customer to delete.
             force (bool):
                 Whether to force deletion (API-specific).
-            expected_status_code (int):
-                Expected HTTP status code (default: 200).
         """
         endpoint = f"{self.ENDPOINT}/{customer_id}"
         logger.debug("📡 DELETE %s force=%s", endpoint, force)
 
-        response = self.request_utility.delete(
-            endpoint,
-            params={"force": force},
-            expected_status_code=expected_status_code,
-        )
+        response = self.request_utility.delete(endpoint, params={"force": force})
 
         return response.json
 
@@ -196,8 +166,6 @@ class CustomersApi:
         self,
         customer_id: Any,
         payload: Dict[str, Any],
-        *,
-        expected_status_code: int = 200,
     ) -> Dict[str, Any]:
         """
         PUT /customers/{id}
@@ -205,10 +173,6 @@ class CustomersApi:
         endpoint = f"{self.ENDPOINT}/{customer_id}"
         logger.debug("📡 PUT %s payload_keys=%s", endpoint, list(payload.keys()))
 
-        response = self.request_utility.put(
-            endpoint,
-            payload=payload,
-            expected_status_code=expected_status_code,
-        )
+        response = self.request_utility.put(endpoint, payload=payload)
 
         return response.json

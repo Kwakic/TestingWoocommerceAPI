@@ -1,6 +1,5 @@
 import pytest
 import logging
-import os
 
 from faker import Faker  # To avoid hardcoding, we use faker to generate fake data for us
 
@@ -417,13 +416,11 @@ def test_create_customer_email_field_validation(customer_helper, customers_dao, 
     # 📞 Call customer creation using factory method
     # -------------------------------------------
 
-    http_response = raw_customer_api.post(
-        endpoint="customers",
-        payload=payload,
-        expected_status_code=expected_status_code
-    )
+    http_response = raw_customer_api.post(endpoint="customers", payload=payload)
 
     response = http_response.json
+
+    assert http_response.status_code == expected_status_code
 
     # --------------------------------------------
     # 📋 Validate error schema and contents
@@ -487,10 +484,12 @@ def test_create_customer_fail_for_existing_email(create_valid_customer, raw_cust
     http_response = raw_customer_api.post(
         endpoint="customers",
         payload=payload,  # or inline--> payload = {"email": "invalid", "password": "Password1"}
-        expected_status_code=400  # Expect failure
     )
     response = http_response.json
-    # You can also write instead: response = raw_customer_api.post(...).json
+
+    expected_status_code = 400
+    assert http_response.status_code == expected_status_code, (f"Expected status code is {expected_status_code}, "
+                                                               f"got {http_response.status_code}")
 
     logger.info("🧪 Validating response for duplicate email error...")
 
@@ -595,3 +594,28 @@ def test_create_customer_fail_for_existing_email(create_valid_customer, raw_cust
 # Helper → dict ✅
 # Validator → dict ✅
 # Tests → unchanged ✅
+
+
+# 👉 Helpers return dict
+# 👉 API / RequestUtility return HttpResponse
+
+
+# 🚀 PATTERN YOU SHOULD FOLLOW EVERYWHERE
+# ✅ Positive test
+# customer = customer_helper.create_customer(...)
+# assert_valid_customer_response(customer)
+
+# ✅ Negative test
+# response = customer_helper.call_get_customer_by_id(...)
+# assert_customer_not_found_error(response)
+
+# ✅ Raw API (only when needed)
+# http_response = raw_customer_api.get(...)
+# assert http_response.status_code == 404
+
+# “Enterprise companies — where do they validate status?”
+
+# 👉 Answer:
+
+# ✔ Tests OR validators
+# ❌ NEVER in HTTP client

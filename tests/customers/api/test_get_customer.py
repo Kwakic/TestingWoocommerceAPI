@@ -160,7 +160,8 @@ def test_retrieve_nonexistent_customer_returns_404(customer_helper, customers_da
     fake_customer_id = 99999999
 
     logger.info(f"🚫 Retrieving non-existent customer ID: {fake_customer_id}")
-    response = customer_helper.call_get_customer_by_id(customer_id=fake_customer_id, expected_status_code=404)
+
+    response = customer_helper.call_get_customer_by_id(customer_id=fake_customer_id)
 
     if isinstance(response, str):
         response = loads(response)

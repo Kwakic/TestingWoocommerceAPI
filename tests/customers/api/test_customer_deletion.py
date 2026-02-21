@@ -63,10 +63,8 @@ def test_customer_deletion_removes_resource(all_resources, customer_helper, cust
     #  🗑️ Step 2:  Delete customer and validate deletion response
     # -------------------------------
     logger.info(f"🧹 Deleting customer ID={customer_id}")
-    delete_response = customer_helper.call_delete_customer(
-        customer_id=customer_id,
-        expected_status_code=200
-    )
+
+    delete_response = customer_helper.call_delete_customer(customer_id)
 
     assert delete_response["id"] == customer_id, (
         f"❌ Mismatched delete_it.py ID: expected {customer_id}, got {delete_response.get('id')}"
@@ -80,7 +78,7 @@ def test_customer_deletion_removes_resource(all_resources, customer_helper, cust
     # 🔍 Step 3: Verify customer is no longer accessible via API
     # -------------------------------------------
     logger.info(f"🔎 Verifying GET after deletion returns 404 for ID={customer_id}")
-    response = customer_helper.call_get_customer_by_id(customer_id=customer_id, expected_status_code=404)
+    response = customer_helper.call_get_customer_by_id(customer_id=customer_id)
     # Validating deleted customer's error message"
 
     assert_customer_not_found_error(response)   # It validates: data: status 404, code, error message
