@@ -238,13 +238,36 @@ def assert_single_entity_by_field(
     #     if c.get("email") == email:
     #         matches.append(c)
 
-    assert len(matches) == 1, \
-        f"❌ Expected exactly 1 entity for {field}={value}, found {len(matches)}"
+    assert len(matches) == 1, f"❌ Expected exactly 1 entity for {field}={value}, found {len(matches)}"
 
     entity = matches[0]
 
     # ✅ Now strict access
-    assert entity[field] == value, \
-        f"❌ {field} mismatch after filtering: {entity[field]}"
+    assert entity[field] == value, f"❌ {field} mismatch after filtering: {entity[field]}"
 
     return entity
+
+
+def assert_status_code(http_response, expected_status: int) -> None:
+    """
+    Assert HTTP status code from HttpResponse.
+
+    This is a TRANSPORT-level validation and should be used in:
+        - contract tests
+        - negative tests
+        - raw API tests
+
+    Args:
+        http_response: HttpResponse object
+        expected_status (int): Expected HTTP status code
+
+    Raises:
+        AssertionError: If status code does not match
+    """
+    actual = http_response.status_code
+
+    assert actual == expected_status, (
+        f"❌ Expected status {expected_status}, got {actual}. "
+        f"URL: {http_response.url} "
+        f"Response: {http_response.text[:300]}"
+    )

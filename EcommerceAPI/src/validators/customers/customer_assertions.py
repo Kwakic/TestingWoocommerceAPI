@@ -177,18 +177,41 @@ def assert_customer_not_found_error(response):
     :param response: customer response
     """
 
-    assert response["code"] in {
-        "woocommerce_rest_invalid_id",
-        "wc_user_invalid_id"
-    }
-
     assert response['code'] == "wc_user_invalid_id", (f"Invalid Error code. Current: '{response['code']}', "
                                                       f"Expected: 'wc_user_invalid_id' ")
 
-    # assert response['message'], "❌ Error 'message' should not be empty"
+    assert response['message'], "❌ Error 'message' should not be empty"
 
     assert response['message'] == "Invalid user ID.", (f"Invalid Error message. Current: '{response['message']}', "
                                                        f"Expected: 'Invalid user ID'")
 
     assert response['data'] == {'status': 404}, (f"Invalid data. Current: {response['data']}, "
                                                  f"Expected: {{'status': 404}}")
+
+
+def assert_customer_creation_failed(response: dict):
+    """
+    Validate customer creation failure (business + contract level).
+
+    IMPORTANT:
+    - This function expects a parsed JSON dict (NOT HttpResponse)
+    - Status code must be validated BEFORE calling this function
+
+    Validates:
+        - error code
+        - error message
+        - response data structure
+    """
+    assert response['data'] == {'status': 400}, (f"Invalid data. Current: {response['data']}, "
+                                                 f"Expected: {{'status': 400}}"
+                                                 )
+
+    assert response['code'], "❌ Error 'code' should not be empty"
+
+    assert response['code'] == "registration-error-email-exists", (
+        f"Invalid Error code. Current: '{response['code']}', "
+        f"Expected: 'registration-error-email-exists'"
+    )
+
+    assert response['message'], "❌ Error 'message' should not be empty"
+    assert "An account is already registered" in str(response['message'])

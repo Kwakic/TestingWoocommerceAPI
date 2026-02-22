@@ -66,6 +66,8 @@ def test_customer_deletion_removes_resource(all_resources, customer_helper, cust
 
     delete_response = customer_helper.call_delete_customer(customer_id)
 
+
+
     assert delete_response["id"] == customer_id, (
         f"❌ Mismatched delete_it.py ID: expected {customer_id}, got {delete_response.get('id')}"
     )

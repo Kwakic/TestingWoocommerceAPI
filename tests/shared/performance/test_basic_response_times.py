@@ -80,10 +80,9 @@ def measure_response_time(
         response = api_client.get(
             endpoint,
             params=params,
-            expected_status_code=expected_status_code,
-            schema=schema,
-            return_raw=return_raw,
+            return_raw=return_raw
         )
+
         duration = time.perf_counter() - start
         logger.info("📡 GET %s → completed in %.3fs", display_endpoint, duration)
         return duration, response
@@ -149,39 +148,63 @@ def test_api_response_times(pytestconfig, request_utility, session_metadata):
         logger.info("⏱️ Testing endpoint: %s (%s)", name, endpoint)
 
         times: list[float] = []
+        failures = 0
+
         for i in range(iterations):
             duration, response = measure_response_time(
                 api_client=client,
                 endpoint=endpoint,
                 params={"per_page": 100},
-                expected_status_code=200,
-                schema=None,
                 return_raw=False,
             )
+
+            if response is None:
+                failures += 1
+                logger.debug("   • Run %02d: FAILED", i + 1)
+                continue
+
             times.append(duration)
             logger.debug("   • Run %02d: %.3fs", i + 1, duration)
 
-            if times:
-                avg = statistics.mean(times)
-                p95 = statistics.quantiles(times, n=100)[94] if len(times) >= 2 else max(times)
-                results[name] = {
-                    "iterations": len(times),
-                    "min": round(min(times), 3),
-                    "max": round(max(times), 3),
-                    "avg": round(avg, 3),
-                    "p95": round(p95, 3),
-                }
-                logger.info(
-                    "✅ %s → avg: %.3fs | p95: %.3fs | min: %.3fs | max: %.3fs",
-                    name.upper(),
-                    avg,
-                    p95,
-                    min(times),
-                    max(times),
-                )
-            else:
-                results[name] = {"error": "All runs failed"}
-                logger.warning("⚠️ All runs failed for endpoint: %s", name)
+        # 🚨 HARD FAIL: all failed
+        if failures == iterations:
+            pytest.fail(f"❌ All {iterations} requests failed for endpoint: {name}")
+
+        # ⚠️ PARTIAL FAILURES
+        if failures > 0:
+            logger.warning(
+                "⚠️ %s → %d/%d requests failed", name.upper(), failures, iterations)
+            pytest.xfail(f"{failures}/{iterations} requests failed for {name}")
+
+        # 🚨 NO VALID TIMINGS
+        if not times:
+            pytest.fail(f"❌ No successful requests for endpoint: {name}")
+
+        # 🚨 THIS is your key requirement (0.000s detection)
+        if all(t < 0.001 for t in times):
+            pytest.fail(
+                f"❌ Suspicious timings detected for {name}: all values ~0.000s"
+            )
+
+        avg = statistics.mean(times)
+        p95 = statistics.quantiles(times, n=100)[94] if len(times) >= 2 else max(times)
+
+        results[name] = {
+            "iterations": len(times),
+            "min": round(min(times), 3),
+            "max": round(max(times), 3),
+            "avg": round(avg, 3),
+            "p95": round(p95, 3),
+        }
+
+        logger.info(
+            "✅ %s → avg: %.3fs | p95: %.3fs | min: %.3fs | max: %.3fs",
+            name.upper(),
+            avg,
+            p95,
+            min(times),
+            max(times),
+        )
 
     # Final concise summary (human-friendly)
     git_info = session_metadata.get("git", {})

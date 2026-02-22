@@ -5,6 +5,8 @@ from faker import Faker  # To avoid hardcoding, we use faker to generate fake da
 
 from EcommerceAPI.src.utilities.bulk_ops import bulk_create_and_validate_resources
 from EcommerceAPI.src.validators.customers.customer_schema_validator import validate_customer_error_response_schema
+from EcommerceAPI.src.validators.customers.customer_assertions import assert_customer_creation_failed
+from EcommerceAPI.src.validators.shared.base_validators import assert_status_code
 
 faker = Faker()
 
@@ -485,11 +487,31 @@ def test_create_customer_fail_for_existing_email(create_valid_customer, raw_cust
         endpoint="customers",
         payload=payload,  # or inline--> payload = {"email": "invalid", "password": "Password1"}
     )
+
     response = http_response.json
 
-    expected_status_code = 400
-    assert http_response.status_code == expected_status_code, (f"Expected status code is {expected_status_code}, "
-                                                               f"got {http_response.status_code}")
+    # ✅ Transport validation (shared validator responsibility)
+    assert_status_code(http_response, 400)  # Benefits: Standardized across ALL tests and Better
+    # error messages: ❌ Expected status 400, got 500. URL: /customers
+
+    # The following is a bad practice to do it directly here --> assert http_response.status_code == 400
+    # The problems with that: No URL in error, harder debugging, Inconsistent across tests, Junior engineers will
+    # copy/paste different styles, Harder to improve globally later.
+
+    # ⚖️ When to Use Each Style
+    # ✅ Use assert_status_code(...) (DEFAULT)
+    # ✔ Negative tests
+    # ✔ Contract tests
+    # ✔ Raw API tests
+    # ✔ Anywhere using HttpResponse
+
+    # 🟡 Use raw assert ONLY when:
+    # ✔ One-off debugging
+    # ✔ Temporary test
+    # ✔ Extremely simple cases
+
+    # ✅ Business validation (customer's validator responsibility)
+    assert_customer_creation_failed(response)
 
     logger.info("🧪 Validating response for duplicate email error...")
 
@@ -541,7 +563,7 @@ def test_create_customer_fail_for_existing_email(create_valid_customer, raw_cust
 # # create_valid_customer (fixture)
 # #  │
 # #  ▼
-# # Validators (customer_schema_validator + customer_assertions)
+# # Validators (customer_schema_validator + customer_assertions + base validator)
 # #  │
 # #  ▼
 # # CustomersHelper.create_customer()
@@ -576,6 +598,24 @@ def test_create_customer_fail_for_existing_email(create_valid_customer, raw_cust
 # #  ▼
 # # TEST ASSERTS ✅
 #
+
+# 🔄 Your NEW flow (after refactor)
+# ✅ Transport layer (always the same)
+# test / helper / raw_api
+#         ↓
+# RequestUtility.post()
+#         ↓
+# _request_with_backoff()
+#         ↓
+# HttpClient.request()  → returns requests.Response
+#         ↓
+# HttpResponse.from_requests()
+#         ↓
+# 👉 returns HttpResponse
+#
+# ✔ This happens for EVERY call
+# ✔ No exceptions
+# ✔ No "sometimes dict / sometimes response"
 
 
 # HttpClient (LOW LEVEL)
@@ -619,3 +659,36 @@ def test_create_customer_fail_for_existing_email(create_valid_customer, raw_cust
 
 # ✔ Tests OR validators
 # ❌ NEVER in HTTP client
+
+
+# 🧠 Final mental model (SUPER IMPORTANT)
+# 🔵 Transport layer (HttpResponse)
+# status_code
+# headers
+# timing
+# raw info
+
+# 🟢 Business layer (dict)
+# id
+# email
+# error code
+# schema
+
+
+# Do we use HttpResponse only for negative tests?
+# ❌ NO
+
+# 👉 It is ALWAYS used internally
+# 👉 But:
+
+# | Case    | You see      |
+# | ------- | ------------ |
+# | Helper  | dict         |
+# | Raw API | HttpResponse |
+
+# 🧠 KEY DISTINCTION (VERY IMPORTANT)
+# | Concept                 | Where it happens                 |
+# | ----------------------- | -------------------------------- |
+# | ✅ Send JSON (request)   | HttpClient (`json=payload`)      |
+# | ✅ Parse JSON (response) | HttpResponse (`response.json()`) |
+
