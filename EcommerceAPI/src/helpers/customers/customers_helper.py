@@ -36,6 +36,9 @@ class CustomersHelper(object):
     ✔ Handle positive + expected-negative flows
     ✔ Delegate validation to validators layer
     ✔ Return parsed JSON (success OR error body)
+    ✔ Returns parsed JSON (dict or list) extracted from HttpResponse.json
+    ✔ Hides transport layer (HttpResponse) from tests
+    ✔ Ensures tests work with clean data structures
 
     Non-responsibilities:
     ---------------------
@@ -44,6 +47,29 @@ class CustomersHelper(object):
     ✘ No business assertions inside this file
     ✘ No fixtures
     ✘ No DB access
+
+    🧪 Tests
+    - Positive → use helper (dict)
+    - Negative → use raw API (HttpResponse)
+
+    Return types:
+    - dict → single resource
+    - list[dict] → collections
+
+    ⚠️ CURRENT SMALL PROBLEM
+    Your helper currently:
+    returns dict
+    hides HttpResponse
+
+    👉 BUT sometimes you need both
+    Example:
+    deletion → need status_code
+    debugging → need headers/url
+    advanced validation → need elapsed time
+
+    🚀 STEP 4 (RECOMMENDED NEXT STEP)
+    👉 Make helper optionally return HttpResponse
+
     """
 
     ENDPOINT = "customers"
@@ -153,7 +179,8 @@ class CustomersHelper(object):
         #  - One responsibility: return response OR fail loudly
 
         try:
-            return self.customers_api.create_customer(payload=payload)
+            http_response = self.customers_api.create_customer(payload=payload)
+            return http_response.json
         except (UnexpectedStatusCodeError, SchemaValidationError) as e:
             # Log a short warning so the failure is visible in the structured logs (CustomFormatter will redact
             # sensitive info/fields).
@@ -210,10 +237,8 @@ class CustomersHelper(object):
         logger.debug("🟢 Updating customer %s with payload keys: %r", customer_id, list(final_payload.keys()))
 
         try:
-            return self.customers_api.update_customer(
-                customer_id=customer_id,
-                payload=final_payload
-            )
+            http_response = self.customers_api.update_customer(customer_id=customer_id, payload=final_payload)
+            return http_response.json
 
         except (UnexpectedStatusCodeError, SchemaValidationError) as e:
             logger.warning("⚠️ Customer update raised %s: %s", type(e).__name__, e)
@@ -242,23 +267,34 @@ class CustomersHelper(object):
          """
         # logger.debug(f"🟢 Calling 'Get Customer' for ID {customer_id}.")
         logger.debug("🟢 Calling 'Get Customer' for ID %s.", customer_id)
-        return self.customers_api.get_customer(customer_id)
+        http_response = self.customers_api.get_customer(customer_id)
+        return http_response.json
 
     def call_get_customer_by_email(self, email: str) -> Dict[str, Any]:
         """
         Retrieve a customer by email.
 
-        Returns:
-            dict: First matching customer (assumes email uniqueness)
+         Returns:
+            dict: First matching customer extracted from HttpResponse.json
+
+        Notes:
+            - API layer returns HttpResponse
+            - Helper extracts `.json` (list)
+            - WooCommerce returns a list → helper returns first item
 
         Raises:
             AssertionError if no customer found.
         """
         logger.debug("🟢 Calling 'Get Customer by Email' for %s.", email)
 
-        result = self.customers_api.get_customer_by_email(email=email)
+        http_response = self.customers_api.get_customer_by_email(email=email)
 
-        return result[0]  # Woo returns list → we take first
+        customers = http_response.json  # 👈 extract JSON (list)
+
+        if not customers:
+            raise AssertionError(f"❌ No customer found for email={email}")
+
+        return customers[0]
 
     def call_delete_customer(self, customer_id: int) -> Dict[str, Any]:
         """
@@ -274,7 +310,9 @@ class CustomersHelper(object):
         # triggered
         # logger.debug(f"🟢 Calling 'Delete Customer' for ID {customer_id}.")
         logger.debug("🟢 Calling 'Delete Customer' for ID %s.", customer_id)
-        return self.customers_api.delete_customer(customer_id, force=True)
+
+        http_response = self.customers_api.delete_customer(customer_id, force=True)
+        return http_response.json
 
     # ------------------------
     # Listing / Pagination

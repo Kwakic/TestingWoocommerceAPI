@@ -692,3 +692,68 @@ def test_create_customer_fail_for_existing_email(create_valid_customer, raw_cust
 # | ✅ Send JSON (request)   | HttpClient (`json=payload`)      |
 # | ✅ Parse JSON (response) | HttpResponse (`response.json()`) |
 
+# ✅ FINAL ARCHITECTURE (LOCK THIS IN)
+# 🧱 Transport layer (RequestUtility)
+#
+# ✔ returns → HttpResponse
+#
+# 🌐 API layer (CustomersApi)
+#
+# ✔ returns → HttpResponse
+# ❌ NEVER .json
+
+
+# 🧠 Helper layer (CustomersHelper)
+
+# ✔ returns → dict
+# ✔ does .json extraction
+# ✔ handles negative exceptions
+
+# 🧪 Tests
+# Positive → use helper (dict)
+# Negative → use raw API (HttpResponse)
+# 📌 RULE (VERY IMPORTANT)
+# 👉 API = transport object
+# 👉 Helper = business-friendly object
+
+
+# 🧠 MENTAL MODEL (SUPER IMPORTANT)
+# 🔵 Positive flow
+# Test
+#   ↓
+# Helper
+#   ↓
+# API
+#   ↓
+# RequestUtility
+#   ↓
+# HttpResponse
+#   ↓
+# Helper extracts .json ✅
+#   ↓
+# Test receives dict ✅
+
+# 🔴 Negative flow
+# Test
+#   ↓
+# raw_customer_api
+#   ↓
+# API
+#   ↓
+# RequestUtility
+#   ↓
+# HttpResponse ✅
+#   ↓
+# Test asserts status_code + json
+
+
+# 🧠 THE REAL RULE (FINAL, NO MORE CONFUSION)
+# Let’s lock this 100% clearly:
+# | Layer          | What it RETURNS            | What it DOES              |
+# | -------------- | -------------------------- | ------------------------- |
+# | RequestUtility | HttpResponse               | transport only            |
+# | API            | HttpResponse               | endpoint definition only  |
+# | Helper         | dict (response.json)       | business + orchestration  |
+# | Validators     | dict                       | schema + assertions       |
+# | Tests          | mix (dict OR HttpResponse) | depending on type of test |
+

@@ -1,5 +1,7 @@
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
+
+from EcommerceAPI.src.core.http_response import HttpResponse
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +18,7 @@ class CustomersApi:
     ✔ Know endpoint paths
     ✔ Know HTTP verbs
     ✔ Delegate calls to RequestUtility
-    ✔ Return parsed JSON on success
+    ✔ Return HttpResponse (NEVER parsed JSON)
     ✔ It keeps tests clean and consistent
 
     Non-responsibilities:
@@ -27,6 +29,10 @@ class CustomersApi:
     ✘ No database access
     ✘ No business rules
     ✘ No test ergonomics (auto-generation, retries, etc.)
+    ✘ No return .json
+
+    👉 API layer MUST:
+        - ✅ return HttpResponse
 
     Any unexpected HTTP status is handled by RequestUtility,
     which raises UnexpectedStatusCodeError / SchemaValidationError.
@@ -46,10 +52,7 @@ class CustomersApi:
     # ------------------------------------------------------------------
     # CREATE
     # ------------------------------------------------------------------
-    def create_customer(
-        self,
-        payload: Dict[str, Any],
-    ) -> Dict[str, Any]:
+    def create_customer(self, payload: Dict[str, Any]) -> HttpResponse:
         """
         POST /customers
 
@@ -60,7 +63,7 @@ class CustomersApi:
                 Fully prepared request body.
 
         Returns:
-            dict: Parsed JSON response.
+            HttpResponse: Full response object (status, headers, JSON, text, etc.)
 
         Raises:
             UnexpectedStatusCodeError
@@ -68,20 +71,12 @@ class CustomersApi:
         """
         logger.debug("📡 POST %s payload_keys=%s", self.ENDPOINT, list(payload.keys()))
 
-        response = self.request_utility.post(
-            self.ENDPOINT,
-            payload=payload,
-        )
-
-        return response.json
+        return self.request_utility.post(self.ENDPOINT, payload=payload)
 
     # ------------------------------------------------------------------
     # READ (single, by ID - filtered list shortcut))
     # ------------------------------------------------------------------
-    def get_customer(
-        self,
-        customer_id: Any
-    ) -> Dict[str, Any]:
+    def get_customer(self, customer_id: Any) -> HttpResponse:
         """
         GET /customers/{id}
 
@@ -90,17 +85,12 @@ class CustomersApi:
         endpoint = f"{self.ENDPOINT}/{customer_id}"
         logger.debug("📡 GET %s", endpoint)
 
-        response = self.request_utility.get(endpoint)
-
-        return response.json
+        return self.request_utility.get(endpoint)
 
     # ------------------------------------------------------------------
     # READ (by email - filtered list shortcut)
     # ------------------------------------------------------------------
-    def get_customer_by_email(
-            self,
-            email: str,
-    ) -> List[Dict[str, Any]]:
+    def get_customer_by_email(self, email: str,) -> HttpResponse:
         """
         GET /customers?email={email}
 
@@ -113,18 +103,12 @@ class CustomersApi:
 
         logger.debug("📡 GET %s params=%s", self.ENDPOINT, params)
 
-        response = self.request_utility.get(self.ENDPOINT, params=params)
-
-        return response.json
+        return self.request_utility.get(self.ENDPOINT, params=params)
 
     # ------------------------------------------------------------------
     # READ (list)
     # ------------------------------------------------------------------
-    def list_customers(
-        self,
-        *,
-        params: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+    def list_customers(self, *, params: Optional[Dict[str, Any]] = None) -> HttpResponse:
         """
         GET /customers
 
@@ -133,17 +117,12 @@ class CustomersApi:
         """
         logger.debug("📡 GET %s params=%s", self.ENDPOINT, params)
 
-        response = self.request_utility.get(
-            self.ENDPOINT,
-            params=params
-        )
-
-        return response.json
+        return self.request_utility.get(self.ENDPOINT, params=params)
 
     # ------------------------------------------------------------------
     # DELETE
     # ------------------------------------------------------------------
-    def delete_customer(self, customer_id: Any, force: bool = True) -> Dict[str, Any]:
+    def delete_customer(self, customer_id: Any, force: bool = True) -> HttpResponse:
         """
         DELETE /customers/{id}
 
@@ -158,21 +137,13 @@ class CustomersApi:
         endpoint = f"{self.ENDPOINT}/{customer_id}"
         logger.debug("📡 DELETE %s force=%s", endpoint, force)
 
-        response = self.request_utility.delete(endpoint, params={"force": force})
+        return self.request_utility.delete(endpoint, params={"force": force})
 
-        return response.json
-
-    def update_customer(
-        self,
-        customer_id: Any,
-        payload: Dict[str, Any],
-    ) -> Dict[str, Any]:
+    def update_customer(self, customer_id: Any, payload: Dict[str, Any],) -> HttpResponse:
         """
         PUT /customers/{id}
         """
         endpoint = f"{self.ENDPOINT}/{customer_id}"
         logger.debug("📡 PUT %s payload_keys=%s", endpoint, list(payload.keys()))
 
-        response = self.request_utility.put(endpoint, payload=payload)
-
-        return response.json
+        return self.request_utility.put(endpoint, payload=payload)
