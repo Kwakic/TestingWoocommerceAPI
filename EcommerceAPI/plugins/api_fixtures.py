@@ -44,10 +44,6 @@ if TYPE_CHECKING:
     # TYPE_CHECKING imports are ignored at runtime, so they’re safe to add into framework code.
     from tests.conftest import api_base_url as _api_base_url_fixture
 
-from EcommerceAPI.src.utilities.exceptions import (
-    SchemaValidationError,
-    UnexpectedStatusCodeError,
-)
 from EcommerceAPI.src.helpers.shared.cleanup_helpers import set_default_request_utility
 from EcommerceAPI.src.validators.customers.customer_schema_validator import validate_customer_response_schema
 from EcommerceAPI.src.validators.customers.customer_assertions import assert_valid_customer_response
@@ -100,10 +96,37 @@ def request_utility(api_base_url: "_api_base_url_fixture"):
 @pytest.fixture(scope="function")
 def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
     """
-    Factory fixture that creates a valid customer via the project's helper layer.
+    This fixture acts as a "Gatekeeper" between the HTTP layer and tests.
 
-    This fixture is intended for happy-path tests. For negative tests that intentionally send invalid payloads, use
-    the raw_customer_api fixture.
+    It:
+    ✔ Calls helper (which returns HttpResponse)
+    ✔ Validates transport (status_code)
+    ✔ Extracts JSON safely
+    ✔ Validates schema + domain rules
+    ✔ Returns a clean dict for tests
+
+    WHY:
+    ----
+    - Prevents tests from dealing with HTTP details
+    - Ensures consistent validation across all tests
+    - Fails fast on API issues
+    - Guarantees that returned object is always valid
+
+    RETURN CONTRACT:
+    ----------------
+    - ALWAYS returns dict
+    - NEVER returns HttpResponse
+    - NEVER returns invalid data
+
+    WHEN TO USE:
+    ------------
+    ✅ Positive tests (happy path)
+    ❌ Negative tests → use raw_customer_api
+
+    EXAMPLE:
+    --------
+    customer = create_valid_customer()
+    assert customer["email"]
 
     Args:
         shared_api_resources (dict): Injected resources containing helper, DAO, and cleanup registry.
@@ -114,39 +137,76 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
     customer_helper = shared_api_resources["customers_helper"]
     register = shared_api_resources["register_resource"]
 
-    def _create_customer(skip_cleanup: bool = False, validate_response: bool = True, **kwargs) -> dict:
+    def _create_customer(skip_cleanup: bool = False, **kwargs) -> dict:
         """
-        Factory method to create a WooCommerce customer with custom values.
+        Create a valid customer (happy-path ONLY).
 
-        - It creates a customer using a helper (happy path only)
-        - Registers the customer for teardown (unless skip_cleanup)
-        - Handles API-level expected errors by returning the error response JSON
+        🔥 CONTRACT (IMPORTANT):
+        -----------------------
+        - ALWAYS returns a valid customer dict
+        - ALWAYS validates status_code == 201
+        - ALWAYS validates schema + domain rules
+        - NEVER returns HttpResponse
+        - NEVER returns invalid data
+
+        FLOW:
+        -----
+        1. Call helper → returns HttpResponse
+        2. Validate status_code (fail-fast)
+        3. Extract JSON
+        4. Validate schema + domain
+        5. Register cleanup
 
         Args:
-            skip_cleanup (bool): If True, skip automatic cleanup registration.
-            validate_response (bool): If True, assert response schema and critical fields.
-            **kwargs: Custom fields to include in the customer payload, e.g., email, password, etc.
+            skip_cleanup (bool):
+                If True → resource is NOT registered for cleanup
+
+            **kwargs:
+                Custom payload fields (email, password, etc.)
 
         Returns:
-            dict: Parsed response from the API (customer object on success or error JSON on expected failure).
+            dict: Validated customer object
+                  Internally uses HttpResponse but never exposes it (for status code)
+
+        Raises:
+            AssertionError:
+                If status_code != 201
+
+            SchemaValidationError:
+                If schema is invalid
         """
-        try:
-            # Attempt to create customer through API helper
-            customer = customer_helper.create_customer(**kwargs)
-        except (UnexpectedStatusCodeError, SchemaValidationError) as e:
-            # Expected API-level error — return response JSON for test assertions.
-            log.warning("Caught API exception during create_customer; returning response JSON.")
-            return e.response_json
+        # -----------------------------------------
+        # 1️⃣ Call helper → HttpResponse
+        # -----------------------------------------
+        response = customer_helper.create_customer(
+            return_response=True,  # returns HttpResponse
+            **kwargs
+        )
 
-        # For truly unexpected errors (network, coding bug, etc.), allow them to surface so tests/CI can fail fast.
+        # -----------------------------------------------------------------
+        # 2️⃣ Transport validation (FAIL FAST) Status validated BEFORE JSON
+        # -----------------------------------------------------------------
+        assert response.status_code == 201, (
+            f"Customer creation failed.\n"
+            f"Expected: 201\n"
+            f"Actual: {response.status_code}\n"
+            f"Response: {response.json}"
+        )
 
-        # Validate response schema and critical fields for happy-path tests
-        # 1. First schema
-        # 2. Then domain assertions
-        if validate_response:
-            validate_customer_response_schema(customer)
-            assert_valid_customer_response(customer)
+        # -----------------------------------------
+        # 3️⃣ Extract JSON
+        # -----------------------------------------
+        customer = response.json
 
+        # -----------------------------------------
+        # 4️⃣ Schema + domain validation
+        # -----------------------------------------
+        validate_customer_response_schema(customer)
+        assert_valid_customer_response(customer)
+
+        # -----------------------------------------
+        # 5️⃣ Cleanup registration
+        # -----------------------------------------
         if not skip_cleanup:
             register("customers", customer["id"])
             log.debug("ℹ️ Registered customer with ID: %s for cleanup.", customer["id"])
@@ -154,7 +214,6 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
             log.debug("ℹ️ Skipped registering customer %s for cleanup.", customer["id"])
 
         return customer
-
     return _create_customer
 
 

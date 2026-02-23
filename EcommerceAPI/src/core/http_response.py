@@ -78,6 +78,7 @@ class HttpResponse:
     elapsed : float
         Request duration in seconds
 
+    raw response = (Structured HTTP response (parsed + normalized))
     ------------------------------------------------------------------------
     🔄 LIFECYCLE (VERY IMPORTANT)
     ------------------------------------------------------------------------
@@ -144,6 +145,7 @@ class HttpResponse:
     text: str
     url: str
     elapsed: float
+    content: Optional[bytes] = None
 
     @classmethod
     def from_requests(cls, response, elapsed: float) -> "HttpResponse":
@@ -198,7 +200,6 @@ class HttpResponse:
         http_response.json         → {"id": 1, ...}
         http_response.text         → '{"id": 1, ...}'
         """
-
         try:
             json_data = response.json()
         except ValueError:
@@ -211,7 +212,9 @@ class HttpResponse:
             text=response.text,
             url=response.url,
             elapsed=elapsed,
+            content=getattr(response, "content", None),
         )
+
 
 # It returns raw requests.Response
 # This response is a full requests.Response object from the requests library, which includes:

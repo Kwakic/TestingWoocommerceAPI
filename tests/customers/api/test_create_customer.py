@@ -757,3 +757,24 @@ def test_create_customer_fail_for_existing_email(create_valid_customer, raw_cust
 # | Validators     | dict                       | schema + assertions       |
 # | Tests          | mix (dict OR HttpResponse) | depending on type of test |
 
+
+# Level 1 → Helper (dict) → simple tests
+# Level 2 → Helper (HttpResponse) → advanced tests
+# Level 3 → Raw API → negative / low-level tests
+
+
+# Which means:
+#
+# Layer	        Type
+# Helper	    HttpResponse
+# Fixture	    extracts dict
+# Validators	dict only
+# Tests	        both
+
+
+# 🧠 7. Final clean architecture (THIS IS YOUR STANDARD)
+# RequestUtility → HttpResponse
+# CustomersApi   → HttpResponse
+# CustomersHelper→ dict OR HttpResponse
+# Fixture        → ALWAYS dict (validated)
+# Test           → business assertions

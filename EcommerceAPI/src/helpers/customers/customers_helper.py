@@ -10,6 +10,7 @@ from EcommerceAPI.src.utilities.pagination_utils import paginate_all_results
 from EcommerceAPI.src.utilities.genericUtilities import generate_random_email_and_password
 from EcommerceAPI.src.utilities.exceptions import UnexpectedStatusCodeError, SchemaValidationError
 from EcommerceAPI.src.utilities.date_timestamp_utils import safe_parse_utc_datetime
+from EcommerceAPI.src.core.http_response import HttpResponse
 
 from EcommerceAPI.src.validators.customers.customer_schema_validator import validate_customer_response_schema
 
@@ -29,47 +30,55 @@ class CustomersHelper(object):
     """
     Domain-level orchestration layer for Customers.
 
-    Responsibilities:
+    Responsibilities
+    ---------------
+    ✔ Build request payloads (including auto-generation)
+    ✔ Delegate HTTP calls to CustomersApi (no direct HTTP usage)
+    ✔ Handle happy-path and expected negative flows
+    ✔ Delegate validation to validator layer
+
+    Return Behavior
+    ---------------
+    Helper methods support two return modes:
+
+    1. Default mode (return_response=False):
+       → Returns parsed JSON (dict or list)
+       → Used for most tests (clean, simple, business-focused)
+
+    2. Response mode (return_response=True):
+       → Returns HttpResponse object
+       → Used when access to transport data is required:
+           - status_code
+           - headers
+           - elapsed time
+           - request/response debugging
+
+    Design Principles
+    ----------------
+    ✔ Helper abstracts transport layer for most tests
+    ✔ Keeps tests readable and business-focused
+    ✔ Allows opt-in access to full HTTP response when needed
+    ✔ Supports both positive and negative scenarios
+
+    Non-Responsibilities
+    --------------------
+    ✘ No raw HTTP calls (handled by RequestUtility)
+    ✘ No schema validation logic (delegated to validators)
+    ✘ No business assertions
+    ✘ No database access
+    ✘ No pytest fixtures
+
+    Testing Guidelines
     -----------------
-    ✔ Build payloads (including auto-generation ergonomics)
-    ✔ Delegate HTTP calls to CustomersApi (NO raw HTTP here)
-    ✔ Handle positive + expected-negative flows
-    ✔ Delegate validation to validators layer
-    ✔ Return parsed JSON (success OR error body)
-    ✔ Returns parsed JSON (dict or list) extracted from HttpResponse.json
-    ✔ Hides transport layer (HttpResponse) from tests
-    ✔ Ensures tests work with clean data structures
+    - Positive tests:
+        → Prefer fixtures (e.g. create_valid_customer)
 
-    Non-responsibilities:
-    ---------------------
-    ✘ No raw HTTP calls
-    ✘ No schema logic (delegated to validators)
-    ✘ No business assertions inside this file
-    ✘ No fixtures
-    ✘ No DB access
 
-    🧪 Tests
-    - Positive → use helper (dict)
-    - Negative → use raw API (HttpResponse)
+    - Advanced validation (status, headers, debugging):
+        → Use helper(return_response=True)
 
-    Return types:
-    - dict → single resource
-    - list[dict] → collections
-
-    ⚠️ CURRENT SMALL PROBLEM
-    Your helper currently:
-    returns dict
-    hides HttpResponse
-
-    👉 BUT sometimes you need both
-    Example:
-    deletion → need status_code
-    debugging → need headers/url
-    advanced validation → need elapsed time
-
-    🚀 STEP 4 (RECOMMENDED NEXT STEP)
-    👉 Make helper optionally return HttpResponse
-
+    - Negative tests / invalid inputs:
+        → Use raw_customer_api (returns HttpResponse)
     """
 
     ENDPOINT = "customers"
@@ -91,8 +100,9 @@ class CustomersHelper(object):
             email: Optional[str] = None,
             password: Optional[str] = None,
             auto_generate: bool = True,
+            return_response: bool = False,
             **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> Dict[str, Any] | HttpResponse:
         """
         Create a customer via CustomersApi.
 
@@ -108,10 +118,14 @@ class CustomersHelper(object):
             email: Optional email
             password: Optional password
             auto_generate: Auto-generate credentials for positive tests
+            return_response:  - False (default) → returns parsed JSON (dict)
+                              - True → returns HttpResponse (status_code, headers, elapsed, etc.)
             **kwargs: Additional payload fields
 
-        Returns:
-            dict: Parsed API response (success or error JSON)
+        RReturns:
+            Dict[str, Any] | HttpResponse:
+                - dict → default mode (parsed JSON)
+                - HttpResponse → if return_response=True
 
         Raises:
             UnexpectedStatusCodeError, SchemaValidationError: Re-raised if no parsed error body is available.
@@ -165,21 +179,12 @@ class CustomersHelper(object):
         # logger.debug(f"🟢 Creating customer with payload: {payload}")
         logger.debug("⚙️ Creating customer with payload keys: %r", list(payload.keys()))
 
-        # --------------------------------------------------------------
-        # Call API + preserve negative-path behavior
-        # --------------------------------------------------------------
-        # RequestUtility._handle_response will:
-        # - attach parsed JSON to exception.response_json when it raises UnexpectedStatusCodeError/SchemaValidationError
-        # - attach the raw requests.Response as exception.response
-
-        # The exception logic is:
-        #  - Tries to extract response_json from exception
-        #  - Falls back gracefully if parsing fails
-        #  - Re-raises only when truly necessary
-        #  - One responsibility: return response OR fail loudly
-
         try:
             http_response = self.customers_api.create_customer(payload=payload)
+
+            if return_response:
+                return http_response
+
             return http_response.json
         except (UnexpectedStatusCodeError, SchemaValidationError) as e:
             # Log a short warning so the failure is visible in the structured logs (CustomFormatter will redact
@@ -202,7 +207,11 @@ class CustomersHelper(object):
                         # Re-raise the original exception since we cannot provide structured error body
                         raise
 
-            # If we successfully retrieved parsed JSON, return it to the caller (useful for negative assertions)
+            response = getattr(e, "response", None)
+
+            if return_response and response is not None:
+                return response
+
             if response_json is not None:
                 return response_json
 
@@ -213,8 +222,9 @@ class CustomersHelper(object):
             self,
             customer_id: int,
             payload: Optional[Dict[str, Any]] = None,
+            return_response: bool = False,
             **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> Dict[str, Any] | HttpResponse:
         """
         Update customer fields.
         - Accepts full payload (same as API)
@@ -223,6 +233,8 @@ class CustomersHelper(object):
 
         Supports:
         - payload: for full/complex updates
+        - return_response:  - False (default) → returns parsed JSON (dict)
+                            - True → returns HttpResponse (status_code, headers, elapsed, etc.)
         - kwargs: for simple updates
         """
         final_payload: Dict[str, Any] = {}
@@ -238,43 +250,61 @@ class CustomersHelper(object):
 
         try:
             http_response = self.customers_api.update_customer(customer_id=customer_id, payload=final_payload)
+
+            if return_response:
+                return http_response
+
             return http_response.json
 
         except (UnexpectedStatusCodeError, SchemaValidationError) as e:
             logger.warning("⚠️ Customer update raised %s: %s", type(e).__name__, e)
 
             response_json = getattr(e, "response_json", None)
+            response = getattr(e, "response", None)
 
-            if response_json is None:
-                resp = getattr(e, "response", None)
-                if resp is not None:
-                    response_json = resp.json()
+            if return_response and response is not None:
+                return response
 
             if response_json is not None:
                 return response_json
 
             raise
 
-    def call_get_customer_by_id(self, customer_id: int) -> Dict[str, Any]:
+    def call_get_customer_by_id(
+            self,
+            customer_id: int,
+            return_response: bool = False
+    ) -> Dict[str, Any] | HttpResponse:
         """
          Retrieve a customer by their ID.
 
          Args:
              customer_id (int): Customer ID.
+             return_response:  - False (default) → returns parsed JSON (dict)
+                               - True → returns HttpResponse (status_code, headers, elapsed, etc.)
 
          Returns:
-             dict: Parsed customer JSON response.
+             dict: Parsed customer JSON response + HTTP response
          """
         # logger.debug(f"🟢 Calling 'Get Customer' for ID {customer_id}.")
         logger.debug("🟢 Calling 'Get Customer' for ID %s.", customer_id)
+
         http_response = self.customers_api.get_customer(customer_id)
+
+        if return_response:
+            return http_response
+
         return http_response.json
 
-    def call_get_customer_by_email(self, email: str) -> Dict[str, Any]:
+    def call_get_customer_by_email(
+            self,
+            email: str,
+            return_response: bool = False
+    ) -> Dict[str, Any] | HttpResponse:
         """
         Retrieve a customer by email.
 
-         Returns:
+        Returns:
             dict: First matching customer extracted from HttpResponse.json
 
         Notes:
@@ -289,19 +319,28 @@ class CustomersHelper(object):
 
         http_response = self.customers_api.get_customer_by_email(email=email)
 
-        customers = http_response.json  # 👈 extract JSON (list)
+        if return_response:
+            return http_response
+
+        customers = http_response.json
 
         if not customers:
             raise AssertionError(f"❌ No customer found for email={email}")
 
         return customers[0]
 
-    def call_delete_customer(self, customer_id: int) -> Dict[str, Any]:
+    def call_delete_customer(
+            self,
+            customer_id: int,
+            return_response: bool = False
+    ) -> Dict[str, Any] | HttpResponse:
         """
         Delete (hard delete_it.py) a customer by ID using force=true.
 
         Args:
             customer_id (int): Customer ID.
+            return_response:  - False (default) → returns parsed JSON (dict)
+                              - True → returns HttpResponse (status_code, headers, elapsed, etc.)
 
         Returns:
             dict: Parsed JSON response from delete_it.py.
@@ -312,6 +351,10 @@ class CustomersHelper(object):
         logger.debug("🟢 Calling 'Delete Customer' for ID %s.", customer_id)
 
         http_response = self.customers_api.delete_customer(customer_id, force=True)
+
+        if return_response:
+            return http_response
+
         return http_response.json
 
     # ------------------------
@@ -348,6 +391,11 @@ class CustomersHelper(object):
             - paginate_all_results takes care of the page loop and returns a flat list.
             - This method applies post-fetch date filtering using safe_parse_utc_datetime.
 
+        No HTTP required:
+            - Uses paginate_all_results
+            - Returns aggregated list
+            - Not a single response
+            - No single HttpResponse to return
         """
 
         logger.debug("⚙️ Calling 'List All Customers' via pagination utility")
