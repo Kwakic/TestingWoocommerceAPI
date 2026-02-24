@@ -6,6 +6,7 @@ import typing
 from random import uniform  # Adds random jitter to exponential backoff.
 import requests
 from requests_oauthlib import OAuth1
+from urllib.parse import urlparse
 
 from EcommerceAPI.src.utilities.credentialsUtility import get_wc_api_keys
 from EcommerceAPI.src.core.http_client import HttpClient
@@ -103,21 +104,76 @@ def _mask_sensitive(payload: typing.Any) -> typing.Any:
 class RequestUtility:
     """
     Central utility for sending authenticated HTTP requests to the API under test.
-    Features:
-      - Authenticates using OAuth1 (WooCommerce keys).
-      - Uses requests.Session() for connection reuse.
-      - Automatic retries with exponential backoff & jitter for robustness.
-      - Detailed, structured logging for diagnostics & debugging.
-      - Supports returning either parsed JSON/text or the raw Response object.
-      - Logging calls emit structured metadata via the `extra` parameter (method, endpoint, status, duration, payload).
-        This enables the JSONFormatter in custom_logger to produce structured events for ingestion.
-      - Payload logging is opt-in via LOG_PAYLOADS environment variable to avoid leaking sensitive data and to reduce
-        log volume in CI.
-      - Sensitive fields in payloads are masked before being included in logs.
 
-    Usage:
-      - Used by API helpers for positive test flows.
-      - Used directly (with return_raw=True) for negative/diagnostic testing.
+    ------------------------------------------------------------------------
+    🎯 PURPOSE
+    ------------------------------------------------------------------------
+    Acts as the transport + orchestration layer for API communication.
+
+    It is responsible for:
+        - Executing HTTP requests via HttpClient
+        - Applying retry logic with exponential backoff
+        - Logging structured request/response data
+        - Converting raw responses into HttpResponse objects
+
+    ------------------------------------------------------------------------
+    ✅ FEATURES
+    ------------------------------------------------------------------------
+    - Authenticates using OAuth1 (WooCommerce keys)
+    - Uses requests.Session() for connection reuse (performance)
+    - Automatic retries with exponential backoff & jitter
+    - Structured logging (method, endpoint, status, duration, payload)
+    - Payload masking for sensitive fields
+    - Safe and consistent response handling via HttpResponse
+
+    ------------------------------------------------------------------------
+    📦 RESPONSE MODEL (IMPORTANT)
+    ------------------------------------------------------------------------
+    All high-level methods return:
+
+        HttpResponse
+
+    This provides:
+        - status_code
+        - json (safe parsed body)
+        - text (raw body)
+        - headers
+        - elapsed time
+
+    👉 NEVER returns raw `requests.Response` in normal flows
+
+    ------------------------------------------------------------------------
+    🔬 LOW-LEVEL ACCESS
+    ------------------------------------------------------------------------
+    For advanced debugging or edge cases:
+
+        request_raw()
+
+    returns:
+        tuple(requests.Response, elapsed)
+
+    ------------------------------------------------------------------------
+    🧪 USAGE
+    ------------------------------------------------------------------------
+    - Used by API classes (CustomersApi, etc.)
+    - Used by helpers for positive test flows
+    - Used directly in negative tests (without helper abstractions)
+
+    Example:
+        response = request_utility.post("customers", payload)
+        assert response.status_code == 201
+        assert response.json["id"] is not None
+
+    ------------------------------------------------------------------------
+    ⚠️ DESIGN PRINCIPLES
+    ------------------------------------------------------------------------
+    - Transport layer only (no business validation)
+    - No assertions
+    - No schema validation
+    - Stateless and reusable
+    - Single response format (HttpResponse)
+
+    ------------------------------------------------------------------------
     """
 
     def __init__(self, base_url: str, retries: int = 3, backoff: float = 2.0):
@@ -188,25 +244,6 @@ class RequestUtility:
                     auth=self.auth,  # ✅ ADD THIS LINE
                 )
 
-                # It returns raw requests.Response
-                # This response is a full requests.Response object from the requests library, which includes:
-                #     .status_code → e.g., 200, 400
-                #     .text → raw response body as a string
-                #     .json() → parsed JSON body (if possible)
-                #     .headers → response headers
-                #     .content → raw bytes
-                #     .request → the request object that was sent
-                #     .url → full URL that was hit
-
-                # # To see the entire raw response log the following:
-
-                # logger.debug(f"""🌐 Raw Response:
-                # Status: {response.status_code}
-                # URL: {response.url}
-                # Headers: {response.headers}
-                # Body:{response.text}
-                # """)
-
                 # Retry on transient server/client errors
                 if response.status_code in {429, 500, 502, 503, 504} and attempt < self.max_attempts:
                     sleep_time = self.backoff_factor ** attempt + uniform(0, 1)
@@ -245,47 +282,61 @@ class RequestUtility:
         """
         Perform an HTTP request and return the raw requests.Response and elapsed time.
 
-        This bypasses _handle_response's status/assert logic and is intended for:
-            - Negative tests that expect non-2xx responses and want to inspect raw response.
-            - Debugging/inspection where you need headers/status without RequestUtility raising.
+        ------------------------------------------------------------------------
+        🎯 PURPOSE
+        ------------------------------------------------------------------------
+        Provides direct, low-level access to the underlying HTTP response.
 
-        Purpose:
-        --------
-        - Used for negative testing scenarios where you want to bypass high-level helper logic, such as auto-generating
-        valid payloads or positive-path response assertions.
-        - Allows you to send malformed, incomplete, or intentionally invalid data to the API.
-        - Supports returning the raw Response object for advanced debugging (headers, status, etc).
+        This method bypasses:
+            - HttpResponse wrapping
+            - Logging abstraction
+            - Any higher-level processing
 
-        Usage:
-        ------
-        - In your pytest fixtures, return request_raw() for negative testing.
-        - Pass `return_raw=True` to any method if you want the full requests.Response object.
+        ------------------------------------------------------------------------
+        🧪 WHEN TO USE
+        ------------------------------------------------------------------------
+        Use ONLY when you need full control over the raw response:
 
+            - Inspect request/response at transport level
+            - Access attributes not exposed by HttpResponse
+            - Debug edge cases or unexpected API behavior
+            - Advanced negative testing scenarios
 
-        Example usage in a test (negative test expecting 400):
-        -------------------------------------------------------
-        If you want the parsed response but the RequestUtility would raise because expected != actual, you can:
-           - Call request_raw and then parse JSON: resp, elapsed = raw_customer_api.request_raw("post", "customers",
-           payload=payload) assert resp.status_code == 400 body = resp.json()
-           - Or call the normal .post(...) but set expected_status_code to the actual expected (e.g., 400) — that will
-           return parsed JSON (this is the preferred approach for negative tests that assert a specific status).
-           - Use return_raw=True with .post(...) only when the response would be a matching expected_status_code;
-           otherwise _handle_response will raise before returning raw.
+        ------------------------------------------------------------------------
+        ⚠️ IMPORTANT
+        ------------------------------------------------------------------------
+        - Returns raw `requests.Response` (NOT HttpResponse)
+        - JSON parsing is NOT safe (response.json() may raise)
+        - No abstraction — use carefully
 
+        ------------------------------------------------------------------------
+        RETURNS
+        ------------------------------------------------------------------------
+        tuple:
+            (requests.Response, elapsed_time_seconds)
 
-        Example in test:
-        ----------------
-            def test_missing_required_field(raw_customer_api):
-                bad_payload = {"email": ""}  # Invalid, missing password
-                # For normal use (parsed response):
-                response = raw_customer_api.post("customers", bad_payload, expected_status_code=400)
-                assert response["code"] == "rest_missing_callback_param"
-                # For advanced debugging (headers, status, etc):
-                raw_resp = raw_customer_api.post("customers", bad_payload, expected_status_code=400, return_raw=True)
-                assert raw_resp.status_code == 400
-                print(raw_resp.headers)
+        ------------------------------------------------------------------------
+        EXAMPLE
+        ------------------------------------------------------------------------
+        resp, elapsed = request_utility.request_raw(
+            method="post",
+            endpoint="customers",
+            payload={"email": ""}
+        )
 
+        assert resp.status_code == 400
+
+        # Manual parsing (may raise if not JSON)
+        body = resp.json()
+
+        ------------------------------------------------------------------------
+        💡 RECOMMENDATION
+        ------------------------------------------------------------------------
+        Prefer using standard methods (get/post/etc.) which return HttpResponse.
+
+        Use request_raw() only when truly necessary.
         """
+
         url = self._build_url(endpoint)
         request_headers = headers or {"Content-Type": "application/json"}
 
@@ -318,6 +369,17 @@ class RequestUtility:
     # -----------------------------------------
     @staticmethod
     def _format_error_body(response_json):
+        """
+        Safely format response body for logging.
+
+        - Pretty prints JSON (dict/list)
+        - Falls back to string for non-JSON responses
+        - Never raises (safe for logging)
+
+        Used for:
+            - Debug logs (4xx / 5xx responses)
+            - Human-readable error output
+        """
         try:
             if isinstance(response_json, (dict, list)):
                 return json.dumps(response_json, indent=2, ensure_ascii=False)
@@ -326,79 +388,83 @@ class RequestUtility:
             logger.debug(f"Failed to serialize response body: {e}")
             return "<unserializable-response-body>"
 
-    @staticmethod
-    def _parse_response_body(response: requests.Response):
-        """
-        Attempt to parse the response as JSON. If that fails, fallback to plain text.
-        """
-        try:
-            return response.json()
-        except ValueError:
-            return response.text
-
     def _handle_response(
             self,
             response: requests.Response,
             duration: float = None,
             method: str = None,
             log_payload: dict = None,
-            return_raw: bool = False
     ) -> HttpResponse:
-        # The function may return a dictionary, or a string, or a requests.Response object (from the requests library).
-        # Why is this used?
-        # In the context of your RequestUtility methods:
-        #     - If return_raw is True, the method returns a requests.Response.
-        #     - Otherwise, it returns either a parsed JSON dict (if the response is JSON), or a plain string (if not).
-        # Summary Table:
-        # TYPE	              WHEN RETURNED
-        # dict	              JSON response, parsed
-        # str	              Non-JSON response (plain text)
-        # requests.Response	  If return_raw=True
-
         """
-        1. parse response
-        2. log
-        3. validate
-        4. return / raise
-        Parses, validates, logs, and (optionally) returns the response.
+        Handle HTTP response lifecycle: normalize → log → return.
+
+        ------------------------------------------------------------------------
+        🎯 PURPOSE
+        ------------------------------------------------------------------------
+        This method acts as the bridge between raw HTTP (requests.Response)
+        and the framework-level response (HttpResponse).
 
         It:
-            - Checks status code.
-            - Logs request/response context, including on failure.
-            - On error, raises informative custom exception.
-            - If return_raw, returns the raw response object for advanced tests.
-            - Unified logging style.
+            1. Converts raw response → HttpResponse (single source of truth)
+            2. Logs request/response metadata
+            3. Logs error body for debugging (4xx/5xx)
+            4. Returns a consistent HttpResponse object
 
-        Key logging improvements:
-        - Structured metadata is passed via `extra` so JSONFormatter can pick it up.
-        - Payload included only when LOG_PAYLOADS is enabled; sensitive fields are masked via _mask_sensitive.
+        ------------------------------------------------------------------------
+        ⚠️ IMPORTANT DESIGN DECISION
+        ------------------------------------------------------------------------
+        - JSON parsing happens ONLY inside HttpResponse
+        - This method NEVER calls response.json() directly
+        - Ensures consistent, safe parsing across the framework
 
         Args:
             response (requests.Response): The HTTP response from requests.
             duration (float, optional): Time taken for the request (for logging).
             method (str, optional): HTTP method (for log formatting).
             log_payload (dict, optional): The request body for logging.
-            return_raw (bool): If True, return the raw Response object.
 
-       Returns:
-            HttpResponse: Parsed JSON/text, or raw Response if requested.
+        ------------------------------------------------------------------------
+        RETURNS
+        ------------------------------------------------------------------------
+        HttpResponse (always)
 
         """
+        # --------------------------------------------------------------------
+        # 1. Convert RAW → HttpResponse (SINGLE SOURCE OF TRUTH)
+        # --------------------------------------------------------------------
+        http_response = HttpResponse.from_requests(response, duration)
 
         # Store actual and expected status codes for later reference (for potential test assertion context)
-        status_code = response.status_code
+        status_code = http_response.status_code
 
-        response_json = self._parse_response_body(response)
+        # --------------------------------------------------------------------
+        # 2. Prepare response body for logging
+        # --------------------------------------------------------------------
+        # Use parsed JSON if available, otherwise fallback to raw text
+        response_body = (
+            http_response.json
+            if http_response.json is not None
+            else http_response.text
+        )
 
-        # Extract endpoint name for readability (avoid long shared URLs)
-        endpoint_name = response.request.url.replace(self.base_url, "")
+        # --------------------------------------------------------------------
+        # 3. Extract endpoint (cleaner logs + avoid long shared URLs)
+        # --------------------------------------------------------------------
+        parsed = urlparse(response.request.url)
+        endpoint_name = parsed.path
 
-        # Prepare masked payload if allowed
+        if parsed.query:
+            endpoint_name += f"?{parsed.query}"
+        # --------------------------------------------------------------------
+        # 4. Prepare masked payload (if enabled)
+        # --------------------------------------------------------------------
         masked_payload = None
         if LOG_PAYLOADS and log_payload is not None:
             masked_payload = _mask_sensitive(log_payload)
 
-        # Structured extra metadata for loggers (helps JSON formatter)
+        # --------------------------------------------------------------------
+        # 5. Structured logging metadata
+        # --------------------------------------------------------------------
         extra_meta = {
             "method": method.upper() if method else None,
             "endpoint": endpoint_name,
@@ -408,22 +474,34 @@ class RequestUtility:
             "event": "request.response",
         }
 
+        # --------------------------------------------------------------------
+        # 6. Success log (always)
+        # --------------------------------------------------------------------
         # Unified human-readable log lines (these remain for console/human files)
         logger.info(
-            f"✅ {method.upper()} {endpoint_name} → {status_code} (completed in {duration:.3f}s)",
+            f"✅ {method.upper()} {endpoint_name} → {status_code} "
+            f"(completed in {duration:.3f}s)",
             extra=extra_meta
         )
-        # 🐞 Always log error body for 4xx/5xx responses (transport-level observability)
+
+        # --------------------------------------------------------------------
+        # 7. Error logging (4xx / 5xx)
+        # --------------------------------------------------------------------
+        # Always log error body for 4xx/5xx responses (transport-level observability)
         if status_code >= 400:
-            body_str = self._format_error_body(response_json)
-            logger.debug(body_str, extra={**extra_meta, "event": "request.error_body"})
+            body_str = self._format_error_body(response_body)
 
-        http_response = HttpResponse.from_requests(response, duration)
+            logger.debug(
+                body_str,
+                extra={**extra_meta, "event": "request.error_body"}
+            )
 
-        # Optionally return the raw response object for advanced inspection
-        if return_raw:
-            return http_response
-
+        # --------------------------------------------------------------------
+        # 8. Return normalized response
+        # --------------------------------------------------------------------
+        # NOTE:
+        # We ALWAYS return HttpResponse (even for "raw" mode)
+        # This ensures a consistent interface across the framework
         return http_response
 
     # -----------------------------------------
@@ -436,7 +514,6 @@ class RequestUtility:
             params: dict = None,
             payload: dict = None,
             headers: dict = None,
-            return_raw: bool = False
     ) -> HttpResponse:
         """
             It constructs and executes an HTTP request (any verb).
@@ -476,7 +553,6 @@ class RequestUtility:
                 params (dict, optional): Query parameters for GET/DELETE.
                 payload (dict, optional): JSON body for POST/PUT.
                 headers (dict, optional): HTTP headers.
-                return_raw (bool): If True, return raw requests.Response.
 
             Returns:
                 HttpResponse
@@ -499,7 +575,6 @@ class RequestUtility:
             duration=duration,
             method=method,
             log_payload=payload,
-            return_raw=return_raw
         )
 
     # -----------------------------------------
@@ -513,7 +588,6 @@ class RequestUtility:
             endpoint: str,
             params: dict = None,
             headers: dict = None,
-            return_raw: bool = False
     ) -> HttpResponse:
         """
         Performs a GET request.
@@ -521,7 +595,6 @@ class RequestUtility:
             endpoint (str): API path.
             params (dict, optional): Query parameters.
             headers (dict, optional): HTTP headers.
-            return_raw (bool): If True, return requests.Response.
         Returns:
             HttpResponse
         """
@@ -530,7 +603,6 @@ class RequestUtility:
             endpoint,
             params=params,
             headers=headers,
-            return_raw=return_raw
         )
 
     def post(
@@ -538,7 +610,6 @@ class RequestUtility:
             endpoint: str,
             payload: dict = None,
             headers: dict = None,
-            return_raw: bool = False
     ) -> HttpResponse:
         """
         Performs a POST request.
@@ -546,7 +617,6 @@ class RequestUtility:
             endpoint (str): API path.
             payload (dict, optional): JSON body.
             headers (dict, optional): HTTP headers.
-            return_raw (bool): If True, return requests.Response.
         Returns:
             HttpResponse
         """
@@ -555,7 +625,6 @@ class RequestUtility:
             endpoint,
             payload=payload,
             headers=headers,
-            return_raw=return_raw
         )
 
     def put(
@@ -563,7 +632,6 @@ class RequestUtility:
             endpoint: str,
             payload: dict = None,
             headers: dict = None,
-            return_raw: bool = False
     ) -> HttpResponse:
         """
         Performs a PUT request.
@@ -571,7 +639,6 @@ class RequestUtility:
             endpoint (str): API path.
             payload (dict, optional): JSON body.
             headers (dict, optional): HTTP headers.
-            return_raw (bool): If True, return requests.Response.
         Returns:
             HttpResponse
         """
@@ -580,7 +647,6 @@ class RequestUtility:
             endpoint,
             payload=payload,
             headers=headers,
-            return_raw=return_raw
         )
 
     def delete(
@@ -588,7 +654,6 @@ class RequestUtility:
             endpoint: str,
             params: dict = None,
             headers: dict = None,
-            return_raw: bool = False
     ) -> HttpResponse:
         """
         Performs a DELETE request.
@@ -596,7 +661,6 @@ class RequestUtility:
             endpoint (str): API path.
             params (dict, optional): Query parameters.
             headers (dict, optional): HTTP headers.
-            return_raw (bool): If True, return requests.Response.
         Returns:
             HttpResponse
 
@@ -606,5 +670,4 @@ class RequestUtility:
             endpoint,
             params=params,
             headers=headers,
-            return_raw=return_raw
         )

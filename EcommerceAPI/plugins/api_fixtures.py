@@ -133,6 +133,13 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
 
     Returns:
         Callable[..., dict]: A function to create a customer with custom fields.
+
+    How it works:
+        Inside fixture: response = customer_helper.create_customer(return_response=True) --> returns HttpResponse
+        Then: customer = response.json
+              return customer --> So the FINAL output of fixture is: dict
+        - Inside fixture → HttpResponse (temporary)
+        - Outside fixture → dict (final contract)
     """
     customer_helper = shared_api_resources["customers_helper"]
     register = shared_api_resources["register_resource"]
@@ -221,15 +228,19 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
 # Fixture: raw_customer_api (lazy import)
 # ---------------------------------------
 @pytest.fixture(scope="function")
-def raw_customer_api(request_utility):
+def customer_api_negative(request_utility):
     """
-    Fixture providing low-level access to the customer API for negative tests and tests that need to inspect raw
-    responses.
+    Fixture providing low-level access to the customer API for negative tests.
 
     When to use:
-        - Use this fixture when testing invalid input payloads, malformed fields, or bad request bodies.
-        - It skips helper logic like auto-generating emails or asserting 201 status codes.
-        - Returns raw API responses (e.g., 400 errors) directly for assertion.
-        - Uses the shared session-scoped request_utility fixture.
+        - Testing invalid payloads, malformed fields, or bad requests
+        - Skips helper logic (no auto-generated data, no implicit assertions)
+
+    Returns:
+        HttpResponse (NOT requests.Response)
+
+    Notes:
+        - Response includes status_code, json, text, headers, etc.
+        - For true raw requests.Response, use request_utility.request_raw()
     """
     return request_utility

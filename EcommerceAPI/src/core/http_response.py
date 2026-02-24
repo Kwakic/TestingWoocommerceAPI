@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
+import requests
 
 
 @dataclass
@@ -55,14 +56,19 @@ class HttpResponse:
         Response headers returned by the server
 
     json : Optional[Any]
-        Parsed JSON body:
+        Parsed response body (already deserialized from JSON).:
             - dict → most API responses
             - list → collection endpoints
             - None → if response is not valid JSON
 
         ⚠️ IMPORTANT:
-        This is already parsed.
-        DO NOT call `.json()` again.
+        - This is NOT the same as `requests.Response.json()`
+        - This is a PRE-PARSED attribute, not a method
+        - Safe to use (will never raise ValueError)
+
+    Example:
+        raw_response.json()   → method (can fail)
+        http_response.json   → attribute (safe)
 
     text : str
         Raw response body (always available)
@@ -138,9 +144,8 @@ class HttpResponse:
 
     ------------------------------------------------------------------------
     """
-
     status_code: int
-    headers: Dict[str, Any]
+    headers: Dict[str, str]
     json: Optional[Any]
     text: str
     url: str
@@ -148,7 +153,7 @@ class HttpResponse:
     content: Optional[bytes] = None
 
     @classmethod
-    def from_requests(cls, response, elapsed: float) -> "HttpResponse":
+    def from_requests(cls, response: requests.Response, elapsed: float) -> "HttpResponse":
         """
         Factory method to convert a raw `requests.Response`
         into a structured HttpResponse object.
@@ -212,7 +217,7 @@ class HttpResponse:
             text=response.text,
             url=response.url,
             elapsed=elapsed,
-            content=getattr(response, "content", None),
+            content=response.content
         )
 
 

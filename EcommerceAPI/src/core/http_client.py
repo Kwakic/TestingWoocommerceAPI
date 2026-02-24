@@ -25,10 +25,10 @@ class HttpClient:
     ❌ NON-RESPONSIBILITIES
     ------------------------------------------------------------------------
     ✘ NO response JSON parsing  → handled later by HttpResponse
-    ✘ NO validation            → handled by validators
-    ✘ NO assertions            → handled in tests
-    ✘ NO business logic        → handled in helpers
-    ✘ NO logging               → handled in higher layers (RequestUtility / plugins)
+    ✘ NO validation             → handled by validators
+    ✘ NO assertions             → handled in tests
+    ✘ NO business logic         → handled in helpers
+    ✘ NO logging                → handled in higher layers (RequestUtility / plugins)
 
     ------------------------------------------------------------------------
     ⚠️ IMPORTANT: "json" PARAMETER CONFUSION
@@ -57,12 +57,12 @@ class HttpClient:
     ------------------------------------------------------------------------
     This client RETURNS RAW response:
 
-        requests.Response
+        requests.Response (comes from the requests library.)
 
     Which contains:
         response.status_code   → HTTP status (e.g., 200, 400)
         response.text          → raw response body (string)
-        response.json()        → parsed JSON (if valid JSON)
+        response.json()        → parsed JSON (if valid JSON - LOW-LEVEL, may raise ValueError)
         response.headers       → response headers
         response.url           → final URL
 
@@ -93,6 +93,7 @@ class HttpClient:
     - API test automation
     - High-volume test execution (CI/CD)
 
+    The flow is: HttpClient → requests.Response → HttpResponse → Helpers/Tests
     ------------------------------------------------------------------------
     """
 

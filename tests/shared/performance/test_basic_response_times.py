@@ -64,9 +64,6 @@ def measure_response_time(
     endpoint: str,
     *,
     params: Dict[str, Any] = None,
-    expected_status_code: int = 200,
-    schema: Dict[str, Any] = None,
-    return_raw: bool = False,
 ) -> Tuple[float, Optional[Any]]:
     """
     Measure the duration of a GET request.
@@ -80,7 +77,6 @@ def measure_response_time(
         response = api_client.get(
             endpoint,
             params=params,
-            return_raw=return_raw
         )
 
         duration = time.perf_counter() - start
@@ -155,7 +151,6 @@ def test_api_response_times(pytestconfig, request_utility, session_metadata):
                 api_client=client,
                 endpoint=endpoint,
                 params={"per_page": 100},
-                return_raw=False,
             )
 
             if response is None:
