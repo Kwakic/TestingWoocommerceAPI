@@ -2049,7 +2049,7 @@ In this phase, we create a Docker image specifically for running tests within ou
    ```Dockerfile
    FROM php:7.4-cli
    WORKDIR /app
-   COPY . .
+   COPY .. .
    RUN composer install
    CMD ["phpunit"]
    ```

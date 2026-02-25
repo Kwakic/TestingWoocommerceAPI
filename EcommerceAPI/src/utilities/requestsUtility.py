@@ -103,7 +103,7 @@ def _mask_sensitive(payload: typing.Any) -> typing.Any:
 # -----------------------------------------
 class RequestUtility:
     """
-    Central utility for sending authenticated HTTP requests to the API under test.
+    Central utility for sending authenticated HTTP requests to the API under test (Orchestration).
 
     ------------------------------------------------------------------------
     🎯 PURPOSE
@@ -267,9 +267,8 @@ class RequestUtility:
             raise RuntimeError("Connection Error! Exhausted retries for request")
 
     # -------------------------------------------------------------------------
-    # 🧪 Low-level utility for raw REST API calls (mainly for negative tests).
+    # 🧪 Low-level utility for raw REST API calls (mainly for negative tests or debugging).
     # -------------------------------------------------------------------------
-
     def request_raw(
             self,
             method: str,
@@ -280,7 +279,11 @@ class RequestUtility:
             headers: dict = None,
     ) -> tuple[requests.Response, float]:
         """
+        ⚠️ ADVANCED USE ONLY!
+
         Perform an HTTP request and return the raw requests.Response and elapsed time.
+
+        In other words: "Give me raw response, but still use framework infrastructure"
 
         ------------------------------------------------------------------------
         🎯 PURPOSE
@@ -301,7 +304,16 @@ class RequestUtility:
             - Access attributes not exposed by HttpResponse
             - Debug edge cases or unexpected API behavior
             - Advanced negative testing scenarios
+            - Investigating headers / encoding
+            - Inspecting .request object
 
+            Or Something is unclear or broken like ("When HttpResponse is not enough to understand what’s happening"):
+            - API returns weird error
+            - JSON parsing fails
+            - headers look wrong
+            - encoding issues
+            - redirects / auth issues
+-
         ------------------------------------------------------------------------
         ⚠️ IMPORTANT
         ------------------------------------------------------------------------
@@ -330,8 +342,23 @@ class RequestUtility:
         body = resp.json()
 
         ------------------------------------------------------------------------
-        💡 RECOMMENDATION
+        The difference between request_raw() and HttpClient.request()
+        Both ultimately hit requests and return requests.Response
         ------------------------------------------------------------------------
+        |              | `request_raw()`               | `HttpClient.request()`  |
+        | ------------ | ----------------------------  | ----------------------  |
+        | Layer        | RequestUtility (mid-level)    | HttpClient (low-level)  |
+        | URL handling | ✅ builds endpoint → full URL | ❌ expects full URL     |
+        | Auth         | ✅ already configured         | ✅ handled internally   |
+        | Retries      | ✅ YES (via backoff)          | ❌ NO                   |
+        | Logging      | ❌ minimal / none             | ❌ none                 |
+        | Intended use | testing/debugging             | transport only          |
+
+        ------------------------------------------------------------------------
+        ⚠️ ADVANCED USE ONLY
+        ------------------------------------------------------------------------
+        This method is NOT used in normal tests.
+
         Prefer using standard methods (get/post/etc.) which return HttpResponse.
 
         Use request_raw() only when truly necessary.
@@ -350,19 +377,6 @@ class RequestUtility:
         )
         elapsed = time.perf_counter() - start
         return resp, elapsed
-
-    # Convenience wrappers that call request_raw and return the raw response (keeps the public API simple)
-    def raw_get(self, endpoint: str, params: dict = None) -> tuple[requests.Response, float]:
-        return self.request_raw("get", endpoint, params=params)
-
-    def raw_post(self, endpoint: str, payload: dict = None) -> tuple[requests.Response, float]:
-        return self.request_raw("post", endpoint, payload=payload)
-
-    def raw_put(self, endpoint: str, payload: dict = None) -> tuple[requests.Response, float]:
-        return self.request_raw("put", endpoint, payload=payload)
-
-    def raw_delete(self, endpoint: str, params: dict = None) -> tuple[requests.Response, float]:
-        return self.request_raw("delete", endpoint, params=params)
 
     # -----------------------------------------
     # 📋 Internal: Handle & log the response, validate, optionally return raw

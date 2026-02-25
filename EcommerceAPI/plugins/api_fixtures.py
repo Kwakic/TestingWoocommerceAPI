@@ -228,7 +228,7 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
 # Fixture: raw_customer_api (lazy import)
 # ---------------------------------------
 @pytest.fixture(scope="function")
-def customer_api_negative(request_utility):
+def raw_customer_api(request_utility):
     """
     Fixture providing low-level access to the customer API for negative tests.
 

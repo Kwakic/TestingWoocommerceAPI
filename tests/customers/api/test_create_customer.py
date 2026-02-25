@@ -377,7 +377,7 @@ def test_create_customer_with_varied_addresses(
 @pytest.mark.negative_test
 @pytest.mark.tcid15
 @pytest.mark.parametrize("payload, expected_status_code", INVALID_EMAIL_PAYLOADS)
-def test_create_customer_email_field_validation(customer_helper, customers_dao, customer_api_negative, payload,
+def test_create_customer_email_field_validation(customer_helper, customers_dao, raw_customer_api, payload,
                                                 expected_status_code):
     """
     ❌ Negative Test: Validate WooCommerce customer creation with malformed or missing email field.
@@ -418,7 +418,7 @@ def test_create_customer_email_field_validation(customer_helper, customers_dao, 
     # 📞 Call customer creation using factory method
     # -------------------------------------------
 
-    http_response = customer_api_negative.post(endpoint="customers", payload=payload)
+    http_response = raw_customer_api.post(endpoint="customers", payload=payload)
 
     response = http_response.json
 
@@ -434,7 +434,7 @@ def test_create_customer_email_field_validation(customer_helper, customers_dao, 
 
 @pytest.mark.negative_test
 @pytest.mark.tcid16
-def test_create_customer_fail_for_existing_email(create_valid_customer, customer_api_negative, customer_helper,
+def test_create_customer_fail_for_existing_email(create_valid_customer, raw_customer_api, customer_helper,
                                                  customers_dao):
     """
     ❌ Negative Test: Attempt to create a customer with an email that already exists.
@@ -483,7 +483,7 @@ def test_create_customer_fail_for_existing_email(create_valid_customer, customer
     # -------------------------------------------
     # 📞 Call customer creation using factory method
     # -------------------------------------------
-    http_response = customer_api_negative.post(
+    http_response = raw_customer_api.post(
         endpoint="customers",
         payload=payload,  # or inline--> payload = {"email": "invalid", "password": "Password1"}
     )

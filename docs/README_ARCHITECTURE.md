@@ -228,7 +228,16 @@ reports/
   ```
 
 ---
+## 🔐 Golden Rules (NOT violate these)
 
+1. Plugins must not import from tests/ at runtime
+(TYPE_CHECKING hack is OK — you already do this correctly)
+2. Fixtures own lifecycle & path (happy vs raw)
+3. Helpers do NOT manage fixtures
+4. Tests do NOT import helpers
+5. Rollback must be trivial (git revert one file)
+
+---
 ## Final note
 
 The framework is designed for multi-team scale: independent microservice test folders, shared plugins for consistent behavior, and CI matrix support for fast, isolated feedback. Keeping Allure generation optional and CI-installed (rather than baked into images) yields smaller images and more reproducible CI runs.
