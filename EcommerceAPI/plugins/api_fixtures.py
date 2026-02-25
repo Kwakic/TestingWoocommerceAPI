@@ -228,18 +228,27 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
 # Fixture: raw_customer_api (lazy import)
 # ---------------------------------------
 @pytest.fixture(scope="function")
-def raw_customer_api(request_utility):
+def customer_api_unvalidated(request_utility):
     """
-    Fixture providing low-level access to the customer API for negative tests.
+    Provides direct access to RequestUtility for customer API calls without helper/fixture validation.
 
     When to use:
         - Testing invalid payloads, malformed fields, or bad requests
         - Skips helper logic (no auto-generated data, no implicit assertions)
 
+    This fixture:
+    - Returns HttpResponse (no validation)
+    - Skips helper layer and fixture validation
+    - Is suitable for:
+        * negative tests
+        * debugging scenarios
+        * low-level API interaction
+
     Returns:
         HttpResponse (NOT requests.Response)
 
     Notes:
+        - ⚠️ Not truly "raw" — still returns HttpResponse.
         - Response includes status_code, json, text, headers, etc.
         - For true raw requests.Response, use request_utility.request_raw()
     """

@@ -1,3 +1,77 @@
+"""
+Central utility for sending authenticated HTTP requests to the API under test (Orchestration).
+
+------------------------------------------------------------------------
+🎯 PURPOSE
+------------------------------------------------------------------------
+Acts as the transport + orchestration layer for API communication.
+
+It is responsible for:
+    - Executing HTTP requests via HttpClient
+    - Applying retry logic with exponential backoff
+    - Logging structured request/response data
+    - Converting raw responses into HttpResponse objects
+
+------------------------------------------------------------------------
+✅ FEATURES
+------------------------------------------------------------------------
+- Authenticates using OAuth1 (WooCommerce keys)
+- Uses requests.Session() for connection reuse (performance)
+- Automatic retries with exponential backoff & jitter
+- Structured logging (method, endpoint, status, duration, payload)
+- Payload masking for sensitive fields
+- Safe and consistent response handling via HttpResponse
+
+------------------------------------------------------------------------
+📦 RESPONSE MODEL (IMPORTANT)
+------------------------------------------------------------------------
+All high-level methods return:
+
+    HttpResponse
+
+This provides:
+    - status_code
+    - json (safe parsed body)
+    - text (raw body)
+    - headers
+    - elapsed time
+
+👉 NEVER returns raw `requests.Response` in normal flows
+
+------------------------------------------------------------------------
+🔬 LOW-LEVEL ACCESS
+------------------------------------------------------------------------
+For advanced debugging or edge cases:
+
+    request_raw()
+
+returns:
+    tuple(requests.Response, elapsed)
+
+------------------------------------------------------------------------
+🧪 USAGE
+------------------------------------------------------------------------
+- Used by API classes (CustomersApi, etc.)
+- Used by helpers for positive test flows
+- Used directly in negative tests (without helper abstractions)
+
+Example:
+    response = request_utility.post("customers", payload)
+    assert response.status_code == 201
+    assert response.json["id"] is not None
+
+------------------------------------------------------------------------
+⚠️ DESIGN PRINCIPLES
+------------------------------------------------------------------------
+- Transport layer only (no business validation)
+- No assertions
+- No schema validation
+- Stateless and reusable
+- Single response format (HttpResponse)
+
+------------------------------------------------------------------------
+"""
+
 import os  # Read environment variables (e.g. ENV).
 import time  # Measure request durations, use sleep for backoff.
 import json
@@ -103,79 +177,23 @@ def _mask_sensitive(payload: typing.Any) -> typing.Any:
 # -----------------------------------------
 class RequestUtility:
     """
-    Central utility for sending authenticated HTTP requests to the API under test (Orchestration).
-
     ------------------------------------------------------------------------
-    🎯 PURPOSE
+    🔹 PUBLIC HTTP METHODS (get/post/put/delete)
     ------------------------------------------------------------------------
-    Acts as the transport + orchestration layer for API communication.
 
-    It is responsible for:
-        - Executing HTTP requests via HttpClient
-        - Applying retry logic with exponential backoff
-        - Logging structured request/response data
-        - Converting raw responses into HttpResponse objects
+    These methods provide low-level access to API endpoints and return HttpResponse.
 
-    ------------------------------------------------------------------------
-    ✅ FEATURES
-    ------------------------------------------------------------------------
-    - Authenticates using OAuth1 (WooCommerce keys)
-    - Uses requests.Session() for connection reuse (performance)
-    - Automatic retries with exponential backoff & jitter
-    - Structured logging (method, endpoint, status, duration, payload)
-    - Payload masking for sensitive fields
-    - Safe and consistent response handling via HttpResponse
+    They are used:
+        - Internally by API classes (recommended for positive flows)
+        - Directly in negative tests
+        - For debugging scenarios
 
-    ------------------------------------------------------------------------
-    📦 RESPONSE MODEL (IMPORTANT)
-    ------------------------------------------------------------------------
-    All high-level methods return:
+    👉 These methods are NOT tied to positive or negative testing.
+    👉 They are generic HTTP operations.
 
-        HttpResponse
-
-    This provides:
-        - status_code
-        - json (safe parsed body)
-        - text (raw body)
-        - headers
-        - elapsed time
-
-    👉 NEVER returns raw `requests.Response` in normal flows
-
-    ------------------------------------------------------------------------
-    🔬 LOW-LEVEL ACCESS
-    ------------------------------------------------------------------------
-    For advanced debugging or edge cases:
-
-        request_raw()
-
-    returns:
-        tuple(requests.Response, elapsed)
-
-    ------------------------------------------------------------------------
-    🧪 USAGE
-    ------------------------------------------------------------------------
-    - Used by API classes (CustomersApi, etc.)
-    - Used by helpers for positive test flows
-    - Used directly in negative tests (without helper abstractions)
-
-    Example:
-        response = request_utility.post("customers", payload)
-        assert response.status_code == 201
-        assert response.json["id"] is not None
-
-    ------------------------------------------------------------------------
-    ⚠️ DESIGN PRINCIPLES
-    ------------------------------------------------------------------------
-    - Transport layer only (no business validation)
-    - No assertions
-    - No schema validation
-    - Stateless and reusable
-    - Single response format (HttpResponse)
-
+    For business-level interactions, use API layer (e.g., CustomersApi).
     ------------------------------------------------------------------------
     """
-
     def __init__(self, base_url: str, retries: int = 3, backoff: float = 2.0):
         """
         Initializes the RequestUtility.
@@ -596,6 +614,51 @@ class RequestUtility:
     # -----------------------------------------
     # ✅ params → for GET, DELETE query strings
     # ✅ json → for POST, PUT body data
+
+    """
+    Perform a POST, GET, PUT or DELETE request and return a normalized HttpResponse.
+
+    ------------------------------------------------------------------------
+    🎯 PURPOSE
+    ------------------------------------------------------------------------
+    These are low-level HTTP methods used to interact with API endpoints.
+
+    It is part of the transport/orchestration layer and is used by:
+        - API classes (e.g., CustomersApi)
+        - Negative tests (via fixtures)
+        - Debugging scenarios
+
+    ------------------------------------------------------------------------
+    📦 RETURNS
+    ------------------------------------------------------------------------
+    HttpResponse:
+        - status_code
+        - json (parsed safely)
+        - text
+        - headers
+        - elapsed time
+
+    ------------------------------------------------------------------------
+    ⚠️ IMPORTANT
+    ------------------------------------------------------------------------
+    - This method does NOT perform:
+        - business validation
+        - schema validation
+        - assertions
+
+    - For positive test flows, prefer using API layer methods:
+        CustomersApi.get_customer(...)
+
+    ------------------------------------------------------------------------
+    🧪 USAGE
+    ------------------------------------------------------------------------
+    Typical usage in negative tests:
+
+        response = raw_customer_api.get("customers")
+        assert response.status_code == 400
+
+    ------------------------------------------------------------------------
+    """
 
     def get(
             self,

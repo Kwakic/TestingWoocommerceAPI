@@ -82,7 +82,7 @@ Provide safe, structured response
 
 ---
 
-# 🔄 FULL EXECUTION FLOW (END-TO-END)
+# 🔄 FULL EXECUTION FLOW (END-TO-END) FOR POSITIVE TEST
 
 ```
 pytest
@@ -145,7 +145,32 @@ dict (business)
   ↓
 Test
 ```
-
+# 🔄 FULL EXECUTION FLOW (END-TO-END) FOR NEGATIVE TEST
+```
+test
+ ↓
+raw_customer_api (fixture)
+ ↓
+RequestUtility.post()
+ ↓
+_request()
+ ↓
+_request_with_backoff()
+ ↓
+HttpClient.request()
+ ↓
+requests.Session.request()
+ ↓
+🌐 SERVER
+ ↓
+requests.Response (RAW)
+ ↓
+_handle_response()
+ ↓
+HttpResponse
+ ↓
+returned to test
+```
 ---
 
 # 🔍 requests.Response vs HttpResponse
