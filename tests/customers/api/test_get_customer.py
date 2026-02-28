@@ -110,6 +110,27 @@ def test_get_customer_by_id(customer_helper, customers_dao, create_valid_custome
         - Do NOT delete customers manually
         - Do NOT query DB directly without DAO
 
+    Verify that a customer can be retrieved by ID.
+
+    🧠 FLOW:
+    --------
+    1. Create a valid customer using fixture (already validated & safe)
+    2. Call GET endpoint using helper (HttpResponse mode)
+    3. Validate transport layer (status_code)
+    4. Extract JSON body
+    5. Validate business data
+
+    WHY:
+    ----
+    - Fixture ensures valid setup (no need to revalidate creation)
+    - Test owns status_code validation (fail-fast)
+    - Business assertions remain clean and focused
+
+    EXPECTED:
+    ---------
+    - Status code: 200
+    - Returned customer matches created customer
+
 
     """
 
@@ -127,7 +148,27 @@ def test_get_customer_by_id(customer_helper, customers_dao, create_valid_custome
     # 🔍 Get customer by ID and validate
     # ------------------------------------------------------------
     logger.info(f"🔎 Fetching customer by ID: {customer_id}")
-    customer_from_get = customer_helper.call_get_customer_by_id(customer_id)
+    # By setting flag "return_http_response=True" it returns HttpResponse necessary to validate status_code, headers...
+    response = customer_helper.call_get_customer_by_id(
+        customer_id,
+        return_http_response=True
+    )
+
+    # -----------------------------------------
+    # Transport validation (FAIL FAST)
+    # -----------------------------------------
+    assert response.status_code == 200, (
+        f"Expected 200 but got {response.status_code}. "
+        f"Response: {response.text}"
+    )
+
+    # Extract JSON to validate body
+    customer_from_get = response.json
+
+    # ------------------------------------------------------------
+    # 🔍 Get customer by ID and validate
+    # ------------------------------------------------------------
+
     assert customer_from_get["id"] == customer_id, (f"❌ Mismatched ID: Expected {customer_id}, "
                                                     f"got {customer_from_get['id']}")
     assert customer_from_get["email"] == email, (f"❌ Mismatched email: Expected {email}, "
@@ -150,18 +191,26 @@ def test_get_customer_by_id(customer_helper, customers_dao, create_valid_custome
 
 @pytest.mark.negative_test
 @pytest.mark.tcid17
-def test_retrieve_nonexistent_customer_returns_404(customer_helper, customers_dao, create_valid_customer):
+def test_get_customer_not_found(customer_helper, customers_dao, create_valid_customer):
     """
-     🚫 Attempt to GET a nonexistent customer.
-    - Expect 404
-    - Validate error schema
+    Verify API returns 404 when customer does not exist.
+
+    🧠 WHY THIS TEST:
+    -----------------
+    - Ensures proper error handling
+    - Validates API contract for missing resources
+
+    IMPORTANT:
+    ----------
+    - Do NOT use fixture (fixture always creates valid customer)
+    - Use helper in HttpResponse mode
     """
 
-    fake_customer_id = 99999999
+    non_existing_id = 99999999
 
-    logger.info(f"🚫 Retrieving non-existent customer ID: {fake_customer_id}")
+    logger.info(f"🚫 Retrieving non-existent customer ID: {non_existing_id}")
 
-    response = customer_helper.call_get_customer_by_id(customer_id=fake_customer_id)
+    response = customer_helper.call_get_customer_by_id(customer_id=non_existing_id)
 
     if isinstance(response, str):
         response = loads(response)

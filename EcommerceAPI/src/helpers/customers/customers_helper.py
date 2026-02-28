@@ -41,11 +41,11 @@ class CustomersHelper(object):
     ---------------
     Helper methods support two return modes:
 
-    1. Default mode (return_response=False):
+    1. Default mode (return_http_response=False):
        → Returns parsed JSON (dict or list)
        → Used for most tests (clean, simple, business-focused)
 
-    2. Response mode (return_response=True):
+    2. Response mode (return_http_response=True):
        → Returns HttpResponse object
        → Used when access to transport data is required:
            - status_code
@@ -75,7 +75,7 @@ class CustomersHelper(object):
 
 
     - Advanced validation (status, headers, debugging):
-        → Use helper(return_response=True)
+        → Use helper(return_http_response=True)
 
     - Negative tests / invalid inputs:
         → Use raw_customer_api (returns HttpResponse)
@@ -100,7 +100,7 @@ class CustomersHelper(object):
             email: Optional[str] = None,
             password: Optional[str] = None,
             auto_generate: bool = True,
-            return_response: bool = False,
+            return_http_response: bool = False,
             **kwargs,
     ) -> Dict[str, Any] | HttpResponse:
         """
@@ -118,14 +118,14 @@ class CustomersHelper(object):
             email: Optional email
             password: Optional password
             auto_generate: Auto-generate credentials for positive tests
-            return_response:  - False (default) → returns parsed JSON (dict)
+            return_http_response:  - False (default) → returns parsed JSON (dict)
                               - True → returns HttpResponse (status_code, headers, elapsed, etc.)
             **kwargs: Additional payload fields
 
         RReturns:
             Dict[str, Any] | HttpResponse:
                 - dict → default mode (parsed JSON)
-                - HttpResponse → if return_response=True
+                - HttpResponse → if return_http_response=True
 
         Raises:
             UnexpectedStatusCodeError, SchemaValidationError: Re-raised if no parsed error body is available.
@@ -182,7 +182,7 @@ class CustomersHelper(object):
         try:
             http_response = self.customers_api.create_customer(payload=payload)
 
-            if return_response:
+            if return_http_response:
                 return http_response
 
             return http_response.json
@@ -209,7 +209,7 @@ class CustomersHelper(object):
 
             response = getattr(e, "response", None)
 
-            if return_response and response is not None:
+            if return_http_response and response is not None:
                 return response
 
             if response_json is not None:
@@ -222,7 +222,7 @@ class CustomersHelper(object):
             self,
             customer_id: int,
             payload: Optional[Dict[str, Any]] = None,
-            return_response: bool = False,
+            return_http_response: bool = False,
             **kwargs,
     ) -> Dict[str, Any] | HttpResponse:
         """
@@ -233,7 +233,7 @@ class CustomersHelper(object):
 
         Supports:
         - payload: for full/complex updates
-        - return_response:  - False (default) → returns parsed JSON (dict)
+        - return_http_response:  - False (default) → returns parsed JSON (dict)
                             - True → returns HttpResponse (status_code, headers, elapsed, etc.)
         - kwargs: for simple updates
         """
@@ -251,7 +251,7 @@ class CustomersHelper(object):
         try:
             http_response = self.customers_api.update_customer(customer_id=customer_id, payload=final_payload)
 
-            if return_response:
+            if return_http_response:
                 return http_response
 
             return http_response.json
@@ -262,7 +262,7 @@ class CustomersHelper(object):
             response_json = getattr(e, "response_json", None)
             response = getattr(e, "response", None)
 
-            if return_response and response is not None:
+            if return_http_response and response is not None:
                 return response
 
             if response_json is not None:
@@ -273,14 +273,14 @@ class CustomersHelper(object):
     def call_get_customer_by_id(
             self,
             customer_id: int,
-            return_response: bool = False
+            return_http_response: bool = False
     ) -> Dict[str, Any] | HttpResponse:
         """
          Retrieve a customer by their ID.
 
          Args:
              customer_id (int): Customer ID.
-             return_response:  - False (default) → returns parsed JSON (dict)
+             return_http_response:  - False (default) → returns parsed JSON (dict)
                                - True → returns HttpResponse (status_code, headers, elapsed, etc.)
 
          Returns:
@@ -291,7 +291,7 @@ class CustomersHelper(object):
 
         http_response = self.customers_api.get_customer(customer_id)
 
-        if return_response:
+        if return_http_response:
             return http_response
 
         return http_response.json
@@ -299,7 +299,7 @@ class CustomersHelper(object):
     def call_get_customer_by_email(
             self,
             email: str,
-            return_response: bool = False
+            return_http_response: bool = False
     ) -> Dict[str, Any] | HttpResponse:
         """
         Retrieve a customer by email.
@@ -319,7 +319,7 @@ class CustomersHelper(object):
 
         http_response = self.customers_api.get_customer_by_email(email=email)
 
-        if return_response:
+        if return_http_response:
             return http_response
 
         customers = http_response.json
@@ -332,14 +332,14 @@ class CustomersHelper(object):
     def call_delete_customer(
             self,
             customer_id: int,
-            return_response: bool = False
+            return_http_response: bool = False
     ) -> Dict[str, Any] | HttpResponse:
         """
         Delete (hard delete_it.py) a customer by ID using force=true.
 
         Args:
             customer_id (int): Customer ID.
-            return_response:  - False (default) → returns parsed JSON (dict)
+            return_http_response:  - False (default) → returns parsed JSON (dict)
                               - True → returns HttpResponse (status_code, headers, elapsed, etc.)
 
         Returns:
@@ -352,7 +352,7 @@ class CustomersHelper(object):
 
         http_response = self.customers_api.delete_customer(customer_id, force=True)
 
-        if return_response:
+        if return_http_response:
             return http_response
 
         return http_response.json

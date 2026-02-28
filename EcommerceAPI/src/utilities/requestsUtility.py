@@ -511,7 +511,7 @@ class RequestUtility:
         # --------------------------------------------------------------------
         # Unified human-readable log lines (these remain for console/human files)
         logger.info(
-            f"✅ {method.upper()} {endpoint_name} → {status_code} "
+            f"✅ {method.upper()} {endpoint_name} → Status code: {status_code} "
             f"(completed in {duration:.3f}s)",
             extra=extra_meta
         )

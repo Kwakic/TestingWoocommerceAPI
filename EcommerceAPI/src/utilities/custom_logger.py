@@ -145,6 +145,9 @@ DEFAULT_SENSITIVE_KEYS = {
     "access_token",
     "client_secret",
     "private_key",
+    "oauth_consumer_key",
+    "oauth_signature",
+    "oauth_token",
 }
 
 

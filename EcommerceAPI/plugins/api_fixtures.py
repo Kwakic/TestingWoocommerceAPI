@@ -184,9 +184,10 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
         """
         # -----------------------------------------
         # 1️⃣ Call helper → HttpResponse
+        # By setting flag "return_http_response=True" it returns HttpResponse necessary to validate status_code...
         # -----------------------------------------
         response = customer_helper.create_customer(
-            return_response=True,  # returns HttpResponse
+            return_http_response=True,
             **kwargs
         )
 
@@ -201,10 +202,9 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
         )
 
         # -----------------------------------------
-        # 3️⃣ Extract JSON
+        # 3️⃣ Extract JSON to validate body
         # -----------------------------------------
         customer = response.json
-
         # -----------------------------------------
         # 4️⃣ Schema + domain validation
         # -----------------------------------------

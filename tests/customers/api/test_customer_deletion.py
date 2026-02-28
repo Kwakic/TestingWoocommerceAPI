@@ -64,10 +64,20 @@ def test_customer_deletion_removes_resource(all_resources, customer_helper, cust
     # -------------------------------
     logger.info(f"🧹 Deleting customer ID={customer_id}")
 
-    delete_response = customer_helper.call_delete_customer(customer_id)
+    # By setting flag "return_http_response=True" it returns HttpResponse necessary to validate status_code, headers...
+    delete_response = customer_helper.call_delete_customer(
+        customer_id,
+        return_http_response=True
+    )
 
-    assert delete_response["id"] == customer_id, (
-        f"❌ Mismatched delete_it.py ID: expected {customer_id}, got {delete_response.get('id')}"
+    # Transport validation (FAIL FAST) Status validated BEFORE JSON
+    assert delete_response.status_code == 200
+
+    # Extract JSON to validate body
+    delete_data = delete_response.json
+
+    assert delete_data["id"] == customer_id, (
+        f" ❌ Mismatched delete_it.py ID: expected {customer_id}, got {delete_data.get('id')}"
     )
     logger.info(f"✅ Deletion response confirmed for ID={customer_id}")
 
@@ -81,7 +91,7 @@ def test_customer_deletion_removes_resource(all_resources, customer_helper, cust
     response = customer_helper.call_get_customer_by_id(customer_id=customer_id)
     # Validating deleted customer's error message"
 
-    assert_customer_not_found_error(response)   # It validates: data: status 404, code, error message
+    assert_customer_not_found_error(response)  # It validates: data: status 404, code, error message
 
     # Then reuse across deletion-related tests.
     logger.info(f"✅ Assertion passed: API confirms customer ID={customer_id} is deleted")
@@ -159,7 +169,21 @@ def test_deleted_customer_not_in_created_after_filter(customer_helper, customers
     # 🗑️ Delete customer before filtering
     # -------------------------------------------
     logger.info(f"🧹 Deleting customer ID={customer_id}")
-    customer_helper.call_delete_customer(customer_id)
+    # By setting flag "return_http_response=True" it returns HttpResponse necessary to validate status_code, headers...
+    delete_response = customer_helper.call_delete_customer(
+        customer_id,
+        return_http_response=True
+    )
+
+    # Transport validation (FAIL FAST) Status validated BEFORE JSON
+    assert delete_response.status_code == 200
+
+    # Extract JSON to validate body
+    delete_data = delete_response.json
+
+    assert delete_data["id"] == customer_id, (
+        f" ❌ Mismatched delete_it.py ID: expected {customer_id}, got {delete_data.get('id')}"
+    )
 
     # -------------------------------------------
     # 📞 Call GET /customers with date filters

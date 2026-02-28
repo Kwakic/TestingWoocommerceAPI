@@ -75,7 +75,7 @@ assert customer["email"]
 Use helper with HttpResponse
 
 ```python
-response = customer_helper.create_customer(return_response=True)
+response = customer_helper.create_customer(return_http_response=True)
 
 assert response.status_code == 201
 assert response.json["id"]
@@ -95,7 +95,7 @@ Use helper in response mode (preferred modern approach)
 ```python
 response = customer_helper.create_customer(
     email="invalid",
-    return_response=True
+    return_http_response=True
 )
 
 assert response.status_code == 400
@@ -165,7 +165,7 @@ assert customer.status_code == 201
 ✔ CORRECT:
 
 ```python
-response = customer_helper.create_customer(return_response=True)
+response = customer_helper.create_customer(return_http_response=True)
 assert response.status_code == 201
 ```
 
@@ -227,7 +227,7 @@ customer = create_valid_customer()
 Then move to:
 
 ```python
-response = customer_helper.create_customer(return_response=True)
+response = customer_helper.create_customer(return_http_response=True)
 ```
 
 Use `request_raw()` only for debugging.

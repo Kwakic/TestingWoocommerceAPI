@@ -142,6 +142,17 @@ class HttpResponse:
     ✔ Makes logging & debugging significantly easier
     ✔ Prepares for future extensions (async, tracing, metrics)
 
+    CLI:
+    If you debug and want to see formatted response to JSON then use the "Professional API Log" Style (Cleanest)
+    If you want to see the headers and the body formatted exactly like a real JSON API response (using " and true),
+    run this snippet in your Pdb:
+    (Pdb) import json; print(f"Status: {response.status_code}\nHeaders: {json.dumps(response.headers, indent=2)}\nBody: {json.dumps(response.json, indent=2)}")
+    or to see also the text, content and elapsed:
+    (Pdb) import json; print(f"\n--- API RESPONSE ---\nURL: {response.url}\nStatus: {response.status_code}\nElapsed: {response.elapsed}s\n\nHEADERS:\n{json.dumps(response.headers, indent=2)}\n\nJSON BODY:\n{json.dumps(response.json, indent=2)}\n\nRAW TEXT:\n{response.text}\n\nRAW CONTENT (BYTES):\n{response.content}\n--------------------")
+
+    To see the response in JSON: Convert the Python dictionary into a JSON-formatted string:
+    (Pdb)  import json; print(json.dumps(customer, indent=4))
+
     ------------------------------------------------------------------------
     """
     status_code: int
@@ -204,6 +215,7 @@ class HttpResponse:
         http_response.status_code  → 200
         http_response.json         → {"id": 1, ...}
         http_response.text         → '{"id": 1, ...}'
+
         """
         try:
             json_data = response.json()

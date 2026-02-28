@@ -126,6 +126,9 @@ class HttpClient:
         Returns:
             requests.Response: RAW response object (not parsed)
 
+        The return value of this class is specifically designed to be passed into your next layer:
+        HttpResponse.from_requests(response)
+
         Example:
             response = client.request(
                 method="POST",
@@ -137,11 +140,24 @@ class HttpClient:
             response.status_code
             response.text
             response.json()
+
         """
         # You are NOT calling requests.Response directly.You are calling self.session.request(..) and this function
         # RETURNS a raw requests.Response class object which is used by def_request_with_backoff(self..)
         # and this method calls response = self.http_client.request(..)
         # 👉 requests library → builds HTTP request → sends it → creates Response object → returns it
+
+        # http_request_response = self.session.request(
+        #     method=method,
+        #     url=url,
+        #     headers=headers,
+        #     params=params,
+        #     json=json,  # ✅ SEND JSON (not parse)
+        #     auth=auth,
+        # )
+        #
+        # return http_request_response
+
         return self.session.request(
             method=method,
             url=url,
@@ -150,3 +166,5 @@ class HttpClient:
             json=json,  # ✅ SEND JSON (not parse)
             auth=auth,
         )
+
+
