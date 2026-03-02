@@ -17,7 +17,7 @@ This framework follows a **clean, layered, enterprise architecture** designed fo
 
 ```
 HttpClient        → LOW LEVEL (transport)
-RequestUtility    → MIDDLE (orchestration)
+APIClient         → MIDDLE (orchestration)
 HttpResponse      → HIGH LEVEL (structured response)
 ```
 
@@ -45,7 +45,7 @@ Send HTTP request to server.
 
 ---
 
-# 🔹 2. RequestUtility (Orchestration Layer)
+# 🔹 2. APIClient (Orchestration Layer)
 
 ### 🎯 Purpose
 Manage full request lifecycle
@@ -100,7 +100,7 @@ Helper
 API Layer
  │
  ▼
-RequestUtility.get/post
+APIClient.get/post
  │
  ▼
 _request_with_backoff
@@ -151,7 +151,7 @@ test
  ↓
 raw_customer_api (fixture)
  ↓
-RequestUtility.post()
+APIClient.post()
  ↓
 _request()
  ↓
@@ -189,7 +189,7 @@ returned to test
 Low-level debugging access
 
 ```
-resp, elapsed = request_utility.request_raw(...)
+resp, elapsed = APIClient.request_raw(...)
 ```
 
 ### ⚠️ Important
@@ -204,7 +204,7 @@ resp, elapsed = request_utility.request_raw(...)
 ## 🔹 Debug API error
 
 ```
-resp, _ = request_utility.request_raw("post", "customers", payload)
+resp, _ = APIClient.request_raw("post", "customers", payload)
 
 print(resp.status_code)
 print(resp.text)
@@ -225,8 +225,8 @@ print(resp.request.body)
 ## 🔹 Compare raw vs wrapped
 
 ```
-raw_resp, _ = request_utility.request_raw("get", "customers")
-wrapped = request_utility.get("customers")
+raw_resp, _ = APIClient.request_raw("get", "customers")
+wrapped = APIClient.get("customers")
 
 print(raw_resp.json())
 print(wrapped.json)
@@ -246,7 +246,7 @@ print(wrapped.json)
 
 ```
 HttpClient        → requests.Response
-RequestUtility    → HttpResponse
+APIClient         → HttpResponse
 API               → HttpResponse
 Helper            → dict
 Test              → assertions
@@ -259,7 +259,7 @@ Debug             → requests.Response
 
 ```
 HttpClient      → send request
-RequestUtility  → manage request
+APIClient       → manage request
 HttpResponse    → safe response
 Helper          → business data
 Test            → validate
@@ -300,7 +300,7 @@ assert data["id"]
 # 🚀 FINAL SUMMARY
 
 ✔ HttpClient → raw transport  
-✔ RequestUtility → orchestration  
+✔ APIClient  → orchestration  
 ✔ HttpResponse → safe abstraction  
 ✔ Helpers → clean business data  
 ✔ Tests → validation  
@@ -312,7 +312,7 @@ assert data["id"]
 
 ```
 HttpClient → raw
-RequestUtility → controlled
+APIClient  → controlled
 HttpResponse → safe
 Helper → business
 Test → validation

@@ -10,7 +10,7 @@ import time
 from copy import deepcopy
 
 
-def paginate_all_results(request_utility, endpoint, params=None, max_pages=1000, retries=3, retry_delay=1.0):
+def paginate_all_results(api_client, endpoint, params=None, max_pages=1000, retries=3, retry_delay=1.0):
     """
         Generic pagination handler for WooCommerce-style endpoints with simple retry logic.
 
@@ -19,7 +19,7 @@ def paginate_all_results(request_utility, endpoint, params=None, max_pages=1000,
         - Keeps logic explicit (no recursion or decorators) for readability.
 
     Args:
-        request_utility (RequestUtility): Utility class to perform authenticated requests.
+        api_client (APIClient): Utility class to perform authenticated requests.
         endpoint (str): API endpoint (e.g., 'customers', 'orders').
         params (dict, optional): Query parameters for filtering (e.g., per_page, created_after).
         max_pages (int): Maximum number of pages to fetch.
@@ -43,7 +43,7 @@ def paginate_all_results(request_utility, endpoint, params=None, max_pages=1000,
         while attempt < retries and not success:
             try:
                 logger.debug(f"📦 Fetching {endpoint} page {i} (attempt {attempt + 1}/{retries})")
-                http_response = request_utility.get(endpoint, params=params)
+                http_response = api_client.get(endpoint, params=params)
                 response = http_response.json
 
                 # Safety: ensure response is an iterable list. Stop pagination if no response or empty list is returned

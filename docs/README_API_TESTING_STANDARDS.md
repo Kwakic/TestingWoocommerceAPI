@@ -6,7 +6,7 @@
 
 - ✅ Test layer owns validation
 - ✅ Fixtures act as Gatekeepers (validate + normalize)
-- ❌ Transport layers (HttpClient / RequestUtility / API) DO NOT validate
+- ❌ Transport layers (HttpClient / APIClient / API) DO NOT validate
 - ✅ Keep tests clean, readable, and business-focused
 - ✅ Fail fast on transport errors
 - ✅ Use consistent response model (HttpResponse)
@@ -111,7 +111,7 @@ assert response.status_code == 400
 Use `request_raw()` ONLY when needed:
 
 ```python
-resp, _ = request_utility.request_raw(
+resp, _ = APIClient.request_raw(
     method="post",
     endpoint="customers",
     payload={"email": "invalid"}

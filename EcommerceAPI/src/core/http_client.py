@@ -26,9 +26,9 @@ class HttpClient:
     ------------------------------------------------------------------------
     ✘ NO response JSON parsing  → handled later by HttpResponse
     ✘ NO validation             → handled by validators
-    ✘ NO assertions             → handled in tests
+    ✘ NO validators             → handled in tests
     ✘ NO business logic         → handled in helpers
-    ✘ NO logging                → handled in higher layers (RequestUtility / plugins)
+    ✘ NO logging                → handled in higher layers (APIClient / plugins)
 
     ------------------------------------------------------------------------
     ⚠️ IMPORTANT: "json" PARAMETER CONFUSION
@@ -75,7 +75,7 @@ class HttpClient:
     ------------------------------------------------------------------------
         HttpClient (this class)
             ↓
-        RequestUtility (adds retries, logging, wrapping)
+        APIClient (adds retries, logging, wrapping)
             ↓
         HttpResponse (parses JSON)
             ↓

@@ -10,7 +10,7 @@ This guide reflects the current architecture where **schema validation is a shar
 
 Schema validation is **not limited to contract or smoke tests**. The framework enforces schema validation at multiple layers:
 
-- **RequestUtility**
+- **APIClient**
   - Supports a `schema=` argument on request calls:
     ```python
     api.get("products", expected_status_code=200, schema=product_schema)

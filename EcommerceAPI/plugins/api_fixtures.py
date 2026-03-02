@@ -1,12 +1,12 @@
 """
-Plugin: small API fixtures (request_utility and create_valid_customer factory).
+Plugin: small API fixtures (api_client and create_valid_customer factory).
 
 This module provides a minimal, well-documented set of fixtures used by API tests.
 
 Fixtures
 --------
-- request_utility (session):
-    Constructs a shared RequestUtility client using a service-specific shared URL
+- api_client (session):
+    Constructs a shared APIClient using a service-specific shared URL
     provided by the test layer (e.g. customers/orders/products).
 
     Design notes:
@@ -25,12 +25,12 @@ Fixtures
       * registers created resources for cleanup via shared_api_resources["register_resource"]
 
 - raw_customer_api (function):
-    Returns the low-level request_utility for negative/raw tests.
+    Returns the low-level APIClient
 
 Notes
 -----
 - The plugin expects the entities plugin to provide the `shared_api_resources` fixture.
-- We avoid import-time side effects by lazily importing RequestUtility inside fixtures.
+- We avoid import-time side effects by lazily importing APIClient inside fixtures.
 """
 
 from typing import Callable
@@ -44,20 +44,21 @@ if TYPE_CHECKING:
     # TYPE_CHECKING imports are ignored at runtime, so they’re safe to add into framework code.
     from tests.conftest import api_base_url as _api_base_url_fixture
 
-from EcommerceAPI.src.helpers.shared.cleanup_helpers import set_default_request_utility
-from EcommerceAPI.src.validators.customers.customer_schema_validator import validate_customer_response_schema
-from EcommerceAPI.src.validators.customers.customer_assertions import assert_valid_customer_response
+from EcommerceAPI.src.shared.helpers.cleanup_helpers import set_default_api_client
+from EcommerceAPI.src.customers.schemas.customer_schema_validator import validate_customer_response_schema
+from EcommerceAPI.src.customers.validators.customer_assertions import assert_valid_customer_response
+from EcommerceAPI.src.clients.api_client import APIClient
 
 log = logging.getLogger(__name__)
 
 
 # -------------------------
-# request_utility fixture
+# api_client fixture
 # -------------------------
 @pytest.fixture(scope="session")
-def request_utility(api_base_url: "_api_base_url_fixture"):
+def api_client(api_base_url: "_api_base_url_fixture"):
     """
-    Provide a session-scoped RequestUtility instance for tests and helpers.
+    Provide a session-scoped APIClient instance (transport + orchestration layer).
 
     Parameters
     ----------
@@ -67,27 +68,19 @@ def request_utility(api_base_url: "_api_base_url_fixture"):
 
     What it does:
     --------
-    - Lazily imports RequestUtility to avoid import-time side effects.
-    - Fails fast with a clear error if RequestUtility cannot be imported.
+    - Fails fast with a clear error if APIClient cannot be imported.
     - Wires the instance into legacy cleanup helpers (best-effort).
     """
-    try:
-        from EcommerceAPI.src.utilities.requestsUtility import RequestUtility
-    except ImportError as exc:
-        raise RuntimeError(
-            "RequestUtility not found. Ensure EcommerceAPI.src.utilities.requestsUtility is importable."
-        ) from exc
-
-    client = RequestUtility(base_url=api_base_url)
+    api_client = APIClient(base_url=api_base_url)
 
     # Best-effort wiring into legacy cleanup helpers.
-    if callable(set_default_request_utility):
+    if callable(set_default_api_client):
         try:
-            set_default_request_utility(client)
+            set_default_api_client(api_client)
         except Exception as exc:
-            log.warning("Failed to wire default request utility: %s", exc)
+            log.warning("Failed to wire default API client: %s", exc)
 
-    return client
+    return api_client
 
 
 # ---------------------------------------
@@ -228,13 +221,13 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
 # Fixture: raw_customer_api (lazy import)
 # ---------------------------------------
 @pytest.fixture(scope="function")
-def customer_api_unvalidated(request_utility):
+def customer_api_raw(api_client):
     """
-    Provides direct access to RequestUtility for customer API calls without helper/fixture validation.
+    Provides direct access to APIClient for customer API calls without helper/fixture validation.
 
     When to use:
         - Testing invalid payloads, malformed fields, or bad requests
-        - Skips helper logic (no auto-generated data, no implicit assertions)
+        - Skips helper logic (no auto-generated data, no implicit validators)
 
     This fixture:
     - Returns HttpResponse (no validation)
@@ -249,7 +242,7 @@ def customer_api_unvalidated(request_utility):
 
     Notes:
         - ⚠️ Not truly "raw" — still returns HttpResponse.
-        - Response includes status_code, json, text, headers, etc.
-        - For true raw requests.Response, use request_utility.request_raw()
+        - Response includes status_code, JSON, text, headers, etc.
+        - For true raw requests.Response, use APIClient.request_raw()
     """
-    return request_utility
+    return api_client

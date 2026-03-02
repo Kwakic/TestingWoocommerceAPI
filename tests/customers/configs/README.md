@@ -1,6 +1,6 @@
 # Configuration System Overview
 
-This README explains how the project manages environments and configuration when each microservice owns its own API host configuration, while still using a single shared config loader and shared utilities (logging, reporting, request utilities).
+This README explains how the project manages environments and configuration when each microservice owns its own API host configuration, while still using a single shared config loader and shared utilities (logging, reporting, api_client).
 
 The design avoids hardcoding service names inside shared code and keeps sensitive data out of Git.
 
@@ -12,7 +12,7 @@ The design avoids hardcoding service names inside shared code and keeps sensitiv
   - customers, orders, products, etc. define their own base URLs
 - No shared utility imports config_customers, config_orders, etc. directly  
   - Shared code is service‑agnostic
-- Logging, reporting, request utilities never care which service they run under  
+- Logging, reporting, api_client never care which service they run under  
   - They only read environment selectors (ENV, MACHINE) and runtime context
 - Secrets live only in `.env` or CI  
   - No credentials or real DB details in service configs
@@ -145,16 +145,16 @@ This keeps ownership local and shared code generic.
 
 ---
 
-## 5. RequestUtility Usage (No Hardcoding)
+## 5. APIClient Usage (No Hardcoding)
 
-`RequestUtility` does not know about services. Helpers inject the correct base URL:
+`APIClient` does not know about services. Helpers inject the correct base URL:
 
 ```python
-req = RequestUtility(base_url=BASE_URL)
+req = APIClient(base_url=BASE_URL)
 ```
 
 Benefits:
-- Same `RequestUtility` works for every microservice
+- Same `APIClient` works for every microservice
 - No factory methods required
 - No string service names hardcoded into shared code
 
@@ -185,7 +185,7 @@ Layer | Responsibility | Service‑Aware | Notes
 `config_loader.py` | ENV + MACHINE | ❌ | Shared
 `config_<service>.py` | API_HOSTS | ✅ | Owned by service
 Helpers / DAOs | Build `base_url` | ✅ | Injected into utilities
-`RequestUtility` | HTTP execution | ❌ | Reusable
+`APIClient` | HTTP execution | ❌ | Reusable
 Logging / Reporting | Observability | ❌ | Fully generic
 
 ---
@@ -212,7 +212,7 @@ Logging / Reporting | Observability | ❌ | Fully generic
         │ base_url injected
         ▼
  ┌───────────────────────────────┐
- │ RequestUtility / Logger /     │
+ │ APIClient / Logger /     │
  │ Reporting (service‑agnostic)  │
  └───────────────────────────────┘
 ```
@@ -232,6 +232,6 @@ Logging / Reporting | Observability | ❌ | Fully generic
 If you add a new microservice:
 1. Create `tests/<service>/configs/config_<service>.py` with `API_HOSTS`.
 2. Implement helpers/DAOs that import that `API_HOSTS`, read `ENV` from `config_loader`, and build `BASE_URL`.
-3. Inject `BASE_URL` into `RequestUtility` and use shared logging/reporting as‑is.
+3. Inject `BASE_URL` into `APIClient` and use shared logging/reporting as‑is.
 
 This pattern keeps shared utilities generic, service ownership clear, and secrets out of the repository.

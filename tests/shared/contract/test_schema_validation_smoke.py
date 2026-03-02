@@ -1,5 +1,5 @@
 """
-Preflight Schema Smoke Tests (uses RequestUtility)
+Preflight Schema Smoke Tests (uses APIClient )
 
 Overview
 --------
@@ -33,7 +33,7 @@ import pytest
 import logging
 from jsonschema import ValidationError
 
-from EcommerceAPI.src.utilities.requestsUtility import RequestUtility
+from EcommerceAPI.src.clients.api_client import APIClient
 
 from tests.shared.schemas.customer import customer_schema
 from tests.shared.schemas.order import order_schema
@@ -50,7 +50,7 @@ pytestmark = [pytest.mark.schema, pytest.mark.contract]
 #  CORE VALIDATION LOGIC
 # =====================================================================
 
-def _fetch_list_and_validate_item(api: RequestUtility, endpoint: str, item_schema: dict, fail_on_empty: bool):
+def _fetch_list_and_validate_item(api: APIClient, endpoint: str, item_schema: dict, fail_on_empty: bool):
     """
     Performs the schema smoke test for a single endpoint.
 
@@ -154,14 +154,14 @@ def _fetch_list_and_validate_item(api: RequestUtility, endpoint: str, item_schem
     ],
     ids=["customers", "products", "orders", "coupons"],
 )
-def test_schema_validation(request_utility, endpoint, item_schema, fail_on_empty_list):
+def test_schema_validation(api_client, endpoint, item_schema, fail_on_empty_list):
     """
     Parametrized schema smoke test for the four core WooCommerce API endpoints.
     """
     log.info("Running schema smoke test for: %s", endpoint)
 
     try:
-        _fetch_list_and_validate_item(request_utility, endpoint, item_schema, fail_on_empty_list)
+        _fetch_list_and_validate_item(api_client, endpoint, item_schema, fail_on_empty_list)
     except Exception as e:
         log.exception("%s: top-level schema smoke check failed.", endpoint)
         pytest.fail(

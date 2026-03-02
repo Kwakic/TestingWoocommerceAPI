@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 import pytest
 
 if TYPE_CHECKING:
-    from EcommerceAPI.src.helpers.customers.customers_helper import CustomersHelper
-    from EcommerceAPI.src.dao.customers.customers_dao import CustomersDAO
+    from EcommerceAPI.src.customers.helpers.customers_helper import CustomersHelper
+    from EcommerceAPI.src.customers.dao.customers_dao import CustomersDAO
 
 
 # ---------------------------------------------------------------------------
@@ -45,10 +45,10 @@ def customer_helper(all_resources) -> "CustomersHelper":
     - create_customer(...)
     - call_get_customer_by_id(...)
     - call_list_all_customers_paginated(...)
-    - schema & domain assertions
+    - schema & domain validators
 
     Backed by:
-    - session-scoped RequestUtility
+    - session-scoped APIClient
     - dynamic entity discovery
     - automatic cleanup integration
 
@@ -63,7 +63,7 @@ def customer_helper(all_resources) -> "CustomersHelper":
 @pytest.fixture
 def customers_dao(all_resources) -> "CustomersDAO":
     """
-    DAO for customer-related database assertions.
+    DAO for customer-related database validators.
 
     Provides direct DB access for:
     - get_customer_by_id

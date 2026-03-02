@@ -16,7 +16,7 @@ Goals:
 
 ```
 HttpClient        → LOW LEVEL (transport)
-RequestUtility    → MIDDLE (orchestration)
+APIClient    → MIDDLE (orchestration)
 HttpResponse      → HIGH LEVEL (structured response)
 ```
 
@@ -49,13 +49,13 @@ response = self.session.request(...)
 
 ---
 
-# 🔹 2. RequestUtility (Orchestration Layer)
+# 🔹 2. APIClient (Orchestration Layer)
 
 ### 🎯 Responsibility
 Manage the full lifecycle of a request.
 
 ```python
-response = request_utility.get("customers")
+response = APIClient.get("customers")
 ```
 
 ### ✔ What it does
@@ -122,7 +122,7 @@ Test
 CustomersApi / Helper
  │
  ▼
-RequestUtility.get/post
+APIClient.get/post
  │
  ▼
 _request_with_backoff
@@ -167,7 +167,7 @@ CustomersHelper (business-friendly layer)
 CustomersApi (API layer)
 │
 ▼
-RequestUtility (transport orchestrator)
+APIClient (transport orchestrator)
 │
 ├── _request()
 │     │
@@ -242,7 +242,7 @@ Server → requests.Response → HttpResponse → dict → test
 Low-level access to raw response while still using framework infrastructure.
 
 ```python
-resp, elapsed = request_utility.request_raw(...)
+resp, elapsed = APIClient.request_raw(...)
 ```
 
 ---
@@ -263,7 +263,7 @@ resp, elapsed = request_utility.request_raw(...)
 ## 🔹 Debug unexpected API error
 
 ```python
-resp, _ = request_utility.request_raw(
+resp, _ = APIClient.request_raw(
     method="post",
     endpoint="customers",
     payload={"email": "bad"}
@@ -299,8 +299,8 @@ except Exception:
 ## 🔹 Compare raw vs wrapped
 
 ```python
-raw_resp, _ = request_utility.request_raw("get", "customers")
-wrapped = request_utility.get("customers")
+raw_resp, _ = APIClient.request_raw("get", "customers")
+wrapped = APIClient.get("customers")
 
 print(raw_resp.json())
 print(wrapped.json)
@@ -396,7 +396,7 @@ Both ultimately hit requests and return requests.Response
 
 |              | `request_raw()`              | `HttpClient.request()` |
 | ------------ | ---------------------------- | ---------------------- |
-| Layer        | RequestUtility (mid-level)   | HttpClient (low-level) |
+| Layer        | APIClient (mid-level)   | HttpClient (low-level) |
 | URL handling | ✅ builds endpoint → full URL | ❌ expects full URL     |
 | Auth         | ✅ already configured         | ✅ handled internally   |
 | Retries      | ✅ YES (via backoff)          | ❌ NO                   |

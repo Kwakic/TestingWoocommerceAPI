@@ -10,7 +10,7 @@ class HttpResponse:
 
     This class represents a structured, unified view of an HTTP response.
 
-    It is created inside RequestUtility after receiving a raw response from HttpClient.
+    It is created inside APIClient after receiving a raw response from HttpClient.
 
     ------------------------------------------------------------------------
     🎯 PURPOSE
@@ -23,7 +23,7 @@ class HttpResponse:
         ❌ Returning raw Response → too low-level and inconsistent usage
 
     ✅ This wrapper gives you BOTH:
-        - Parsed JSON (for assertions)
+        - Parsed JSON (for validators)
         - Raw data (for debugging / observability)
 
     ------------------------------------------------------------------------
@@ -39,7 +39,7 @@ class HttpResponse:
     ❌ NON-RESPONSIBILITIES
     ------------------------------------------------------------------------
     ✘ NO validation (schema/business)
-    ✘ NO assertions
+    ✘ NO validators
     ✘ NO logging
     ✘ NO retries
     ✘ NO request execution

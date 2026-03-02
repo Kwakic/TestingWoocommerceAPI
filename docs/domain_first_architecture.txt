@@ -1,0 +1,174 @@
+TestEcommerceAPI (project suite/root)
+│
+├──.github/
+│       └── workflows/
+│             └── ci.yml
+│
+├── .venv/...                                        ← shared virtual environment (optional)
+│
+├── docs/...                                         ← shared
+│
+├── EcommerceAPI (installable framework package)/    ← SHARED INSTALLABLE FRAMEWORK
+│     ├── ecommerceapitest.egg-info/..
+│     ├── plugins/                                   ← ⚠ ONLY shared plugins here
+│     │     ├── __init__.py
+│     │     ├── _config.py
+│     │     ├── allure_autogen.py
+│     │     ├── api_fixtures.py
+│     │     ├── config_pytest.py
+│     │     ├── db_fixtures.py
+│     │     ├── entities.py
+│     │     ├── reporting.py
+│     │     ├── logging_plugin.py
+│     │     └── README_plugins.md
+│     │── src/                                      ← ⚠ ONLY reusable/shared/global
+│     │     ├── configs/
+│     │     │     ├── config_loader.py
+│     │     │     ├── runtime_config.py
+│     │     │     ├── runtime_metadata.py
+│     │     │     ├── README.md
+│     │     │     └── __init__.py
+│     │     ├── core/
+│     │     │     ├── http_client.py               ← LOW LEVEL
+│     │     │     └── http_response.py
+│     │     ├── clients/
+│     │     │     ├── api_client.py                ← orchestration layer
+│     │     │     └── auth_response.py
+│     │     ├── customers/
+│     │     │     ├── dao/
+│     │     │     │      │── customers_dao.py
+│     │     │     │      └── __init__.py
+│     │     │     ├── api/                         ← domain API
+│     │     │     │      │── customers_api.py
+│     │     │     │   validators/
+│     │     │     │      │── customer_assertions.py
+│     │     │     │      └── __init__.py
+│     │     │     ├── schemas/
+│     │     │     │      │── customer_model.py     ← Pydantic
+│     │     │     │      └── _init__.py
+│     │     │     └── helpers/
+│     │     │            │── customers_helper.py
+│     │     │            └── __init__.py
+│     │     ├── coupons/...
+│     │     ├── orders/...
+│     │     ├── products/...
+│     │     ├── shared/                             ← ⚠ universal/reusable/shared
+│     │     │     ├── assertions/
+│     │     │     │      │── common_assertions.py
+│     │     │     │      └── __init__.py
+│     │     │     ├── api/
+│     │     │     │      │── common_api.py
+│     │     │     │      └── __init__.py
+│     │     │     └── helpers/
+│     │     │            │── cleanup_helpers.py
+│     │     │            └── __init__.py
+│     │     │
+│     │     │── manual_cleanup_scripts/...
+│     │     ├── utilities/                           ← ⚠ universal/reusable utilities
+│     │     │     ├── __init__.py
+│     │     │     ├── bulk_ops.py
+│     │     │     ├── credentialsUtility.py
+│     │     │     ├── custom_logger.py
+│     │     │     ├── data_utils.py
+│     │     │     ├── date_timestamp_utils.py
+│     │     │     ├── dbUtility.py
+│     │     │     ├── entities_registry.py
+│     │     │     ├── env_utils.py
+│     │     │     ├── exceptions.py
+│     │     │     ├── filtering_utils.py
+│     │     │     ├── genericUtilities.py
+│     │     │     ├── log._context.py
+│     │     │     ├── pagination_utils.py
+│     │     │     ├── api_client.py
+│     │     │     ├── team_discovery.py
+│     │     │     └── truncate_logging_utils.py
+│     │     └── __init__.py
+│     │
+│     │── __init__.py
+│     │── __main__.py
+│     ├── cli.py                                    ← Defines EcommerceAPItest as pip-installable
+│     └── pyproject.toml
+│
+│
+│─── reports/
+│      ├── allure-html/
+│      │    └── data/export/history/plugins/widgets etc...
+│      ├── allure-results/
+│      │    ├── 04af3878-18b7-4028-9c9d-6081964f70bd-result.json
+│      │    ├── 84fb7175-704e-4839-8998-33d4a95e927e-container.json
+│      │    ├── 2281ae1a-d91a-4316-b475-a2665d3edbf2-attachment.txt
+│      │    ├── ac0d7cb9-9fea-422d-b0e9-a0a8cbb08369-container.json
+│      │    └── etc...
+│      │
+│      └── logs
+│           ├── customers/
+│           │        ├── dev/
+│           │        │     └── test_debug_structured_20260109_195544.jsonl
+│           │        └── test/
+│           │              └── test_debug_structured_20260109_093007.jsonl
+│           └── shared/
+│                   ├── dev/
+│                   │     └── test_debug_structured_20260109_195544.jsonl
+│                   └── test/
+│                         └── test_debug_structured_20260109_093007.jsonl
+│
+├── tests/                                         ← The test suite root - Each team got its own file
+│     ├── customers/                               ← customers-specific
+│     │     ├── configs/
+│     │     │     ├── config_customers.py          ← storing API_HOSTS
+│     │     │     ├── __init__.py
+│     │     │     └── README.md
+│     │     ├── data/
+│     │     │     ├── __init__.py
+│     │     │     └── create_customer_payload.json
+│     │     ├── .gitlab-ci-template.yml
+│     │     ├── __init__.py
+│     │     ├── conftest.py
+│     │     ├── README.md
+│     │     └── api/
+│     │            ├── test_debug.log
+│     │            ├── test_suite_summary.MD
+│     │            ├── test_create_customer.py
+│     │            ├── test_customer_deletion.py
+│     │            ├── test_customer_filters.py
+│     │            ├── test_customers_auth.py
+│     │            ├── test_get_all_customers_smoke.py
+│     │            ├── test_get_customer.py
+│     │            ├── test_soft_deleted_customer_handling.py
+│     │            ├── test_update_custom
+│     │            └── __init__.py
+│     ├── shared/
+│     │     ├── schemas/
+│     │     │      ├── coupon.py
+│     │     │      ├── customers.py
+│     │     │      ├── order.py.py
+│     │     │      └── product.py.py
+│     │     ├── contract/
+│     │     │      ├── test_schema_validation_smoke.py
+│     │     │      ├── __init__.py
+│     │     │      └── README_CONTRACT.md
+│     │     ├── performance/
+│     │     │      ├── test_basic_response_times.py
+│     │     │      └── __init__.py
+│     │     └── preflight/
+│     │            ├── test_logging_globals.py
+│     │            ├── test_config_contract.py
+│     │            ├── test_pytest_bootstrap.py
+│     │            ├── __init__.py
+│     │            └── README_PREFLIGHT.md
+│     │
+│     ├── orders/..                                ← orders-specific
+│     ├── coupons/..                               ← coupons-specific
+│     └── products/..                              ← products-specific
+│
+│─── .dockerignore                                 ← shared
+│─── .env                                          ← shared
+│─── .env.example                                  ← shared
+│─── .gitattributes                                ← shared
+│─── .gitignore                                    ← shared
+│─── .gitlab-ci.yml                                ← shared
+│─── CHANGELOG.md                                  ← shared
+│─── conftest.py                                   ← shared
+│─── docker-compose.matrix.yml                     ← shared
+│─── Dockerfile                                    ← shared
+└──  pytest.ini                                    ← shared

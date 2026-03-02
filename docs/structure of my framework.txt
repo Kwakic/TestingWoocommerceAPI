@@ -805,7 +805,8 @@ TestEcommerceAPI (project suite/root)
 │     │     ├── validators/
 │     │     │     ├── customers/
 │     │     │     │      │── customer_schema_validator.py
-│     │     │     │      │── customer_assertions.py
+│     │     │     │      │── customer_model.py       ← Pydantic
+│     │     │     │      │── customer_assertions.py  ← SIMPLIFIED (business only)
 │     │     │     │      └── __init__.py
 │     │     │     ├── orders/
 │     │     │     │      │── order_schema_validator.py

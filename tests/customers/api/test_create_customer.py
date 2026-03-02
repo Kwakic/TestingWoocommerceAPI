@@ -4,9 +4,8 @@ import logging
 from faker import Faker  # To avoid hardcoding, we use faker to generate fake data for us
 
 from EcommerceAPI.src.utilities.bulk_ops import bulk_create_and_validate_resources
-from EcommerceAPI.src.validators.customers.customer_schema_validator import validate_customer_error_response_schema
-from EcommerceAPI.src.validators.customers.customer_assertions import assert_customer_creation_failed
-from EcommerceAPI.src.validators.shared.base_validators import assert_status_code
+from EcommerceAPI.src.customers.schemas.customer_schema_validator import validate_customer_error_response_schema
+from EcommerceAPI.src.customers.validators.customer_assertions import assert_customer_creation_failed
 
 faker = Faker()
 
@@ -27,7 +26,7 @@ INVALID_EMAIL_PAYLOADS = [
     pytest.param(
         {"email": "no-at.domain.com", "password": "TestPass1"}, 400, id="missing-at"),
     pytest.param(
-        {"email": "@missing-local.org", "password": "TestPass1"}, 400, id="missing-local-org"),
+        {"email": "user@gmail", "password": "TestPass1"}, 400, id="missing-Top-Level Domain"),
     pytest.param(
         {}, 400, id="missing-email-field")  # ❌ Missing email (the only required field).)
 ]
@@ -377,7 +376,7 @@ def test_create_customer_with_varied_addresses(
 @pytest.mark.negative_test
 @pytest.mark.tcid15
 @pytest.mark.parametrize("payload, expected_status_code", INVALID_EMAIL_PAYLOADS)
-def test_create_customer_email_field_validation(customer_helper, customers_dao, customer_api_unvalidated, payload,
+def test_create_customer_email_field_validation(customer_helper, customers_dao, customer_api_raw, payload,
                                                 expected_status_code):
     """
     ❌ Negative Test: Validate WooCommerce customer creation with malformed or missing email field.
@@ -402,7 +401,8 @@ def test_create_customer_email_field_validation(customer_helper, customers_dao, 
     Args:
         customers_dao: Fixture providing customer DAO.
         customer_helper: Fixture providing customer API helper.
-        raw_customer_api (Callable): .Fixture providing low-level access t tests that need to inspect raw responses.
+        customer_api_unvalidated (Callable): .Fixture providing low-level access t tests that need to inspect raw
+        responses.
         payload (dict): Test input payload with malformed or missing email/password fields.
         expected_status_code (int): Expected HTTP response code.
     """
@@ -418,7 +418,7 @@ def test_create_customer_email_field_validation(customer_helper, customers_dao, 
     # 📞 Call customer creation using factory method
     # -------------------------------------------
 
-    http_response = customer_api_unvalidated.post(endpoint="customers", payload=payload)
+    http_response = customer_api_raw.post(endpoint="customers", payload=payload)
 
     response = http_response.json
 
@@ -434,7 +434,7 @@ def test_create_customer_email_field_validation(customer_helper, customers_dao, 
 
 @pytest.mark.negative_test
 @pytest.mark.tcid16
-def test_create_customer_fail_for_existing_email(create_valid_customer, customer_api_unvalidated, customer_helper,
+def test_create_customer_fail_for_existing_email(create_valid_customer, customer_api_raw, customer_helper,
                                                  customers_dao):
     """
     ❌ Negative Test: Attempt to create a customer with an email that already exists.
@@ -483,37 +483,27 @@ def test_create_customer_fail_for_existing_email(create_valid_customer, customer
     # -------------------------------------------
     # 📞 Call customer creation using factory method
     # -------------------------------------------
-    http_response = customer_api_unvalidated.post(
+    http_response = customer_api_raw.post(
         endpoint="customers",
         payload=payload,  # or inline--> payload = {"email": "invalid", "password": "Password1"}
     )
 
     response = http_response.json
 
-    # ✅ Transport validation (shared validator responsibility)
-    assert_status_code(http_response, 400)  # Benefits: Standardized across ALL tests and Better
-    # error messages: ❌ Expected status 400, got 500. URL: /customers
-
-    # The following is a bad practice to do it directly here --> assert http_response.status_code == 400
-    # The problems with that: No URL in error, harder debugging, Inconsistent across tests, Junior engineers will
-    # copy/paste different styles, Harder to improve globally later.
-
-    # ⚖️ When to Use Each Style
-    # ✅ Use assert_status_code(...) (DEFAULT)
-    # ✔ Negative tests
-    # ✔ Contract tests
-    # ✔ Raw API tests
-    # ✔ Anywhere using HttpResponse
-
-    # 🟡 Use raw assert ONLY when:
-    # ✔ One-off debugging
-    # ✔ Temporary test
-    # ✔ Extremely simple cases
+    # -------------------------------------------
+    # ✅ Transport validation (EXPLICIT)
+    # -------------------------------------------
+    assert http_response.status_code == 400, (
+        f"Expected 400, got {http_response.status_code}. "
+        f"Response: {http_response.text[:300]}"
+    )
 
     # ✅ Business validation (customer's validator responsibility)
     assert_customer_creation_failed(response)
 
     logger.info("🧪 Validating response for duplicate email error...")
+
+    response = http_response.json
 
     # ---------------------------------------------------------------------------------------------------------
     # 🔍 Confirm customer exists in DB and API GET response matches DB.
@@ -535,4 +525,4 @@ def test_create_customer_fail_for_existing_email(create_valid_customer, customer
 # CustomersHelper → dict OR HttpResponse
 # Fixture         → ALWAYS dict (validated)
 # Validators      →
-# Test            → business assertions
+# Test            → business validators

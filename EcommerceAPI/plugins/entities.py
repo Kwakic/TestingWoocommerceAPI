@@ -112,8 +112,9 @@ import pkgutil
 from dataclasses import dataclass
 from enum import Enum
 
-import EcommerceAPI.src.api
-from EcommerceAPI.src.utilities.requestsUtility import RequestUtility
+import EcommerceAPI.src
+
+from EcommerceAPI.src.clients.api_client import APIClient
 from EcommerceAPI.src.utilities.entities_registry import EntitiesRegistry
 
 log = logging.getLogger(__name__)
@@ -179,7 +180,7 @@ class SharedAPIResources(TypedDict, total=False):
     - total=False — all keys are optional (the dict may include some or none of them).
     - register_resource: function used by tests to register created resources.
     - mark_resource_deleted: function to mark a resource as deleted.
-    - request_utility: shared RequestUtility instance.
+    - api_client: shared APIClient instance.
     - _entity_registry: internal dict mapping entity names to EntityBundle instances.
 
     Note: Kept as TypedDict for runtime compatibility; use AllResources for ergonomic attribute access.
@@ -187,14 +188,14 @@ class SharedAPIResources(TypedDict, total=False):
     """
     register_resource: Callable[[str, str], None]
     mark_resource_deleted: Callable[[str, str], None]
-    request_utility: Any
+    api_client: Any
     _entity_registry: Dict[str, EntityBundle]  # Internal plumbing, not for tests
 
 
 # ----------------------------------------------------------------
 # Dynamic Helper/DAO/Protocol Discovery & Registry
 # ----------------------------------------------------------------
-def discover_entities(request_utility: RequestUtility) -> Dict[str, EntityBundle]:
+def discover_entities(api_client: APIClient) -> Dict[str, EntityBundle]:
     """
     Discover helper and DAO modules under EcommerceAPI.src.helpers and EcommerceAPI.src.dao
 
@@ -214,53 +215,63 @@ def discover_entities(request_utility: RequestUtility) -> Dict[str, EntityBundle
     Returns:
         Dict[str, EntityBundle]: entity name → EntityBundle(helper, dao, delete_method)
     """
-    # Import module namespaces
-    import EcommerceAPI.src.helpers
-    import EcommerceAPI.src.dao
 
-    helpers_path = EcommerceAPI.src.helpers.__path__
-    dao_path = EcommerceAPI.src.dao.__path__
+    # -------------------------------------------------------------
+    # Scan the entire src package and dynamically import them (domain-based structure)
+    # -------------------------------------------------------------
+    base_path = EcommerceAPI.src.__path__
 
     # Registry to populate
     entities: Dict[str, EntityBundle] = {}
 
     # Known protocol → utility mapping
     api_protocol_map = {
-        "customers": "request_utility",
-        "products": "request_utility",
-        "orders": "request_utility",
-        "coupons": "request_utility",
+        "customers": "api_client",
+        "products": "api_client",
+        "orders": "api_client",
+        "coupons": "api_client",
     }
-    protocol_utils = {"request_utility": request_utility}
+    protocol_utils = {"api_client": api_client}
 
-    # Dynamically import all helper modules (supports subpackages, e.g. helpers/customers/customers_helper.py)
+    # -------------------------------------------------------------
+    # Discover ALL modules under src and dynamically import all modules(domain-agnostic). It supports subpackages, e.g.
+    # helpers/customers/customers_helper.py)
+    # This supports:
+    #   src/customers/helpers/customers_helper.py
+    #   src/orders/api/orders_api.py
+    #   etc.
+    # -------------------------------------------------------------
+    all_modules = {
+        modname: importlib.import_module(modname)
+        for _, modname, _ in pkgutil.walk_packages(
+            base_path,
+            prefix="EcommerceAPI.src.",
+        )
+    }
+
+    # -------------------------------------------------------------
+    # Filter modules by role using naming convention
+    # -------------------------------------------------------------
+
+    # Helper modules → *_helper.py
     helper_modules = {
-        modname.rsplit(".", 1)[-1]: importlib.import_module(modname)
-        for _, modname, _ in pkgutil.walk_packages(
-            helpers_path,
-            prefix="EcommerceAPI.src.helpers.",
-        )
-        if modname.endswith("_helper")
+        name.rsplit(".", 1)[-1]: mod
+        for name, mod in all_modules.items()
+        if name.endswith("_helper")
     }
-    # Dynamically import all dao's modules (supports subpackages, e.g. dao/customers/customers_dao.py)
-    dao_modules = {
-        modname.rsplit(".", 1)[-1]: importlib.import_module(modname)
-        for _, modname, _ in pkgutil.walk_packages(
-            dao_path,
-            prefix="EcommerceAPI.src.dao.",
-        )
-        if modname.endswith("_dao")
-    }
-    # Dynamically import all API modules (supports subpackages)
-    api_path = EcommerceAPI.src.api.__path__
 
+    # DAO modules → *_dao.py
+    dao_modules = {
+        name.rsplit(".", 1)[-1]: mod
+        for name, mod in all_modules.items()
+        if name.endswith("_dao")
+    }
+
+    # API modules → *_api.py
     api_modules = {
-        modname.rsplit(".", 1)[-1]: importlib.import_module(modname)
-        for _, modname, _ in pkgutil.walk_packages(
-            api_path,
-            prefix="EcommerceAPI.src.api.",
-        )
-        if modname.endswith("_api")
+        name.rsplit(".", 1)[-1]: mod
+        for name, mod in all_modules.items()
+        if name.endswith("_api")
     }
 
     # ---------------------------------------------------------------------
@@ -397,7 +408,6 @@ def discover_entities(request_utility: RequestUtility) -> Dict[str, EntityBundle
         # Instantiate helper + DAO
         try:
             # Step 1: Try to load the dedicated API client
-            api_instance = None
             try:
                 api_module_name = f"{entity}_api"
                 api_module = api_modules.get(api_module_name)
@@ -408,17 +418,17 @@ def discover_entities(request_utility: RequestUtility) -> Dict[str, EntityBundle
                 api_class_name = f"{_to_camel(entity)}Api"
                 api_cls = getattr(api_module, api_class_name, None)
 
-                if api_cls:
-                    api_instance = api_cls(request_utility)
-                    log.debug("✅ [%s] Loaded API client: %s", entity, api_class_name)
-                else:
+                if not api_cls:
                     continue
+
+                api_instance = api_cls(api_client)
+                log.debug("✅ [%s] Loaded API client: %s", entity, api_class_name)
 
             except Exception as e:
                 log.warning("⚠️  [%s] Failed to load API: %s — skipping", entity, e)
                 continue
 
-            # Step 2: Instantiate helper with API client
+            # Step 2: Instantiate helper with an API client
             try:
                 helper_instance = helper_cls(api_instance)
                 log.debug("✅ [%s] Instantiated helper with API client", entity)
@@ -464,7 +474,6 @@ def discover_entities(request_utility: RequestUtility) -> Dict[str, EntityBundle
 
         if is_ready:
             status = "✅  READY"
-            details = ""
         else:
             # Diagnose WHY it was skipped
             api_module_name = f"{entity_clean}_api"
@@ -481,7 +490,6 @@ def discover_entities(request_utility: RequestUtility) -> Dict[str, EntityBundle
                 reason = "unknown"
 
             status = f"⏭️ SKIPPED ({reason})"
-            details = ""
 
         summary_lines.append(f"{entity_clean:<12} | {status}")
 
@@ -496,7 +504,7 @@ def discover_entities(request_utility: RequestUtility) -> Dict[str, EntityBundle
 # Shared API resource fixture with cleanup support
 # ----------------------------------------------------------------
 @pytest.fixture(scope="module")
-def shared_api_resources(request_utility: RequestUtility) -> SharedAPIResources:
+def shared_api_resources(api_client: APIClient) -> SharedAPIResources:
     """
     Module-scoped fixture that discovers and exposes API helpers, DAOs, and resource tracking utilities.
 
@@ -507,8 +515,8 @@ def shared_api_resources(request_utility: RequestUtility) -> SharedAPIResources:
       - Smart cleanup:
         → If nothing was created, cleanup is skipped.
         → If something *was* created, it’s deleted automatically.
-      - This fixture now consumes the session-scoped `request_utility` fixture and passes it into discover_entities
-        so discovered bundles use the same RequestUtility instance.
+      - This fixture now consumes the session-scoped `api_client` fixture and passes it into discover_entities
+        so discovered bundles use the same APIClient instance.
 
     When pytest imports conftest.py it defines fixtures. The shared_api_resources fixture calls discover_entities()
     that dynamically import all *_helper.py and *_dao.py modules, instantiates their classes, and returns a registry.
@@ -518,7 +526,7 @@ def shared_api_resources(request_utility: RequestUtility) -> SharedAPIResources:
     Exposed mapping:
       - "<entity>_helper": helper instance for the entity
       - "<entity>_dao": DAO instance for the entity
-      - "request_utility": the shared RequestUtility instance
+      - "api_client": the shared APIClient instance
       - "register_resource": function to register created resource ids for teardown
       - "mark_resource_deleted": function to mark resources as already deleted
       - "_entity_registry": mapping of entity name to EntityBundle
@@ -526,8 +534,8 @@ def shared_api_resources(request_utility: RequestUtility) -> SharedAPIResources:
     Teardown:
       - When resources were registered during the module run, they're conditionally cleaned up at fixture teardown time.
     """
-    # Discover entities via helper/DAO registry. Pass the shared request_utility into discover_entities
-    entity_registry = discover_entities(request_utility)
+    # Discover entities via helper/DAO registry. Pass the shared api_client into discover_entities
+    entity_registry = discover_entities(api_client)
 
     # Optional strict discovery validation (fail-fast in CI if enabled)
     if STRICT_ENTITY_DISCOVERY:
@@ -570,7 +578,7 @@ def shared_api_resources(request_utility: RequestUtility) -> SharedAPIResources:
     data = {
         **{f"{entity}_helper": bundle.helper for entity, bundle in entity_registry.items()},
         **{f"{entity}_dao": bundle.dao for entity, bundle in entity_registry.items()},
-        "request_utility": request_utility,
+        "api_client": api_client,
         "register_resource": register_resource,
         "mark_resource_deleted": mark_resource_deleted,
         "_entity_registry": wrapped_registry,  # <-- now always an EntitiesRegistry
@@ -595,7 +603,7 @@ def shared_api_resources(request_utility: RequestUtility) -> SharedAPIResources:
             already_deleted_ids = deleted_resources.get(resource_type, set())
             total_created = len(set(resource_ids))
             # Import cleanup_items only when needed (to avoid import cycles)
-            from EcommerceAPI.src.helpers.shared.cleanup_helpers import cleanup_items
+            from EcommerceAPI.src.shared.helpers.cleanup_helpers import cleanup_items
             cleanup_items(
                 resource_type=resource_type,
                 resource_ids=resource_ids,
@@ -647,7 +655,7 @@ class AllResources:
 
     Attributes:
         entities: Mapping[str, EntityBundle] — the runtime registry of entities
-        request: shared RequestUtility instance.
+        api_client: shared APIClient instance (transport + orchestration layer)
         register: Function to register a test-created resource for teardown.
         mark_deleted: Mark a resource as already deleted (skip in cleanup).
 
@@ -663,7 +671,7 @@ class AllResources:
     """
 
     entities: Mapping[str, "EntityBundle"]
-    request: Any
+    api_client: Any
     register: Callable[[str, str], None]
     mark_deleted: Callable[[str, str], None]
 
@@ -715,12 +723,14 @@ class AllResources:
         # Filter keys to valid Python identifiers and merge with default dir.
         # Narrow exception handling to avoid masking unrelated issues.
         try:
-            keys = [k for k in keys_iter if isinstance(k, str) and k.isidentifier()]
+            valid_keys = []
+            for k in keys_iter:
+                if isinstance(k, str) and k.isidentifier():
+                    valid_keys.append(k)
         except (TypeError, RuntimeError, AttributeError, ValueError):
             return sorted(default_dir)
 
-        # return sorted(default_dir.union(keys))  # not sure if is better the one below
-        return sorted(set(super().__dir__()) | set(self.entities.keys()))
+        return sorted(default_dir | set(valid_keys))
 
 
 @pytest.fixture(scope="module")
@@ -735,7 +745,7 @@ def all_resources(shared_api_resources: SharedAPIResources) -> AllResources:
 
     return AllResources(
         entities=registry,
-        request=shared_api_resources["request_utility"],
+        api_client=shared_api_resources["api_client"],
         register=shared_api_resources["register_resource"],
         mark_deleted=shared_api_resources["mark_resource_deleted"],
     )

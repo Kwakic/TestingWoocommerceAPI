@@ -18,7 +18,7 @@
 # from EcommerceAPI.src.clients.api_client import APIClient
 # from EcommerceAPI.src.utilities.exceptions import APIRequestException
 # from EcommerceAPI.src.coupons.dao.coupons_dao import CouponsDAO
-# from tests.shared.schemas import coupon_schema, error_schema
+# from tests.coupons.schemas.coupon import coupon_schema, error_schema
 #
 # logger = logging.getLogger(__name__)
 #

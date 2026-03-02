@@ -4,7 +4,7 @@ from jsonschema import validate
 from dateutil.parser import isoparse  # For robust ISO date parsing
 
 from EcommerceAPI.src.utilities.date_timestamp_utils import get_customers_in_window
-from EcommerceAPI.src.validators.customers.customer_assertions import assert_customer_not_found_error
+from EcommerceAPI.src.customers.validators.customer_assertions import assert_customer_not_found_error
 from tests.shared.schemas.customer import customer_schema
 
 logger = logging.getLogger(__name__)

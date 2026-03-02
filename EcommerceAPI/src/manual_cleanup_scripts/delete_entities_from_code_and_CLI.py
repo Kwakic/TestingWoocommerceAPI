@@ -1,10 +1,10 @@
 import logging
 import csv
 from datetime import datetime
-from EcommerceAPI.src.helpers.orders.orders_helper import OrdersHelper
-from EcommerceAPI.src.helpers.products.products_helper import ProductsHelper
-from EcommerceAPI.src.helpers.coupons.coupons_helper import CouponsHelper
-from EcommerceAPI.src.helpers.customers.customers_helper import CustomersHelper  # Assuming this exists
+# from EcommerceAPI.src.orders.helpers.orders_helper import OrdersHelper
+# from EcommerceAPI.src.products.helpers.products_helper import ProductsHelper
+# from EcommerceAPI.src.coupons.helpers.coupons_helper import CouponsHelper
+from EcommerceAPI.src.customers.helpers.customers_helper import CustomersHelper  # Assuming this exists
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

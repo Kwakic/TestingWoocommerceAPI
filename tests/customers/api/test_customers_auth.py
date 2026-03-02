@@ -3,7 +3,7 @@
 # import logging
 # from requests_oauthlib import OAuth1
 #
-# from tests.customers.schemas.customer import error_schema
+# from tests.shared.schemas.customer import error_schema
 # from EcommerceAPI.src.utilities.credentialsUtility import get_wc_api_keys
 #
 # logger = logging.getLogger(__name__)
@@ -21,6 +21,7 @@
 # ]
 #
 #
+# # NOT WORKING DUE TO removal expected status code and not updated
 # def get_invalid_auth_test_data():
 #     """
 #     🚫 Returns invalid OAuth credentials for negative testing.

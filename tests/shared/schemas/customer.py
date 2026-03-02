@@ -1,11 +1,11 @@
 # schemas.py — JSON Schema definitions for WooCommerce resources
 
 # 🧪 Example Usage in a Test:
-# from EcommerceAPI.src.utilities.requestUtility import requestUtility
+# from EcommerceAPI.src.clients.api_client import APIClient
 # from EcommerceAPI.data.schemas import product_schema, order_schema, customer_schema, coupon_schema
 # Example:
 # def test_product_schema_validation():
-#     api = requestUtility()
+#     api = APIClient()
 #     products = api.get("products", schema={"type": "array"})
 #     if products:
 #         api.get(f"products/{products[0]['id']}", schema=product_schema)

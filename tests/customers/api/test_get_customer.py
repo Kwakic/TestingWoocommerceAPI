@@ -4,10 +4,11 @@ import logging
 from jsonschema import validate
 from json import loads
 
-
 from tests.shared.schemas.customer import error_schema
-from EcommerceAPI.src.validators.customers.customer_schema_validator import validate_customer_response_schema
-from EcommerceAPI.src.validators.customers.customer_assertions import assert_customer_not_found_error
+from EcommerceAPI.src.customers.schemas.customer_schema_validator import validate_customer_response_schema
+from EcommerceAPI.src.customers.validators.customer_assertions import assert_customer_not_found_error, \
+    assert_customer_retrieved_successfully
+
 logger = logging.getLogger(__name__)
 #  logger.setLevel(logging.DEBUG)  # already set in pytest.ini
 
@@ -124,29 +125,31 @@ def test_get_customer_by_id(customer_helper, customers_dao, create_valid_custome
     ----
     - Fixture ensures valid setup (no need to revalidate creation)
     - Test owns status_code validation (fail-fast)
-    - Business assertions remain clean and focused
+    - Business validators remain clean and focused
 
     EXPECTED:
     ---------
     - Status code: 200
     - Returned customer matches created customer
 
-
+    NOTE related to create_valid_customer() fixture:
+    To keep the customer in the DB (i.e., skip deletion), set: customer = create_customer_for_test(skip_cleanup=True)
+    No need to assert ID/email. The fixture already does it: customer_helper.assert_valid_customer_response(customer)
+    Default: skip_cleanup=False, validate_response=True
     """
-
-    # ✅ Create customer using factory fixture
+    # -------------------------------------------
+    # Setup (fixture handles POST 201)
     # -------------------------------------------
     logger.info("🛠 Creating a test customer via factory fixture.")
-    # To keep the customer in the DB (i.e., skip deletion), set: customer = create_customer_for_test(skip_cleanup=True)
-    customer = create_valid_customer()  # Default: skip_cleanup=False, validate_response=True
-    # No need to assert ID/email. The fixture already does it: customer_helper.assert_valid_customer_response(customer)
+    # Create customer using factory fixture
+    customer = create_valid_customer()
 
+    # ------------------------------------------------------------
+    # Act (GET) Get customer by ID and validate
+    # ------------------------------------------------------------
     customer_id = customer["id"]
     email = customer["email"]
 
-    # ------------------------------------------------------------
-    # 🔍 Get customer by ID and validate
-    # ------------------------------------------------------------
     logger.info(f"🔎 Fetching customer by ID: {customer_id}")
     # By setting flag "return_http_response=True" it returns HttpResponse necessary to validate status_code, headers...
     response = customer_helper.call_get_customer_by_id(
@@ -154,32 +157,27 @@ def test_get_customer_by_id(customer_helper, customers_dao, create_valid_custome
         return_http_response=True
     )
 
-    # -----------------------------------------
-    # Transport validation (FAIL FAST)
-    # -----------------------------------------
-    assert response.status_code == 200, (
-        f"Expected 200 but got {response.status_code}. "
-        f"Response: {response.text}"
-    )
-
+    # ------------------------------------------------------------
+    # Transport validation (TEST responsibility - FAIL FAST)
     # Extract JSON to validate body
-    customer_from_get = response.json
+    # ------------------------------------------------------------
+    customer_data = assert_customer_retrieved_successfully(response)
 
     # ------------------------------------------------------------
     # 🔍 Get customer by ID and validate
     # ------------------------------------------------------------
 
-    assert customer_from_get["id"] == customer_id, (f"❌ Mismatched ID: Expected {customer_id}, "
-                                                    f"got {customer_from_get['id']}")
-    assert customer_from_get["email"] == email, (f"❌ Mismatched email: Expected {email}, "
-                                                 f"got {customer_from_get['email']}")
+    assert customer_data["id"] == customer_id, (f"❌ Mismatched ID: Expected {customer_id}, "
+                                                f"got {customer_data['id']}")
+    assert customer_data["email"] == email, (f"❌ Mismatched email: Expected {email}, "
+                                             f"got {customer_data['email']}")
     logger.info(f"✅ Fetched customer by ID matches created one: ID={customer_id}, Email={email}")
 
     # ------------------------------------------------------------------
     # 📋 Schema Validation (GET response)
     # ------------------------------------------------------------------
     # The validate_customer_response_schema(customer_from_get) is validating the response from:GET /customers/{id}
-    validate_customer_response_schema(customer=customer_from_get)
+    validate_customer_response_schema(customer=customer_data)
 
     # ---------------------------------------------------------------------------------------------------------
     # 🔍 Confirm customer exists in DB and API GET response matches DB.
@@ -215,7 +213,7 @@ def test_get_customer_not_found(customer_helper, customers_dao, create_valid_cus
     if isinstance(response, str):
         response = loads(response)
 
-    assert_customer_not_found_error(response)   # It validates: data: status 404, code, error message
+    assert_customer_not_found_error(response)  # It validates: data: status 404, code, error message
 
     validate(instance=response, schema=error_schema)
     logger.info("✅ Error response schema validated for non-existent customer fetch")

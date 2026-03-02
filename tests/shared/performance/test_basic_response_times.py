@@ -30,7 +30,7 @@ import pytest
 import logging
 from typing import Dict, Any, Optional, Tuple
 
-from EcommerceAPI.src.utilities.requestsUtility import RequestUtility
+from EcommerceAPI.src.clients.api_client import APIClient
 from EcommerceAPI.src.utilities.exceptions import (
     SchemaValidationError,
     UnexpectedStatusCodeError,
@@ -60,7 +60,7 @@ def _build_display_endpoint(endpoint: str, params: Optional[Dict[str, Any]]) -> 
 
 
 def measure_response_time(
-    api_client: RequestUtility,
+    api_client: APIClient,
     endpoint: str,
     *,
     params: Dict[str, Any] = None,
@@ -93,7 +93,7 @@ def measure_response_time(
 
 
 @pytest.mark.performance
-def test_api_response_times(pytestconfig, request_utility, session_metadata):
+def test_api_response_times(pytestconfig, api_client, session_metadata):
     """
     Run lightweight GET-only benchmarks for a set of endpoints and emit concise summaries.
 
@@ -103,7 +103,7 @@ def test_api_response_times(pytestconfig, request_utility, session_metadata):
       3. Compute metrics (min/max/avg/p95) and log concise summary lines.
       4. No on-disk perf JSON reports are produced by this test; structured logging captures per-request info.
     """
-    client = request_utility
+    client = api_client
 
     endpoints = {
         "customers": ("internal", "customers"),

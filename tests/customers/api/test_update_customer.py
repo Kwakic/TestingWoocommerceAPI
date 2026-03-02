@@ -4,7 +4,7 @@ import logging
 from jsonschema import validate
 
 from tests.shared.schemas.customer import error_schema
-from EcommerceAPI.src.validators.customers.customer_schema_validator import validate_customer_response_schema
+from EcommerceAPI.src.customers.schemas.customer_schema_validator import validate_customer_response_schema
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ def test_update_customer_first_name(customer_helper, customers_dao, create_valid
     logger.info(f"🔁 Updating customer ID={customer_id} with first_name='{updated_first_name}' "
                 f"and email='{updated_email}'")
 
-    # Use the helper's injected request_utility (singular) to perform raw update call
+    # Use the helper's injected api_client (singular) to perform raw update call
     update_response = customer_helper.update_customer(
         customer_id,
         payload={"first_name": updated_first_name, "email": updated_email},
@@ -139,7 +139,7 @@ def test_update_customer_invalid_inputs(customer_helper, customers_dao, create_v
     # ---------------------------------------------------
     # 📞 Attempt to update customer (expecting failure)
     # ---------------------------------------------------
-    # Use the shared request_utility fixture for the raw call; pass expected_status so the client returns/parses the
+    # Use the shared api_request fixture for the raw call; pass expected_status so the client returns/parses the
     # error payload.
 
     response = customer_helper.update_customer(

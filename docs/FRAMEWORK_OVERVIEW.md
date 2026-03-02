@@ -71,10 +71,10 @@ For full developer setup and step-by-step onboarding, see: `DEVELOPER_ONBOARDING
   - Root-level pytest config controls discovery (`[tool.pytest.ini_options]`).
   - Tests follow naming: `test_*.py`, `Test*` classes, `test_*` functions.
   - Markers used: `preflight`, `schema`, `api`, `smoke`, `regression`, `integration`, `performance`.
-  - Schema validation runs per-test (via `RequestUtility` and helper assertions) — not just in preflight.
+  - Schema validation runs per-test (via `APIClient` and helper assertions) — not just in preflight.
 
 - Helpers & fixtures
-  - `RequestUtility` — central HTTP client with retries, OAuth1, schema validation, and structured logging hooks.
+  - `APIClient` — central HTTP client with retries, OAuth1, schema validation, and structured logging hooks.
   - Helper classes (e.g., `CustomersHelper`) encapsulate API operations and domain assertions.
   - Factory fixtures like `create_valid_customer` validate responses by default and register created resources for teardown.
 
@@ -105,7 +105,7 @@ For full developer setup and step-by-step onboarding, see: `DEVELOPER_ONBOARDING
 - Logging & diagnostics:
   - `EcommerceAPI/src/utilities/custom_logger.py`, `EcommerceAPI/plugins/logging_plugin.py`
 - Tests & fixtures examples:
-  - `tests/shared/api_fixtures.py` — common fixtures (request_utility, factory fixtures)
+  - `tests/shared/api_fixtures.py` — common fixtures (api_client, factory fixtures)
   - `tests/customers/helpers/customers_helper.py` — sample helper showing patterns
 
 ---
