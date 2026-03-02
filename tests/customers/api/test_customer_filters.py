@@ -3,6 +3,7 @@ import logging
 from dateutil.parser import isoparse  # For robust ISO date parsing
 from jsonschema import validate
 
+from EcommerceAPI.src.customers.validators.customer_assertions import assert_customer_exists_and_matches_api
 from tests.shared.schemas.customer import customer_schema
 from EcommerceAPI.src.utilities.date_timestamp_utils import get_customers_in_window
 
@@ -24,7 +25,8 @@ def test_list_customers_created_within_time_range_with_db_check(customer_helper,
     This test validates the /customers API filtering logic based on `created_after` and `created_before` query
     parameters, ensuring accurate inclusion of newly created customers.
 
-    It also checks end-to-end correctness across multiple layers: API response schema, filter logic, and database consistency.
+    It also checks end-to-end correctness across multiple layers: API response schema, filter logic, and database
+    consistency.
 
     **Steps:**
     1. ✅ Create a new customer via POST (fixture-based).
@@ -66,9 +68,6 @@ def test_list_customers_created_within_time_range_with_db_check(customer_helper,
     # To keep the customer in the DB (i.e., skip deletion), set: customer = create_customer_for_test(skip_cleanup=True)
     customer = create_valid_customer()  # Default: skip_cleanup=False, validate_response=True
     # No need to assert ID/email. The fixture already does it: customer_helper.assert_valid_customer_response(customer)
-
-    customer_id = customer["id"]
-    email = customer["email"]
 
     customer_id = customer["id"]
     customer_email = customer["email"]
@@ -115,7 +114,15 @@ def test_list_customers_created_within_time_range_with_db_check(customer_helper,
     # 🔍 Confirm customer exists in DB and API GET response matches DB.
     # 🧩 Schema Validation (it checks that the GET response is valid).
     # ---------------------------------------------------------------------------------------------------------
-    customer_helper.validate_customer_exists_and_matches_api(email=email, dao=customers_dao)
+    # 1️⃣ Fetch (helper responsibility)
+    customers = customer_helper.call_list_all_customers_paginated(email=customer_email)
+
+    # 2️⃣ DB
+    db_customer = customers_dao.get_customer_by_email(customer_email)
+
+    # 3️⃣ Assert (assertion layer)
+    assert_customer_exists_and_matches_api(customers, customer_email, db_customer)
+
     logger.info("🎯 Full validation complete for customer ID: %r", customer_id)
 
     # You were filtering with timestamps generated locally that didn’t match exactly the customer’s creation timestamp

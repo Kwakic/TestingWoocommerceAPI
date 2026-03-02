@@ -14,11 +14,11 @@ from EcommerceAPI.src.core.http_response import HttpResponse
 
 # from EcommerceAPI.src.validators.customers.customer_schema_validator import validate_customer_response_schema
 
-from EcommerceAPI.src.customers.validators.customer_assertions import (
-    assert_valid_customer_in_api,
-    assert_valid_customer_matches_db,
-    assert_single_customer_by_email,
-)
+# from EcommerceAPI.src.customers.validators.customer_assertions import (
+#     assert_valid_customer_in_api,
+#     assert_valid_customer_matches_db,
+#     assert_single_customer_by_email,
+# )
 
 logger = logging.getLogger(__name__)
 
@@ -281,7 +281,7 @@ class CustomersHelper(object):
          Args:
              customer_id (int): Customer ID.
              return_http_response:  - False (default) → returns parsed JSON (dict)
-                               - True → returns HttpResponse (status_code, headers, elapsed, etc.)
+                                    - True → returns HttpResponse (status_code, headers, elapsed, etc.)
 
          Returns:
              dict: Parsed customer JSON response + HTTP response
@@ -479,96 +479,6 @@ class CustomersHelper(object):
         # ✅ Return all valid customers that passed date filter
         return filtered_customers
 
-    def validate_customer_exists_and_matches_api(self, email: str, dao) -> None:
-        """
-        Checks that customer exists in GET /customers, validates schema, and matches DB record.
-        - fast API call - API returns result for this query
-        - minimal overhead
-        - Blind trust in API
-        - Cannot detect duplicates
-        - API filter → 1 result → OK
-
-        After fetching data from the API with GET /customers you're validating that the customer returned by the GET
-        API also conforms to the expected schema. Helps catch bugs where POST works fine, but GET returns malformed data
-        Useful in integration and regression tests. What is result[0]? This refers to the first customer object
-        returned from calling GET /customers, filtered by email.
-
-        Args:
-        email (str): Customer email to look up.
-        dao: Data access object with get_customer_by_email(email) method.
-
-        Raises:
-            AssertionError: If validations fail.
-
-        Note: dao must be provided by caller (fixture or mock)
-        """
-        logger.debug("⚙️ Validating existence of customer by email: %s", email)
-
-        # 🔍 Call API to get customers
-        result = self.call_list_all_customers_paginated(email=email)
-
-        # ✅ API validation
-        customer = assert_valid_customer_in_api(result, email)
-        logger.info("✅ Assertion passed: Customer found calling API GET all customers paginated")
-
-        # # ✅ Schema validation - Validates API response schema using existing method GET /customers response.
-        # validate_customer_response_schema(customer=customer.model_dump())
-
-        # ✅ DB validation
-        db_customer = dao.get_customer_by_email(email)
-        assert_valid_customer_matches_db(customer.model_dump(), db_customer)
-
-        logger.info("✅ Assertion passed: Customer record validated in DB for ID=%s", db_customer["ID"])
-
-    # 🔍 Why both validations are needed?
-    # Even though the schema is the same, you're validating:
-    #    - That the create endpoint returns a well-formed customer
-    #    - That the list/retrieve endpoint also returns that customer correctly
-    # It’s entirely possible for one to pass and the other to fail if there's a bug in the API's data handling
-    # logic (e.g., bad serialization in GET, missing fields in POST).
-
-    def validate_customer_uniqueness_and_consistency(self, email: str, dao) -> None:
-        """
-        Validates that:
-        - Exactly ONE customer exists with given email (full dataset scan)
-        - API response is valid (schema)
-        - DB record matches API data
-        - Detects duplicates
-        - Independent of API correctness (filter in Python)
-
-        You are testing the SYSTEM, not the endpoint:
-        - Is my system data correct regardless of API behavior?
-
-        When to use it:
-        Deep method (10% of tests)
-        🧠 Deep → System correctness
-            ✔ duplicate detection
-            ✔ regression
-            ✔ data integrity
-            ✔ Migration / cleanup tests
-                - import data
-                - restore DB
-                - run cleanup jobs
-        """
-
-        logger.debug("🟢 Validating uniqueness of customer by email: %s", email)
-
-        # 🔍 FULL DATASET SCAN (no API filtering) Scan the whole dataset, and stop trusting API filtering.
-        all_customers = self.call_list_all_customers_paginated()
-
-        # ✅ Uniqueness validation
-        customer = assert_single_customer_by_email(all_customers, email)
-
-        logger.info("✅ Assertion passed: Exactly one customer found in full dataset scan")
-
-        # # ✅ Schema validation
-        # validate_customer_response_schema(customer=customer)
-
-        # ✅ DB validation
-        db_customer = dao.get_customer_by_email(email)
-        assert_valid_customer_matches_db(customer, db_customer)
-
-        logger.info("✅ Assertion passed: Customer record validated in DB for ID=%s", db_customer["ID"])
 
 # # NOTE!! Keep this main block for local debugging only. Remove or guard it before committing if you prefer to avoid
 # # leaving ad-hoc debug code in the main branch.

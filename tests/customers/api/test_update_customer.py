@@ -3,6 +3,7 @@ import logging
 
 from jsonschema import validate
 
+from EcommerceAPI.src.customers.validators.customer_assertions import assert_customer_exists_and_matches_api
 from tests.shared.schemas.customer import error_schema
 from EcommerceAPI.src.customers.schemas.customer_schema_validator import validate_customer_response_schema
 
@@ -52,7 +53,7 @@ def test_update_customer_first_name(customer_helper, customers_dao, create_valid
     # No need to assert ID/email. The fixture already does it: customer_helper.assert_valid_customer_response(customer)
 
     customer_id = customer["id"]
-    original_email = customer["email"]
+    # original_email = customer["email"]
 
     # Define update payload
     updated_first_name = "QAUpdated"
@@ -86,7 +87,15 @@ def test_update_customer_first_name(customer_helper, customers_dao, create_valid
     # 🔍 Confirm customer exists in DB and API GET response matches DB.
     # 🧩 Schema Validation (it checks that the GET response is valid).
     # ---------------------------------------------------------------------------------------------------------
-    customer_helper.validate_customer_exists_and_matches_api(email=updated_email, dao=customers_dao)
+    # 1️⃣ Fetch (helper responsibility)
+    customers = customer_helper.call_list_all_customers_paginated(email=updated_email)
+
+    # 2️⃣ DB
+    db_customer = customers_dao.get_customer_by_email(updated_email)
+
+    # 3️⃣ Assert (assertion layer)
+    assert_customer_exists_and_matches_api(customers, updated_email, db_customer)
+
     logger.info("🎯 Full validation complete for customer ID: %r", customer_id)
 
 
@@ -139,7 +148,7 @@ def test_update_customer_invalid_inputs(customer_helper, customers_dao, create_v
     # ---------------------------------------------------
     # 📞 Attempt to update customer (expecting failure)
     # ---------------------------------------------------
-    # Use the shared api_request fixture for the raw call; pass expected_status so the client returns/parses the
+    # Use the shared api_client fixture for the raw call; pass expected_status so the client returns/parses the
     # error payload.
 
     response = customer_helper.update_customer(

@@ -7,7 +7,7 @@ from json import loads
 from tests.shared.schemas.customer import error_schema
 from EcommerceAPI.src.customers.schemas.customer_schema_validator import validate_customer_response_schema
 from EcommerceAPI.src.customers.validators.customer_assertions import assert_customer_not_found_error, \
-    assert_customer_retrieved_successfully
+    assert_customer_retrieved_successfully, assert_customer_exists_and_matches_api
 
 logger = logging.getLogger(__name__)
 #  logger.setLevel(logging.DEBUG)  # already set in pytest.ini
@@ -78,7 +78,15 @@ def test_get_customer_by_email(customer_helper, customers_dao, create_valid_cust
     # 🔍 Confirm customer exists in DB and API GET response matches DB.
     # 🧩 Schema Validation (it checks that the GET response is valid).
     # ---------------------------------------------------------------------------------------------------------
-    customer_helper.validate_customer_exists_and_matches_api(email=email, dao=customers_dao)
+    # 1️⃣ Fetch (helper responsibility)
+    customers = customer_helper.call_list_all_customers_paginated(email=email)
+
+    # 2️⃣ DB
+    db_customer = customers_dao.get_customer_by_email(email)
+
+    # 3️⃣ Assert (assertion layer)
+    assert_customer_exists_and_matches_api(customers, email, db_customer)
+
     logger.info("🎯 Full validation complete for customer ID: %r", customer_id)
 
 
@@ -183,7 +191,15 @@ def test_get_customer_by_id(customer_helper, customers_dao, create_valid_custome
     # 🔍 Confirm customer exists in DB and API GET response matches DB.
     # 🧩 Schema Validation (it checks that the GET response is valid).
     # ---------------------------------------------------------------------------------------------------------
-    customer_helper.validate_customer_exists_and_matches_api(email=email, dao=customers_dao)
+    # 1️⃣ Fetch (helper responsibility)
+    customers = customer_helper.call_list_all_customers_paginated(email=email)
+
+    # 2️⃣ DB
+    db_customer = customers_dao.get_customer_by_email(email)
+
+    # 3️⃣ Assert (assertion layer)
+    assert_customer_exists_and_matches_api(customers, email, db_customer)
+
     logger.info("🎯 Full validation complete for customer ID: %r", customer_id)
 
 

@@ -92,6 +92,82 @@ def assert_valid_customer_in_api(customers: List[Dict[str, Any]], email: str) ->
     return customer
 
 
+def assert_customer_uniqueness_and_consistency(
+    customers: List[Dict[str, Any]],
+    email: str,
+    db_customer: Dict[str, Any],
+) -> None:
+    """
+        Validates that:
+        - Exactly ONE customer exists with given email (full dataset scan)
+        - API response is valid (schema)
+        - DB record matches API data
+        - Detects duplicates
+        - Independent of API correctness (filter in Python)
+
+        You are testing the SYSTEM, not the endpoint:
+        - Is my system data correct regardless of API behavior?
+
+        When to use it:
+        Deep method (10% of tests)
+        🧠 Deep → System correctness
+            ✔ duplicate detection
+            ✔ regression
+            ✔ data integrity checks
+            ✔ Migration / cleanup tests
+                - import data
+                - restore DB
+                - run cleanup jobs
+            NOTE:
+    - Assumes customers list is already fetched (helper responsibility)
+    - Structure validation handled inside lower-level assertions
+    """
+
+    logger.debug("🟢 Validating uniqueness of customer by email: %s", email)
+
+    # ✅ Uniqueness validation
+    customer = assert_single_customer_by_email(customers, email)
+
+    logger.info("✅ Assertion passed: Exactly one customer found in full dataset scan")
+
+    # ✅ DB validation
+    assert_valid_customer_matches_db(customer, db_customer)
+
+    logger.info("✅ Assertion passed: Customer record validated in DB for ID=%s", db_customer["ID"])
+
+
+def assert_customer_exists_and_matches_api(
+    customers: List[Dict[str, Any]],
+    email: str,
+    db_customer: Dict[str, Any],
+) -> None:
+    """
+    Validate:
+    - customer exists in API response
+    - customer matches DB record
+
+    Use for:
+        - fast validation (API filter)
+        - integration tests
+        - regression checks
+
+    NOTE:
+    - Assumes customers list already fetched (helper responsibility)
+    """
+
+    logger.debug("⚙️ Validating existence of customer by email: %s", email)
+
+    # ✅ API validation
+    customer = assert_valid_customer_in_api(customers, email)
+
+    logger.info("✅ Assertion passed: Customer found via API")
+
+    # ✅ DB validation
+    assert_valid_customer_matches_db(customer.model_dump(), db_customer)
+
+    logger.info("✅ Assertion passed: Customer record validated in DB for ID=%s", db_customer["ID"])
+
+
 # ------------------------------------------------------------------
 # 🗄️ DB VALIDATION (PURE BUSINESS LOGIC)
 # ------------------------------------------------------------------

@@ -5,7 +5,8 @@ from faker import Faker  # To avoid hardcoding, we use faker to generate fake da
 
 from EcommerceAPI.src.utilities.bulk_ops import bulk_create_and_validate_resources
 from EcommerceAPI.src.customers.schemas.customer_schema_validator import validate_customer_error_response_schema
-from EcommerceAPI.src.customers.validators.customer_assertions import assert_customer_creation_failed
+from EcommerceAPI.src.customers.validators.customer_assertions import assert_customer_creation_failed, \
+    assert_customer_uniqueness_and_consistency, assert_customer_exists_and_matches_api
 
 faker = Faker()
 
@@ -127,7 +128,14 @@ def test_bulk_create_customers(qty, customer_helper, customers_dao, create_valid
         Args:
             email (str): Unique identifier used to search for the customer
         """
-        customer_helper.validate_customer_exists_and_matches_api(email=email, dao=customers_dao)
+        # 1️⃣ Fetch (helper responsibility)
+        customers = customer_helper.call_list_all_customers_paginated(email=email)
+
+        # 2️⃣ DB
+        db_customer = customers_dao.get_customer_by_email(email)
+
+        # 3️⃣ Assert (assertion layer)
+        assert_customer_exists_and_matches_api(customers, email, db_customer)
 
     # -------------------------------------------------------
     # 🚀 Run the bulk utility: create + validate + teardown
@@ -212,7 +220,14 @@ def test_bulk_create_customers_edge_cases(qty, customer_helper, customers_dao, c
         Args:
             email (str): Unique identifier used to search for the customer
         """
-        customer_helper.validate_customer_exists_and_matches_api(email=email, dao=customers_dao)
+        # 1️⃣ Fetch (helper responsibility)
+        customers = customer_helper.call_list_all_customers_paginated(email=email)
+
+        # 2️⃣ DB
+        db_customer = customers_dao.get_customer_by_email(email)
+
+        # 3️⃣ Assert (assertion layer)
+        assert_customer_exists_and_matches_api(customers, email, db_customer)
 
     # -------------------------------------------------------
     # 🚀 Run the bulk utility: create + validate + teardown
@@ -274,7 +289,15 @@ def test_create_single_customer_with_email_and_password_only(customer_helper, cu
     # 🔍 Confirm customer exists in DB and API GET response matches DB.
     # 🧩 Schema Validation (it checks that the GET response is valid).
     # ---------------------------------------------------------------------------------------------------------
-    customer_helper.validate_customer_exists_and_matches_api(email=email, dao=customers_dao)
+    # 1️⃣ Fetch (helper responsibility)
+    customers = customer_helper.call_list_all_customers_paginated(email=email)
+
+    # 2️⃣ DB
+    db_customer = customers_dao.get_customer_by_email(email)
+
+    # 3️⃣ Assert (assertion layer)
+    assert_customer_exists_and_matches_api(customers, email, db_customer)
+
     logger.info("🎯 Full validation complete for customer ID: %r", customer_id)
 
 
@@ -369,7 +392,15 @@ def test_create_customer_with_varied_addresses(
     # 🔍 Confirm customer exists in DB and API GET response matches DB.
     # 🧩 Schema Validation (it checks that the GET response is valid).
     # ---------------------------------------------------------------------------------------------------------
-    customer_helper.validate_customer_exists_and_matches_api(email=customer_email, dao=customers_dao)
+    # 1️⃣ Fetch (helper responsibility)
+    customers = customer_helper.call_list_all_customers_paginated(email=customer_email)
+
+    # 2️⃣ DB
+    db_customer = customers_dao.get_customer_by_email(customer_email)
+
+    # 3️⃣ Assert (assertion layer)
+    assert_customer_exists_and_matches_api(customers, customer_email, db_customer)
+
     logger.info("🎯 Full validation complete for customer ID: %r", customer_id)
 
 
@@ -401,7 +432,7 @@ def test_create_customer_email_field_validation(customer_helper, customers_dao, 
     Args:
         customers_dao: Fixture providing customer DAO.
         customer_helper: Fixture providing customer API helper.
-        customer_api_unvalidated (Callable): .Fixture providing low-level access t tests that need to inspect raw
+        customer_api_raw(Callable): .Fixture providing low-level access t tests that need to inspect raw
         responses.
         payload (dict): Test input payload with malformed or missing email/password fields.
         expected_status_code (int): Expected HTTP response code.
@@ -446,7 +477,7 @@ def test_create_customer_fail_for_existing_email(create_valid_customer, customer
 
     Args:
         create_valid_customer (Callable): Factory fixture to create valid WooCommerce customers
-        customer_api_unvalidated (RawAPIClient): Fixture for low-level API calls used for negative testing
+        customer_api_raw (Raw APIClient): Fixture for low-level API calls used for negative testing
         customer_helper: Provides customer's helper
         customers_dao: Provides customer's DAOs
 
@@ -509,8 +540,15 @@ def test_create_customer_fail_for_existing_email(create_valid_customer, customer
     # 🔍 Confirm customer exists in DB and API GET response matches DB.
     # 🧩 Schema Validation (it checks that the GET response is valid).
     # ---------------------------------------------------------------------------------------------------------
-    # The method "validate_customer_uniqueness_and_consistency" ensures only 1 exists and detects backend bugs
-    customer_helper.validate_customer_uniqueness_and_consistency(email, customers_dao)
+
+    # Fetch data (helper responsibility)
+    customers = customer_helper.call_list_all_customers_paginated()
+
+    # DB access
+    db_customer = customers_dao.get_customer_by_email(email)
+
+    # Assertion
+    assert_customer_uniqueness_and_consistency(customers, email, db_customer)
 
     # --------------------------------------------
     # 📋 Validate error schema and contents
