@@ -3,7 +3,7 @@ import logging
 
 from jsonschema import validate
 
-from EcommerceAPI.src.customers.validators.customer_assertions import assert_customer_exists_and_matches_api
+from EcommerceAPI.src.customers.validators.customer_validators import assert_customer_exists_and_matches_api
 from tests.shared.schemas.customer import error_schema
 from EcommerceAPI.src.customers.schemas.customer_schema_validator import validate_customer_response_schema
 
@@ -88,7 +88,7 @@ def test_update_customer_first_name(customer_helper, customers_dao, create_valid
     # 🧩 Schema Validation (it checks that the GET response is valid).
     # ---------------------------------------------------------------------------------------------------------
     # 1️⃣ Fetch (helper responsibility)
-    customers = customer_helper.call_list_all_customers_paginated(email=updated_email)
+    customers = customer_helper.list_customers_paginated(email=updated_email)
 
     # 2️⃣ DB
     db_customer = customers_dao.get_customer_by_email(updated_email)

@@ -3,7 +3,7 @@ import logging
 from dateutil.parser import isoparse  # For robust ISO date parsing
 from jsonschema import validate
 
-from EcommerceAPI.src.customers.validators.customer_assertions import assert_customer_exists_and_matches_api
+from EcommerceAPI.src.customers.validators.customer_validators import assert_customer_exists_and_matches_api
 from tests.shared.schemas.customer import customer_schema
 from EcommerceAPI.src.utilities.date_timestamp_utils import get_customers_in_window
 
@@ -115,7 +115,7 @@ def test_list_customers_created_within_time_range_with_db_check(customer_helper,
     # 🧩 Schema Validation (it checks that the GET response is valid).
     # ---------------------------------------------------------------------------------------------------------
     # 1️⃣ Fetch (helper responsibility)
-    customers = customer_helper.call_list_all_customers_paginated(email=customer_email)
+    customers = customer_helper.list_customers_paginated(email=customer_email)
 
     # 2️⃣ DB
     db_customer = customers_dao.get_customer_by_email(customer_email)

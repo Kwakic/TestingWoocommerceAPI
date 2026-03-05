@@ -29,22 +29,23 @@ TestEcommerceAPI (project suite/root)
 │     │     │     ├── README.md
 │     │     │     └── __init__.py
 │     │     ├── core/
-│     │     │     ├── http_client.py               ← LOW LEVEL
+│     │     │     ├── http_client.py               ← low level transport
 │     │     │     └── http_response.py
 │     │     ├── clients/
-│     │     │     ├── api_client.py                ← orchestration layer
-│     │     │     └── auth_response.py
+│     │     │     ├── api_client.py                ← orchestration layer (used to be requestUtility)
+│     │     │     └── auth_response.py             ← pending to do
 │     │     ├── customers/
 │     │     │     ├── dao/
 │     │     │     │      │── customers_dao.py
 │     │     │     │      └── __init__.py
 │     │     │     ├── api/                         ← domain API
 │     │     │     │      │── customers_api.py
-│     │     │     │   validators/
+│     │     │     ├── validators/
 │     │     │     │      │── customer_assertions.py
 │     │     │     │      └── __init__.py
 │     │     │     ├── schemas/
 │     │     │     │      │── customer_model.py     ← Pydantic
+│     │     │     │      │── customer_schema_validator.py   ← it will be replaced
 │     │     │     │      └── _init__.py
 │     │     │     └── helpers/
 │     │     │            │── customers_helper.py

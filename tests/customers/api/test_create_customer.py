@@ -5,16 +5,14 @@ from faker import Faker  # To avoid hardcoding, we use faker to generate fake da
 
 from EcommerceAPI.src.utilities.bulk_ops import bulk_create_and_validate_resources
 from EcommerceAPI.src.customers.schemas.customer_schema_validator import validate_customer_error_response_schema
-from EcommerceAPI.src.customers.validators.customer_assertions import assert_customer_creation_failed, \
-    assert_customer_uniqueness_and_consistency, assert_customer_exists_and_matches_api
+from EcommerceAPI.src.customers.validators.customer_validators import assert_customer_creation_failed, \
+     assert_customer_integrity
 
 faker = Faker()
 
 logger = logging.getLogger(__name__)  # logger.setLevel(logging.DEBUG) --> Already set in pytest.ini
 
-
 pytestmark = [pytest.mark.customers, pytest.mark.regresion]
-
 
 INVALID_EMAIL_PAYLOADS = [
     pytest.param(
@@ -128,14 +126,8 @@ def test_bulk_create_customers(qty, customer_helper, customers_dao, create_valid
         Args:
             email (str): Unique identifier used to search for the customer
         """
-        # 1️⃣ Fetch (helper responsibility)
-        customers = customer_helper.call_list_all_customers_paginated(email=email)
-
-        # 2️⃣ DB
-        db_customer = customers_dao.get_customer_by_email(email)
-
-        # 3️⃣ Assert (assertion layer)
-        assert_customer_exists_and_matches_api(customers, email, db_customer)
+        # API Fetch + API VALIDATION + DB FETCH + DB VALIDATION
+        assert_customer_integrity(customer_helper, customers_dao, email)
 
     # -------------------------------------------------------
     # 🚀 Run the bulk utility: create + validate + teardown
@@ -220,14 +212,8 @@ def test_bulk_create_customers_edge_cases(qty, customer_helper, customers_dao, c
         Args:
             email (str): Unique identifier used to search for the customer
         """
-        # 1️⃣ Fetch (helper responsibility)
-        customers = customer_helper.call_list_all_customers_paginated(email=email)
-
-        # 2️⃣ DB
-        db_customer = customers_dao.get_customer_by_email(email)
-
-        # 3️⃣ Assert (assertion layer)
-        assert_customer_exists_and_matches_api(customers, email, db_customer)
+        # API Fetch + API VALIDATION + DB FETCH + DB VALIDATION
+        assert_customer_integrity(customer_helper, customers_dao, email)
 
     # -------------------------------------------------------
     # 🚀 Run the bulk utility: create + validate + teardown
@@ -285,18 +271,8 @@ def test_create_single_customer_with_email_and_password_only(customer_helper, cu
     customer_id = customer["id"]
     email = customer["email"]
 
-    # ---------------------------------------------------------------------------------------------------------
-    # 🔍 Confirm customer exists in DB and API GET response matches DB.
-    # 🧩 Schema Validation (it checks that the GET response is valid).
-    # ---------------------------------------------------------------------------------------------------------
-    # 1️⃣ Fetch (helper responsibility)
-    customers = customer_helper.call_list_all_customers_paginated(email=email)
-
-    # 2️⃣ DB
-    db_customer = customers_dao.get_customer_by_email(email)
-
-    # 3️⃣ Assert (assertion layer)
-    assert_customer_exists_and_matches_api(customers, email, db_customer)
+    # API Fetch + API VALIDATION + DB FETCH + DB VALIDATION
+    assert_customer_integrity(customer_helper, customers_dao, email)
 
     logger.info("🎯 Full validation complete for customer ID: %r", customer_id)
 
@@ -388,18 +364,8 @@ def test_create_customer_with_varied_addresses(
     customer_id = customer["id"]
     customer_email = customer["email"]
 
-    # ---------------------------------------------------------------------------------------------------------
-    # 🔍 Confirm customer exists in DB and API GET response matches DB.
-    # 🧩 Schema Validation (it checks that the GET response is valid).
-    # ---------------------------------------------------------------------------------------------------------
-    # 1️⃣ Fetch (helper responsibility)
-    customers = customer_helper.call_list_all_customers_paginated(email=customer_email)
-
-    # 2️⃣ DB
-    db_customer = customers_dao.get_customer_by_email(customer_email)
-
-    # 3️⃣ Assert (assertion layer)
-    assert_customer_exists_and_matches_api(customers, customer_email, db_customer)
+    # API Fetch + API VALIDATION + DB FETCH + DB VALIDATION
+    assert_customer_integrity(customer_helper, customers_dao, customer_email)
 
     logger.info("🎯 Full validation complete for customer ID: %r", customer_id)
 
@@ -536,26 +502,14 @@ def test_create_customer_fail_for_existing_email(create_valid_customer, customer
 
     response = http_response.json
 
-    # ---------------------------------------------------------------------------------------------------------
-    # 🔍 Confirm customer exists in DB and API GET response matches DB.
-    # 🧩 Schema Validation (it checks that the GET response is valid).
-    # ---------------------------------------------------------------------------------------------------------
-
-    # Fetch data (helper responsibility)
-    customers = customer_helper.call_list_all_customers_paginated()
-
-    # DB access
-    db_customer = customers_dao.get_customer_by_email(email)
-
-    # Assertion
-    assert_customer_uniqueness_and_consistency(customers, email, db_customer)
+    # API Fetch + API VALIDATION + DB FETCH + DB VALIDATION
+    assert_customer_integrity(customer_helper, customers_dao, email)
 
     # --------------------------------------------
     # 📋 Validate error schema and contents
     # --------------------------------------------
     validate_customer_error_response_schema(response)
     logger.info(f"✅ Proper error returned for payload: {payload} → {response['code']}: {response['message']}")
-
 
 # 🧠 Final clean architecture (THIS IS YOUR STANDARD)
 # RequestUtility  → HttpResponse

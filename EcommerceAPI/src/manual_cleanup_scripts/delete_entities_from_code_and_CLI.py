@@ -166,10 +166,10 @@ class CustomerCleaner(BaseCleaner):
         super().__init__(CustomersHelper, "customers")
 
     def list_entities(self, params):
-        return self.helper.call_list_all_customers_paginated(payload=params)
+        return self.helper.list_customers_paginated(payload=params)
 
     def delete_entity(self, entity_id):
-        self.helper.call_delete_customer(entity_id, params={"force": True})
+        self.helper.delete_customer(entity_id, params={"force": True})
 
     def extract_metadata(self, entity):
         return " | ".join(filter(None, [

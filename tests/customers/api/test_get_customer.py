@@ -6,7 +6,7 @@ from json import loads
 
 from tests.shared.schemas.customer import error_schema
 from EcommerceAPI.src.customers.schemas.customer_schema_validator import validate_customer_response_schema
-from EcommerceAPI.src.customers.validators.customer_assertions import assert_customer_not_found_error, \
+from EcommerceAPI.src.customers.validators.customer_validators import assert_customer_not_found_error, \
     assert_customer_retrieved_successfully, assert_customer_exists_and_matches_api
 
 logger = logging.getLogger(__name__)
@@ -61,7 +61,7 @@ def test_get_customer_by_email(customer_helper, customers_dao, create_valid_cust
     # 🔍 Get customer by EMAIL and validate
     # ------------------------------------------------------------
     logger.info(f"🔎 Fetching customer by email: {email}")
-    customer_from_get = customer_helper.call_get_customer_by_email(email=email)
+    customer_from_get = customer_helper.get_customer_by_email(email=email)
 
     assert customer_from_get["id"] == customer_id, (f"❌ Mismatched ID: Expected {customer_id}, "
                                                     f"got {customer_from_get['id']}")
@@ -79,7 +79,7 @@ def test_get_customer_by_email(customer_helper, customers_dao, create_valid_cust
     # 🧩 Schema Validation (it checks that the GET response is valid).
     # ---------------------------------------------------------------------------------------------------------
     # 1️⃣ Fetch (helper responsibility)
-    customers = customer_helper.call_list_all_customers_paginated(email=email)
+    customers = customer_helper.list_customers_paginated(email=email)
 
     # 2️⃣ DB
     db_customer = customers_dao.get_customer_by_email(email)
@@ -160,7 +160,7 @@ def test_get_customer_by_id(customer_helper, customers_dao, create_valid_custome
 
     logger.info(f"🔎 Fetching customer by ID: {customer_id}")
     # By setting flag "return_http_response=True" it returns HttpResponse necessary to validate status_code, headers...
-    response = customer_helper.call_get_customer_by_id(
+    response = customer_helper.get_customer_by_id(
         customer_id,
         return_http_response=True
     )
@@ -192,7 +192,7 @@ def test_get_customer_by_id(customer_helper, customers_dao, create_valid_custome
     # 🧩 Schema Validation (it checks that the GET response is valid).
     # ---------------------------------------------------------------------------------------------------------
     # 1️⃣ Fetch (helper responsibility)
-    customers = customer_helper.call_list_all_customers_paginated(email=email)
+    customers = customer_helper.list_customers_paginated(email=email)
 
     # 2️⃣ DB
     db_customer = customers_dao.get_customer_by_email(email)
@@ -224,7 +224,7 @@ def test_get_customer_not_found(customer_helper, customers_dao, create_valid_cus
 
     logger.info(f"🚫 Retrieving non-existent customer ID: {non_existing_id}")
 
-    response = customer_helper.call_get_customer_by_id(customer_id=non_existing_id)
+    response = customer_helper.get_customer_by_id(customer_id=non_existing_id)
 
     if isinstance(response, str):
         response = loads(response)

@@ -8,6 +8,8 @@ from datetime import timedelta
 from tests.shared.schemas.customer import customer_schema
 from EcommerceAPI.src.utilities.date_timestamp_utils import get_now_utc_floor, to_iso_utc, safe_parse_utc_datetime
 
+from EcommerceAPI.src.customers.helpers.customers_helper import CustomersHelper
+
 logger = logging.getLogger(__name__)
 #  logger.setLevel(logging.DEBUG)  # already set in pytest.ini
 
@@ -27,7 +29,7 @@ def test_get_all_customers_list_not_empty_and_valid_schema(customer_helper, cust
     """
 
     logger.info("🟢 Calling GET all customers without filters.")
-    customers = customer_helper.call_list_all_customers_paginated()
+    customers = customer_helper.list_customers_paginated()
 
     # Assert we got a non-empty list
     assert customers, "❌ No customers returned from GET /customers"
@@ -68,7 +70,7 @@ def test_get_all_customers_pagination_boundary(customer_helper, customers_dao):
     logger.info(f"🟢 Testing pagination boundary with per_page={per_page}, max_pages={max_pages}")
 
     params = {'per_page': per_page}
-    all_customers = customer_helper.call_list_all_customers_paginated(params=params, max_pages=max_pages)
+    all_customers = customer_helper.list_customers_paginated(params=params, max_pages=max_pages)
 
     assert all_customers, "❌ No customers returned from paginated GET /customers"
     assert isinstance(all_customers, list), f"Expected list of customers, got: {type(all_customers)}"
@@ -114,9 +116,9 @@ def test_get_all_customers_empty_list_with_mock(customer_helper, customers_dao):
     DB changes and keeps tests reliable and fast.
     """
 
-    with patch.object(customer_helper, 'call_list_all_customers_paginated', return_value=[]):
-        logger.info("🟢 Mocking call_list_all_customers_paginated to return empty list")
-        customers = customer_helper.call_list_all_customers_paginated()
+    with patch.object(customer_helper, 'list_customers_paginated', return_value=[]):
+        logger.info("🟢 Mocking list_customers_paginated to return empty list")
+        customers = customer_helper.list_customers_paginated()
 
         # The mocked method should return an empty list
         assert customers == [], "❌ Expected empty list from mocked call_list_all_customers_paginated"
@@ -161,7 +163,7 @@ def test_list_customers_created_in_the_future_returns_empty(customer_helper, cus
     logger.info(f"🔍 Fetching customers created after current time: {created_after}")
 
     # 🚀 Step 2: Fetch customers. Call the /customers API with created_after filter set to "now".
-    filtered_customers = customer_helper.call_list_all_customers_paginated(
+    filtered_customers = customer_helper.list_customers_paginated(
         created_after=created_after
     )
 

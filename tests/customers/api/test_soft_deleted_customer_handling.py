@@ -61,7 +61,7 @@ def test_soft_deleted_customer_is_still_returned_by_api(customer_helper, custome
         f"Customer with email={customer_email} will still be returned unless backend customization is added."
     )
     # You could log this or check it manually if desired:
-    customers = customer_helper.call_list_all_customers_paginated(email=customer_email)
+    customers = customer_helper.list_customers_paginated(email=customer_email)
     logger.info(f"API returned customer(s): {customers}")
 
 
@@ -115,7 +115,7 @@ def test_soft_deleted_customers_are_excluded_by_custom_filter(
     # -------------------------------------------
     # 🔍 Step 3: Fetch RAW API data (Woo behavior)
     # -------------------------------------------
-    raw_customers = customer_helper.call_list_all_customers_paginated(email=email)
+    raw_customers = customer_helper.list_customers_paginated(email=email)
     assert raw_customers, "❌ API did not return any customers"
 
     raw_ids = [c["id"] for c in raw_customers]

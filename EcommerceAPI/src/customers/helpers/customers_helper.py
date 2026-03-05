@@ -5,30 +5,20 @@ from __future__ import annotations
 import logging
 from typing import Optional, List, Dict, Any
 
-from EcommerceAPI.src.customers.api.customers_api import CustomersApi
 from EcommerceAPI.src.utilities.pagination_utils import paginate_all_results
 from EcommerceAPI.src.utilities.genericUtilities import generate_random_email_and_password
 from EcommerceAPI.src.utilities.exceptions import UnexpectedStatusCodeError, SchemaValidationError
 from EcommerceAPI.src.utilities.date_timestamp_utils import safe_parse_utc_datetime
 from EcommerceAPI.src.core.http_response import HttpResponse
+from EcommerceAPI.src.customers.api.customers_api import CustomersApi
 
-# from EcommerceAPI.src.validators.customers.customer_schema_validator import validate_customer_response_schema
-
-# from EcommerceAPI.src.customers.validators.customer_assertions import (
-#     assert_valid_customer_in_api,
-#     assert_valid_customer_matches_db,
-#     assert_single_customer_by_email,
-# )
 
 logger = logging.getLogger(__name__)
 
 
-# The shared logging level and handlers are configured by the project's logging bootstrap (custom_logger).
-
-
 class CustomersHelper(object):
     """
-    Domain-level orchestration layer for Customers.
+    Domain-level orchestration layer for Customers (workflow).
 
     Responsibilities
     ---------------
@@ -60,6 +50,9 @@ class CustomersHelper(object):
     ✔ Allows opt-in access to full HTTP response when needed
     ✔ Supports both positive and negative scenarios
 
+    - Helper knows only about transport
+    - Helper only orchestrates
+
     Non-Responsibilities
     --------------------
     ✘ No raw HTTP calls (handled by APIClient)
@@ -67,6 +60,7 @@ class CustomersHelper(object):
     ✘ No business validators
     ✘ No database access
     ✘ No pytest fixtures
+
 
     Testing Guidelines
     -----------------
@@ -83,7 +77,7 @@ class CustomersHelper(object):
 
     ENDPOINT = "customers"
 
-    def __init__(self, customers_api: CustomersApi):
+    def __init__(self, customers_api: CustomersApi):  # dependency injection flow
         """
         Args:
             customers_api: Domain API client (wraps APIClient)
@@ -270,7 +264,7 @@ class CustomersHelper(object):
 
             raise
 
-    def call_get_customer_by_id(
+    def get_customer_by_id(
             self,
             customer_id: int,
             return_http_response: bool = False
@@ -296,7 +290,7 @@ class CustomersHelper(object):
 
         return http_response.json
 
-    def call_get_customer_by_email(
+    def get_customer_by_email(
             self,
             email: str,
             return_http_response: bool = False
@@ -329,7 +323,7 @@ class CustomersHelper(object):
 
         return customers[0]
 
-    def call_delete_customer(
+    def delete_customer(
             self,
             customer_id: int,
             return_http_response: bool = False
@@ -360,7 +354,7 @@ class CustomersHelper(object):
     # ------------------------
     # Listing / Pagination
     # ------------------------
-    def call_list_all_customers_paginated(
+    def list_customers_paginated(
             self,
             params: Optional[Dict[str, Any]] = None,
             max_pages: int = 1000,
@@ -490,7 +484,7 @@ class CustomersHelper(object):
 #     from EcommerceAPI.src.clients.api_client import APIClient
 #     ru = APIClient()
 #     helper = CustomersHelper(api_client=ru)
-#     items = helper.call_list_all_customers_paginated()
+#     items = helper.list_customers_paginated()
 #     breakpoint()  # Execution will pause here and drop into the debugger (pdb by default)
 #     print(len(items))
 #

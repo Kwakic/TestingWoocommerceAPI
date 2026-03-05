@@ -46,7 +46,7 @@ if TYPE_CHECKING:
 
 from EcommerceAPI.src.shared.helpers.cleanup_helpers import set_default_api_client
 from EcommerceAPI.src.customers.schemas.customer_schema_validator import validate_customer_response_schema
-from EcommerceAPI.src.customers.validators.customer_assertions import assert_valid_customer_response
+from EcommerceAPI.src.customers.validators.customer_validators import assert_valid_customer_response
 from EcommerceAPI.src.clients.api_client import APIClient
 
 log = logging.getLogger(__name__)

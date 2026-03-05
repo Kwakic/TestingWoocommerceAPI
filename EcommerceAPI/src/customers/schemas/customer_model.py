@@ -1,3 +1,4 @@
+# structure validation only
 """
 Customer Pydantic Model (STRUCTURE VALIDATION LAYER)
 
@@ -21,7 +22,6 @@ If validation fails → raises ValidationError
 - Add DB logic
 - Use this directly in tests (for now)
 """
-from typing import Optional
 
 from pydantic import BaseModel, EmailStr
 
@@ -44,4 +44,3 @@ class CustomerModel(BaseModel):
     email: EmailStr
     username: str
     # username: Optional[str] = None
-

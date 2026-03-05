@@ -4,7 +4,7 @@ from jsonschema import validate
 from dateutil.parser import isoparse  # For robust ISO date parsing
 
 from EcommerceAPI.src.utilities.date_timestamp_utils import get_customers_in_window
-from EcommerceAPI.src.customers.validators.customer_assertions import assert_customer_not_found_error
+from EcommerceAPI.src.customers.validators.customer_validators import assert_customer_not_found_error
 from tests.shared.schemas.customer import customer_schema
 
 logger = logging.getLogger(__name__)
@@ -65,7 +65,7 @@ def test_customer_deletion_removes_resource(all_resources, customer_helper, cust
     logger.info(f"🧹 Deleting customer ID={customer_id}")
 
     # By setting flag "return_http_response=True" it returns HttpResponse necessary to validate status_code, headers...
-    delete_response = customer_helper.call_delete_customer(
+    delete_response = customer_helper.delete_customer(
         customer_id,
         return_http_response=True
     )
@@ -88,7 +88,7 @@ def test_customer_deletion_removes_resource(all_resources, customer_helper, cust
     # 🔍 Step 3: Verify customer is no longer accessible via API
     # -------------------------------------------
     logger.info(f"🔎 Verifying GET after deletion returns 404 for ID={customer_id}")
-    response = customer_helper.call_get_customer_by_id(customer_id=customer_id)
+    response = customer_helper.get_customer_by_id(customer_id=customer_id)
     # Validating deleted customer's error message"
 
     assert_customer_not_found_error(response)  # It validates: data: status 404, code, error message
@@ -170,7 +170,7 @@ def test_deleted_customer_not_in_created_after_filter(customer_helper, customers
     # -------------------------------------------
     logger.info(f"🧹 Deleting customer ID={customer_id}")
     # By setting flag "return_http_response=True" it returns HttpResponse necessary to validate status_code, headers...
-    delete_response = customer_helper.call_delete_customer(
+    delete_response = customer_helper.delete_customer(
         customer_id,
         return_http_response=True
     )

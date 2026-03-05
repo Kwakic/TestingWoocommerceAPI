@@ -98,7 +98,7 @@ def get_customers_in_window(helper, created_at: datetime, before_min: int = 1, a
     logger.info(f"🔍 Filtering customers using window:"
                 f" created_after={created_after}, created_before={created_before}, negative={negative}")
 
-    customers = helper.call_list_all_customers_paginated(
+    customers = helper.list_customers_paginated(
         created_after=created_after,
         created_before=created_before
     )
