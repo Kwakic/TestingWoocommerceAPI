@@ -44,6 +44,20 @@ def paginate_all_results(api_client, endpoint, params=None, max_pages=1000, retr
             try:
                 logger.debug(f"📦 Fetching {endpoint} page {i} (attempt {attempt + 1}/{retries})")
                 http_response = api_client.get(endpoint, params=params)
+
+                # ✅ Validate status code for pagination calls
+                assert http_response.status_code == 200, (
+                    f"❌ Pagination request failed for {endpoint} page={i}. "
+                    f"Expected status 200, got {http_response.status_code}"
+                )
+
+                logger.debug(
+                    "📄 Pagination request OK: endpoint=%s page=%s status=%s",
+                    endpoint,
+                    i,
+                    http_response.status_code,
+                )
+
                 response = http_response.json
 
                 # Safety: ensure response is an iterable list. Stop pagination if no response or empty list is returned

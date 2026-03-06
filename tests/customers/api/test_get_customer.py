@@ -6,8 +6,11 @@ from json import loads
 
 from tests.shared.schemas.customer import error_schema
 from EcommerceAPI.src.customers.schemas.customer_schema_validator import validate_customer_response_schema
-from EcommerceAPI.src.customers.validators.customer_validators import assert_customer_not_found_error, \
-    assert_customer_retrieved_successfully, assert_customer_exists_and_matches_api
+from EcommerceAPI.src.customers.validators.customer_validators import (assert_customer_not_found_error,
+                                                                       assert_customer_retrieved_successfully,
+                                                                       assert_customer_exists_and_matches_api,
+                                                                       assert_customer_identity,
+                                                                       assert_single_customer_by_email)
 
 logger = logging.getLogger(__name__)
 #  logger.setLevel(logging.DEBUG)  # already set in pytest.ini
@@ -61,18 +64,30 @@ def test_get_customer_by_email(customer_helper, customers_dao, create_valid_cust
     # 🔍 Get customer by EMAIL and validate
     # ------------------------------------------------------------
     logger.info(f"🔎 Fetching customer by email: {email}")
-    customer_from_get = customer_helper.get_customer_by_email(email=email)
+    response = customer_helper.get_customer_by_email(
+        email=email,
+        return_http_response=True
+    )
 
-    assert customer_from_get["id"] == customer_id, (f"❌ Mismatched ID: Expected {customer_id}, "
-                                                    f"got {customer_from_get['id']}")
-    assert customer_from_get["email"] == email, (f"❌ Mismatched email: Expected {email}, "
-                                                 f"got {customer_from_get['email']}")
-    logger.info(f"✅ Fetched customer by email matches created one: ID={customer_id}, Email={email}")
+    # ✅ Transport validation (tests own status validation)
+    assert response.status_code == 200
+
+    # WooCommerce returns a LIST when filtering by email
+    customers = response.json
+
+    # Extract correct customer using validator.
+    # This endpoint returns a list, so we must enforce exactly one match.
+    customer_from_get = assert_single_customer_by_email(customers, email)
+
+    # Validate identity
+    assert_customer_identity(customer_from_get, customer_id, email)
+
+    logger.info(
+        f"✅ Fetched customer by email matches created one: ID={customer_id}, Email={email}"
+    )
     # ------------------------------------------------------------------
     # 📋 Schema Validation (GET response)
     # ------------------------------------------------------------------
-    # The validate_customer_response_schema(customer_from_get) is validating the response from:GET /customers/{id}
-    validate_customer_response_schema(customer=customer_from_get)
 
     # ---------------------------------------------------------------------------------------------------------
     # 🔍 Confirm customer exists in DB and API GET response matches DB.
@@ -160,6 +175,7 @@ def test_get_customer_by_id(customer_helper, customers_dao, create_valid_custome
 
     logger.info(f"🔎 Fetching customer by ID: {customer_id}")
     # By setting flag "return_http_response=True" it returns HttpResponse necessary to validate status_code, headers...
+    # This endpoint returns ONE object, not list So assert_single_customer_by_email() should NOT be used.
     response = customer_helper.get_customer_by_id(
         customer_id,
         return_http_response=True
@@ -175,10 +191,8 @@ def test_get_customer_by_id(customer_helper, customers_dao, create_valid_custome
     # 🔍 Get customer by ID and validate
     # ------------------------------------------------------------
 
-    assert customer_data["id"] == customer_id, (f"❌ Mismatched ID: Expected {customer_id}, "
-                                                f"got {customer_data['id']}")
-    assert customer_data["email"] == email, (f"❌ Mismatched email: Expected {email}, "
-                                             f"got {customer_data['email']}")
+    assert_customer_identity(customer_data, customer_id, email)
+
     logger.info(f"✅ Fetched customer by ID matches created one: ID={customer_id}, Email={email}")
 
     # ------------------------------------------------------------------

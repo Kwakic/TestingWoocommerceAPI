@@ -21,14 +21,92 @@ This module is the SINGLE ENTRY POINT for all customer validations (business rul
     - Tests (optional) ✅
 
 API + business:
-    assert_valid_customer_response → structure
-    _find_customer_by_email → locating entity
-    assert_valid_customer_in_api → API validation
-    assert_customer_integrity
+    assert_valid_customer_response → Structure validation
+    _find_customer_by_email → API validation
+    assert_customer_creation_failed → error validation
+    assert_customer_not_found_error → error validation
+    assert_customer_retrieved_successfully → Error validation
+    assert_customer_exists_and_matches_api → API + DB validation (low level)
+
+------------------------------------------------------------------
+In enterprise test frameworks the usual rule is:
+    - Validators should NOT fetch data.
+    - Validators should only validate.
+------------------------------------------------------------------
+
+Tests / helpers responsible for:
+    fetching
+    orchestration
+    workflow
+
+Validators responsible for:
+    data validation
+    business rules
+    consistency checks
+------------------------------------------------------------------
+
+The correct architecture is:
+
+    TEST / HELPER
+         ↓
+    FETCH DATA (API / DAO)
+         ↓
+    VALIDATORS
+         ↓
+    SCHEMAS (Pydantic)
+
+------------------------------------------------------------------
+
+Flow:
+
+    TEST
+     ↓
+    HELPER
+     ↓
+    API CLIENT
+     ↓
+    VALIDATORS
+     ↓
+    PYDANTIC
+     ↓
+    DB VALIDATORS
+
+------------------------------------------------------------------
+The validator file should contain:
+
+    STRUCTURE
+    ---------
+    assert_valid_customer_response
+
+    API VALIDATION
+    --------------
+    assert_valid_customer_in_api
+    assert_customer_exists_and_matches_api
+
+    ERROR VALIDATION
+    ----------------
     assert_customer_creation_failed
     assert_customer_not_found_error
     assert_customer_retrieved_successfully
-    assert_customer_exists_and_matches_api
+
+------------------------------------------------------------------
+
+POST /customers            → schema validation
+GET /customers/{id}        → schema validation
+GET /customers?filters     → identity + DB validation
+
+That is exactly what enterprise QA frameworks do.
+
+------------------------------------------------------------------
+
+Tests should NOT orchestrate API + DB + validators manually.
+
+------------------------------------------------------------------
+Helpers should provide a single verification entrypoint.
+------------------------------------------------------------------
+
+------------------------------------------------------------------
+
 """
 
 from typing import List, Dict, Any
@@ -109,107 +187,48 @@ def _find_customer_by_email(
     email: str
 ) -> CustomerModel:
     """
-    Internal helper that finds a customer by email and validates structure.
+    Locate a customer by email and validate structure.
 
-    This function centralizes the logic for locating a customer
-    in an API response and converting it into a validated Pydantic model.
+    Use only when: Extracting single customer from filtered API response.
+    """
 
-    It guarantees:
-        - Exactly one customer exists
-        - Structure is valid
+    for customer in customers:
+        if customer.get("email") == email:
+            return assert_valid_customer_response(customer)
+
+    raise AssertionError(f"❌ No customer found for email: {email}")
+
+
+def assert_single_customer_by_email(
+    customers: List[Dict[str, Any]],
+    email: str
+) -> Dict[str, Any]:
+    """
+    Ensure exactly ONE customer exists in dataset.
+
+    Used when validating dataset responses (pagination).
+
+    Enforce uniqueness in dataset.
+
+    Use it ONLY when:
+        - endpoint returns LIST
+        - you expect exactly one record
+
+    Use it ONLY when you fetch a dataset (list endpoint):
+    Example dataset:
+        GET /customers
+        GET /customers?email=
+        GET /customers?page=1
+
     """
 
     matches = [c for c in customers if c.get("email") == email]
 
-    assert matches, f"❌ No customer found for email: {email}"
-
     assert len(matches) == 1, (
-        f"❌ Expected 1 customer, found {len(matches)} for {email}"
+        f"❌ Expected 1 customer for {email}, found {len(matches)}"
     )
 
-    raw_customer = matches[0]
-
-    return assert_valid_customer_response(raw_customer)
-
-
-# ------------------------------------------------------------------
-# 🧪 API RESPONSE VALIDATION (STRUCTURE + BUSINESS)
-# ------------------------------------------------------------------
-def assert_valid_customer_in_api(
-    customers: List[Dict[str, Any]],
-    email: str
-) -> CustomerModel:
-
-    customer = _find_customer_by_email(customers, email)
-
-    assert customer.email == email
-
-    logger.info(
-        "✅ Assertion passed: Customer exists in API response "
-        "(id=%s, email=%s)",
-        customer.id,
-        customer.email
-    )
-
-    return customer
-
-
-def assert_customer_integrity(
-    helper,
-    dao,
-    email: str
-) -> CustomerModel:
-    """
-    High-level validator that verifies customer integrity
-    across API and database.
-
-    This validator performs the full validation pipeline:
-
-        1️⃣ Fetch customer via API
-        2️⃣ Validate API response structure + business logic
-        3️⃣ Fetch DB record
-        4️⃣ Validate API ↔ DB consistency
-
-    Args:
-        helper:
-            CustomersHelper instance
-
-        dao:
-            CustomersDao instance
-
-        email (str):
-            Customer email used as identifier
-
-    Returns:
-        CustomerModel:
-            Validated customer object
-
-    Example usage in tests:
-
-        assert_customer_integrity(customer_helper, customers_dao, email)
-    """
-
-    # -------------------------------------------------------
-    # 🌐 API FETCH
-    # -------------------------------------------------------
-    customers = helper.list_customers_paginated(email=email)
-
-    # -------------------------------------------------------
-    # API VALIDATION
-    # -------------------------------------------------------
-    customer = assert_valid_customer_in_api(customers, email)
-
-    # -------------------------------------------------------
-    # DB FETCH
-    # -------------------------------------------------------
-    db_customer = dao.get_customer_by_email(email)
-
-    # -------------------------------------------------------
-    # DB VALIDATION
-    # -------------------------------------------------------
-    assert_customer_matches_db(customer, db_customer)
-
-    return customer
+    return matches[0]
 
 
 def assert_customer_creation_failed(response: dict):
@@ -286,8 +305,7 @@ def assert_customer_exists_and_matches_api(
         db_customer: Dict[str, Any],
 ) -> None:
     """
-    Validate that a customer exists in the API response
-    and matches the corresponding database record.
+    Validate that API response contains the expected customer and that it matches the database record.
 
     This validator performs two layers of checks:
 
@@ -320,15 +338,12 @@ def assert_customer_exists_and_matches_api(
 
     logger.debug("⚙️ Validating existence of customer by email: %s", email)
 
-    # -------------------------------------------------------
-    # 🌐 API VALIDATION
-    # -------------------------------------------------------
-    # This ensures the customer exists and structure is valid.
-    customer = assert_valid_customer_in_api(customers, email)
+    customer = _find_customer_by_email(customers, email)
 
     logger.info(
-        "✅ Assertion passed: Customer found via API (id=%s)",
-        customer.id
+        "✅ Customer found in API response (id=%s, email=%s)",
+        customer.id,
+        customer.email
     )
 
     # -------------------------------------------------------
@@ -338,6 +353,29 @@ def assert_customer_exists_and_matches_api(
     assert_customer_matches_db(customer, db_customer)
 
     logger.info(
-        "✅ Assertion passed: Customer record validated in DB for ID=%s",
+        "✅ Customer matches database record (ID=%s)",
         db_customer["ID"]
+    )
+
+
+def assert_customer_identity(
+    customer: dict,
+    expected_id: int,
+    expected_email: str
+) -> None:
+    """
+    Validate that returned customer matches expected identity.
+
+    This validator is intentionally simple and focused:
+        - ensures the correct resource was returned
+        - improves readability in tests
+        - removes duplicated assertions across test suite
+    """
+
+    assert customer["id"] == expected_id, (
+        f"❌ Mismatched ID: expected {expected_id}, got {customer['id']}"
+    )
+
+    assert customer["email"] == expected_email, (
+        f"❌ Mismatched email: expected {expected_email}, got {customer['email']}"
     )

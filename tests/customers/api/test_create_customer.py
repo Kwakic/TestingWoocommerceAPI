@@ -5,8 +5,7 @@ from faker import Faker  # To avoid hardcoding, we use faker to generate fake da
 
 from EcommerceAPI.src.utilities.bulk_ops import bulk_create_and_validate_resources
 from EcommerceAPI.src.customers.schemas.customer_schema_validator import validate_customer_error_response_schema
-from EcommerceAPI.src.customers.validators.customer_validators import assert_customer_creation_failed, \
-     assert_customer_integrity
+from EcommerceAPI.src.customers.validators.customer_validators import assert_customer_creation_failed
 
 faker = Faker()
 
@@ -126,8 +125,12 @@ def test_bulk_create_customers(qty, customer_helper, customers_dao, create_valid
         Args:
             email (str): Unique identifier used to search for the customer
         """
+
         # API Fetch + API VALIDATION + DB FETCH + DB VALIDATION
-        assert_customer_integrity(customer_helper, customers_dao, email)
+        customer_helper.assert_customer_exists_and_matches_db(
+            email=email,
+            dao=customers_dao
+        )
 
     # -------------------------------------------------------
     # 🚀 Run the bulk utility: create + validate + teardown
@@ -213,7 +216,10 @@ def test_bulk_create_customers_edge_cases(qty, customer_helper, customers_dao, c
             email (str): Unique identifier used to search for the customer
         """
         # API Fetch + API VALIDATION + DB FETCH + DB VALIDATION
-        assert_customer_integrity(customer_helper, customers_dao, email)
+        customer_helper.assert_customer_exists_and_matches_db(
+            email=email,
+            dao=customers_dao
+        )
 
     # -------------------------------------------------------
     # 🚀 Run the bulk utility: create + validate + teardown
@@ -272,7 +278,10 @@ def test_create_single_customer_with_email_and_password_only(customer_helper, cu
     email = customer["email"]
 
     # API Fetch + API VALIDATION + DB FETCH + DB VALIDATION
-    assert_customer_integrity(customer_helper, customers_dao, email)
+    customer_helper.assert_customer_exists_and_matches_db(
+        email=email,
+        dao=customers_dao
+    )
 
     logger.info("🎯 Full validation complete for customer ID: %r", customer_id)
 
@@ -362,10 +371,13 @@ def test_create_customer_with_varied_addresses(
     # To keep the customer in the DB (i.e., skip deletion), pass: customer = create_customer_for_test(skip_cleanup=True)
     customer = create_valid_customer(billing=billing, shipping=shipping)
     customer_id = customer["id"]
-    customer_email = customer["email"]
+    email = customer["email"]
 
     # API Fetch + API VALIDATION + DB FETCH + DB VALIDATION
-    assert_customer_integrity(customer_helper, customers_dao, customer_email)
+    customer_helper.assert_customer_exists_and_matches_db(
+        email=email,
+        dao=customers_dao
+    )
 
     logger.info("🎯 Full validation complete for customer ID: %r", customer_id)
 
@@ -503,7 +515,10 @@ def test_create_customer_fail_for_existing_email(create_valid_customer, customer
     response = http_response.json
 
     # API Fetch + API VALIDATION + DB FETCH + DB VALIDATION
-    assert_customer_integrity(customer_helper, customers_dao, email)
+    customer_helper.assert_customer_exists_and_matches_db(
+        email=email,
+        dao=customers_dao
+    )
 
     # --------------------------------------------
     # 📋 Validate error schema and contents

@@ -63,11 +63,15 @@ def test_update_customer_first_name(customer_helper, customers_dao, create_valid
                 f"and email='{updated_email}'")
 
     # Use the helper's injected api_client (singular) to perform raw update call
-    update_response = customer_helper.update_customer(
+    response = customer_helper.update_customer(
         customer_id,
         payload={"first_name": updated_first_name, "email": updated_email},
-        expected_status_code=200
+        return_http_response=True
     )
+
+    assert response.status_code == 200
+
+    update_response = response.json
 
     assert update_response["first_name"] == updated_first_name, (
         f"❌ First name update failed. Expected: '{updated_first_name}', Got: '{update_response.get('first_name')}'"

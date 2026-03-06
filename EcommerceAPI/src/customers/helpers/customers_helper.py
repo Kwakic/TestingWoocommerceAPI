@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Optional, List, Dict, Any
 
+from EcommerceAPI.src.customers.validators.customer_validators import assert_customer_exists_and_matches_api
 from EcommerceAPI.src.utilities.pagination_utils import paginate_all_results
 from EcommerceAPI.src.utilities.genericUtilities import generate_random_email_and_password
 from EcommerceAPI.src.utilities.exceptions import UnexpectedStatusCodeError, SchemaValidationError
@@ -472,6 +473,42 @@ class CustomersHelper(object):
 
         # ✅ Return all valid customers that passed date filter
         return filtered_customers
+
+    def assert_customer_exists_and_matches_db(self, email: str, dao) -> None:
+        """
+        High-level helper that validates that a customer exists
+        in the API and matches the database record.
+
+        Responsibilities:
+            - Fetch customer list from API
+            - Fetch customer record from DB
+            - Call validation layer
+
+        This keeps tests clean and avoids repeated boilerplate.
+
+        Args:
+            email (str): Customer email used to locate the resource.
+            dao: Customer DAO instance.
+        """
+
+        logger.debug("🔎 Validating customer integrity for email=%s", email)
+
+        # -----------------------------
+        # API fetch
+        # -----------------------------
+        customers = self.list_customers_paginated(email=email)
+
+        # -----------------------------
+        # DB fetch
+        # -----------------------------
+        db_customer = dao.get_customer_by_email(email)
+
+        # -----------------------------
+        # Assertion layer
+        # -----------------------------
+        assert_customer_exists_and_matches_api(customers, email, db_customer)
+
+        logger.info("✅ Customer validated against API and DB (email=%s)", email)
 
 
 # # NOTE!! Keep this main block for local debugging only. Remove or guard it before committing if you prefer to avoid
