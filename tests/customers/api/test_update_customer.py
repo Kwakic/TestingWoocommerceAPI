@@ -3,7 +3,6 @@ import logging
 
 from jsonschema import validate
 
-from EcommerceAPI.src.customers.validators.customer_validators import assert_customer_exists_and_matches_api
 from tests.shared.schemas.customer import error_schema
 from EcommerceAPI.src.customers.schemas.customer_schema_validator import validate_customer_response_schema
 
@@ -88,17 +87,9 @@ def test_update_customer_first_name(customer_helper, customers_dao, create_valid
     validate_customer_response_schema(customer=update_response)
 
     # ---------------------------------------------------------------------------------------------------------
-    # 🔍 Confirm customer exists in DB and API GET response matches DB.
-    # 🧩 Schema Validation (it checks that the GET response is valid).
+    #  Fetch customer list from API + Fetch customer record from DB + Call validation layer
     # ---------------------------------------------------------------------------------------------------------
-    # 1️⃣ Fetch (helper responsibility)
-    customers = customer_helper.list_customers_paginated(email=updated_email)
-
-    # 2️⃣ DB
-    db_customer = customers_dao.get_customer_by_email(updated_email)
-
-    # 3️⃣ Assert (assertion layer)
-    assert_customer_exists_and_matches_api(customers, updated_email, db_customer)
+    customer_helper.assert_customer_exists_and_matches_db(updated_email, customers_dao)
 
     logger.info("🎯 Full validation complete for customer ID: %r", customer_id)
 

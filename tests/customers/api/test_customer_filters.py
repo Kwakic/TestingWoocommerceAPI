@@ -1,10 +1,8 @@
 import pytest
 import logging
 from dateutil.parser import isoparse  # For robust ISO date parsing
-from jsonschema import validate
 
-from EcommerceAPI.src.customers.validators.customer_validators import assert_customer_exists_and_matches_api
-from tests.shared.schemas.customer import customer_schema
+from EcommerceAPI.src.customers.validators.customer_validators import assert_valid_customer_response
 from EcommerceAPI.src.utilities.date_timestamp_utils import get_customers_in_window
 
 logger = logging.getLogger(__name__)
@@ -107,21 +105,13 @@ def test_list_customers_created_within_time_range_with_db_check(customer_helper,
     # 📋 Validate schema for each returned customer.
     # -------------------------------------------
     for cust in filtered_customers:
-        validate(instance=cust, schema=customer_schema)
+        assert_valid_customer_response(cust)
     logger.info("📦 All customers in filtered list passed schema validation")
 
     # ---------------------------------------------------------------------------------------------------------
-    # 🔍 Confirm customer exists in DB and API GET response matches DB.
-    # 🧩 Schema Validation (it checks that the GET response is valid).
+    #  Fetch customer list from API + Fetch customer record from DB + Call validation layer
     # ---------------------------------------------------------------------------------------------------------
-    # 1️⃣ Fetch (helper responsibility)
-    customers = customer_helper.list_customers_paginated(email=customer_email)
-
-    # 2️⃣ DB
-    db_customer = customers_dao.get_customer_by_email(customer_email)
-
-    # 3️⃣ Assert (assertion layer)
-    assert_customer_exists_and_matches_api(customers, customer_email, db_customer)
+    customer_helper.assert_customer_exists_and_matches_db(customer_email, customers_dao)
 
     logger.info("🎯 Full validation complete for customer ID: %r", customer_id)
 

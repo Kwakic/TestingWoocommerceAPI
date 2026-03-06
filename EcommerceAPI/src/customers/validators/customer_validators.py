@@ -22,11 +22,12 @@ This module is the SINGLE ENTRY POINT for all customer validations (business rul
 
 API + business:
     assert_valid_customer_response → Structure validation
-    _find_customer_by_email → API validation
+    assert_single_customer_by_email → API validation
     assert_customer_creation_failed → error validation
     assert_customer_not_found_error → error validation
-    assert_customer_retrieved_successfully → Error validation
+    assert_customer_retrieved_successfully → Transport validation
     assert_customer_exists_and_matches_api → API + DB validation (low level)
+    assert_customer_identity() → Identity validation
 
 ------------------------------------------------------------------
 In enterprise test frameworks the usual rule is:
@@ -65,6 +66,8 @@ Flow:
      ↓
     API CLIENT
      ↓
+    HttpResponse
+     ↓
     VALIDATORS
      ↓
     PYDANTIC
@@ -100,10 +103,32 @@ That is exactly what enterprise QA frameworks do.
 ------------------------------------------------------------------
 
 Tests should NOT orchestrate API + DB + validators manually.
-
-------------------------------------------------------------------
 Helpers should provide a single verification entrypoint.
+
+The test should not orchestrate DB + API together.
+Helper should e.g. def assert_customer_exists_and_matches_db(self, email: str, dao)
 ------------------------------------------------------------------
+Your framework becomes:
+
+Transport validation
+    ↓
+HttpResponse
+
+Validator layer
+    ↓
+assert_customer_retrieved_successfully()
+
+Structure validation
+    ↓
+CustomerModel (Pydantic)
+
+Business validation
+    ↓
+assert_customer_identity()
+
+Integration validation
+    ↓
+assert_customer_exists_and_matches_db()
 
 ------------------------------------------------------------------
 
@@ -113,7 +138,6 @@ from typing import List, Dict, Any
 import logging
 
 from EcommerceAPI.src.core.http_response import HttpResponse
-from EcommerceAPI.src.customers.schemas.customer_schema_validator import validate_customer_response_schema
 from EcommerceAPI.src.customers.validators.customer_db_validators import (
     assert_customer_matches_db
 )
@@ -182,44 +206,27 @@ def assert_valid_customer_response(customer: Dict[str, Any]) -> CustomerModel:
     # username='testuser_cfitmuyfvq')
 
 
-def _find_customer_by_email(
+def assert_single_customer_by_email(
     customers: List[Dict[str, Any]],
     email: str
 ) -> CustomerModel:
     """
-    Locate a customer by email and validate structure.
+    Validate that exactly ONE customer exists for a given email
+    in a dataset response (list endpoint).
 
-    Use only when: Extracting single customer from filtered API response.
-    """
+    Typical use cases:
+        - GET /customers
+        - GET /customers?email=
+        - paginated dataset responses
 
-    for customer in customers:
-        if customer.get("email") == email:
-            return assert_valid_customer_response(customer)
+    This validator performs:
 
-    raise AssertionError(f"❌ No customer found for email: {email}")
+        1️⃣ Dataset filtering
+        2️⃣ Uniqueness validation
+        3️⃣ Structure validation (Pydantic)
 
-
-def assert_single_customer_by_email(
-    customers: List[Dict[str, Any]],
-    email: str
-) -> Dict[str, Any]:
-    """
-    Ensure exactly ONE customer exists in dataset.
-
-    Used when validating dataset responses (pagination).
-
-    Enforce uniqueness in dataset.
-
-    Use it ONLY when:
-        - endpoint returns LIST
-        - you expect exactly one record
-
-    Use it ONLY when you fetch a dataset (list endpoint):
-    Example dataset:
-        GET /customers
-        GET /customers?email=
-        GET /customers?page=1
-
+    Returns:
+        CustomerModel (validated object)
     """
 
     matches = [c for c in customers if c.get("email") == email]
@@ -228,7 +235,16 @@ def assert_single_customer_by_email(
         f"❌ Expected 1 customer for {email}, found {len(matches)}"
     )
 
-    return matches[0]
+    # Validate structure via Pydantic
+    customer_model = assert_valid_customer_response(matches[0])
+
+    logger.info(
+        "✅ Customer found in dataset: id=%s email=%s",
+        customer_model.id,
+        customer_model.email
+    )
+
+    return customer_model
 
 
 def assert_customer_creation_failed(response: dict):
@@ -281,22 +297,26 @@ def assert_customer_not_found_error(response):
                                                  f"Expected: {{'status': 404}}")
 
 
-def assert_customer_retrieved_successfully(response: HttpResponse) -> dict:  # The response parameter is expected to be
-    # an instance of HttpResponse
+def assert_customer_retrieved_successfully(response: HttpResponse) -> CustomerModel:
     """
-    A thin domain-level assertion
+    Validate successful GET /customers/{id} response.
+
+    Flow:
+        1️⃣ Transport validation
+        2️⃣ Structure validation (Pydantic)
+        3️⃣ Return typed model
     """
+
     assert response.status_code == 200, (
         f"Expected 200, got {response.status_code}. Response: {response.text}"
     )
 
-    # Extract JSON to validate body
     data = response.json
 
-    # later → replace with Pydantic
-    validate_customer_response_schema(data)
+    # 🔒 Structure validation via Pydantic
+    customer_model = assert_valid_customer_response(data)
 
-    return data
+    return customer_model
 
 
 def assert_customer_exists_and_matches_api(
@@ -305,30 +325,31 @@ def assert_customer_exists_and_matches_api(
         db_customer: Dict[str, Any],
 ) -> None:
     """
-    Validate that API response contains the expected customer and that it matches the database record.
+    Validate that a customer exists in the API response and that
+    the returned data matches the database record.
 
-    This validator performs two layers of checks:
+    This validator performs two layers of validation:
 
     1️⃣ API VALIDATION
-        - Ensures the customer exists in the API response
-        - Validates structure using Pydantic
-        - Validates basic business rules
+        - Ensures exactly one customer exists in the dataset
+        - Validates structure via Pydantic
+        - Returns a typed CustomerModel
 
     2️⃣ DATABASE VALIDATION
-        - Confirms API response matches the database record
+        - Confirms API data matches the database record
 
-    This function is commonly used in integration and
+    This validator is commonly used in integration and
     end-to-end tests where both API and DB correctness
     must be verified.
 
     Args:
-        customers (List[Dict[str, Any]]):
-            List of customers returned by the API.
+        customers:
+            Dataset returned by API (GET /customers).
 
-        email (str):
+        email:
             Expected customer email.
 
-        db_customer (Dict[str, Any]):
+        db_customer:
             Database record retrieved via DAO.
 
     Raises:
@@ -338,7 +359,11 @@ def assert_customer_exists_and_matches_api(
 
     logger.debug("⚙️ Validating existence of customer by email: %s", email)
 
-    customer = _find_customer_by_email(customers, email)
+    # -------------------------------------------------------
+    # 1️⃣ DATASET VALIDATION
+    # -------------------------------------------------------
+    # Ensure exactly one customer exists in API dataset and validate structure using Pydantic.
+    customer = assert_single_customer_by_email(customers, email)
 
     logger.info(
         "✅ Customer found in API response (id=%s, email=%s)",
@@ -347,9 +372,9 @@ def assert_customer_exists_and_matches_api(
     )
 
     # -------------------------------------------------------
-    # 🗄️ DB VALIDATION
+    # 2️⃣ DATABASE VALIDATION
     # -------------------------------------------------------
-    # Convert model to dictionary only if needed by DB validator.
+    # Compare API response with database record
     assert_customer_matches_db(customer, db_customer)
 
     logger.info(
@@ -359,23 +384,20 @@ def assert_customer_exists_and_matches_api(
 
 
 def assert_customer_identity(
-    customer: dict,
+    customer: CustomerModel,
     expected_id: int,
     expected_email: str
 ) -> None:
     """
     Validate that returned customer matches expected identity.
 
-    This validator is intentionally simple and focused:
-        - ensures the correct resource was returned
-        - improves readability in tests
-        - removes duplicated assertions across test suite
+    Works with Pydantic CustomerModel.
     """
 
-    assert customer["id"] == expected_id, (
-        f"❌ Mismatched ID: expected {expected_id}, got {customer['id']}"
+    assert customer.id == expected_id, (
+        f"❌ Mismatched ID: expected {expected_id}, got {customer.id}"
     )
 
-    assert customer["email"] == expected_email, (
-        f"❌ Mismatched email: expected {expected_email}, got {customer['email']}"
+    assert customer.email == expected_email, (
+        f"❌ Mismatched email: expected {expected_email}, got {customer.email}"
     )

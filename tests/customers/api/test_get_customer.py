@@ -5,12 +5,12 @@ from jsonschema import validate
 from json import loads
 
 from tests.shared.schemas.customer import error_schema
-from EcommerceAPI.src.customers.schemas.customer_schema_validator import validate_customer_response_schema
+
 from EcommerceAPI.src.customers.validators.customer_validators import (assert_customer_not_found_error,
                                                                        assert_customer_retrieved_successfully,
-                                                                       assert_customer_exists_and_matches_api,
                                                                        assert_customer_identity,
-                                                                       assert_single_customer_by_email)
+                                                                       assert_single_customer_by_email,
+                                                                       assert_valid_customer_response)
 
 logger = logging.getLogger(__name__)
 #  logger.setLevel(logging.DEBUG)  # already set in pytest.ini
@@ -22,85 +22,102 @@ pytestmark = [pytest.mark.customers, pytest.mark.regresion]
 @pytest.mark.tcid13
 def test_get_customer_by_email(customer_helper, customers_dao, create_valid_customer):
     """
-    !!!!!we have the same to create customer i.e. tcid03, perhaps this test should only retrieve the customer!!!!
+    Verify that a created customer can be retrieved using the query endpoint:
+        GET /customers?email={email}
 
-    Validate that a created customer can be retrieved by email (a custom query like GET /customers?email={email}).
-    It validates the following aspects:
-        - API response structure (schema validation) after POST /customers
-        - Critical fields (`id`, `email`, etc.) are present and correct
-        - Customer appears in GET /customers endpoint and matches DB
-        - API response matches DB record
-        - Logging and traceability (via logger + correlation_id where applicable)
-        - Cleanup is automatic unless explicitly skipped
-        - Generates unique correlation ID for logs for better traceability
+    This test validates the full retrieval workflow across multiple layers:
 
-    🔧 Behind the scenes:
-    - It uses a factory fixture: `create_valid_customer(...)` which calls:
-        - `customer_helper.create_customer(...)` → handles API POST
-        - Automatically validates:
-            - Response schema via `validate_customer_response_schema(...)`
-            - Critical fields via `assert_valid_customer_response(...) such as email and ID`
-            - Registers the customer for teardown (unless skip_cleanup=True)
-    - Returns full customer dict (e.g., `{"id": 123, "email": ..., "username": ...}`)
+    1️⃣ Customer creation (handled by fixture)
+    2️⃣ Transport layer correctness (HTTP status code)
+    3️⃣ API response correctness
+    4️⃣ Identity validation (returned customer matches created one)
+    5️⃣ API ↔ DB consistency validation
 
-    Test authors:
-    Access to helpers and DAOs is made via fixtures
-        - Do NOT instantiate helpers
-        - Do NOT delete customers manually
-        - Do NOT query DB directly without DAO
+    IMPORTANT:
+    - The fixture `create_valid_customer()` already validates the POST response
+      (structure + critical fields) and registers cleanup.
+    - Therefore, this test focuses ONLY on validating the GET endpoint behavior.
+
+    Validation coverage:
+        ✔ Transport validation (status_code)
+        ✔ Dataset validation (list endpoint)
+        ✔ Identity validation
+        ✔ API ↔ DB consistency
     """
+
     # -------------------------------------------
-    # ✅ Create customer using factory fixture
+    # 🛠 Step 1 — Create a valid customer
     # -------------------------------------------
     logger.info("🛠 Creating a test customer via factory fixture.")
-    # To keep the customer in the DB (i.e., skip deletion), set: customer = create_customer_for_test(skip_cleanup=True)
-    customer = create_valid_customer()  # Default: skip_cleanup=False, validate_response=True
-    # No need to assert ID/email. The fixture already does it: customer_helper.assert_valid_customer_response(customer)
+
+    # Fixture handles:
+    #   - POST /customers
+    #   - Pydantic validation
+    #   - automatic cleanup registration
+    customer = create_valid_customer()
 
     customer_id = customer["id"]
     email = customer["email"]
 
-    # ------------------------------------------------------------
-    # 🔍 Get customer by EMAIL and validate
-    # ------------------------------------------------------------
-    logger.info(f"🔎 Fetching customer by email: {email}")
+    # -------------------------------------------
+    # 🔎 Step 2 — Retrieve customer via email filter
+    # -------------------------------------------
+    logger.info("🔎 Fetching customer by email: %s", email)
+
+    # return_http_response=True allows us to validate transport layer
     response = customer_helper.get_customer_by_email(
         email=email,
         return_http_response=True
     )
 
-    # ✅ Transport validation (tests own status validation)
-    assert response.status_code == 200
+    # -------------------------------------------
+    # 🚦 Step 3 — Transport validation (FAIL FAST)
+    # -------------------------------------------
+    # Enterprise rule:
+    # Tests validate status codes explicitly.
+    assert response.status_code == 200, (
+        f"Expected 200, got {response.status_code}. Response: {response.text}"
+    )
 
-    # WooCommerce returns a LIST when filtering by email
+    # -------------------------------------------
+    # 📦 Step 4 — Extract dataset
+    # -------------------------------------------
+    # This endpoint returns a LIST of customers.
     customers = response.json
 
-    # Extract correct customer using validator.
-    # This endpoint returns a list, so we must enforce exactly one match.
-    customer_from_get = assert_single_customer_by_email(customers, email)
-
-    # Validate identity
-    assert_customer_identity(customer_from_get, customer_id, email)
+    # -------------------------------------------
+    # 🔍 Step 5 — Extract the correct customer
+    # -------------------------------------------
+    # Since the endpoint returns a dataset, we enforce that exactly ONE customer exists for the queried email.
+    # Extract correct customer from dataset (dict)
+    customer_model = assert_single_customer_by_email(
+        customers,
+        email
+    )
+    # -------------------------------------------
+    # 🧠 Step 6 — Identity validation
+    # -------------------------------------------
+    # Convert raw dict → validated CustomerModel
+    # Ensure the retrieved customer matches the one we created.
+    assert_customer_identity(customer_model, customer_id, email)
 
     logger.info(
-        f"✅ Fetched customer by email matches created one: ID={customer_id}, Email={email}"
+        "✅ Fetched customer matches created one: ID=%s, Email=%s",
+        customer_id,
+        email
     )
-    # ------------------------------------------------------------------
-    # 📋 Schema Validation (GET response)
-    # ------------------------------------------------------------------
 
-    # ---------------------------------------------------------------------------------------------------------
-    # 🔍 Confirm customer exists in DB and API GET response matches DB.
-    # 🧩 Schema Validation (it checks that the GET response is valid).
-    # ---------------------------------------------------------------------------------------------------------
-    # 1️⃣ Fetch (helper responsibility)
-    customers = customer_helper.list_customers_paginated(email=email)
-
-    # 2️⃣ DB
-    db_customer = customers_dao.get_customer_by_email(email)
-
-    # 3️⃣ Assert (assertion layer)
-    assert_customer_exists_and_matches_api(customers, email, db_customer)
+    # -------------------------------------------
+    # 🗄 Step 7 — API vs DB consistency validation
+    # -------------------------------------------
+    # Helper orchestrates:
+    #   - API fetch
+    #   - DB lookup
+    #   - API ↔ DB validation
+    customer_helper.assert_customer_exists_and_matches_db(
+        email,
+        customers_dao
+    )
 
     logger.info("🎯 Full validation complete for customer ID: %r", customer_id)
 
@@ -108,111 +125,73 @@ def test_get_customer_by_email(customer_helper, customers_dao, create_valid_cust
 @pytest.mark.tcid14
 def test_get_customer_by_id(customer_helper, customers_dao, create_valid_customer):
     """
-    Validate that a created customer can be retrieved by ID (validates the endpoint GET /customers/{id}).
+    Validate that a created customer can be retrieved by ID (GET /customers/{id}).
 
-    It validates the following aspects:
-        - API response structure (schema validation) after POST /customers
-        - Critical fields (`id`, `email`, etc.) are present and correct
-        - Customer appears in GET /customers endpoint and matches DB
-        - API response matches DB record
-        - Logging and traceability (via logger + correlation_id where applicable)
-        - Cleanup is automatic unless explicitly skipped
-        - Generates unique correlation ID for logs for better traceability
+    What this test validates:
+        - Customer can be fetched via API after creation
+        - Transport layer status code is correct
+        - API response structure is valid (Pydantic validation)
+        - Returned customer matches the created one
+        - API data is consistent with DB
 
-    🔧 Behind the scenes:
-    - It uses a factory fixture: `create_valid_customer(...)` which calls:
-        - `customer_helper.create_customer(...)` → handles API POST
-        - Automatically validates:
-            - Response schema via `validate_customer_response_schema(...)`
-            - Critical fields via `assert_valid_customer_response(...) such as email and ID`
-            - Registers the customer for teardown (unless skip_cleanup=True)
-    - Returns full customer dict (e.g., `{"id": 123, "email": ..., "username": ...}`)
-
-    Test authors:
-    Access to helpers and DAOs is made via fixtures
-        - Do NOT instantiate helpers
-        - Do NOT delete customers manually
-        - Do NOT query DB directly without DAO
-
-    Verify that a customer can be retrieved by ID.
-
-    🧠 FLOW:
-    --------
-    1. Create a valid customer using fixture (already validated & safe)
-    2. Call GET endpoint using helper (HttpResponse mode)
-    3. Validate transport layer (status_code)
-    4. Extract JSON body
-    5. Validate business data
-
-    WHY:
-    ----
-    - Fixture ensures valid setup (no need to revalidate creation)
-    - Test owns status_code validation (fail-fast)
-    - Business validators remain clean and focused
-
-    EXPECTED:
-    ---------
-    - Status code: 200
-    - Returned customer matches created customer
-
-    NOTE related to create_valid_customer() fixture:
-    To keep the customer in the DB (i.e., skip deletion), set: customer = create_customer_for_test(skip_cleanup=True)
-    No need to assert ID/email. The fixture already does it: customer_helper.assert_valid_customer_response(customer)
-    Default: skip_cleanup=False, validate_response=True
+    NOTE:
+        The fixture `create_valid_customer()` already validates the POST response.
+        Therefore, this test only validates the GET endpoint behavior.
     """
+
     # -------------------------------------------
-    # Setup (fixture handles POST 201)
+    # 🛠 Step 1 — Create a valid customer
     # -------------------------------------------
     logger.info("🛠 Creating a test customer via factory fixture.")
-    # Create customer using factory fixture
+
+    # The fixture already validates POST response and registers cleanup.
     customer = create_valid_customer()
 
-    # ------------------------------------------------------------
-    # Act (GET) Get customer by ID and validate
-    # ------------------------------------------------------------
     customer_id = customer["id"]
     email = customer["email"]
 
+    # -------------------------------------------
+    # 🔎 Step 2 — Retrieve customer via API
+    # -------------------------------------------
     logger.info(f"🔎 Fetching customer by ID: {customer_id}")
-    # By setting flag "return_http_response=True" it returns HttpResponse necessary to validate status_code, headers...
-    # This endpoint returns ONE object, not list So assert_single_customer_by_email() should NOT be used.
+
+    # return_http_response=True gives us the HttpResponse wrapper which allows status code validation and debugging.
     response = customer_helper.get_customer_by_id(
         customer_id,
         return_http_response=True
     )
 
-    # ------------------------------------------------------------
-    # Transport validation (TEST responsibility - FAIL FAST)
-    # Extract JSON to validate body
-    # ------------------------------------------------------------
-    customer_data = assert_customer_retrieved_successfully(response)
+    # -------------------------------------------
+    # 🚦 Step 3 — Transport + structure validation
+    # -------------------------------------------
+    # This validator performs:
+    #   1️⃣ status_code validation (fail-fast)
+    #   2️⃣ Pydantic structure validation
+    #   3️⃣ returns a typed CustomerModel
+    customer_model = assert_customer_retrieved_successfully(response)
 
-    # ------------------------------------------------------------
-    # 🔍 Get customer by ID and validate
-    # ------------------------------------------------------------
+    # -------------------------------------------
+    # 🔍 Step 4 — Business validation
+    # -------------------------------------------
+    # Ensure we retrieved the correct customer
+    assert_customer_identity(customer_model, customer_id, email)
 
-    assert_customer_identity(customer_data, customer_id, email)
-
-    logger.info(f"✅ Fetched customer by ID matches created one: ID={customer_id}, Email={email}")
-
-    # ------------------------------------------------------------------
-    # 📋 Schema Validation (GET response)
-    # ------------------------------------------------------------------
-    # The validate_customer_response_schema(customer_from_get) is validating the response from:GET /customers/{id}
-    validate_customer_response_schema(customer=customer_data)
-
-    # ---------------------------------------------------------------------------------------------------------
-    # 🔍 Confirm customer exists in DB and API GET response matches DB.
-    # 🧩 Schema Validation (it checks that the GET response is valid).
-    # ---------------------------------------------------------------------------------------------------------
-    # 1️⃣ Fetch (helper responsibility)
-    customers = customer_helper.list_customers_paginated(email=email)
-
-    # 2️⃣ DB
-    db_customer = customers_dao.get_customer_by_email(email)
-
-    # 3️⃣ Assert (assertion layer)
-    assert_customer_exists_and_matches_api(customers, email, db_customer)
+    logger.info(
+        "✅ Fetched customer matches created one: ID=%s, Email=%s",
+        customer_id,
+        email
+    )
+    # -------------------------------------------
+    # 🗄 Step 5 — API vs DB consistency validation
+    # -------------------------------------------
+    # Helper orchestrates:
+    #   - GET /customers list
+    #   - DB lookup via DAO
+    #   - API vs DB validation
+    customer_helper.assert_customer_exists_and_matches_db(
+        email,
+        customers_dao
+    )
 
     logger.info("🎯 Full validation complete for customer ID: %r", customer_id)
 

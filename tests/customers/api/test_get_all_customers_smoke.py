@@ -1,14 +1,11 @@
 
 import pytest
 import logging
-from jsonschema import validate
 from unittest.mock import patch
 from datetime import timedelta
 
-from tests.shared.schemas.customer import customer_schema
+from EcommerceAPI.src.customers.validators.customer_validators import assert_valid_customer_response
 from EcommerceAPI.src.utilities.date_timestamp_utils import get_now_utc_floor, to_iso_utc, safe_parse_utc_datetime
-
-from EcommerceAPI.src.customers.helpers.customers_helper import CustomersHelper
 
 logger = logging.getLogger(__name__)
 #  logger.setLevel(logging.DEBUG)  # already set in pytest.ini
@@ -40,7 +37,7 @@ def test_get_all_customers_list_not_empty_and_valid_schema(customer_helper, cust
     # Validate schema of each customer returned
     for cust in customers:
         try:
-            validate(instance=cust, schema=customer_schema)
+            assert_valid_customer_response(cust)
         except Exception as e:
             pytest.fail(f"❌ Customer schema validation failed for ID={cust.get('id')}: {e}")
 
@@ -89,7 +86,7 @@ def test_get_all_customers_pagination_boundary(customer_helper, customers_dao):
     # Validate schema on all customers
     for cust in all_customers:
         try:
-            validate(instance=cust, schema=customer_schema)
+            assert_valid_customer_response(cust)
         except Exception as e:
             logger.error(f"❌ Schema validation failed for customer ID={cust.get('id')}: {e}")
             logger.debug(f"Offending customer JSON: {cust}")
