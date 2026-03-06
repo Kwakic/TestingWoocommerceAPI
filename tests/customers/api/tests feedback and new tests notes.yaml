@@ -217,3 +217,12 @@
 #RequestUtility._request_with_backoff()
 #    ↓
 #requests.Session.request(method="post", ...)
+
+
+# Update test:
+# def test_validate_date_modified_and_date_modified_gmt():
+#    """
+#    Make sure that attributes date_modified and date_modified_gmt change accordingly their value in DB
+#    when updated.
+#    """
+#    pass

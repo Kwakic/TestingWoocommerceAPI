@@ -45,7 +45,6 @@ if TYPE_CHECKING:
     from tests.conftest import api_base_url as _api_base_url_fixture
 
 from EcommerceAPI.src.shared.helpers.cleanup_helpers import set_default_api_client
-from EcommerceAPI.src.customers.schemas.customer_schema_validator import validate_customer_response_schema
 from EcommerceAPI.src.customers.validators.customer_validators import assert_valid_customer_response
 from EcommerceAPI.src.clients.api_client import APIClient
 
@@ -199,9 +198,8 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
         # -----------------------------------------
         customer = response.json
         # -----------------------------------------
-        # 4️⃣ Schema + domain validation
+        # 4️⃣ Structure + business validation via Pydantic
         # -----------------------------------------
-        validate_customer_response_schema(customer)
         assert_valid_customer_response(customer)
 
         # -----------------------------------------

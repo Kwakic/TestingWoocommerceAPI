@@ -232,22 +232,20 @@ class HttpResponse:
             content=response.content
         )
 
+    # It returns raw requests.Response
+    # This response is a full requests.Response object from the requests library, which includes:
+    #     .status_code → e.g., 200, 400
+    #     .headers → response headers
+    #     .json() → parsed JSON body (if possible)
+    #     .text → raw response body as a string
+    #     .url → full URL that was hit
+    #     .elapsed → elapsed time
 
-# It returns raw requests.Response
-# This response is a full requests.Response object from the requests library, which includes:
-#     .status_code → e.g., 200, 400
-#     .headers → response headers
-#     .json() → parsed JSON body (if possible)
-#     .text → raw response body as a string
-#     .url → full URL that was hit
-#     .elapsed → elapsed time
+    # # To see the entire raw response log the following:
 
-
-# # To see the entire raw response log the following:
-
-# logger.debug(f"""🌐 Raw Response:
-# Status: {response.status_code}
-# URL: {response.url}
-# Headers: {response.headers}
-# Body:{response.text}
-# """)
+    # logger.debug(f"""🌐 Raw Response:
+    # Status: {response.status_code}
+    # URL: {response.url}
+    # Headers: {response.headers}
+    # Body:{response.text}
+    # """)
