@@ -317,3 +317,75 @@ HttpResponse → safe
 Helper → business
 Test → validation
 ```
+
+
+
+------------------------------------------------------------------
+# 🧪 Validation Layer (NEW)
+
+After the API client returns an HttpResponse, validation happens in
+a dedicated validation pipeline.
+
+Execution flow:
+
+HttpResponse
+     ↓
+Validators
+     ↓
+Pydantic Models
+     ↓
+DB Validators
+
+
+------------------------------------------------------------------
+# 🔄 Complete Execution Flow (Including Validation)
+
+pytest
+ │
+ ▼
+Test
+ │
+ ▼
+Fixture
+ │
+ ▼
+Helper
+ │
+ ▼
+API Layer
+ │
+ ▼
+APIClient
+ │
+ ▼
+HttpResponse
+ │
+ ▼
+Validators
+ │
+ ▼
+Pydantic Models
+ │
+ ▼
+DB Validators
+ │
+ ▼
+Assertions
+
+
+------------------------------------------------------------------
+# 🧠 Design Philosophy
+
+Transport layer responsibilities:
+- send HTTP request
+- receive response
+- wrap response in HttpResponse
+
+Validation layer responsibilities:
+- validate response structure
+- validate business rules
+- validate API/DB consistency
+
+Tests responsibilities:
+- verify expected behaviour
+- perform business assertions

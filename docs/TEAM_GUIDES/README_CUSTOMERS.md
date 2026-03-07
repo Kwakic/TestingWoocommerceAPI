@@ -153,3 +153,44 @@ When in doubt, default to `customer_helper`.
 
 Need examples or help? See the pytest docs: [pytest documentation](https://docs.pytest.org/en/stable/) or ask the 
 framework maintainers on the team channel. 😊
+
+
+------------------------------------------------------------------
+# 🧪 Validation Pattern in Customer Tests (NEW)
+
+Customer tests follow a structured validation pipeline.
+
+Example:
+
+response = customer_helper.get_customer_by_id(customer_id, return_http_response=True)
+
+customer_model = assert_customer_retrieved_successfully(response)
+
+assert_customer_identity(customer_model, customer_id, email)
+
+customer_helper.assert_customer_exists_and_matches_db(email, customers_dao)
+
+
+Validation stages:
+
+Transport validation
+      ↓
+Structure validation (Pydantic)
+      ↓
+Business validation
+      ↓
+DB validation
+
+
+------------------------------------------------------------------
+# 🧠 Why This Pattern Exists
+
+This layered validation approach ensures:
+
+- API responses are structurally valid
+- business rules are verified
+- API and DB remain consistent
+
+It also keeps tests readable for newcomers and prevents duplication
+of validation logic across test files.
+    

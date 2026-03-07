@@ -165,3 +165,80 @@ If you are unsure where to write validation:
 👉 Use `*_assertions.py`
 
 That is the **only place you need to care about**.
+
+
+
+------------------------------------------------------------------
+# 🔄 Framework Evolution — Pydantic Migration (NEW)
+
+⚠️ Historical note:
+This framework originally used **JSON Schema validation**.
+
+It has now migrated to **Pydantic models** for structure validation.
+
+Benefits:
+
+- Strong typing
+- Better validation errors
+- IDE autocompletion
+- Cleaner validator code
+- Easier debugging during test failures
+
+
+------------------------------------------------------------------
+# 🧱 Updated Validation Architecture
+
+The validation pipeline is now:
+
+Structure validation
+        ↓
+API validation
+        ↓
+Business validation
+        ↓
+DB validation
+
+
+------------------------------------------------------------------
+# 🧠 Validator Responsibilities
+
+Validators must **NOT fetch data**.
+
+Validators only validate **data passed to them**.
+
+Correct architecture:
+
+TEST / HELPER
+     ↓
+FETCH DATA (API / DAO)
+     ↓
+VALIDATORS
+     ↓
+PYDANTIC MODELS
+     ↓
+DB VALIDATORS
+
+
+------------------------------------------------------------------
+# 📦 Validator Types in the Framework
+
+STRUCTURE VALIDATION
+--------------------
+CustomerModel (Pydantic)
+
+
+API VALIDATION
+--------------
+assert_valid_customer_response()
+assert_customer_retrieved_successfully()
+
+
+BUSINESS VALIDATION
+-------------------
+assert_customer_identity()
+
+
+INTEGRATION VALIDATION
+----------------------
+assert_customer_matches_db()
+assert_customer_exists_and_matches_api()

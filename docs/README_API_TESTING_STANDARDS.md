@@ -247,3 +247,38 @@ Test → assert
 ---
 
 **End of Document**
+
+
+
+------------------------------------------------------------------
+# 🔄 Structure Validation Update (Pydantic)
+
+The framework now uses **Pydantic models instead of JSON Schema**
+for response structure validation.
+
+Old pattern:
+
+validate_customer_response_schema(customer)
+
+New pattern:
+
+customer_model = CustomerModel(**customer)
+
+Advantages:
+
+- strict typing
+- clearer validation errors
+- easier debugging
+- better IDE support
+
+
+------------------------------------------------------------------
+# Updated Validation Order
+
+Always validate responses in this order:
+
+1. Transport status validation
+2. JSON extraction
+3. Structure validation (Pydantic)
+4. Business validation
+5. Database validation (if applicable)

@@ -1,3 +1,4 @@
+
 import pytest
 import logging
 
@@ -11,26 +12,39 @@ logger = logging.getLogger(__name__)
 
 pytestmark = [pytest.mark.customers, pytest.mark.regression]
 
+# ------------------------------------------------------------------
+# Invalid payloads used for negative update tests
+# ------------------------------------------------------------------
+# Each case contains:
+#   name            → used by pytest for readable test IDs
+#   payload         → update payload sent to the API
+#   expected_status → expected HTTP status code
+#
+# NOTE:
+# "DUPLICATE_EMAIL" is a placeholder replaced during test execution
+# with the email of another created customer.
+# ------------------------------------------------------------------
+
 INVALID_UPDATE_PAYLOADS = [
     {
         "name": "invalid-email-no-at",
         "payload": {"email": "not-an-email"},
-        "expected_status": 400
+        "expected_status": 400,
     },
     {
         "name": "invalid-email-missing-domain",
         "payload": {"email": "dty@not-an-email"},
-        "expected_status": 400
+        "expected_status": 400,
     },
     {
         "name": "invalid-email-missing-local",
         "payload": {"email": "@missing-local.com"},
-        "expected_status": 400
+        "expected_status": 400,
     },
     {
         "name": "duplicate-email",
         "payload": {"email": "DUPLICATE_EMAIL"},
-        "expected_status": 400
+        "expected_status": 400,
     },
 ]
 
@@ -133,72 +147,114 @@ def test_update_customer_first_name(customer_helper, customers_dao, create_valid
 
 @pytest.mark.negative_test
 @pytest.mark.tcid21
-@pytest.mark.parametrize("case", INVALID_UPDATE_PAYLOADS, ids=[c["name"] for c in INVALID_UPDATE_PAYLOADS])
-def test_update_customer_invalid_inputs(customer_helper, customers_dao, create_valid_customer, update_payload,
-                                        expected_status):
+@pytest.mark.parametrize(
+    "case",
+    INVALID_UPDATE_PAYLOADS,
+    ids=[c["name"] for c in INVALID_UPDATE_PAYLOADS],
+)
+def test_update_customer_invalid_inputs(
+    customer_helper,
+    customers_dao,
+    create_valid_customer,
+    case,
+):
     """
-    Verify that invalid customer updates are rejected.
+    Verify that invalid customer updates are rejected by the API.
 
-    Validates that:
-        - API returns the correct error response for invalid payloads
-        - Error payload follows the expected schema
-        - Customer data in the database remains unchanged
+    This test ensures that:
+
+    • Invalid update payloads return the correct error response
+    • Error responses follow the expected schema
+    • The original customer record in the database remains unchanged
 
     Test flow:
         1. Create a valid customer
-        2. Attempt update with invalid payload
-        3. Validate error response structure
-        4. Confirm database record was not modified
+        2. Attempt to update the customer with an invalid payload
+        3. Validate the returned error structure
+        4. Confirm the database record was not modified
     """
 
-    # Step 1 — Create customer used for update test (one to update, one as duplicate)
-    logger.info("🛠 Creating a test customer via factory fixture.")
-    # To keep the customer in the DB (i.e., skip deletion), set: customer = create_customer_for_test(skip_cleanup=True)
-    original_customer = create_valid_customer()  # Default: skip_cleanup=False, validate_response=True
-    # No need to assert ID/email. The fixture already does it: customer_helper.assert_valid_customer_response(customer)
+    # ------------------------------------------------------------------
+    # Step 1 — Extract test case data
+    # ------------------------------------------------------------------
+    update_payload = case["payload"]
+    expected_status = case["expected_status"]
+
+    # ------------------------------------------------------------------
+    # Step 2 — Create baseline customer (fixture performs validation)
+    # ------------------------------------------------------------------
+    logger.info("🛠 Creating a baseline customer for update test")
+
+    original_customer = create_valid_customer()
 
     customer_id = original_customer["id"]
     original_email = original_customer["email"]
 
-    # Step 2 — Prepare payload (avoid mutating parametrize input)
-    payload = {**update_payload}
+    # ------------------------------------------------------------------
+    # Step 3 — Prepare payload safely
+    # ------------------------------------------------------------------
+    # Avoid mutating the shared parametrized dataset.
+    payload = dict(update_payload)
 
-    # Inject duplicate email when required by test case
+    # Special case: duplicate email validation
     if payload.get("email") == "DUPLICATE_EMAIL":
         duplicate_customer = create_valid_customer()
         payload["email"] = duplicate_customer["email"]
 
         logger.info("🔁 Using duplicate email: %s", payload["email"])
 
-    logger.info(f"🚫 Attempting to update customer ID={customer_id} with payload: {update_payload}")
+    logger.info(
+        "🚫 Attempting invalid update for customer_id=%s payload=%s",
+        customer_id,
+        payload,
+    )
 
-    # Step 3 — Attempt update (expected to fail)
-    # Use the shared api_client fixture for the raw call; pass expected_status so the client returns/parses the
-    # error payload.
-
+    # ------------------------------------------------------------------
+    # Step 4 — Execute update request (expected to fail)
+    # ------------------------------------------------------------------
     response = customer_helper.update_customer(
         customer_id,
         payload=payload,
-        expected_status_code=expected_status
+        expected_status_code=expected_status,
     )
-    # Now assert the error structure
-    assert isinstance(response, dict), f"❌ Expected error response as dict, got: {type(response)}"
-    assert response["code"], f"❌ Missing 'code' in response: {response}"
-    assert response["message"], f"❌ Missing 'message' in response: {response}"
+
+    # ------------------------------------------------------------------
+    # Step 5 — Validate error response structure
+    # ------------------------------------------------------------------
+    assert isinstance(response, dict), (
+        f"❌ Expected error response as dict, got: {type(response)}"
+    )
+
+    assert "code" in response, f"❌ Missing 'code' in response: {response}"
+    assert "message" in response, f"❌ Missing 'message' in response: {response}"
+
     validate(instance=response, schema=error_schema)
 
-    # Step 4 — Ensure database record was not modified
+    # ------------------------------------------------------------------
+    # Step 6 — Verify database record was NOT modified
+    # ------------------------------------------------------------------
+    # Important for update tests:
+    # even when validation fails, backend bugs could still mutate data.
+    # This check guarantees the original record remains intact.
 
-    # It is highly recommended when the API call could potentially mutate data if not properly guarded — like in
-    # update, delete or PATCH partial operations.
-    # You're attempting to mutate existing data (via PUT). There's risk of a partial update or bug in backend
-    # validation logic. Verifying that nothing changed is part of what makes it a strong regression test.
-    # ✅ Best practice: Keep the DB check here. It's essential.
     db_customer = customers_dao.get_customer_by_email(email=original_email)
-    assert db_customer is not None, "❌ Original customer no longer in DB after failed update"
-    assert db_customer["ID"] == customer_id, "❌ Customer ID mismatch"
-    assert db_customer["user_email"] == original_email, "❌ Email was changed after failed update"
-    logger.info("✅ Original customer record remains unchanged after failed update.")
+
+    assert db_customer is not None, (
+        "❌ Original customer no longer exists in the database"
+    )
+
+    assert db_customer["ID"] == customer_id, (
+        "❌ Customer ID mismatch after failed update"
+    )
+
+    assert db_customer["user_email"] == original_email, (
+        "❌ Customer email was modified after failed update"
+    )
+
+    logger.info(
+        "✅ Database record remains unchanged after rejected update (customer_id=%s)",
+        customer_id,
+    )
 
 
 def test_validate_date_modified_and_date_modified_gmt():
