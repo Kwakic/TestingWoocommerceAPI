@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 """
 Customer test fixtures (facade layer).
 
-This file provides **explicit, ergonomic fixtures** for customer-related tests.
+This file provides **explicit, ergonomic fixtures** for customers-related tests.
 Test authors should use THESE fixtures and should NOT care about:
 
 - dynamic entity discovery
@@ -39,7 +39,7 @@ Benefits:
 @pytest.fixture
 def customer_helper(all_resources) -> "CustomersHelper":
     """
-    High-level API helper for customer operations.
+    High-level API helper for customers operations.
 
     Provides:
     - create_customer(...)
@@ -63,7 +63,7 @@ def customer_helper(all_resources) -> "CustomersHelper":
 @pytest.fixture
 def customers_dao(all_resources) -> "CustomersDAO":
     """
-    DAO for customer-related database validators.
+    DAO for customers-related database validators.
 
     Provides direct DB access for:
     - get_customer_by_id

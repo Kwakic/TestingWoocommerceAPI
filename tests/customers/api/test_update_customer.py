@@ -5,8 +5,9 @@ import logging
 from jsonschema import validate
 
 from EcommerceAPI.src.customers.validators.customer_validators import (assert_customer_identity,
-                                                                       assert_valid_customer_response)
-from tests.shared.schemas.customer import error_schema
+                                                                       assert_valid_customer_response,
+                                                                       assert_customer_error_response)
+from tests.shared.schemas.customers.error_schema import error_schema
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,7 @@ pytestmark = [pytest.mark.customers, pytest.mark.regression]
 #
 # NOTE:
 # "DUPLICATE_EMAIL" is a placeholder replaced during test execution
-# with the email of another created customer.
+# with the email of another created customers.
 # ------------------------------------------------------------------
 
 INVALID_UPDATE_PAYLOADS = [
@@ -48,63 +49,37 @@ INVALID_UPDATE_PAYLOADS = [
     },
 ]
 
-# Outdated version not recommended:
-# INVALID_UPDATE_PAYLOADS = [
-#     pytest.param(
-#         {"email": "not-an-email"},
-#         400,
-#         id="invalid-email-no-at"
-#     ),
-#     pytest.param(
-#         {"email": "dty@not-an-email"},
-#         400,
-#         id="invalid-email-missing-end-part"
-#     ),
-#     pytest.param(
-#         {"email": "@missing-local.com"},
-#         400,
-#         id="invalid-email-missing-local-part"
-#     ),
-#     pytest.param(
-#         {"email": "DUPLICATE_EMAIL"},
-#         400,
-#         id="duplicate-email"
-#     ),
-# ]
-# the in test:
-# @pytest.mark.parametrize("update_payload, expected_status", INVALID_UPDATE_PAYLOADS)
-
 
 @pytest.mark.tcid12
 def test_update_customer_first_name(customer_helper, customers_dao, create_valid_customer):
     """
-    Verify that a customer can be updated successfully.
+    Verify that a customers can be updated successfully.
 
     Validates that:
         - PUT /customers/{id} returns a successful response
         - Updated fields are reflected in the API response
-        - Returned customer structure is valid (Pydantic validation)
+        - Returned customers structure is valid (Pydantic validation)
 
     Test flow:
-        1. Create customer via fixture
+        1. Create customers via fixture
         2. Update first_name and email
         3. Validate response structure
         4. Verify updated values
     """
 
-    # Step 1 — Create customer (POST handled by fixture)
-    logger.info("🛠 Creating a test customer for updating name and email.")
-    # To keep the customer in the DB (i.e., skip deletion), set: customer = create_customer_for_test(skip_cleanup=True)
+    # Step 1 — Create customers (POST handled by fixture)
+    logger.info("🛠 Creating a test customers for updating name and email.")
+    # To keep the customers in the DB (i.e.,skip deletion), set: customers = create_customer_for_test(skip_cleanup=True)
     customer = create_valid_customer()  # Default: skip_cleanup=False, validate_response=True
 
     customer_id = customer["id"]
-    # original_email = customer["email"]
+    # original_email = customers["email"]
 
     # Define update payload
     updated_first_name = "QAUpdated"
     updated_email = "mart_hanz@golp.com"
 
-    logger.info(f"🔁 Updating customer ID={customer_id} with first_name='{updated_first_name}' "
+    logger.info(f"🔁 Updating customers ID={customer_id} with first_name='{updated_first_name}' "
                 f"and email='{updated_email}'")
 
     # Use the helper's injected api_client (singular) to perform raw update call
@@ -123,7 +98,7 @@ def test_update_customer_first_name(customer_helper, customers_dao, create_valid
     customer_model = assert_valid_customer_response(update_response)
 
     # Step 5 — Identity validation
-    # Ensure we updated the correct customer
+    # Ensure we updated the correct customers
     assert_customer_identity(
         customer_model,
         customer_id,
@@ -159,17 +134,17 @@ def test_update_customer_invalid_inputs(
     case,
 ):
     """
-    Verify that invalid customer updates are rejected by the API.
+    Verify that invalid customers updates are rejected by the API.
 
     This test ensures that:
 
     • Invalid update payloads return the correct error response
     • Error responses follow the expected schema
-    • The original customer record in the database remains unchanged
+    • The original customers record in the database remains unchanged
 
     Test flow:
-        1. Create a valid customer
-        2. Attempt to update the customer with an invalid payload
+        1. Create a valid customers
+        2. Attempt to update the customers with an invalid payload
         3. Validate the returned error structure
         4. Confirm the database record was not modified
     """
@@ -181,9 +156,9 @@ def test_update_customer_invalid_inputs(
     expected_status = case["expected_status"]
 
     # ------------------------------------------------------------------
-    # Step 2 — Create baseline customer (fixture performs validation)
+    # Step 2 — Create baseline customers (fixture performs validation)
     # ------------------------------------------------------------------
-    logger.info("🛠 Creating a baseline customer for update test")
+    logger.info("🛠 Creating a baseline customers for update test")
 
     original_customer = create_valid_customer()
 
@@ -221,12 +196,7 @@ def test_update_customer_invalid_inputs(
     # ------------------------------------------------------------------
     # Step 5 — Validate error response structure
     # ------------------------------------------------------------------
-    assert isinstance(response, dict), (
-        f"❌ Expected error response as dict, got: {type(response)}"
-    )
-
-    assert "code" in response, f"❌ Missing 'code' in response: {response}"
-    assert "message" in response, f"❌ Missing 'message' in response: {response}"
+    assert_customer_error_response(response)
 
     validate(instance=response, schema=error_schema)
 
@@ -240,7 +210,7 @@ def test_update_customer_invalid_inputs(
     db_customer = customers_dao.get_customer_by_email(email=original_email)
 
     assert db_customer is not None, (
-        "❌ Original customer no longer exists in the database"
+        "❌ Original customers no longer exists in the database"
     )
 
     assert db_customer["ID"] == customer_id, (
@@ -259,6 +229,6 @@ def test_update_customer_invalid_inputs(
 
 def test_validate_date_modified_and_date_modified_gmt():
     """
-    Verify that date_modified and date_modified_gmt change after updating a customer.
+    Verify that date_modified and date_modified_gmt change after updating a customers.
     """
     pass

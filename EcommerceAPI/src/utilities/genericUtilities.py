@@ -113,7 +113,7 @@ def strip_keys(d: dict, exclude=("email", "password")) -> dict:
     return {k: v for k, v in d.items() if k not in exclude}  # Loops through every key-value pair in the input
     # dictionary d and Keeps only those keys that are not in the exclude tuple.
 
-# Then in your test file: customer = create_customer_for_test(email=email, password=password, **strip_keys(payload))
+# Then in your test file: customers = create_customer_for_test(email=email, password=password, **strip_keys(payload))
 # Instead of doing this every time: additional_fields = {
 #     k: v for k, v in payload.items() if k not in ("email", "password")
 # }
@@ -122,7 +122,7 @@ def strip_keys(d: dict, exclude=("email", "password")) -> dict:
 # email = payload.get("email")
 # password = payload.get("password")
 #
-# customer = create_customer_for_test(
+# customers = create_customer_for_test(
 #     email=email,
 #     password=password,
 #     expected_status_code=400,

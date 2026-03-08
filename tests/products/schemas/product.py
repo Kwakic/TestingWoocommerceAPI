@@ -7,10 +7,10 @@ Notes:
     - numeric price strings like "12.99"
     - empty string "" when no price is set
     - null (if the API returns null)
-- The schema allows additionalProperties at the root level (like your customer schema),
+- The schema allows additionalProperties at the root level (like your customers schema),
   so WooCommerce can evolve without breaking these preflight checks.
 - An `product_error_schema` is provided to match typical WooCommerce error responses
-  (same style as your existing error_schema in the customer schema).
+  (same style as your existing error_schema in the customers schema).
 """
 from typing import Dict, Any
 

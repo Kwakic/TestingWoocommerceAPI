@@ -140,14 +140,14 @@
 #
 #    3. Data Consistency Across Services
 #    ------------------------------------
-#       - If your customer object is replicated across services (e.g., CRM, email system), you could verify event
+#       - If your customers object is replicated across services (e.g., CRM, email system), you could verify event
 #       emission or sync correctness — but only if it applies in your infra
 #
 #    4. Security Headers & CORS
 #    ----------------------------
 #        - If testing via API gateway or external clients, verify security-related headers are present
 #
-#    These are out-of-scope unless you’re testing full-stack behavior — not core to customer CRUD testing.
+#    These are out-of-scope unless you’re testing full-stack behavior — not core to customers CRUD testing.
 #
 #
 #=================================================================================
@@ -181,7 +181,7 @@
 #🧭 Call Chain Breakdown
 #1. ✅ Your test or fixture calls create_customer_for_test()
 #That fixture returns a function (_create_customer(...)) that eventually calls:
-#customer = customer_helper.create_customer(**kwargs)
+#customers = customer_helper.create_customer(**kwargs)
 #
 #2. ✅ customer_helper.create_customer() is called
 #This is from your CustomersHelper class:

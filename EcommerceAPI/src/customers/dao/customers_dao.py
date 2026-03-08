@@ -19,11 +19,11 @@ class CustomersDAO(object):  # object in the parenthesis will inherit objects by
 
     def get_customer_by_email(self, email: str) -> Optional[Dict[str, Any]]:
         """
-        Retrieve a single customer by their email address.
+        Retrieve a single customers by their email address.
         Args:
             email: Email address (should be unique).
         Returns:
-            Dictionary with customer fields or None if not found.
+            Dictionary with customers fields or None if not found.
         """
 
         # Validate input email — it must be a non-empty string
@@ -50,15 +50,15 @@ class CustomersDAO(object):  # object in the parenthesis will inherit objects by
         try:
             rs_sql = self.db_helper.execute_select(sql, params)  # Execute the query securely with the parameter
             if not rs_sql:  # Handle a case when no result is found
-                logger.info(f" 🔍Verifying DB. NO customer found for email: '{email}'")
+                logger.info(f" 🔍Verifying DB. NO customers found for email: '{email}'")
                 return None
 
             customer = rs_sql[0]  # Return the first (and only) result from the list
-            logger.debug(f"ℹ️ Found customer for email '{email}': {customer}")  # Log the result at debug level
+            logger.debug(f"ℹ️ Found customers for email '{email}': {customer}")  # Log the result at debug level
             return customer  # Always returns a single dict or None (not a list)
 
         except Exception as e:  # Log and re-raise any database or logic error
-            logger.exception(f"Error retrieving customer by email '{email}': {e}")  # The only thing you might want to
+            logger.exception(f"Error retrieving customers by email '{email}': {e}")  # The only thing you might want to
             # do: use logger.exception(...) inside your except blocks instead of logger.error(...) with str(e).
             # logger.exception automatically includes the stack trace, which is helpful for test/debug environments.
             raise
@@ -74,9 +74,9 @@ class CustomersDAO(object):  # object in the parenthesis will inherit objects by
 
     def soft_delete_customer_by_id(self, customer_id: int) -> int:
         """
-        Soft-deletes a customer by setting `user_status` to 1.
+        Soft-deletes a customers by setting `user_status` to 1.
 
-        :param customer_id: ID of the customer to soft-delete_it.py.
+        :param customer_id: ID of the customers to soft-delete_it.py.
         :return: Number of rows affected (should be 1 if successful).
         :raises ValueError: If customer_id is invalid.
         :raises Exception: If the database update fails.
@@ -85,50 +85,50 @@ class CustomersDAO(object):  # object in the parenthesis will inherit objects by
             Number of rows affected (should be 1 if successful).
         """
         if not isinstance(customer_id, int) or customer_id <= 0:
-            raise ValueError(f"Invalid customer ID: {customer_id}. Must be a positive integer.")
+            raise ValueError(f"Invalid customers ID: {customer_id}. Must be a positive integer.")
         sql = f"UPDATE {self.table_name} SET user_status = 1 WHERE ID = :id"
         params = {"id": customer_id}
         try:
             rows_affected = self.db_helper.execute_sql(sql, params)
-            log_msg = f"Soft-deleting customer ID={customer_id} → Rows affected: {rows_affected}"
+            log_msg = f"Soft-deleting customers ID={customer_id} → Rows affected: {rows_affected}"
             if rows_affected == 1:
                 logger.info(f"✅ {log_msg}")
             else:
                 logger.warning(f"⚠️ {log_msg}")
             return rows_affected
         except Exception as e:
-            logger.exception(f"❌ Failed to soft-delete_it.py customer ID={customer_id}: {e}")
+            logger.exception(f"❌ Failed to soft-delete_it.py customers ID={customer_id}: {e}")
             raise
 
     def get_customer_by_id(self, customer_id: int) -> Optional[Dict[str, Any]]:
         """
-        Retrieve a customer by their ID.
+        Retrieve a customers by their ID.
         Args:
             customer_id: Customer ID.
         Returns:
-            Dictionary with customer fields or None if not found.
+            Dictionary with customers fields or None if not found.
         """
         if not isinstance(customer_id, int) or customer_id <= 0:
-            raise ValueError("Invalid customer ID provided.")
+            raise ValueError("Invalid customers ID provided.")
         sql = f"SELECT * FROM {self.table_name} WHERE ID = :id LIMIT 1"
         params = {"id": customer_id}
         try:
             results = self.db_helper.execute_select(sql, params)
             return results[0] if results else None
         except Exception as e:
-            logger.exception(f"Error retrieving customer by ID '{customer_id}': {e}")
+            logger.exception(f"Error retrieving customers by ID '{customer_id}': {e}")
             raise
 
     def get_random_customer_from_db(self, qty: int = 1, filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         """
-        Retrieve random customer(s) from the last 5000 entries, optionally filtered by fields in wp_users.
+        Retrieve random customers(s) from the last 5000 entries, optionally filtered by fields in wp_users.
         Args:
             qty: number of random customers to retrieve
             filters: optional, dictionary of filters (e.g., {'user_status': 0, 'user_login': 'admin'})
         Returns:
             List of randomly selected customers
 
-        Note: For this particular test case, we need only one customer, but in the future we might need multiple
+        Note: For this particular test case, we need only one customers, but in the future we might need multiple
         customers, so that's we specified the quantity (qty). This function's job is to randomly pick one or more
         customers from the database.
         """
@@ -191,12 +191,12 @@ class CustomersDAO(object):  # object in the parenthesis will inherit objects by
             selected_customers = random.sample(rs_sql, qty)  # Randomly selects users from the list without replacement
             # (i.e., no duplicates). random.sample(population, k) guarantees a uniformly random subset of size k. No
             # duplicates, unlike random.choices.
-            logger.debug(f"Randomly selected {qty} customer(s) with filters {filters}: {selected_customers}")
+            logger.debug(f"Randomly selected {qty} customers(s) with filters {filters}: {selected_customers}")
             return selected_customers  # Logs the selected subset of customers (at debug level). Returns the random
             # selection back to the caller.
 
         except Exception as e:
-            logger.exception(f"Error retrieving random customer(s) with filters {filters}: {e}")
+            logger.exception(f"Error retrieving random customers(s) with filters {filters}: {e}")
             raise  # If anything goes wrong during the query or selection:
             # - Logs the exception at error level.
             # - Re-raises it so the caller can handle it (or it can fail loudly in tests).

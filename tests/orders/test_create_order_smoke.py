@@ -77,7 +77,7 @@
 #     # rand_product = product_dao.get_random_product_from_db(1) # we use it in our setup instead
 #     # product_id = rand_product[0]['ID'] # we use it in our setup instead
 #     product_id = my_orders_smoke_setup['product_id']
-#     # 2. Make the call - First we make a call to create a customer
+#     # 2. Make the call - First we make a call to create a customers
 #     cust_info = customer_helper.create_customer()
 #     # import pdb;pdb.set_trace()  # It helps us to see the structure of 'cust_info' to extract the ID from dictionary
 #     customer_id = cust_info['id']

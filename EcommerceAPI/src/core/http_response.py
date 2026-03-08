@@ -151,7 +151,7 @@ class HttpResponse:
     (Pdb) import json; print(f"\n--- API RESPONSE ---\nURL: {response.url}\nStatus: {response.status_code}\nElapsed: {response.elapsed}s\n\nHEADERS:\n{json.dumps(response.headers, indent=2)}\n\nJSON BODY:\n{json.dumps(response.json, indent=2)}\n\nRAW TEXT:\n{response.text}\n\nRAW CONTENT (BYTES):\n{response.content}\n--------------------")
 
     To see the response in JSON: Convert the Python dictionary into a JSON-formatted string:
-    (Pdb)  import json; print(json.dumps(customer, indent=4))
+    (Pdb)  import json; print(json.dumps(customers, indent=4))
 
     ------------------------------------------------------------------------
     """

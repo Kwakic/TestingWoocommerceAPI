@@ -5,7 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Optional, List, Dict, Any
 
-from EcommerceAPI.src.customers.validators.customer_validators import assert_customer_exists_and_matches_api
+from EcommerceAPI.src.customers.validators.customer_validators import assert_customer_exists_and_matches_api, \
+    assert_customer_retrieved_successfully, assert_customer_identity
 from EcommerceAPI.src.utilities.pagination_utils import paginate_all_results
 from EcommerceAPI.src.utilities.genericUtilities import generate_random_email_and_password
 from EcommerceAPI.src.utilities.exceptions import UnexpectedStatusCodeError, SchemaValidationError
@@ -99,7 +100,7 @@ class CustomersHelper(object):
             **kwargs,
     ) -> Dict[str, Any] | HttpResponse:
         """
-        Create a customer via CustomersApi.
+        Create a customers via CustomersApi.
 
         Behavior:
         - Auto-generate email/password for positive tests
@@ -171,8 +172,8 @@ class CustomersHelper(object):
         # payload.update(kwargs) adds all those extra key-value pairs to the payload
         payload.update(kwargs)
 
-        # logger.debug(f"🟢 Creating customer with payload: {payload}")
-        logger.debug("⚙️ Creating customer with payload keys: %r", list(payload.keys()))
+        # logger.debug(f"🟢 Creating customers with payload: {payload}")
+        logger.debug("⚙️ Creating customers with payload keys: %r", list(payload.keys()))
 
         try:
             http_response = self.customers_api.create_customer(payload=payload)
@@ -221,7 +222,7 @@ class CustomersHelper(object):
             **kwargs,
     ) -> Dict[str, Any] | HttpResponse:
         """
-        Update customer fields.
+        Update customers fields.
         - Accepts full payload (same as API)
         - Does NOT modify payload
         - It supports positive + negative flows (This allows: update_customer(customer_id, first_name=None))
@@ -241,7 +242,7 @@ class CustomersHelper(object):
         # ✅ Then merge kwargs (same behavior as create_customer)
         final_payload.update(kwargs)
 
-        logger.debug("🟢 Updating customer %s with payload keys: %r", customer_id, list(final_payload.keys()))
+        logger.debug("🟢 Updating customers %s with payload keys: %r", customer_id, list(final_payload.keys()))
 
         try:
             http_response = self.customers_api.update_customer(customer_id=customer_id, payload=final_payload)
@@ -271,7 +272,7 @@ class CustomersHelper(object):
             return_http_response: bool = False
     ) -> Dict[str, Any] | HttpResponse:
         """
-         Retrieve a customer by their ID.
+         Retrieve a customers by their ID.
 
          Args:
              customer_id (int): Customer ID.
@@ -279,7 +280,7 @@ class CustomersHelper(object):
                                     - True → returns HttpResponse (status_code, headers, elapsed, etc.)
 
          Returns:
-             dict: Parsed customer JSON response + HTTP response
+             dict: Parsed customers JSON response + HTTP response
          """
         # logger.debug(f"🟢 Calling 'Get Customer' for ID {customer_id}.")
         logger.debug("🟢 Calling 'Get Customer' for ID %s.", customer_id)
@@ -297,10 +298,10 @@ class CustomersHelper(object):
             return_http_response: bool = False
     ) -> Dict[str, Any] | HttpResponse:
         """
-        Retrieve a customer by email.
+        Retrieve a customers by email.
 
         Returns:
-            dict: First matching customer extracted from HttpResponse.json
+            dict: First matching customers extracted from HttpResponse.json
 
         Notes:
             - API layer returns HttpResponse
@@ -308,7 +309,7 @@ class CustomersHelper(object):
             - WooCommerce returns a list → helper returns first item
 
         Raises:
-            AssertionError if no customer found.
+            AssertionError if no customers found.
         """
         logger.debug("🟢 Calling 'Get Customer by Email' for %s.", email)
 
@@ -320,7 +321,7 @@ class CustomersHelper(object):
         customers = http_response.json
 
         if not customers:
-            raise AssertionError(f"❌ No customer found for email={email}")
+            raise AssertionError(f"❌ No customers found for email={email}")
 
         return customers[0]
 
@@ -330,7 +331,7 @@ class CustomersHelper(object):
             return_http_response: bool = False
     ) -> Dict[str, Any] | HttpResponse:
         """
-        Delete (hard delete) a customer by ID using force=true.
+        Delete (hard delete) a customers by ID using force=true.
 
         Args:
             customer_id (int): Customer ID.
@@ -447,20 +448,20 @@ class CustomersHelper(object):
         for customer in all_customers:
             created_gmt = customer.get("date_created_gmt")
             try:
-                # ✅ Parse customer date as offset-aware datetime in UTC
+                # ✅ Parse customers date as offset-aware datetime in UTC
                 created_date = parse_dt(created_gmt) if created_gmt else None
                 if created_date:
-                    # ❌ Skip customer if it was created *after* the allowed upper bound
+                    # ❌ Skip customers if it was created *after* the allowed upper bound
                     if cutoff_before and created_date >= cutoff_before:
                         continue
-                    # ❌ Skip customer if it was created *before* the allowed lower bound
+                    # ❌ Skip customers if it was created *before* the allowed lower bound
                     if cutoff_after and created_date <= cutoff_after:
                         continue
-                # ✅ Keep customer — passed all time filters
+                # ✅ Keep customers — passed all time filters
                 filtered_customers.append(customer)
             except Exception as e:
                 logger.warning(
-                    "⚠️ Could not parse 'date_created_gmt' for customer ID %s: %s",
+                    "⚠️ Could not parse 'date_created_gmt' for customers ID %s: %s",
                     customer.get("id"),
                     e,
                 )
@@ -476,12 +477,12 @@ class CustomersHelper(object):
 
     def assert_customer_exists_and_matches_db(self, email: str, dao) -> None:
         """
-        High-level helper that validates that a customer exists
+        High-level helper that validates that a customers exists
         in the API and matches the database record.
 
         Responsibilities:
-            - Fetch customer list from API
-            - Fetch customer record from DB
+            - Fetch customers list from API
+            - Fetch customers record from DB
             - Call validation layer
 
         This keeps tests clean and avoids repeated boilerplate.
@@ -491,7 +492,7 @@ class CustomersHelper(object):
             dao: Customer DAO instance.
         """
 
-        logger.debug("🔎 Validating customer integrity for email=%s", email)
+        logger.debug("🔎 Validating customers integrity for email=%s", email)
 
         # -----------------------------
         # API fetch
@@ -509,6 +510,7 @@ class CustomersHelper(object):
         assert_customer_exists_and_matches_api(customers, email, db_customer)
 
         logger.info("✅ Customer validated against API and DB (email=%s)", email)
+
 
 
 # # NOTE!! Keep this main block for local debugging only. Remove or guard it before committing if you prefer to avoid

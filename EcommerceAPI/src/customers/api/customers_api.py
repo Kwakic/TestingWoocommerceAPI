@@ -58,7 +58,7 @@ class CustomersApi:
         POST /customers
 
 
-        Create a new customer.
+        Create a new customers.
 
         Args:
             payload (dict):
@@ -82,7 +82,7 @@ class CustomersApi:
         """
         GET /customers/{id}
 
-        Fetch a single customer by ID.
+        Fetch a single customers by ID.
         """
         endpoint = f"{self.ENDPOINT}/{customer_id}"
         logger.debug("📡 GET %s", endpoint)
@@ -96,7 +96,7 @@ class CustomersApi:
         """
         GET /customers?email={email}
 
-        Fetch customer(s) filtered by email.
+        Fetch customers(s) filtered by email.
 
         Note:
             WooCommerce returns a list. This method returns a raw list response.
@@ -128,11 +128,11 @@ class CustomersApi:
         """
         DELETE /customers/{id}
 
-        Delete a customer.
+        Delete a customers.
 
         Args:
             customer_id:
-                ID of the customer to delete.
+                ID of the customers to delete.
             force (bool):
                 Whether to force deletion (API-specific).
         """

@@ -124,7 +124,7 @@ def assert_entity_exists_in_api(
             - If the resource has invalid/missing ID
 
     Example:
-        customer = assert_resource_exists(customers, identifier=email, field="email")
+        customers = assert_resource_exists(customers, identifier=email, field="email")
     """
 
     assert entities, f"❌ Entity not found for {field}={identifier}"
@@ -176,7 +176,7 @@ def assert_entity_matches_db(
     - Structure already validated
 
     Example:
-        assert_resource_matches_db(customer, db_customer)
+        assert_resource_matches_db(customers, db_customer)
     """
 
     assert db_entity, "❌ No DB record found"

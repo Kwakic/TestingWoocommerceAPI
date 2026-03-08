@@ -51,7 +51,7 @@ class UnexpectedStatusCodeError(APIRequestException):
 
 
 # class CustomerValidationError(APIRequestException):
-#     """Raised when customer data mismatches between API and DB."""
+#     """Raised when customers data mismatches between API and DB."""
 #     pass
 
 

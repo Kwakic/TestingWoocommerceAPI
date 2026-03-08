@@ -4,7 +4,7 @@ import logging
 from jsonschema import validate
 from json import loads
 
-from tests.shared.schemas.customer import error_schema
+from tests.shared.schemas.customers.error_schema import error_schema
 
 from EcommerceAPI.src.customers.validators.customer_validators import (assert_customer_not_found_error,
                                                                        assert_customer_retrieved_successfully,
@@ -21,7 +21,7 @@ pytestmark = [pytest.mark.customers, pytest.mark.regression]
 @pytest.mark.tcid13
 def test_get_customer_by_email(customer_helper, customers_dao, create_valid_customer):
     """
-    Verify that a customer can be retrieved using the email filter.
+    Verify that a customers can be retrieved using the email filter.
 
     Endpoint tested:
         GET /customers?email={email}
@@ -32,17 +32,17 @@ def test_get_customer_by_email(customer_helper, customers_dao, create_valid_cust
         - automatic cleanup registration
 
     Test flow:
-        1. Create a customer
-        2. Retrieve customer using email filter
+        1. Create a customers
+        2. Retrieve customers using email filter
         3. Validate returned dataset
-        4. Verify returned customer identity
+        4. Verify returned customers identity
         5. Verify API data matches database
     """
 
     # -------------------------------------------
-    # 🛠 Step 1 — Create a valid customer
+    # 🛠 Step 1 — Create a valid customers
     # -------------------------------------------
-    logger.info("🛠 Creating a test customer via factory fixture.")
+    logger.info("🛠 Creating a test customers via factory fixture.")
 
     # Fixture handles:
     #   - POST /customers
@@ -54,9 +54,9 @@ def test_get_customer_by_email(customer_helper, customers_dao, create_valid_cust
     email = customer["email"]
 
     # -------------------------------------------
-    # 🔎 Step 2 — Retrieve customer via email filter
+    # 🔎 Step 2 — Retrieve customers via email filter
     # -------------------------------------------
-    logger.info("🔎 Fetching customer by email: %s", email)
+    logger.info("🔎 Fetching customers by email: %s", email)
 
     # Request HttpResponse wrapper so we can validate status code (return_http_response=True)
     response = customer_helper.get_customer_by_email(
@@ -78,7 +78,7 @@ def test_get_customer_by_email(customer_helper, customers_dao, create_valid_cust
     customers = response.json
 
     # -------------------------------------------
-    # 🔍 Step 5 — Extract the correct customer from dataset
+    # 🔍 Step 5 — Extract the correct customers from dataset
     # -------------------------------------------
     customer_model = assert_single_customer_by_email(
         customers,
@@ -88,11 +88,11 @@ def test_get_customer_by_email(customer_helper, customers_dao, create_valid_cust
     # 🧠 Step 6 — Identity validation
     # -------------------------------------------
     # Convert raw dict → validated CustomerModel
-    # Ensure the retrieved customer matches the one we created.
+    # Ensure the retrieved customers matches the one we created.
     assert_customer_identity(customer_model, customer_id, email)
 
     logger.info(
-        "✅ Fetched customer matches created one: ID=%s, Email=%s",
+        "✅ Fetched customers matches created one: ID=%s, Email=%s",
         customer_id,
         email
     )
@@ -109,13 +109,13 @@ def test_get_customer_by_email(customer_helper, customers_dao, create_valid_cust
         customers_dao
     )
 
-    logger.info("🎯 Full validation complete for customer ID: %r", customer_id)
+    logger.info("🎯 Full validation complete for customers ID: %r", customer_id)
 
 
 @pytest.mark.tcid14
 def test_get_customer_by_id(customer_helper, customers_dao, create_valid_customer):
     """
-    Verify that a customer can be retrieved by ID.
+    Verify that a customers can be retrieved by ID.
 
     Endpoint tested:
         GET /customers/{id}
@@ -126,17 +126,17 @@ def test_get_customer_by_id(customer_helper, customers_dao, create_valid_custome
         - cleanup registration
 
     Test flow:
-        1. Create customer
-        2. Retrieve customer by ID
+        1. Create customers
+        2. Retrieve customers by ID
         3. Validate response structure
-        4. Verify returned customer identity
+        4. Verify returned customers identity
         5. Verify API data matches database
     """
 
     # -------------------------------------------
-    # 🛠 Step 1 — Create a valid customer
+    # 🛠 Step 1 — Create a valid customers
     # -------------------------------------------
-    logger.info("🛠 Creating a test customer via factory fixture.")
+    logger.info("🛠 Creating a test customers via factory fixture.")
 
     # The fixture already validates POST response and registers cleanup.
     customer = create_valid_customer()
@@ -145,9 +145,9 @@ def test_get_customer_by_id(customer_helper, customers_dao, create_valid_custome
     email = customer["email"]
 
     # -------------------------------------------
-    # 🔎 Step 2 — Retrieve customer via API
+    # 🔎 Step 2 — Retrieve customers via API
     # -------------------------------------------
-    logger.info(f"🔎 Fetching customer by ID: {customer_id}")
+    logger.info(f"🔎 Fetching customers by ID: {customer_id}")
 
     # Request HttpResponse wrapper so we can validate status code (return_http_response=True)
     response = customer_helper.get_customer_by_id(
@@ -163,11 +163,11 @@ def test_get_customer_by_id(customer_helper, customers_dao, create_valid_custome
     # -------------------------------------------
     # 🔍 Step 4 — Business validation
     # -------------------------------------------
-    # Ensure we retrieved the correct customer
+    # Ensure we retrieved the correct customers
     assert_customer_identity(customer_model, customer_id, email)
 
     logger.info(
-        "✅ Fetched customer matches created one: ID=%s, Email=%s",
+        "✅ Fetched customers matches created one: ID=%s, Email=%s",
         customer_id,
         email
     )
@@ -183,37 +183,36 @@ def test_get_customer_by_id(customer_helper, customers_dao, create_valid_custome
         customers_dao
     )
 
-    logger.info("🎯 Full validation complete for customer ID: %r", customer_id)
+    logger.info("🎯 Full validation complete for customers ID: %r", customer_id)
 
 
 @pytest.mark.negative_test
 @pytest.mark.tcid17
 def test_get_customer_not_found(customer_helper, customers_dao, create_valid_customer):
     """
-    Negative test for retrieving a non-existing customer.
+    Negative test for retrieving a non-existing customers.
 
     Endpoint tested:
         GET /customers/{id}
 
     Test flow:
-        1. Request non-existing customer ID
+        1. Request non-existing customers ID
         2. Validate API returns correct error response
         3. Validate error schema
     """
 
     non_existing_id = 99999999
 
-    logger.info(f"🚫 Retrieving non-existent customer ID: {non_existing_id}")
+    logger.info(f"🚫 Retrieving non-existent customers ID: {non_existing_id}")
 
     # Without return_http_response=True because the validator expects the JSON error payload. Just keep it consistent
     # across negative tests.
     response = customer_helper.get_customer_by_id(customer_id=non_existing_id)
 
-    if isinstance(response, str):
-        response = loads(response)
-
+    # Normalize response to dictionary
+    response = loads(response) if isinstance(response, str) else response
     # Validate API error response
     assert_customer_not_found_error(response)
 
     validate(instance=response, schema=error_schema)
-    logger.info("✅ Error response schema validated for non-existent customer fetch")
+    logger.info("✅ Error response schema validated for non-existent customers fetch")

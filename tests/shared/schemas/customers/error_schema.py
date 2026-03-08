@@ -66,16 +66,40 @@ customer_schema = {
 #
 
 # schemas.py
+"""
+Error schema validator
 
-# ❗ Error response format expected from WooCommerce:
-# {
-#   "code": "woocommerce_rest_invalid_email",
-#   "message": "Email address is invalid.",
-#   "data": {
-#       "status": 400,
-#       "params": ["email"]
-#   }
-# }
+It checks if:
+  - keys exist
+  - values not empty
+  - response is dict
+  - status exists
+
+Your schema checks structure strictly:
+    - correct types
+    - required fields
+    - nested objects
+    - allowed shapes
+
+Example from your schema:
+    - "code" must be a string
+    - "message" must be a string
+    - "data.status" must be an integer
+    - "params" must be either array OR object
+
+
+Error response format expected from WooCommerce:
+    {
+      "code": "woocommerce_rest_invalid_email",
+      "message": "Email address is invalid.",
+      "data": {
+          "status": 400,
+          "params": ["email"]
+      }
+    }
+
+"""
+
 
 error_schema = {
     "type": "object",

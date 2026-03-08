@@ -63,7 +63,7 @@ def cleanup_items(
     Args:
         resource_type: API resource path or logical name (e.g., "customers", "orders").
         resource_ids: Iterable of resource identifiers to attempt deletion on.
-        label: Friendly singular label for logs (e.g., "customer"). Defaults to resource_type.rstrip("s").
+        label: Friendly singular label for logs (e.g., "customers"). Defaults to resource_type.rstrip("s").
         summary_log: Optional list to which a summary line will be appended.
         total_created: How many were created during the test session (for summary).
         skip_message: Optional message used when there is nothing to cleanup.
@@ -156,7 +156,7 @@ def make_cleanup_partial(api_client: APIClient, resource_type: str, label: Optio
     Args:
         api_client: APIClient-like object exposing `.delete(...)`
         resource_type: The resource path (e.g., "customers").
-        label: Optional friendly label (e.g., "customer").
+        label: Optional friendly label (e.g., "customers").
 
     Returns:
         Callable that accepts the same args as cleanup_items except "delete_method" and "resource_type".
@@ -175,7 +175,7 @@ def make_all_cleanups(api_client: Any) -> Dict[str, Callable[..., None]]:
     return {
         "orders": make_cleanup_partial(api_client, "orders", label="order"),
         "products": make_cleanup_partial(api_client, "products", label="product"),
-        "customers": make_cleanup_partial(api_client, "customers", label="customer"),
+        "customers": make_cleanup_partial(api_client, "customers", label="customers"),
         "coupons": make_cleanup_partial(api_client, "coupons", label="coupon"),
     }
 
@@ -223,7 +223,7 @@ def cleanup_products(resource_ids: Iterable[Any], **kwargs) -> None:
 
 def cleanup_customers(resource_ids: Iterable[Any], **kwargs) -> None:
     api_client = _require_default_api_client()
-    return make_cleanup_partial(api_client, "customers", label="customer")(resource_ids, **kwargs)
+    return make_cleanup_partial(api_client, "customers", label="customers")(resource_ids, **kwargs)
 
 
 def cleanup_coupons(resource_ids: Iterable[Any], **kwargs) -> None:

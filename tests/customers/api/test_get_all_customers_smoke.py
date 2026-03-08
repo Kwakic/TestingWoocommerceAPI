@@ -21,12 +21,12 @@ def test_get_all_customers_list_not_empty_and_valid_schema(customer_helper, cust
 
     Validates that:
         - API returns a non-empty list of customers
-        - Each returned customer has a valid structure (Pydantic validation)
+        - Each returned customers has a valid structure (Pydantic validation)
 
     Test flow:
         1. Call GET /customers
         2. Ensure response contains customers
-        3. Validate structure of each customer
+        3. Validate structure of each customers
     """
 
     logger.info("🟢 Calling GET all customers without filters.")
@@ -38,7 +38,7 @@ def test_get_all_customers_list_not_empty_and_valid_schema(customer_helper, cust
 
     logger.info(f"✅ Retrieved {len(customers)} customers.")
 
-    # Validate structure of each returned customer
+    # Validate structure of each returned customers
     for cust in customers:
         try:
             assert_valid_customer_response(cust)
@@ -63,7 +63,7 @@ def test_get_all_customers_pagination_boundary(customer_helper, customers_dao):
         1. Retrieve customers with small page size
         2. Collect results across multiple pages
         3. Ensure no duplicate IDs
-        4. Validate structure of each customer
+        4. Validate structure of each customers
     """
     # You can write a parameterized test to test multiple per_page boundary values (1, 2, 10, etc.)
     per_page = 5
@@ -88,13 +88,13 @@ def test_get_all_customers_pagination_boundary(customer_helper, customers_dao):
 
     logger.info(f"✅ Retrieved {len(all_customers)} unique customers across pages.")
 
-    # Validate structure of each customer
+    # Validate structure of each customers
     for cust in all_customers:
         try:
             assert_valid_customer_response(cust)
         except Exception as e:
-            logger.error(f"❌ Schema validation failed for customer ID={cust.get('id')}: {e}")
-            logger.debug(f"Offending customer JSON: {cust}")
+            logger.error(f"❌ Schema validation failed for customers ID={cust.get('id')}: {e}")
+            logger.debug(f"Offending customers JSON: {cust}")
             pytest.fail(f"❌ Customer schema invalid for ID={cust.get('id')}")
 
     logger.info("✅ All paginated customers conform to schema.")
@@ -127,7 +127,7 @@ def test_get_all_customers_empty_list_with_mock(customer_helper, customers_dao):
 
         # Ensure mocked response returns empty dataset
         assert customers == [], "❌ Expected empty list from mocked call_list_all_customers_paginated"
-        logger.info("✅ Successfully mocked empty customer list")
+        logger.info("✅ Successfully mocked empty customers list")
 
 
 @pytest.mark.negative_test
@@ -189,7 +189,7 @@ def test_list_customers_created_in_the_future_returns_empty(customer_helper, cus
 
     # Step 4 — Ensure no customers exist beyond tolerance window
     assert not future_customers, (
-        f"❌ Found {len(future_customers)} customer(s) created after now (+1s buffer) — "
+        f"❌ Found {len(future_customers)} customers(s) created after now (+1s buffer) — "
         f"Possible clock drift or invalid timestamp. Base time: {created_after}"
     )
 
@@ -205,5 +205,5 @@ def test_list_customers_created_in_the_future_returns_empty(customer_helper, cus
             )
         except Exception as e:
             logger.warning(
-                f"⚠️ Failed to parse timestamp for customer ID={cust.get('id')} | raw_ts={raw_ts} | Error: {e}"
+                f"⚠️ Failed to parse timestamp for customers ID={cust.get('id')} | raw_ts={raw_ts} | Error: {e}"
             )

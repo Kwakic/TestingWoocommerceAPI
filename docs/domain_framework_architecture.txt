@@ -39,13 +39,13 @@ TestEcommerceAPI (project suite/root)
 │     │     │     │      │── customers_dao.py
 │     │     │     │      └── __init__.py
 │     │     │     ├── api/                         ← domain API
-│     │     │     │      │── customers_api.py
+│     │     │     │      └── customers_api.py
 │     │     │     ├── validators/
-│     │     │     │      │── customer_assertions.py
+│     │     │     │      │── customer_db_validators.py
+│     │     │     │      │── customer_validators.py
 │     │     │     │      └── __init__.py
-│     │     │     ├── schemas/
-│     │     │     │      │── customer_model.py     ← Pydantic
-│     │     │     │      │── customer_schema_validator.py   ← it will be replaced
+│     │     │     ├── schemas/                     ← Pydantic validation models (runtime validation)
+│     │     │     │      │── customer_model.py
 │     │     │     │      └── _init__.py
 │     │     │     └── helpers/
 │     │     │            │── customers_helper.py
@@ -139,11 +139,19 @@ TestEcommerceAPI (project suite/root)
 │     │            ├── test_update_custom
 │     │            └── __init__.py
 │     ├── shared/
-│     │     ├── schemas/
-│     │     │      ├── coupon.py
-│     │     │      ├── customers.py
-│     │     │      ├── order.py.py
-│     │     │      └── product.py.py
+│     │     ├── schemas/                             ← JSON contract schemas (contract testing)
+│     │     │      ├── customers
+│     │     │      │      ├── error_schema.py
+│     │     │      │      └── __init__.py
+│     │     │      ├── orders
+│     │     │      │      ├── error_schema.py
+│     │     │      │      └── __init__.py
+│     │     │      ├── coupons
+│     │     │      │      ├── error_schema.py
+│     │     │      │      └── __init__.py
+│     │     │      └── products
+│     │     │             ├── error_schema.py
+│     │     │             └── __init__.py
 │     │     ├── contract/
 │     │     │      ├── test_schema_validation_smoke.py
 │     │     │      ├── __init__.py

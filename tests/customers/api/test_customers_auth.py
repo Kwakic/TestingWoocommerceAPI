@@ -3,7 +3,7 @@
 # import logging
 # from requests_oauthlib import OAuth1
 #
-# from tests.shared.schemas.customer import error_schema
+# from tests.shared.schemas.customers import error_schema
 # from EcommerceAPI.src.utilities.credentialsUtility import get_wc_api_keys
 #
 # logger = logging.getLogger(__name__)
@@ -14,10 +14,10 @@
 # # 🧮 Test Matrix — Defines test dimensions: method, endpoint, etc.
 # TEST_MATRIX = [
 #     # method, endpoint, resource_type, needs_id, needs_payload
-#     ("get", "customers", "customer", False, False),
-#     ("post", "customers", "customer", False, True),
-#     ("put", "customers", "customer", True, True),
-#     ("delete_it.py", "customers", "customer", True, False),
+#     ("get", "customers", "customers", False, False),
+#     ("post", "customers", "customers", False, True),
+#     ("put", "customers", "customers", True, True),
+#     ("delete_it.py", "customers", "customers", True, False),
 # ]
 #
 #
@@ -63,10 +63,10 @@
 #     """
 #     🔐 Negative Authentication Matrix Test
 #
-#     Verifies all customer-related endpoints properly reject invalid credentials (401 Unauthorized).
+#     Verifies all customers-related endpoints properly reject invalid credentials (401 Unauthorized).
 #
 #     - Does NOT create any real resources.
-#     - Uses fake customer ID when needed (e.g., PUT/DELETE).
+#     - Uses fake customers ID when needed (e.g., PUT/DELETE).
 #     - Ensures invalid keys/secrets prevent access regardless of input.
 #     """
 #     # ⚠️ Skip risky methods if running in production. (NOT REAL it needs to be implemented)
@@ -77,7 +77,7 @@
 #     request_util = all_resources.request
 #     request_util.auth = OAuth1(invalid_key, invalid_secret)
 #
-#     # 🧪 If endpoint requires ID, inject a fake ID instead of creating a real customer
+#     # 🧪 If endpoint requires ID, inject a fake ID instead of creating a real customers
 #     if needs_id:
 #         fake_id = 999999  # Arbitrary ID that doesn't exist — we’re testing auth, not existence
 #         endpoint = f"{endpoint}/{fake_id}"
@@ -118,10 +118,10 @@
 # # 📊 Negative Auth Test Coverage Matrix:
 # # | Method | Endpoint       | Resource | Needs ID | Needs Payload | Auth Variants |
 # # |--------|----------------|----------|----------|----------------|----------------|
-# # | GET    | customers      | customer | ❌        | ❌              | 3              |
-# # | POST   | customers      | customer | ❌        | ✅              | 3              |
-# # | PUT    | customers/{id} | customer | ✅        | ✅              | 3              |
-# # | DELETE | customers/{id} | customer | ✅        | ❌              | 3              |
+# # | GET    | customers      | customers | ❌        | ❌              | 3              |
+# # | POST   | customers      | customers | ❌        | ✅              | 3              |
+# # | PUT    | customers/{id} | customers | ✅        | ✅              | 3              |
+# # | DELETE | customers/{id} | customers | ✅        | ❌              | 3              |
 #
 #
 # # ✅ Summary:

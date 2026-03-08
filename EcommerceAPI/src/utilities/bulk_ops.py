@@ -26,10 +26,10 @@ def bulk_create_and_validate_resources(
 
         qty (int): Number of resources to create and validate.
 
-        label (str): Label used for logging output (e.g., "customer", "product").
+        label (str): Label used for logging output (e.g., "customers", "product").
     """
 
-    # Stores all unique identifiers returned by create_fn (e.g., customer emails)
+    # Stores all unique identifiers returned by create_fn (e.g., customers emails)
     identifiers = []
     logger.info(f"🧪 Starting bulk create+validate for {qty} {label}(s)")
 

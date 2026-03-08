@@ -20,7 +20,7 @@ For all customer tests prefer the domain-scoped fixtures provided by the `custom
 Example (pytest style):
 ```python
 def test_update_customer(customer_helper, customers_dao, create_valid_customer):
-    customer = create_valid_customer  # fixture returns a validated customer object
+    customer = create_valid_customer  # fixture returns a validated customers object
     updated = customer_helper.update_customer(customer["id"], {"name": "New"})
     assert updated["name"] == "New"
     assert customers_dao.exists(customer["id"])
@@ -51,7 +51,7 @@ Allowed pattern:
 def test_order_for_existing_customer(entity_helper):
     customer_helper = entity_helper("customers")
     customer = customer_helper.create_customer()
-    # use customer in orders test...
+    # use customers in orders test...
 ```
 
 - ✔ This is allowed and decouples teams  
@@ -111,7 +111,7 @@ Example:
 def test_order_for_existing_customer(entity_helper):
     customer_helper = entity_helper("customers")
     customer = customer_helper.create_customer()
-    # use customer in orders test...
+    # use customers in orders test...
 ```
 
 - ✔ Cross-domain safe  

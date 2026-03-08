@@ -39,8 +39,9 @@ DB Validators
 
 assert_valid_customer_response → Structure validation (STRUCTURE)
 assert_single_customer_by_email → API validation (DATASET)
-assert_customer_creation_failed → error validation
-assert_customer_not_found_error → error validation
+assert_customer_creation_failed → error validation (SCENARIOS)
+assert_customer_not_found_error → error validation (SCENARIOS)
+assert_customer_error_response → error validation (BASE)
 assert_customer_retrieved_successfully → Transport validation (TRANSPORT)
 assert_customer_exists_and_matches_api → API + DB validation (INTEGRATION)
 assert_customer_identity() → Identity validation (BUSINESS)
@@ -65,7 +66,7 @@ logger = logging.getLogger(__name__)
 # -------------------------------------------------------
 def assert_valid_customer_response(customer: Dict[str, Any]) -> CustomerModel:
     """
-    Validate the structure of a customer API response.
+    Validate the structure of a customers API response.
 
     This function performs **structure validation** using the Pydantic
     `CustomerModel`.
@@ -77,11 +78,11 @@ def assert_valid_customer_response(customer: Dict[str, Any]) -> CustomerModel:
 
     Args:
         customer:
-            Raw customer dictionary returned by the API.
+            Raw customers dictionary returned by the API.
 
     Returns:
         CustomerModel:
-            Validated customer object.
+            Validated customers object.
 
     Raises:
         ValidationError:
@@ -90,7 +91,7 @@ def assert_valid_customer_response(customer: Dict[str, Any]) -> CustomerModel:
     # Pydantic parses and validates the dictionary.
     # If anything is wrong (missing fields, wrong types, invalid email) Pydantic raises a ValidationError immediately.
     customer_model = CustomerModel(**customer)  # This is a dictionary unpacking. Take all key-value pairs from the
-    # customer dict and pass them as named arguments.
+    # customers dict and pass them as named arguments.
 
     logger.info(
         "✅ Customer structure valid: id=%s, email=%s",
@@ -111,7 +112,7 @@ def assert_single_customer_by_email(
     email: str
 ) -> CustomerModel:
     """
-    Validate that exactly ONE customer exists for a given email in a dataset response (list endpoint).
+    Validate that exactly ONE customers exists for a given email in a dataset response (list endpoint).
 
     Typical use cases:
         - GET /customers
@@ -130,7 +131,7 @@ def assert_single_customer_by_email(
     matches = [c for c in customers if c.get("email") == email]
 
     assert len(matches) == 1, (
-        f"❌ Expected 1 customer for {email}, found {len(matches)}"
+        f"❌ Expected 1 customers for {email}, found {len(matches)}"
     )
 
     # Validate structure via Pydantic
@@ -147,7 +148,7 @@ def assert_single_customer_by_email(
 
 def assert_customer_creation_failed(response: dict):
     """
-    Validate customer creation failure (business + contract level).
+    Validate customers creation failure (business + contract level).
 
     IMPORTANT:
     - This function expects a parsed JSON dict (NOT HttpResponse)
@@ -165,41 +166,43 @@ def assert_customer_creation_failed(response: dict):
         "data": {"status": 400}
     }
     """
-    assert response['data'] == {'status': 400}, (f"Invalid data. Current: {response['data']}, "
-                                                 f"Expected: {{'status': 400}}"
-                                                 )
 
-    assert response['code'], "❌ Error 'code' should not be empty"
+    # Base error contract validation
+    assert_customer_error_response(response)
+
+    assert response["data"]["status"] == 400, (
+        f"Expected status 400, got {response['data']['status']}"
+    )
 
     assert response['code'] == "registration-error-email-exists", (
         f"Invalid Error code. Current: '{response['code']}', "
         f"Expected: 'registration-error-email-exists'"
     )
 
-    assert response['message'], "❌ Error 'message' should not be empty"
     assert "An account is already registered" in str(response['message'])
 
 
 def assert_customer_not_found_error(response):
     """
-    Validate response for a non-existing customer.
+    Validate error returned when customers does not exist.
 
     Expected:
         code: wc_user_invalid_id
         message: "Invalid user ID."
         status: 404
     """
+    # Base error contract validation
+    assert_customer_error_response(response)
+
+    assert response["data"]["status"] == 404, (
+        f"Expected status 404, got {response['data']['status']}"
+    )
 
     assert response['code'] == "wc_user_invalid_id", (f"Invalid Error code. Current: '{response['code']}', "
                                                       f"Expected: 'wc_user_invalid_id' ")
 
-    assert response['message'], "❌ Error 'message' should not be empty"
-
     assert response['message'] == "Invalid user ID.", (f"Invalid Error message. Current: '{response['message']}', "
                                                        f"Expected: 'Invalid user ID'")
-
-    assert response['data'] == {'status': 404}, (f"Invalid data. Current: {response['data']}, "
-                                                 f"Expected: {{'status': 404}}")
 
 
 def assert_customer_retrieved_successfully(response: HttpResponse) -> CustomerModel:
@@ -232,14 +235,14 @@ def assert_customer_exists_and_matches_api(
         db_customer: Dict[str, Any],
 ) -> None:
     """
-    Validate that the returned customer matches the expected identity.
+    Validate that the returned customers matches the expected identity.
 
-    Used when a single customer object should be returned by the API.
+    Used when a single customers object should be returned by the API.
 
     This validator performs two layers of validation:
 
     1️⃣ API VALIDATION
-        - Ensures exactly one customer exists in the dataset
+        - Ensures exactly one customers exists in the dataset
         - Validates structure via Pydantic
         - Returns a typed CustomerModel
 
@@ -254,7 +257,7 @@ def assert_customer_exists_and_matches_api(
             Dataset returned by API (GET /customers).
 
         email:
-            Expected customer email.
+            Expected customers email.
 
         db_customer:
             Database record retrieved via DAO.
@@ -264,12 +267,12 @@ def assert_customer_exists_and_matches_api(
             If API data or DB data are inconsistent.
     """
 
-    logger.debug("⚙️ Validating existence of customer by email: %s", email)
+    logger.debug("⚙️ Validating existence of customers by email: %s", email)
 
     # -------------------------------------------------------
     # 1️⃣ DATASET VALIDATION
     # -------------------------------------------------------
-    # Ensure exactly one customer exists in API dataset and validate structure using Pydantic.
+    # Ensure exactly one customers exists in API dataset and validate structure using Pydantic.
     customer = assert_single_customer_by_email(customers, email)
 
     logger.info(
@@ -299,14 +302,14 @@ def assert_customer_identity(
     expected_email: str
 ) -> None:
     """
-    Validate that the returned customer matches the expected identity.
+    Validate that the returned customers matches the expected identity.
 
     This validator ensures that the API returned the correct resource.
 
     Typical use cases:
         - GET /customers/{id}
         - GET /customers?email=
-        - responses where a SINGLE customer object is expected
+        - responses where a SINGLE customers object is expected
 
     Why this validator exists:
         - Removes duplicated assertions across tests
@@ -316,28 +319,28 @@ def assert_customer_identity(
 
     Args:
         customer (CustomerModel):
-            Validated customer object returned by API.
+            Validated customers object returned by API.
 
         expected_id (int):
-            ID of the customer that should have been returned.
+            ID of the customers that should have been returned.
 
         expected_email (str):
-            Email of the customer that should have been returned.
+            Email of the customers that should have been returned.
 
     Raises:
         AssertionError:
-            If returned customer does not match expected identity.
+            If returned customers does not match expected identity.
     """
 
     # -------------------------------------------------------
-    # Validate customer ID
+    # Validate customers ID
     # -------------------------------------------------------
     assert customer.id == expected_id, (
         f"❌ Customer ID mismatch: expected {expected_id}, got {customer.id}"
     )
 
     # -------------------------------------------------------
-    # Validate customer email
+    # Validate customers email
     # -------------------------------------------------------
     assert customer.email == expected_email, (
         f"❌ Customer email mismatch: expected {expected_email}, got {customer.email}"
@@ -347,4 +350,67 @@ def assert_customer_identity(
         "✅ Customer identity verified (id=%s, email=%s)",
         customer.id,
         customer.email
+    )
+
+
+# -------------------------------------------------------
+# 🚨 GENERIC ERROR VALIDATION
+# -------------------------------------------------------
+def assert_customer_error_response(
+    response: dict,
+    expected_status: int | None = None
+) -> None:
+    """
+    Validate the standard WooCommerce error response structure.
+
+    This validator ensures the API returned a valid error payload.
+
+    Expected structure:
+
+    {
+        "code": "...",
+        "message": "...",
+        "data": {
+            "status": 400
+        }
+    }
+
+    Args:
+        response:
+            Parsed JSON error response returned by the API.
+
+        expected_status:
+            Optional expected HTTP status code (e.g. 400, 404).
+
+    Raises:
+        AssertionError if the error structure is invalid.
+    """
+
+    # -------------------------------------------------------
+    # Basic contract validation
+    # -------------------------------------------------------
+    assert isinstance(response, dict), (
+        f"❌ Expected error response dict, got: {type(response)}"
+    )
+    assert "code" in response, f"❌ Missing 'code' in response: {response}"
+    assert "message" in response, f"❌ Missing 'message' in response: {response}"
+    assert "data" in response, f"❌ Missing 'data' in response: {response}"
+
+    # -------------------------------------------------------
+    # Ensure values are not empty
+    # -------------------------------------------------------
+    assert response["code"], "❌ Error 'code' must not be empty"
+    assert response["message"], "❌ Error 'message' must not be empty"
+
+    # -------------------------------------------------------
+    # Check HTTP status
+    # -------------------------------------------------------
+    assert "status" in response["data"], (
+        f"❌ Missing 'status' in response['data']: {response}"
+    )
+
+    logger.info(
+        "✅ Valid error response received (code=%s status=%s)",
+        response["code"],
+        response["data"]["status"]
     )

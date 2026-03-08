@@ -37,13 +37,13 @@ def build_created_after_before_window(
     Here’s why we don’t just call /customers with no filters:
         - Efficiency & Focus: Most /customers endpoints return paginated results. You don’t want to search through
         10,000 customers just to check if one was excluded.
-        - Precision: You're narrowing the scope of your query to only the time when the deleted customer could’ve existed.
+        - Precision: You're narrowing the scope of your query to only the time when the deleted customers could’ve existed.
         - Edge Case Coverage: This helps test whether filtering logic (e.g., on created_at) leaks deleted data when
         users query by time.
 
     But in practice, if you don't pair it with created_before, you widen the query unnecessarily, increasing chances of:
         - Random, unrelated results that might slow down the test.
-        - Flaky behavior (e.g., if another customer gets created in the test run and appears in the response)
+        - Flaky behavior (e.g., if another customers gets created in the test run and appears in the response)
         - Time drift issues (e.g., if server and test time differ)
 
     Args:
@@ -77,7 +77,7 @@ def get_customers_in_window(helper, created_at: datetime, before_min: int = 1, a
     Fetches customers from API filtered by a time window around `created_at`.
 
     Args:
-        helper: The customer helper with API call method.
+        helper: The customers helper with API call method.
         created_at (datetime): Timestamp to build the filter window around.
         before_min (int): +/- window size in minutes.
         after_min (int): +/- window size in minutes.
@@ -86,7 +86,7 @@ def get_customers_in_window(helper, created_at: datetime, before_min: int = 1, a
     Returns:
         list: Customers returned from the API in the given time window.
     """
-    # ⏳ Parse server timestamps the exact creation time from the customer response (in GMT) using ISO parser to
+    # ⏳ Parse server timestamps the exact creation time from the customers response (in GMT) using ISO parser to
     # avoid datetime bugs.
     created_after, created_before = build_created_after_before_window(
         base_time=created_at,

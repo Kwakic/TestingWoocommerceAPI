@@ -4,7 +4,7 @@ Customer Pydantic Models (STRUCTURE VALIDATION LAYER)
 
 🎯 Purpose
 ---------------------------------------------------------------------
-Define the expected structure of customer objects returned by the API.
+Define the expected structure of customers objects returned by the API.
 
 These models replace JSON Schema validation and provide:
 
@@ -36,7 +36,7 @@ If validation fails → Pydantic raises ValidationError.
 ---------------------------------------------------------------------
 When you need a dict (for DB validators):
 Use:
-    customer.model_dump()
+    customers.model_dump()
 
 """
 from typing import Optional, List, Dict, Any

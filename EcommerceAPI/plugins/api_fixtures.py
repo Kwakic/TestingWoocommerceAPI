@@ -16,9 +16,9 @@ Fixtures
     * This avoids hardcoding service names or doing brittle path-based detection.
 
 - create_valid_customer (function):
-    Factory that delegates to the customers_helper to create a valid customer
+    Factory that delegates to the customers_helper to create a valid customers
     (happy-path only). Preserves original behavior:
-      * returns the created customer dict on success
+      * returns the created customers dict on success
       * returns exception.response_json for expected API errors
         (UnexpectedStatusCodeError, SchemaValidationError)
       * optionally validates the response via helper.assert_valid_customer_response
@@ -117,19 +117,19 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
 
     EXAMPLE:
     --------
-    customer = create_valid_customer()
-    assert customer["email"]
+    customers = create_valid_customer()
+    assert customers["email"]
 
     Args:
         shared_api_resources (dict): Injected resources containing helper, DAO, and cleanup registry.
 
     Returns:
-        Callable[..., dict]: A function to create a customer with custom fields.
+        Callable[..., dict]: A function to create a customers with custom fields.
 
     How it works:
         Inside fixture: response = customer_helper.create_customer(return_response=True) --> returns HttpResponse
-        Then: customer = response.json
-              return customer --> So the FINAL output of fixture is: dict
+        Then: customers = response.json
+              return customers --> So the FINAL output of fixture is: dict
         - Inside fixture → HttpResponse (temporary)
         - Outside fixture → dict (final contract)
     """
@@ -138,11 +138,11 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
 
     def _create_customer(skip_cleanup: bool = False, **kwargs) -> dict:
         """
-        Create a valid customer (happy-path ONLY).
+        Create a valid customers (happy-path ONLY).
 
         🔥 CONTRACT (IMPORTANT):
         -----------------------
-        - ALWAYS returns a valid customer dict
+        - ALWAYS returns a valid customers dict
         - ALWAYS validates status_code == 201
         - ALWAYS validates schema + domain rules
         - NEVER returns HttpResponse
@@ -164,7 +164,7 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
                 Custom payload fields (email, password, etc.)
 
         Returns:
-            dict: Validated customer object
+            dict: Validated customers object
                   Internally uses HttpResponse but never exposes it (for status code)
 
         Raises:
@@ -207,9 +207,9 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
         # -----------------------------------------
         if not skip_cleanup:
             register("customers", customer["id"])
-            log.debug("ℹ️ Registered customer with ID: %s for cleanup.", customer["id"])
+            log.debug("ℹ️ Registered customers with ID: %s for cleanup.", customer["id"])
         else:
-            log.debug("ℹ️ Skipped registering customer %s for cleanup.", customer["id"])
+            log.debug("ℹ️ Skipped registering customers %s for cleanup.", customer["id"])
 
         return customer
     return _create_customer
@@ -221,7 +221,7 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
 @pytest.fixture(scope="function")
 def customer_api_raw(api_client):
     """
-    Provides direct access to APIClient for customer API calls without helper/fixture validation.
+    Provides direct access to APIClient for customers API calls without helper/fixture validation.
 
     When to use:
         - Testing invalid payloads, malformed fields, or bad requests

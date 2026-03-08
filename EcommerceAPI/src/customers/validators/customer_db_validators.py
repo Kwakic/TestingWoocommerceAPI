@@ -20,7 +20,7 @@ def assert_customer_matches_db(
     db_customer: Dict[str, any]
 ) -> None:
     """
-    Validate that the API customer object matches the corresponding database record.
+    Validate that the API customers object matches the corresponding database record.
 
     This validator performs **pure business validation**.
 
@@ -32,7 +32,7 @@ def assert_customer_matches_db(
 
     Args:
         customer (CustomerModel):
-            Validated customer object returned by API assertions.
+            Validated customers object returned by API assertions.
 
         db_customer (Dict[str, Any]):
             Customer record retrieved from the database via DAO.
@@ -46,7 +46,7 @@ def assert_customer_matches_db(
     # -------------------------------------------------------
     # 🗄️ Ensure DB record exists
     # -------------------------------------------------------
-    assert db_customer, "❌ No DB record found for customer"
+    assert db_customer, "❌ No DB record found for customers"
 
     # -------------------------------------------------------
     # 🧪 BUSINESS VALIDATION
@@ -62,6 +62,6 @@ def assert_customer_matches_db(
     )
 
     logger.info(
-        "✅ Assertion passed: API customer matches DB record (ID=%s)",
+        "✅ Assertion passed: API customers matches DB record (ID=%s)",
         customer.id
     )

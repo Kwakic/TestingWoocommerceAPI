@@ -21,7 +21,7 @@ pytestmark = [pytest.mark.customers, pytest.mark.regression, pytest.mark.end_to_
 def test_list_customers_created_within_time_range_with_db_check(customer_helper, customers_dao, minute_offset: int,
                                                                 create_valid_customer):
     """
-    Verify that a customer appears in results when filtering by a time
+    Verify that a customers appears in results when filtering by a time
     window that includes the creation timestamp.
 
     Endpoint tested:
@@ -33,17 +33,17 @@ def test_list_customers_created_within_time_range_with_db_check(customer_helper,
         - automatic cleanup registration
 
     Test flow:
-        1. Create a customer
+        1. Create a customers
         2. Build a time window around the server creation timestamp
         3. Retrieve customers using time filters
-        4. Ensure the created customer appears in the results
+        4. Ensure the created customers appears in the results
         5. Validate returned customers
         6. Verify API data matches database
     """
 
-    # Step 1 — Create customer (fixture performs POST validation)
-    logger.info("🛠 Creating a test customer via factory fixture.")
-    # To keep the customer in the DB (i.e., skip deletion), set: customer = create_customer_for_test(skip_cleanup=True)
+    # Step 1 — Create customers (fixture performs POST validation)
+    logger.info("🛠 Creating a test customers via factory fixture.")
+    # To keep the customers in the DB (i.e., skip deletion), set: customers = create_customer_for_test(skip_cleanup=True)
     customer = create_valid_customer()  # Default: skip_cleanup=False, validate_response=True
 
     customer_id = customer["id"]
@@ -67,13 +67,13 @@ def test_list_customers_created_within_time_range_with_db_check(customer_helper,
     assert filtered_customers, "❌ No customers returned from GET /customers with date filters"
     logger.info(f"✅ Assertion passed: Customers returned from filtered GET: count={len(filtered_customers)}")
 
-    # Step 4 — Extract the expected customer from dataset
+    # Step 4 — Extract the expected customers from dataset
     customer_model = assert_single_customer_by_email(
         filtered_customers,
         customer_email
     )
 
-    # Step 5 — Validate customer identity
+    # Step 5 — Validate customers identity
     assert_customer_identity(
         customer_model,
         customer_id,
@@ -94,7 +94,7 @@ def test_list_customers_created_within_time_range_with_db_check(customer_helper,
     # Step 7 — Verify API data matches database
     customer_helper.assert_customer_exists_and_matches_db(customer_email, customers_dao)
 
-    logger.info("🎯 Full validation complete for customer ID: %r", customer_id)
+    logger.info("🎯 Full validation complete for customers ID: %r", customer_id)
 
 
 @pytest.mark.negative_test
@@ -102,22 +102,22 @@ def test_list_customers_created_within_time_range_with_db_check(customer_helper,
 def test_customer_should_not_returned_when_filtered_outside_creation_time(customer_helper, customers_dao,
                                                                           create_valid_customer):
     """
-    Verify that a customer is NOT returned when filtering outside
+    Verify that a customers is NOT returned when filtering outside
     the creation timestamp window.
 
     Endpoint tested:
         GET /customers?created_after=&created_before=
 
     Test flow:
-        1. Create a customer
+        1. Create a customers
         2. Build a time window outside the creation timestamp
         3. Query customers using the filter
-        4. Ensure the created customer is NOT returned
+        4. Ensure the created customers is NOT returned
     """
 
-    # Step 1 — Create customer
-    logger.info("🛠 Creating a test customer via factory fixture.")
-    # To keep the customer in the DB (i.e., skip deletion), set: customer = create_customer_for_test(skip_cleanup=True)
+    # Step 1 — Create customers
+    logger.info("🛠 Creating a test customers via factory fixture.")
+    # To keep the customers in the DB (i.e., skip deletion), set: customers = create_customer_for_test(skip_cleanup=True)
     customer = create_valid_customer()  # Default: skip_cleanup=False, validate_response=True
 
     customer_id = customer["id"]
@@ -128,7 +128,7 @@ def test_customer_should_not_returned_when_filtered_outside_creation_time(custom
 
     # Step 2 — Retrieve customers outside creation window
     # Note: Use the utility with logging now included inside it. ⏳ Parse server timestamps the exact creation time from
-    # the customer response (in GMT) using ISO parser to avoid datetime bugs.
+    # the customers response (in GMT) using ISO parser to avoid datetime bugs.
     filtered_customers = get_customers_in_window(
         helper=customer_helper,
         created_at=created_at,
@@ -139,7 +139,7 @@ def test_customer_should_not_returned_when_filtered_outside_creation_time(custom
 
     returned_ids = [c["id"] for c in filtered_customers]
 
-    # Step 3 — Ensure customer is excluded from results
+    # Step 3 — Ensure customers is excluded from results
     assert customer_id not in returned_ids, (
         f"❌ Customer ID {customer_id} was incorrectly included in results filtered outside its creation time"
     )

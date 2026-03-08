@@ -22,7 +22,7 @@ ARCHITECTURAL PRINCIPLES
 
 • No coupling between teams
   - Orders tests can use customers via entity_helper("customers")
-    without importing or depending on customer test code.
+    without importing or depending on customers test code.
 
 • Zero breaking changes
   - Existing tests using all_resources.<entity>.helper continue to work.
@@ -59,17 +59,17 @@ USAGE EXAMPLES
 ✔ Domain-specific tests (preferred within a domain)
 
     def test_customer(customer_helper):
-        customer = customer_helper.create_customer()
-        assert customer["id"]
+        customers = customer_helper.create_customer()
+        assert customers["id"]
 
 
 ✔ Cross-team reuse (orders using customers)
 
     def test_order_creation(entity_helper):
         customer_helper = entity_helper("customers")
-        customer = customer_helper.create_customer()
-        order = create_order(customer_id=customer["id"])
-        assert order["customer_id"] == customer["id"]
+        customers = customer_helper.create_customer()
+        order = create_order(customer_id=customers["id"])
+        assert order["customer_id"] == customers["id"]
 
 
 ✔ Parametrized framework / infra tests
@@ -158,8 +158,8 @@ class EntityBundle:
     Example usage in a test:
         helper = all_resources.entities["customers"].helper
         dao = all_resources.entities["customers"].dao
-        customer = helper.create_customer()
-        db_record = dao.get_customer_by_id(customer["id"])
+        customers = helper.create_customer()
+        db_record = dao.get_customer_by_id(customers["id"])
 
     """
     helper: Any
@@ -299,7 +299,7 @@ def discover_entities(api_client: APIClient) -> Dict[str, EntityBundle]:
         """
         entity_lower = entity_name.lower()
 
-        # Conservative singular prefix (customers -> customer)
+        # Conservative singular prefix (customers -> customers)
         prefix = entity_lower[:-1] if entity_lower.endswith("s") and len(entity_lower) > 1 else entity_lower
 
         # Step 1: predictable module filename candidates (deduped)

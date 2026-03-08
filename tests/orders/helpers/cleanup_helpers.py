@@ -61,7 +61,7 @@
 #     Args:
 #         resource_type: API resource path or logical name (e.g., "customers", "orders").
 #         resource_ids: Iterable of resource identifiers to attempt deletion on.
-#         label: Friendly singular label for logs (e.g., "customer"). Defaults to resource_type.rstrip("s").
+#         label: Friendly singular label for logs (e.g., "customers"). Defaults to resource_type.rstrip("s").
 #         summary_log: Optional list to which a summary line will be appended.
 #         total_created: How many were created during the test session (for summary).
 #         skip_message: Optional message used when there is nothing to cleanup.
@@ -154,7 +154,7 @@
 #     Args:
 #         client: A APIClient-like object exposing `.delete_it.py(...)`.
 #         resource_type: The resource path (e.g., "customers").
-#         label: Optional friendly label (e.g., "customer").
+#         label: Optional friendly label (e.g., "customers").
 #
 #     Returns:
 #         Callable that accepts the same args as cleanup_items except "delete_method" and "resource_type".
@@ -173,7 +173,7 @@
 #     return {
 #         "orders": make_cleanup_partial(client, "orders", label="order"),
 #         "products": make_cleanup_partial(client, "products", label="product"),
-#         "customers": make_cleanup_partial(client, "customers", label="customer"),
+#         "customers": make_cleanup_partial(client, "customers", label="customers"),
 #         "coupons": make_cleanup_partial(client, "coupons", label="coupon"),
 #     }
 #
@@ -221,7 +221,7 @@
 #
 # def cleanup_customers(resource_ids: Iterable[Any], **kwargs) -> None:
 #     client = _require_default_client()
-#     return make_cleanup_partial(client, "customers", label="customer")(resource_ids, **kwargs)
+#     return make_cleanup_partial(client, "customers", label="customers")(resource_ids, **kwargs)
 #
 #
 # def cleanup_coupons(resource_ids: Iterable[Any], **kwargs) -> None:
