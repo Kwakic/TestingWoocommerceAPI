@@ -82,7 +82,7 @@ import requests
 from requests_oauthlib import OAuth1
 from urllib.parse import urlparse
 
-from EcommerceAPI.src.utilities.credentialsUtility import get_wc_api_keys
+from EcommerceAPI.src.utilities.credentials_utility import get_wc_api_keys
 from EcommerceAPI.src.core.http_client import HttpClient
 from EcommerceAPI.src.core.http_response import HttpResponse
 

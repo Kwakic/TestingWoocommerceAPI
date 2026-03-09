@@ -4,7 +4,7 @@ import logging
 from jsonschema import validate
 from json import loads
 
-from tests.shared.schemas.customers.error_schema import error_schema
+from tests.shared.contracts.error_schema import error_schema
 
 from EcommerceAPI.src.customers.validators.customer_validators import (assert_customer_not_found_error,
                                                                        assert_customer_retrieved_successfully,

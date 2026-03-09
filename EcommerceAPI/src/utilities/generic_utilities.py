@@ -1,4 +1,4 @@
-# genericUtilities.py
+# generic_utilities.py
 # Helper utilities to generate random emails, passwords, strings, and coupon codes.
 
 import logging as logger

@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.pool import QueuePool
-from EcommerceAPI.src.utilities.credentialsUtility import get_db_credentials
+from EcommerceAPI.src.utilities.credentials_utility import get_db_credentials
 import logging
 
 logger = logging.getLogger(__name__)

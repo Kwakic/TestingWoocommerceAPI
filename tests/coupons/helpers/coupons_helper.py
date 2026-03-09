@@ -18,7 +18,7 @@
 # from EcommerceAPI.src.clients.api_client import APIClient
 # from EcommerceAPI.src.utilities.exceptions import APIRequestException
 # from EcommerceAPI.src.coupons.dao.coupons_dao import CouponsDAO
-# from tests.shared.schemas import coupon_schema, error_schema
+# from tests.shared.models import coupon_schema, error_schema
 #
 # logger = logging.getLogger(__name__)
 #
@@ -145,7 +145,7 @@
 #         """
 #         Validate an error response for coupons.
 #
-#         If an `error_schema` is available in EcommerceAPI.src.schemas.coupon it will be used for full JSON Schema
+#         If an `error_schema` is available in EcommerceAPI.src.models.coupon it will be used for full JSON Schema
 #         validation. Otherwise a minimal structural check (presence of 'code' and 'message') is performed.
 #         """
 #         if not isinstance(response, dict):

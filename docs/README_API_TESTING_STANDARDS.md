@@ -282,3 +282,56 @@ Always validate responses in this order:
 3. Structure validation (Pydantic)
 4. Business validation
 5. Database validation (if applicable)
+
+
+------------------------------------------------------------------
+# 🧪 Shared Test Suites (Framework-Level Tests)
+
+The framework also contains shared tests that validate infrastructure,
+security, and environment behavior before running entity-specific tests.
+
+Directory structure:
+
+tests/shared/
+
+    preflight/
+        test_api_connectivity.py
+        test_response_format.py
+        test_logging_globals.py
+
+    security/
+        test_authentication_matrix.py
+        test_authentication_success.py
+
+    performance/
+        test_basic_response_times.py
+
+Purpose of each category:
+
+Preflight tests
+---------------
+Verify the test environment and framework configuration before executing
+the full test suite.
+
+Examples:
+- API connectivity
+- logging configuration
+- response format validation
+
+Security tests
+--------------
+Validate authentication and access control behavior.
+
+Example matrix:
+
+4 entities
+× 4 HTTP methods
+× 3 invalid credential cases
+= 48 security tests
+
+Performance tests
+-----------------
+Provide lightweight baseline response time checks to detect regressions
+in API responsiveness.
+
+------------------------------------------------------------------

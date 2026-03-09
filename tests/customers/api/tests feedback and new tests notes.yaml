@@ -14,7 +14,7 @@
 #    Update ignoring system-managed fields (date_created, is_paying_customer, etc.)
 #
 #🧾 Schema Validation:
-#    POST, GET, PUT response schemas
+#    POST, GET, PUT response models
 #    Correct data types and presence/absence of keys
 #
 #🗄️ DB Assertions:

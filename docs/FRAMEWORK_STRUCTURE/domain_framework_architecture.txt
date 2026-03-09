@@ -68,17 +68,17 @@ TestEcommerceAPI (project suite/root)
 │     │     ├── utilities/                           ← ⚠ universal/reusable utilities
 │     │     │     ├── __init__.py
 │     │     │     ├── bulk_ops.py
-│     │     │     ├── credentialsUtility.py
+│     │     │     ├── credentials_utility.py
 │     │     │     ├── custom_logger.py
 │     │     │     ├── data_utils.py
 │     │     │     ├── date_timestamp_utils.py
-│     │     │     ├── dbUtility.py
+│     │     │     ├── db_utility.py
 │     │     │     ├── entities_registry.py
 │     │     │     ├── env_utils.py
 │     │     │     ├── exceptions.py
 │     │     │     ├── filtering_utils.py
-│     │     │     ├── genericUtilities.py
-│     │     │     ├── log._context.py
+│     │     │     ├── generic_utilities.py
+│     │     │     ├── log_context.py
 │     │     │     ├── pagination_utils.py
 │     │     │     ├── api_client.py
 │     │     │     ├── team_discovery.py
@@ -127,42 +127,28 @@ TestEcommerceAPI (project suite/root)
 │     │     ├── conftest.py
 │     │     ├── README.md
 │     │     └── api/
-│     │            ├── test_debug.log
-│     │            ├── test_suite_summary.MD
 │     │            ├── test_create_customer.py
 │     │            ├── test_customer_deletion.py
 │     │            ├── test_customer_filters.py
-│     │            ├── test_customers_auth.py
 │     │            ├── test_get_all_customers_smoke.py
 │     │            ├── test_get_customer.py
 │     │            ├── test_soft_deleted_customer_handling.py
-│     │            ├── test_update_custom
+│     │            ├── test_update_customer.py
 │     │            └── __init__.py
 │     ├── shared/
-│     │     ├── schemas/                             ← JSON contract schemas (contract testing)
-│     │     │      ├── customers
-│     │     │      │      ├── error_schema.py
-│     │     │      │      └── __init__.py
-│     │     │      ├── orders
-│     │     │      │      ├── error_schema.py
-│     │     │      │      └── __init__.py
-│     │     │      ├── coupons
-│     │     │      │      ├── error_schema.py
-│     │     │      │      └── __init__.py
-│     │     │      └── products
-│     │     │             ├── error_schema.py
-│     │     │             └── __init__.py
-│     │     ├── contract/
-│     │     │      ├── test_schema_validation_smoke.py
-│     │     │      ├── __init__.py
-│     │     │      └── README_CONTRACT.md
+│     │     ├── contracts/                          ← JSON contract schemas (contract testing)
+│     │     │      └── error_schema.py
 │     │     ├── performance/
 │     │     │      ├── test_basic_response_times.py
 │     │     │      └── __init__.py
+│     │     ├── security/
+│     │     │      ├── test_authentication_matrix.py
+│     │     │      ├── test_authentication_success.py
+│     │     │      └── __init__.py
 │     │     └── preflight/
+│     │            ├── test_api_connectivity.py
 │     │            ├── test_logging_globals.py
-│     │            ├── test_config_contract.py
-│     │            ├── test_pytest_bootstrap.py
+│     │            ├── test_response_format.py
 │     │            ├── __init__.py
 │     │            └── README_PREFLIGHT.md
 │     │

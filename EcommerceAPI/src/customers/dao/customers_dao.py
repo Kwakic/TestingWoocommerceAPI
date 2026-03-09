@@ -1,8 +1,8 @@
-from EcommerceAPI.src.utilities.dbUtility import DBUtility
+from EcommerceAPI.src.utilities.db_utility import DBUtility
 import logging
 import random
 
-from typing import Protocol, Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any
 
 logger = logging.getLogger(__name__)
 
@@ -44,8 +44,8 @@ class CustomersDAO(object):  # object in the parenthesis will inherit objects by
         # is required for execute(sql, params) to work correctly with 1 param.
 
         # Now we need to execute the query. For that, we will use the package called 'PyMySQL' and we write a code in
-        # 'dbUtility.py' file. It doesn't have sense to write code to access a database to create connection, get
-        # credentials, etc. Instead, we create a DB helper class 'dbUtility.py' because every connection will need
+        # 'db_utility.py' file. It doesn't have sense to write code to access a database to create connection, get
+        # credentials, etc. Instead, we create a DB helper class 'db_utility.py' because every connection will need
         # that(repetitive).
         try:
             rs_sql = self.db_helper.execute_select(sql, params)  # Execute the query securely with the parameter

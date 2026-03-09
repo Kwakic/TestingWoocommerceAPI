@@ -8,7 +8,7 @@ from typing import Optional, List, Dict, Any
 from EcommerceAPI.src.customers.validators.customer_validators import assert_customer_exists_and_matches_api, \
     assert_customer_retrieved_successfully, assert_customer_identity
 from EcommerceAPI.src.utilities.pagination_utils import paginate_all_results
-from EcommerceAPI.src.utilities.genericUtilities import generate_random_email_and_password
+from EcommerceAPI.src.utilities.generic_utilities import generate_random_email_and_password
 from EcommerceAPI.src.utilities.exceptions import UnexpectedStatusCodeError, SchemaValidationError
 from EcommerceAPI.src.utilities.date_timestamp_utils import safe_parse_utc_datetime
 from EcommerceAPI.src.core.http_response import HttpResponse

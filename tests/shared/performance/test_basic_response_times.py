@@ -43,6 +43,9 @@ from EcommerceAPI.src.configs.config_loader import ENV
 logger = logging.getLogger(__name__)
 
 
+pytestmark = [pytest.mark.performance]
+
+
 def _build_display_endpoint(endpoint: str, params: Optional[Dict[str, Any]]) -> str:
     """
     Return a human-friendly endpoint representation, including an encoded querystring

@@ -1,6 +1,8 @@
 """
 Smoke tests for structured logging metadata and LAST_STRUCTURED_LOG exposure.
 
+preflight: verify environment/test framework before suite runs
+
 These tests validate:
 - GLOBAL_METADATA receives all expected keys after attach_global_logging_metadata is called.
 - configure_logging exposes the most-recent structured logfile path via LAST_STRUCTURED_LOG
@@ -76,5 +78,5 @@ def test_last_structured_log_set_when_enabled(tmp_path, monkeypatch):
         pass
     except PermissionError as e:
         # Common on Windows / CI; log for visibility but don't fail preflight
-        log.warning("Could not remove temp log dir %s: %s", tmp_log_dir, e)
+        logger.warning("Could not remove temp log dir %s: %s", tmp_log_dir, e)
 

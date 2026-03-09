@@ -1,6 +1,4 @@
-# import os
-# import pytest
-# from tests.customers.configs.config_customers import API_HOSTS
+# root/tests/customers/conftest
 
 from typing import TYPE_CHECKING
 import pytest

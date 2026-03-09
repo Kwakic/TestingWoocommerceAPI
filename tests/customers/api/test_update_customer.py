@@ -7,7 +7,7 @@ from jsonschema import validate
 from EcommerceAPI.src.customers.validators.customer_validators import (assert_customer_identity,
                                                                        assert_valid_customer_response,
                                                                        assert_customer_error_response)
-from tests.shared.schemas.customers.error_schema import error_schema
+from tests.shared.contracts.error_schema import error_schema
 
 logger = logging.getLogger(__name__)
 
@@ -227,8 +227,26 @@ def test_update_customer_invalid_inputs(
     )
 
 
-def test_validate_date_modified_and_date_modified_gmt():
+def test_validate_date_modified_and_date_modified_gmt(customer_helper, customers_dao,):
     """
     Verify that date_modified and date_modified_gmt change after updating a customers.
     """
+
+    # Fetch existing customer from DB. If there is no existing customer skip the test.
+    # existing_customer = customer_helper.get_customer_by_id(154)
+    existing_customer = customers_dao.get_random_customer_from_db()
+
+
+    # Update some fields of an existing customer ('email': 'hulibrk@takp.com', "billing":{phone:+36555888666})
+    # Verify that updated fields match the payload
+    # Verify that fields date_modified and date_modified_gmt are updated accordingly  from JSON response
+    # Verify date_created and date_created_gmt are haven't been updated from JSON response
+    # Verify these fields have been changed in DB
+
+
+    # 'date_created': '2026-03-09T16:23:05',
+    # 'date_created_gmt': '2026-03-09T16:23:05',
+    # 'date_modified': '2026-03-09T16:23:09',
+    # 'date_modified_gmt': '2026-03-09T16:23:09'
+
     pass

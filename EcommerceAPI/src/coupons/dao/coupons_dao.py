@@ -1,4 +1,4 @@
-from EcommerceAPI.src.utilities.dbUtility import DBUtility
+from EcommerceAPI.src.utilities.db_utility import DBUtility
 import random
 
 

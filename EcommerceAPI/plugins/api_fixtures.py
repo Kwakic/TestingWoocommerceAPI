@@ -37,13 +37,6 @@ from typing import Callable
 import logging
 import pytest
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    # IDE-only: point to the test-level fixture so PyCharm can navigate to it. Do NOT import conftest at runtime!
-    # TYPE_CHECKING imports are ignored at runtime, so they’re safe to add into framework code.
-    from tests.conftest import api_base_url as _api_base_url_fixture
-
 from EcommerceAPI.src.shared.helpers.cleanup_helpers import set_default_api_client
 from EcommerceAPI.src.customers.validators.customer_validators import assert_valid_customer_response
 from EcommerceAPI.src.clients.api_client import APIClient
@@ -55,7 +48,7 @@ log = logging.getLogger(__name__)
 # api_client fixture
 # -------------------------
 @pytest.fixture(scope="session")
-def api_client(api_base_url: "_api_base_url_fixture"):
+def api_client(api_base_url: str):
     """
     Provide a session-scoped APIClient instance (transport + orchestration layer).
 

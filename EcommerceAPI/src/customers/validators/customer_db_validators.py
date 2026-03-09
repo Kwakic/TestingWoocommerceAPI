@@ -3,7 +3,7 @@
 import logging
 from typing import Dict
 
-from EcommerceAPI.src.customers.schemas.customer_model import CustomerModel
+from EcommerceAPI.src.customers.models.customer_model import CustomerModel
 
 logger = logging.getLogger(__name__)
 

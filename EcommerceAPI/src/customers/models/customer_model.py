@@ -1,6 +1,6 @@
 # structure validation only
 """
-Customer Pydantic Models (STRUCTURE VALIDATION LAYER)
+Customer Pydantic Models (RUNTIME STRUCTURE VALIDATION LAYER)
 
 🎯 Purpose
 ---------------------------------------------------------------------

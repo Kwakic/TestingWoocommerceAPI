@@ -1,4 +1,4 @@
-from EcommerceAPI.src.utilities.dbUtility import DBUtility
+from EcommerceAPI.src.utilities.db_utility import DBUtility
 import logging as logger
 
 
@@ -79,7 +79,7 @@ class OrdersDao(object):  # object in the parenthesis will inherit objects by de
         #    - It's more robust if the variable includes quotes, special characters, etc.
 
         # The reason for adding "params" in your execute_select() --> "cur.execute(sql, params)"  within the
-        # "dbUtility.py" is specifically to make parameterized queries work safely and cleanly.
+        # "db_utility.py" is specifically to make parameterized queries work safely and cleanly.
 
     # ✅ Add insert_order_item_meta() Example
     # Below is an insert method for order item metadata using your new execute_sql() safely:

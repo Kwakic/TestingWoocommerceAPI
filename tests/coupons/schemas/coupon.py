@@ -6,7 +6,7 @@ This module exposes:
 - error_schema: schema to validate typical WooCommerce error responses (so helpers can import it safely)
 
 Note:
-- error_schema mirrors the general error schema used across other resource schemas to keep validation
+- error_schema mirrors the general error schema used across other resource models to keep validation
   consistent when helpers validate error responses.
 """
 # Basic coupon schema (keeps lenient behavior to allow API evolution)

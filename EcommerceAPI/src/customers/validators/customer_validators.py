@@ -56,7 +56,7 @@ from EcommerceAPI.src.customers.validators.customer_db_validators import (
     assert_customer_matches_db
 )
 
-from EcommerceAPI.src.customers.schemas.customer_model import CustomerModel
+from EcommerceAPI.src.customers.models.customer_model import CustomerModel
 
 logger = logging.getLogger(__name__)
 
