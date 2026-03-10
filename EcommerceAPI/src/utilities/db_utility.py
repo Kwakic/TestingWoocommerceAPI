@@ -1,6 +1,8 @@
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.pool import QueuePool
+from typing import List, Dict, Any
+
 from EcommerceAPI.src.utilities.credentials_utility import get_db_credentials
 import logging
 
@@ -21,13 +23,14 @@ class DBUtility:
         self.table_prefix = creds['table_prefix']
         self.database = creds['database']
 
-    def execute_select(self, sql: str, params=None):
+    def execute_select(self, sql: str, params=None) -> List[Dict[str, Any]]:
         with self.engine.connect() as conn:
             result = conn.execute(text(sql), params or {})
-            return [dict(row._mapping) for row in result]  # noinspection PyProtectedMember
+            return [dict(row) for row in result.mappings().all()]
 
     def execute_sql(self, sql: str, params=None):
-        with self.engine.begin() as conn:
-            result = conn.execute(text(sql), params or {})
-            return result.rowcount
+        with self.engine.connect() as conn:
+            with conn.begin():
+                result = conn.execute(text(sql), params or {})
+                return result.rowcount
 

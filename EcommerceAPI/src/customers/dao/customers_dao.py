@@ -1,6 +1,7 @@
 from EcommerceAPI.src.utilities.db_utility import DBUtility
 import logging
 import random
+from datetime import datetime, timezone
 
 from typing import Optional, List, Dict, Any
 
@@ -119,7 +120,43 @@ class CustomersDAO(object):  # object in the parenthesis will inherit objects by
             logger.exception(f"Error retrieving customers by ID '{customer_id}': {e}")
             raise
 
-    def get_random_customer_from_db(self, qty: int = 1, filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    def get_customers_updated_date(self, customer_id: int) -> Optional[datetime]:
+        """
+        Retrieve customer's last modified datetime from DB.
+
+        Verifying that API update timestamps and DB timestamps stay consistent.
+
+        Args:
+            customer_id: Customer ID.
+        Returns:
+            datetime | None
+        """
+        if not isinstance(customer_id, int) or customer_id <= 0:
+            raise ValueError("Invalid customers ID provided.")
+
+        sql = (
+            f"SELECT meta_value FROM {self.db_helper.database}.{self.db_helper.table_prefix}usermeta "
+            f"WHERE user_id = :id AND meta_key = 'last_update'"
+        )
+
+        params = {"id": customer_id}
+        try:
+            results = self.db_helper.execute_select(sql, params)
+
+            if not results:
+                return None
+
+            unix_ts = int(results[0]["meta_value"])
+
+            # Convert UNIX → UTC datetime
+            return datetime.fromtimestamp(unix_ts, tz=timezone.utc).replace(microsecond=0)
+
+        except Exception as e:
+            logger.exception(f"Error retrieving customers updated date for ID '{customer_id}': {e}")
+            raise
+
+    def get_random_customer_from_db(self, qty: int = 1,
+                                    filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         """
         Retrieve random customers(s) from the last 5000 entries, optionally filtered by fields in wp_users.
         Args:
@@ -131,6 +168,7 @@ class CustomersDAO(object):  # object in the parenthesis will inherit objects by
         Note: For this particular test case, we need only one customers, but in the future we might need multiple
         customers, so that's we specified the quantity (qty). This function's job is to randomly pick one or more
         customers from the database.
+
         """
 
         # 🔐 Step-by-Step
@@ -191,7 +229,7 @@ class CustomersDAO(object):  # object in the parenthesis will inherit objects by
             selected_customers = random.sample(rs_sql, qty)  # Randomly selects users from the list without replacement
             # (i.e., no duplicates). random.sample(population, k) guarantees a uniformly random subset of size k. No
             # duplicates, unlike random.choices.
-            logger.debug(f"Randomly selected {qty} customers(s) with filters {filters}: {selected_customers}")
+            logger.debug(f"✅ Randomly selected {qty} customers(s) with filters {filters}: {selected_customers}")
             return selected_customers  # Logs the selected subset of customers (at debug level). Returns the random
             # selection back to the caller.
 

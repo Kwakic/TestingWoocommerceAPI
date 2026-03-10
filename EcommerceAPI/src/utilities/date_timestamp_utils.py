@@ -230,3 +230,6 @@ def get_now_utc_floor() -> datetime:
     Returns the current time in UTC with microseconds stripped (rounded to the nearest second).
     """
     return datetime.now(timezone.utc).replace(microsecond=0)
+
+def unix_to_utc_datetime(unix_ts: int) -> datetime:
+    return datetime.fromtimestamp(unix_ts, tz=timezone.utc).replace(microsecond=0)

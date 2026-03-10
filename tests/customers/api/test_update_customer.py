@@ -3,10 +3,15 @@ import pytest
 import logging
 
 from jsonschema import validate
+from datetime import timezone
 
 from EcommerceAPI.src.customers.validators.customer_validators import (assert_customer_identity,
                                                                        assert_valid_customer_response,
                                                                        assert_customer_error_response)
+from EcommerceAPI.src.utilities.generic_utilities import generate_random_email_and_password
+
+from EcommerceAPI.src.utilities.date_timestamp_utils import precise_parse_utc_datetime
+
 from tests.shared.contracts.error_schema import error_schema
 
 logger = logging.getLogger(__name__)
@@ -89,7 +94,11 @@ def test_update_customer_first_name(customer_helper, customers_dao, create_valid
         return_http_response=True
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 200, (
+        f"PUT /customers updating failed. "
+        f"Expected 201, got {response.status_code}. "
+        f"Response: {response.text}"
+    )
 
     # Step 3 — Extract response body
     update_response = response.json
@@ -226,27 +235,127 @@ def test_update_customer_invalid_inputs(
         customer_id,
     )
 
-
-def test_validate_date_modified_and_date_modified_gmt(customer_helper, customers_dao,):
+@pytest.mark.tcid29
+def test_validate_date_modified_and_date_modified_gmt(customer_helper, customers_dao):
     """
-    Verify that date_modified and date_modified_gmt change after updating a customers.
+    Verify that customer modification timestamps are consistent between API and database.
+
+    This test validates the following:
+
+    1. Updating a customer changes the modification timestamp.
+    2. The API `date_modified` field matches the database `last_update` timestamp.
+    3. The original `date_created` value remains unchanged after update.
+
+    Important notes about timestamps:
+
+    • WordPress stores `user_registered` in site-local time.
+    • WooCommerce REST API returns timestamps in UTC.
+    • Therefore we allow a timezone tolerance when comparing creation timestamps.
+
+    Test flow:
+        1. Fetch a random active customer from DB
+        2. Capture DB timestamps before update
+        3. Update the customer via API
+        4. Validate identity and business changes
+        5. Validate timestamp consistency between API and DB
     """
 
-    # Fetch existing customer from DB. If there is no existing customer skip the test.
-    # existing_customer = customer_helper.get_customer_by_id(154)
-    existing_customer = customers_dao.get_random_customer_from_db()
+    # -------------------------------------------------------------
+    # Step 1 — Retrieve a random active customer from the database
+    # -------------------------------------------------------------
+    logger.info("🛠 Retrieving random active customer from DB.")
+    customer = customers_dao.get_random_customer_from_db(
+        qty=1,
+        filters={"user_status": 0}
+    )
 
+    if not customer:
+        pytest.skip("No active customer found in DB")
 
-    # Update some fields of an existing customer ('email': 'hulibrk@takp.com', "billing":{phone:+36555888666})
-    # Verify that updated fields match the payload
-    # Verify that fields date_modified and date_modified_gmt are updated accordingly  from JSON response
-    # Verify date_created and date_created_gmt are haven't been updated from JSON response
-    # Verify these fields have been changed in DB
+    existing_customer = customer[0]
 
+    db_id = existing_customer["ID"]
+    db_email = existing_customer["user_email"]
 
-    # 'date_created': '2026-03-09T16:23:05',
-    # 'date_created_gmt': '2026-03-09T16:23:05',
-    # 'date_modified': '2026-03-09T16:23:09',
-    # 'date_modified_gmt': '2026-03-09T16:23:09'
+    # WordPress stores this as site-local time (no timezone)
+    db_created_at = existing_customer["user_registered"].replace(microsecond=0)
 
-    pass
+    # Capture DB modification timestamp BEFORE update
+    db_modified_before = customers_dao.get_customers_updated_date(db_id)
+
+    # -------------------------------------------------------------
+    # Step 2 — Update customer via API
+    # -------------------------------------------------------------
+    rand_email = generate_random_email_and_password()["email"]
+
+    payload = {
+        "email": rand_email,
+        "billing": {"phone": "36555888666"}
+    }
+
+    response = customer_helper.update_customer(
+        customer_id=db_id,
+        payload=payload,
+        return_http_response=True
+    )
+
+    # Fail fast if update request failed
+    assert response.status_code == 200, (
+        f"PUT /customers update failed: {response.text}"
+    )
+
+    # -------------------------------------------------------------
+    # Step 3 — Validate response structure
+    # -------------------------------------------------------------
+    updated_customer = response.json
+    customer_model = assert_valid_customer_response(updated_customer)
+
+    # Parse API timestamps (API always returns UTC ISO timestamps)
+    api_created_at = precise_parse_utc_datetime(customer_model.date_created)
+    api_modified_at = precise_parse_utc_datetime(customer_model.date_modified)
+
+    # -------------------------------------------------------------
+    # Step 4 — Validate identity and business change
+    # -------------------------------------------------------------
+    assert_customer_identity(
+        customer_model,
+        db_id,
+        customer_model.email
+    )
+
+    # Ensure update actually changed the email
+    assert db_email != customer_model.email, (
+        f"❌ Customer email mismatch: expected change from {db_email} to {customer_model.email}"
+    )
+
+    # -------------------------------------------------------------
+    # Step 5 — Validate creation timestamp remains unchanged
+    # -------------------------------------------------------------
+    # DB timestamp is stored in site-local timezone.
+    # API timestamp is returned in UTC.
+    # Therefore we allow a tolerance window (usually 1 hour).
+    db_created_at_utc = db_created_at.replace(tzinfo=timezone.utc)
+
+    delta_seconds = abs((api_created_at - db_created_at_utc).total_seconds())
+
+    assert delta_seconds <= 3600, (
+        f"❌ Customer created_at mismatch beyond timezone tolerance: "
+        f"DB={db_created_at_utc}, API={api_created_at}"
+    )
+
+    # -------------------------------------------------------------
+    # Step 6 — Validate DB modification timestamp changed
+    # -------------------------------------------------------------
+    db_modified_after = customers_dao.get_customers_updated_date(db_id)
+
+    assert db_modified_after != db_modified_before, (
+        "❌ DB modified timestamp did not change after update"
+    )
+
+    # -------------------------------------------------------------
+    # Step 7 — Validate API modification timestamp matches DB
+    # -------------------------------------------------------------
+    assert api_modified_at == db_modified_after, (
+        f"❌ Modified timestamp mismatch: DB={db_modified_after}, API={api_modified_at}"
+    )
+

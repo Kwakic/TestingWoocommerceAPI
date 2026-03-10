@@ -9,7 +9,8 @@ import time
 from typing import Optional, Dict  # This line is included because of type hints in the function signatures:
 
 
-def generate_random_email_and_password(domain: Optional[str] = None, email_prefix: Optional[str] = None) -> Dict[str, str]:
+def generate_random_email_and_password(domain: Optional[str] = None,
+                                       email_prefix: Optional[str] = None) -> Dict[str, str]:
     """
         Generate a random email and password with optional custom domain and prefix.
 

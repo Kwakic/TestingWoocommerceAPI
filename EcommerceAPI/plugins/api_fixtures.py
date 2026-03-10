@@ -180,11 +180,18 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
         # 2️⃣ Transport validation (FAIL FAST) Status validated BEFORE JSON
         # -----------------------------------------------------------------
         assert response.status_code == 201, (
-            f"Customer creation failed.\n"
-            f"Expected: 201\n"
-            f"Actual: {response.status_code}\n"
-            f"Response: {response.json}"
+            f" POST /Customers creation failed."
+            f"Expected: 201, got {response.status_code}"
+            f"Response: {response.text}"
         )
+        # Note: Using response.text:
+        # Customer updating failed. Expected 200, got 400.
+        # Response: {"code":"rest_invalid_param","message":"Invalid parameter(s): billing",...}
+        # This shows exactly what the server returned.
+        # Problem with response.json. If the API returns something that is not JSON (very common when PHP crashes
+        # or proxies break), then: response.json
+        # will be: None
+        # and you lose useful debugging info.
 
         # -----------------------------------------
         # 3️⃣ Extract JSON to validate body

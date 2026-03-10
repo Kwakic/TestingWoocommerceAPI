@@ -218,7 +218,7 @@ def assert_customer_retrieved_successfully(response: HttpResponse) -> CustomerMo
     """
 
     assert response.status_code == 200, (
-        f"Expected 200, got {response.status_code}. Response: {response.text}"
+        f"GET /customers fetching failed. Expected 200, got {response.status_code}. Response: {response.text}"
     )
 
     data = response.json
