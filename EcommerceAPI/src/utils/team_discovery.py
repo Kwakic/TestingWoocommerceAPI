@@ -1,7 +1,7 @@
 # team_discover.py
 
 """
-Team discovery utilities.
+Team discovery utils.
 
 A "team" is inferred dynamically from pytest nodeids.
 No hardcoded team list is required.

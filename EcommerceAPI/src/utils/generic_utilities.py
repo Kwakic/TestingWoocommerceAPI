@@ -1,5 +1,5 @@
 # generic_utilities.py
-# Helper utilities to generate random emails, passwords, strings, and coupon codes.
+# Helper utils to generate random emails, passwords, strings, and coupon codes.
 
 import logging as logger
 import random
@@ -119,7 +119,7 @@ def strip_keys(d: dict, exclude=("email", "password")) -> dict:
 #     k: v for k, v in payload.items() if k not in ("email", "password")
 # }
 # You'd just write:
-# from EcommerceAPI.src.utilities.genericUtilities import strip_keys
+# from EcommerceAPI.src.utils.genericUtilities import strip_keys
 # email = payload.get("email")
 # password = payload.get("password")
 #

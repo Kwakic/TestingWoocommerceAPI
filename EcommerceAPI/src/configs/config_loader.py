@@ -15,7 +15,7 @@ Key design principles:
     ✔ No hardcoded microservice names
     ✔ Auto-import service config (API_HOSTS) dynamically
     ✔ Secure DB settings (NO DB_HOST inside repo service configs)
-    ✔ One loader used across all plugins and utilities
+    ✔ One loader used across all plugins and utils
 """
 
 from __future__ import annotations

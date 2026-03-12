@@ -43,7 +43,7 @@ from collections import defaultdict
 
 import pytest
 
-from EcommerceAPI.src.utilities.team_discovery import extract_team_from_nodeid
+from EcommerceAPI.src.utils.team_discovery import extract_team_from_nodeid
 from EcommerceAPI.src.configs.runtime_config import get_config
 from EcommerceAPI.src.configs.runtime_config import SESSION_ID as FRAMEWORK_SESSION_ID
 from EcommerceAPI.src.configs.runtime_metadata import SESSION_METADATA

@@ -8,9 +8,9 @@ from datetime import timezone
 from EcommerceAPI.src.customers.validators.customer_validators import (assert_customer_identity,
                                                                        assert_valid_customer_response,
                                                                        assert_customer_error_response)
-from EcommerceAPI.src.utilities.generic_utilities import generate_random_email_and_password
+from EcommerceAPI.src.utils.generic_utilities import generate_random_email_and_password
 
-from EcommerceAPI.src.utilities.date_timestamp_utils import precise_parse_utc_datetime
+from EcommerceAPI.src.utils.date_timestamp_utils import precise_parse_utc_datetime
 
 from tests.shared.contracts.error_schema import error_schema
 

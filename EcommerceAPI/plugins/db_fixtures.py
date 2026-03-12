@@ -1,7 +1,7 @@
 """
 Plugin: database fixtures.
 
-Provides session-scoped database utilities for integration tests.
+Provides session-scoped database utils for integration tests.
 
 Design principles:
 - Single DB connection per test session.
@@ -11,7 +11,7 @@ Design principles:
 """
 
 import pytest
-from EcommerceAPI.src.utilities.db_utility import DBUtility
+from EcommerceAPI.src.utils.db_utility import DBUtility
 
 
 @pytest.fixture(scope="session")

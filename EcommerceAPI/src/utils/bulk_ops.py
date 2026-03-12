@@ -1,4 +1,4 @@
-# EcommerceAPI/src/utilities/bulk_ops.py
+# EcommerceAPI/src/utils/bulk_ops.py
 
 import logging as logger
 

@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Optional
 import os
 
-from EcommerceAPI.src.utilities.env_utils import env_bool
+from EcommerceAPI.src.utils.env_utils import env_bool
 
 # ============================================================================
 # Session identifier (single source of truth)

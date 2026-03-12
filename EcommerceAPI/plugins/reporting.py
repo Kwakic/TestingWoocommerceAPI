@@ -42,7 +42,7 @@ def pytest_runtest_makereport(item, call):
     # ------------------------------------------------------------------
     try:
         import allure
-        from EcommerceAPI.src.utilities.team_discovery import extract_team_from_nodeid
+        from EcommerceAPI.src.utils.team_discovery import extract_team_from_nodeid
         from EcommerceAPI.src.configs.config_loader import ENV
 
         team = extract_team_from_nodeid(item.nodeid)
@@ -66,7 +66,7 @@ def pytest_runtest_makereport(item, call):
     # ------------------------------------------------------------------
     try:
         import allure
-        from EcommerceAPI.src.utilities.custom_logger import LAST_STRUCTURED_LOG
+        from EcommerceAPI.src.utils.custom_logger import LAST_STRUCTURED_LOG
     except ImportError:
         return
 

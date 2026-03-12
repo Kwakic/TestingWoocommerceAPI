@@ -4,7 +4,7 @@
 # from EcommerceAPI.src.helpers.woo_orders_helper import OrdersHelper
 # from EcommerceAPI.src.helpers.products_helper import ProductsHelper
 # from EcommerceAPI.src.helpers.woo_coupons_helper import CouponsHelper
-# from EcommerceAPI.src.utilities.genericUtilities import generate_random_coupon_code, generate_random_string
+# from EcommerceAPI.src.utils.genericUtilities import generate_random_coupon_code, generate_random_string
 #
 #
 # @pytest.mark.parametrize(

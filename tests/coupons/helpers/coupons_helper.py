@@ -16,7 +16,7 @@
 # from jsonschema.exceptions import ValidationError
 #
 # from EcommerceAPI.src.clients.api_client import APIClient
-# from EcommerceAPI.src.utilities.exceptions import APIRequestException
+# from EcommerceAPI.src.utils.exceptions import APIRequestException
 # from EcommerceAPI.src.coupons.dao.coupons_dao import CouponsDAO
 # from tests.shared.models import coupon_schema, error_schema
 #

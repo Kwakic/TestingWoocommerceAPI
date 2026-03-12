@@ -1,6 +1,6 @@
 # import pytest
 #
-# from EcommerceAPI.src.utilities.genericUtilities import generate_random_string
+# from EcommerceAPI.src.utils.genericUtilities import generate_random_string
 # from EcommerceAPI.src.helpers.products_helper import ProductsHelper
 # from EcommerceAPI.src.dao.products_dao import ProductsDAO
 #

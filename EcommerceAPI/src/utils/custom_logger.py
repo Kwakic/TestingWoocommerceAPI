@@ -64,10 +64,10 @@ from pathlib import Path
 from datetime import datetime, timezone
 from typing import Any, Iterable, Optional, Dict, TextIO
 
-from EcommerceAPI.src.utilities import log_context
+from EcommerceAPI.src.utils import log_context
 from EcommerceAPI.src.configs.config_loader import ENV
-from EcommerceAPI.src.utilities.date_timestamp_utils import to_iso_utc
-from EcommerceAPI.src.utilities.team_discovery import extract_team_from_nodeid
+from EcommerceAPI.src.utils.date_timestamp_utils import to_iso_utc
+from EcommerceAPI.src.utils.team_discovery import extract_team_from_nodeid
 
 # Module logger — used for internal debug messages in this module.
 log = logging.getLogger(__name__)
@@ -703,7 +703,7 @@ def _resolve_project_root() -> Path:
                 (parent / "setup.cfg").exists() or
                 (parent / "README.md").exists()):
             return parent
-    # fallback: try to move up 3 levels (typical layout: <repo>/EcommerceAPI/src/utilities/...)
+    # fallback: try to move up 3 levels (typical layout: <repo>/EcommerceAPI/src/utils/...)
     try:
         return p.parents[3]
     except IndexError:

@@ -7,7 +7,7 @@ from EcommerceAPI.src.customers.validators.customer_validators import (
     assert_single_customer_by_email,
     assert_customer_identity
 )
-from EcommerceAPI.src.utilities.date_timestamp_utils import get_customers_in_window
+from EcommerceAPI.src.utils.date_timestamp_utils import get_customers_in_window
 
 logger = logging.getLogger(__name__)
 #  logger.setLevel(logging.DEBUG)  # already set in pytest.ini

@@ -115,7 +115,7 @@ from enum import Enum
 import EcommerceAPI.src
 
 from EcommerceAPI.src.clients.api_client import APIClient
-from EcommerceAPI.src.utilities.entities_registry import EntitiesRegistry
+from EcommerceAPI.src.utils.entities_registry import EntitiesRegistry
 
 log = logging.getLogger(__name__)
 
@@ -173,7 +173,7 @@ class SharedAPIResources(TypedDict, total=False):
     TypedDict — a way to describe what keys (and value types) an ordinary Python dict is expected to contain.
 
     Why it is there?:
-    Many fixtures return a dictionary of helpers / utilities (instead of an object).
+    Many fixtures return a dictionary of helpers / utils (instead of an object).
     TypedDict just documents what keys exist and what types those values are — it doesn’t change runtime behavior.
 
     Meaning of parts:
@@ -506,7 +506,7 @@ def discover_entities(api_client: APIClient) -> Dict[str, EntityBundle]:
 @pytest.fixture(scope="module")
 def shared_api_resources(api_client: APIClient) -> SharedAPIResources:
     """
-    Module-scoped fixture that discovers and exposes API helpers, DAOs, and resource tracking utilities.
+    Module-scoped fixture that discovers and exposes API helpers, DAOs, and resource tracking utils.
 
     Gives each test module:
       - Ready-to-use API helpers for orders, products, coupons, customers.
@@ -574,7 +574,7 @@ def shared_api_resources(api_client: APIClient) -> SharedAPIResources:
     # Wrap the registry in an EntitiesRegistry immediately
     wrapped_registry = EntitiesRegistry.from_dict(entity_registry)
 
-    # The resource fixture exposes helpers, DAOs, delete methods, and tracking utilities
+    # The resource fixture exposes helpers, DAOs, delete methods, and tracking utils
     data = {
         **{f"{entity}_helper": bundle.helper for entity, bundle in entity_registry.items()},
         **{f"{entity}_dao": bundle.dao for entity, bundle in entity_registry.items()},
@@ -651,7 +651,7 @@ def shared_api_resources_obj(shared_api_resources: SharedAPIResources) -> Entiti
 @dataclass
 class AllResources:
     """
-    Aggregates the entity registry and core utilities for use in tests.
+    Aggregates the entity registry and core utils for use in tests.
 
     Attributes:
         entities: Mapping[str, EntityBundle] — the runtime registry of entities

@@ -3,7 +3,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.pool import QueuePool
 from typing import List, Dict, Any
 
-from EcommerceAPI.src.utilities.credentials_utility import get_db_credentials
+from EcommerceAPI.src.utils.credentials_utility import get_db_credentials
 import logging
 
 logger = logging.getLogger(__name__)

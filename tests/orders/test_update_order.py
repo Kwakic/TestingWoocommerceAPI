@@ -1,7 +1,7 @@
 # import json
 # from EcommerceAPI.src.helpers.woo_orders_helper import OrdersHelper
-# from EcommerceAPI.src.utilities.genericUtilities import generate_random_string
-# from EcommerceAPI.src.utilities.wooAPIUtility import WooAPIUtility
+# from EcommerceAPI.src.utils.genericUtilities import generate_random_string
+# from EcommerceAPI.src.utils.wooAPIUtility import WooAPIUtility
 # import pytest
 #
 # pytestmark = [pytest.mark.orders, pytest.mark.regression]

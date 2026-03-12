@@ -2,7 +2,7 @@ import pytest
 import logging
 from faker import Faker
 
-from EcommerceAPI.src.utilities.filtering_utils import filter_out_soft_deleted
+from EcommerceAPI.src.utils.filtering_utils import filter_out_soft_deleted
 
 faker = Faker()
 logger = logging.getLogger(__name__)

@@ -1,7 +1,7 @@
 # import json
 # import pytest
 # import logging as logger
-# from EcommerceAPI.src.utilities.genericUtilities import generate_random_coupon_code, generate_random_string
+# from EcommerceAPI.src.utils.genericUtilities import generate_random_coupon_code, generate_random_string
 #
 #
 # @pytest.mark.tcid60

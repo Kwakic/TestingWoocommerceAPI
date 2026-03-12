@@ -1,6 +1,6 @@
 # from EcommerceAPI.src.helpers.woo_coupons_helper import CouponsHelper
-# from EcommerceAPI.src.utilities.genericUtilities import generate_random_string, generate_random_coupon_code
-# # from EcommerceAPI.src.utilities.wooAPIUtility import WooAPIUtility
+# from EcommerceAPI.src.utils.genericUtilities import generate_random_string, generate_random_coupon_code
+# # from EcommerceAPI.src.utils.wooAPIUtility import WooAPIUtility
 # import json
 # import logging as logger
 # import pytest

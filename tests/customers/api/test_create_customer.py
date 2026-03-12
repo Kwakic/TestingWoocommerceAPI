@@ -3,7 +3,7 @@ import logging
 
 from faker import Faker  # To avoid hardcoding, we use faker to generate fake data for us
 
-from EcommerceAPI.src.utilities.bulk_ops import bulk_create_and_validate_resources
+from EcommerceAPI.src.utils.bulk_ops import bulk_create_and_validate_resources
 from EcommerceAPI.src.customers.validators.customer_validators import assert_customer_creation_failed
 from jsonschema import validate
 from tests.shared.contracts.error_schema import error_schema

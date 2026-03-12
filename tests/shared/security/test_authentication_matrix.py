@@ -38,19 +38,19 @@ Total tests matrix executed:
 × 4 methods
 × 3 auth scenarios
 = 48 security tests
-
 """
 
 import os
 import pytest
 import logging
 from typing import Any, Dict
-from requests_oauthlib import OAuth1
 from jsonschema import validate
+from typing import List, Tuple
 
-from EcommerceAPI.src.utilities.credentials_utility import get_wc_api_keys
-from tests.shared.contracts.error_schema import error_schema
+from EcommerceAPI.src.utils.credentials_utility import get_wc_api_keys
 from EcommerceAPI.src.clients.api_client import APIClient
+from EcommerceAPI.src.auth.base_auth import AuthStrategy
+from tests.shared.contracts.error_schema import error_schema
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +58,27 @@ pytestmark = [
     pytest.mark.security,
     pytest.mark.negative,
 ]
+
+
+# ------------------------------------------------------------------
+# Test authentication strategy
+# ------------------------------------------------------------------
+
+class InvalidOAuthStrategy(AuthStrategy):
+    """
+    Test-only authentication strategy used to simulate invalid OAuth credentials.
+
+    This overrides the framework's default OAuth strategy and injects
+    intentionally invalid keys into the request.
+    """
+
+    def __init__(self, key: str, secret: str):
+        from requests_oauthlib import OAuth1
+        self.oauth = OAuth1(key, secret)
+
+    def apply(self, request_kwargs):
+        request_kwargs["auth"] = self.oauth
+        return request_kwargs
 
 
 # ------------------------------------------------------------------
@@ -88,7 +109,7 @@ METHOD_MATRIX = [
 # Invalid credential combinations
 # ------------------------------------------------------------------
 
-def invalid_auth_cases():
+def invalid_auth_cases() -> List[Tuple[str, str, str]]:
     """
     Generate invalid OAuth credential scenarios.
 
@@ -133,8 +154,8 @@ def test_authentication_rejects_invalid_credentials(
     """
     Ensure invalid OAuth credentials are rejected by all API endpoints.
 
-    Design principle:
-    ----------------------------
+    Design principle
+    ----------------
     We create an isolated APIClient with invalid credentials instead of
     mutating the shared pytest api_client fixture.
 
@@ -154,19 +175,20 @@ def test_authentication_rejects_invalid_credentials(
         pytest.skip("Skipping destructive auth tests in production")
 
     # --------------------------------------------------------------
-    # Create isolated API client
+    # Create isolated API client with invalid credentials
     # --------------------------------------------------------------
-    # APIClient loads valid credentials from environment automatically.
-    # We override the OAuth1 credentials to simulate invalid authentication.
 
     base_url = api_client.base_url
-    test_client = APIClient(base_url)
 
-    test_client.auth = OAuth1(invalid_key, invalid_secret)
+    test_client = APIClient(
+        base_url,
+        auth_strategy=InvalidOAuthStrategy(invalid_key, invalid_secret)
+    )
 
     # --------------------------------------------------------------
     # Build endpoint
     # --------------------------------------------------------------
+
     endpoint = entity
 
     # Some endpoints require a resource identifier.
@@ -178,16 +200,19 @@ def test_authentication_rejects_invalid_credentials(
     # --------------------------------------------------------------
     # Build request arguments dynamically
     # --------------------------------------------------------------
+
     kwargs: Dict[str, Any] = {"endpoint": endpoint}
 
-    # POST / PUT require payloads. We send an empty payload because
-    # authentication should fail before payload validation.
+    # POST / PUT require payloads.
+    # We send an empty payload because authentication should fail
+    # before payload validation occurs.
     if needs_payload:
         kwargs["payload"] = {}
 
     # --------------------------------------------------------------
     # Execute request dynamically
     # --------------------------------------------------------------
+
     method_func = getattr(test_client, method)
     response = method_func(**kwargs)
 
@@ -201,23 +226,26 @@ def test_authentication_rejects_invalid_credentials(
     # --------------------------------------------------------------
     # Transport validation
     # --------------------------------------------------------------
+
     assert response.status_code == 401
 
     # --------------------------------------------------------------
     # Extract JSON response
     # --------------------------------------------------------------
+
     assert response.json, "Expected JSON authentication error response"
     body = response.json
 
     # --------------------------------------------------------------
     # Schema validation
     # --------------------------------------------------------------
+
     validate(instance=body, schema=error_schema)
 
     # --------------------------------------------------------------
     # Business validation
     # --------------------------------------------------------------
+
     assert body["code"] == "woocommerce_rest_authentication_error"
     assert body["message"] == expected_message
     assert body["data"]["status"] == 401
-

@@ -5,7 +5,7 @@ from unittest.mock import patch
 from datetime import timedelta
 
 from EcommerceAPI.src.customers.validators.customer_validators import assert_valid_customer_response
-from EcommerceAPI.src.utilities.date_timestamp_utils import get_now_utc_floor, to_iso_utc, safe_parse_utc_datetime
+from EcommerceAPI.src.utils.date_timestamp_utils import get_now_utc_floor, to_iso_utc, safe_parse_utc_datetime
 
 logger = logging.getLogger(__name__)
 #  logger.setLevel(logging.DEBUG)  # already set in pytest.ini

@@ -31,7 +31,7 @@ import logging
 from typing import Dict, Any, Optional, Tuple
 
 from EcommerceAPI.src.clients.api_client import APIClient
-from EcommerceAPI.src.utilities.exceptions import (
+from EcommerceAPI.src.utils.exceptions import (
     SchemaValidationError,
     UnexpectedStatusCodeError,
     APIRequestException,

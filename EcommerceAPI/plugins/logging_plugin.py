@@ -25,8 +25,8 @@ import pytest
 from dotenv import load_dotenv
 
 from EcommerceAPI.src.configs.config_loader import ENV
-from EcommerceAPI.src.utilities import log_context
-from EcommerceAPI.src.utilities.custom_logger import (
+from EcommerceAPI.src.utils import log_context
+from EcommerceAPI.src.utils.custom_logger import (
     is_redaction_enabled,
     redact_obj,
     set_redaction,
@@ -38,8 +38,8 @@ from EcommerceAPI.src.utilities.custom_logger import (
     CustomFormatter,
 )
 
-from EcommerceAPI.src.utilities.env_utils import env_bool
-from EcommerceAPI.src.utilities.team_discovery import extract_team_from_nodeid
+from EcommerceAPI.src.utils.env_utils import env_bool
+from EcommerceAPI.src.utils.team_discovery import extract_team_from_nodeid
 
 # Use the single-session id from the framework config (single source of truth)
 from EcommerceAPI.src.configs.runtime_config import SESSION_ID
@@ -317,7 +317,7 @@ def pytest_configure(config):
 
     # 6) Internal noisy loggers: remove their StreamHandlers but keep propagation, lower level
     INTERNAL_NOISY = [
-        "ssqaapitest.src.utilities.requestsUtility",
+        "ssqaapitest.src.utils.requestsUtility",
         # extend as needed
     ]
     for name in INTERNAL_NOISY:
@@ -589,7 +589,7 @@ def pytest_runtest_protocol(item):
 def session_metadata():
     """
     Return a dictionary with session metadata (git commit, branch, CI provider, session id).
-    This fixture is session-scoped and intended for tests or reporting utilities that need environment metadata.
+    This fixture is session-scoped and intended for tests or reporting utils that need environment metadata.
     """
     return SESSION_METADATA
 

@@ -79,15 +79,14 @@ import logging
 import typing
 from random import uniform  # Adds random jitter to exponential backoff.
 import requests
-from requests_oauthlib import OAuth1
 from urllib.parse import urlparse
 
-from EcommerceAPI.src.utilities.credentials_utility import get_wc_api_keys
 from EcommerceAPI.src.core.http_client import HttpClient
 from EcommerceAPI.src.core.http_response import HttpResponse
+from EcommerceAPI.src.auth.oauth1_auth import OAuth1Auth
 
 # Use central logging/redaction configuration and helpers to avoid duplication
-from EcommerceAPI.src.utilities.custom_logger import (
+from EcommerceAPI.src.utils.custom_logger import (
     DEFAULT_SENSITIVE_KEYS,
     is_include_payloads,
     redact_obj,
@@ -177,44 +176,46 @@ def _mask_sensitive(payload: typing.Any) -> typing.Any:
 # -----------------------------------------
 class APIClient:
     """
-    ------------------------------------------------------------------------
-    🔹 PUBLIC HTTP METHODS (get/post/put/delete)
-    ------------------------------------------------------------------------
+    Enterprise API client responsible for:
 
-    These methods provide low-level access to API endpoints and return HttpResponse.
+    - building full API URLs
+    - orchestrating HTTP requests
+    - handling retries/backoff
+    - delegating authentication to AuthStrategy
 
-    They are used:
-        - Internally by API classes (recommended for positive flows)
-        - Directly in negative tests
-        - For debugging scenarios
-
-    👉 These methods are NOT tied to positive or negative testing.
-    👉 They are generic HTTP operations.
-
+    Note:
     For business-level interactions, use API layer (e.g., CustomersApi).
     ------------------------------------------------------------------------
     """
-    def __init__(self, base_url: str, retries: int = 3, backoff: float = 2.0):
+    def __init__(
+        self,
+        base_url: str,
+        retries: int = 3,
+        backoff: float = 2.0,
+        auth_strategy=None
+    ):
         """
-        Initializes the APIClient.
+        Initialize API client.
 
         Args:
-            base_url (str): Fully-qualified shared URL for the API
-                (e.g. http://localhost:8888/wp-json/wc/v3).
-            retries (int): Number of retry attempts for transient errors.
-            backoff (float): Exponential backoff factor between retries.
-        """
-        # Load WooCommerce OAuth credentials
-        wc_creds = get_wc_api_keys()
-        self.auth = OAuth1(wc_creds['wc_key'], wc_creds['wc_secret'])
+            base_url: Base API endpoint
+            retries: Number of retry attempts
+            backoff: Exponential backoff factor
+            auth_strategy: None
 
-        # Base url
+        """
         self.base_url = base_url
         self.env = os.getenv("ENV", "test").lower()
+
+        # Allow dependency injection for testing
         self.http_client = HttpClient()
+
         # Retry/backoff configuration
         self.max_attempts = retries
         self.backoff_factor = backoff
+
+        # Authentication strategy - If none provided, default to OAuth1 for WooCommerce.
+        self.auth_strategy = auth_strategy or OAuth1Auth()
 
     # -----------------------------------------
     # URL construction
@@ -236,53 +237,80 @@ class APIClient:
     # -----------------------------------------
     def _request_with_backoff(self, method: str, **kwargs) -> requests.Response:
         """
-            It sends an HTTP request with automatic retries/backoff for retryable errors.
-            Retries on status codes 429/500/502/503/504 and network exceptions.
-            It:
-            - Tries by default up to 3 times on known retryable status codes (429, 500, etc.)
-            - Adds a small random delay using uniform(0, 1) to reduce "thundering herd" issues
-            - Logs warnings on each retry
-            - Returns the raw response object from requests
-            - This helps with flaky APIs, especially during CI or high-load testing.
+        Execute an HTTP request with automatic retry and exponential backoff.
+
+        This method provides resilience for transient failures that commonly occur
+        in distributed systems and during CI test execution.
+
+        Retry conditions:
+            - HTTP status codes: 429, 500, 502, 503, 504
+            - Network/connection exceptions raised by requests
+
+        Behavior:
+            - Retries up to `self.max_attempts`
+            - Uses exponential backoff with jitter to reduce "thundering herd"
+            - Logs retry attempts with structured logging
+            - Returns the raw `requests.Response` object
 
         Returns:
-                requests.Response: Raw response object.
-        Raises:
-                requests.RequestException: If all attempts fail.
+            requests.Response: Raw response returned by the HTTP client.
 
-            """
+        Raises:
+            requests.RequestException: If all retry attempts fail due to network errors.
+            RuntimeError: If retries are exhausted unexpectedly.
+        """
+        url = kwargs.get("url")
+        headers = kwargs.get("headers")
+        params = kwargs.get("params")
+        json_payload = kwargs.get("json")
+
+        last_exception: requests.RequestException | None = None
+
         for attempt in range(1, self.max_attempts + 1):
             try:
-                response = self.http_client.request(
-                    method=method,
-                    url=kwargs.get("url"),
-                    headers=kwargs.get("headers"),
-                    params=kwargs.get("params"),
-                    json=kwargs.get("json"),
-                    auth=self.auth,  # ✅ ADD THIS LINE
-                )
+                request_kwargs = {
+                    "method": method,
+                    "url": url,
+                    "headers": headers,
+                    "params": params,
+                    "json": json_payload,
+                }
 
-                # Retry on transient server/client errors
+                request_kwargs = self.auth_strategy.apply(request_kwargs)
+
+                response = self.http_client.request(**request_kwargs)
+                if response is None:
+                    raise RuntimeError("HttpClient.request() returned no response")
+
                 if response.status_code in {429, 500, 502, 503, 504} and attempt < self.max_attempts:
                     sleep_time = self.backoff_factor ** attempt + uniform(0, 1)
                     logger.warning(
-                        f"🔁 Retry {attempt} on {kwargs.get('url')} after {sleep_time:.2f}s "
+                        f"Retry {attempt} on {url} after {sleep_time:.2f}s "
                         f"(status {response.status_code})",
-                        extra={"event": "request.retry", "method": method.upper(), "endpoint": kwargs.get("url")}
+                        extra={"event": "request.retry", "method": method.upper(), "endpoint": url},
                     )
                     time.sleep(sleep_time)
                     continue
+
                 return response
 
-            except requests.RequestException as e:
-                if attempt == self.max_attempts:
-                    raise
-                sleep_time = self.backoff_factor ** attempt + uniform(0, 1)
-                logger.warning(f"❗ Retry {attempt} due to exception: {e}. Sleeping {sleep_time:.3f}s",
-                               extra={"event": "request.exception", "method": method.upper(),
-                                      "endpoint": kwargs.get("url")})
-                time.sleep(sleep_time)
-            raise RuntimeError("Connection Error! Exhausted retries for request")
+            except requests.RequestException as exc:
+                last_exception = exc
+
+                if attempt < self.max_attempts:
+                    sleep_time = self.backoff_factor ** attempt + uniform(0, 1)
+                    logger.warning(
+                        f"Retry {attempt} due to exception: {exc}. Sleeping {sleep_time:.3f}s",
+                        extra={"event": "request.exception", "method": method.upper(), "endpoint": url},
+                    )
+                    time.sleep(sleep_time)
+                    continue
+
+                raise
+
+        if last_exception is not None:
+            raise last_exception
+        raise RuntimeError("Connection Error! Exhausted retries for request")
 
     # -------------------------------------------------------------------------
     # 🧪 Low-level utility for raw REST API calls (mainly for negative tests or debugging).

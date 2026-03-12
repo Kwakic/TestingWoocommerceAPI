@@ -8,7 +8,7 @@ Single source of truth for:
 
 Safe to import from:
 - plugins
-- utilities
+- utils
 - reporting layers
 """
 

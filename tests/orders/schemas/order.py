@@ -1,7 +1,7 @@
 # models.py — JSON Schema definitions for WooCommerce resources
 
 # 🧪 Example Usage in a Test:
-# from EcommerceAPI.src.utilities.wooAPIUtility import WooAPIUtility
+# from EcommerceAPI.src.utils.wooAPIUtility import WooAPIUtility
 # from EcommerceAPI.data.models import product_schema, order_schema, customer_schema, coupon_schema
 # Example:
 # def test_product_schema_validation():

@@ -3,7 +3,7 @@
 #
 # from EcommerceAPI.src.dao.products_dao import ProductsDAO
 # from EcommerceAPI.src.helpers.products_helper import ProductsHelper
-# from EcommerceAPI.src.utilities.genericUtilities import safe_product_name
+# from EcommerceAPI.src.utils.genericUtilities import safe_product_name
 #
 # import json
 # import pytest

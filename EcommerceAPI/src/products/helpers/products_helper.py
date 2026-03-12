@@ -21,7 +21,7 @@
 # from typing import Any, Dict, List, Optional, Tuple
 #
 # from EcommerceAPI.src.clients.api_client import APIClient
-# from EcommerceAPI.src.utilities.exceptions import APIRequestException
+# from EcommerceAPI.src.utils.exceptions import APIRequestException
 # from EcommerceAPI.src.products.dao.products_dao import ProductsDAO
 #
 # logger = logging.getLogger(__name__)

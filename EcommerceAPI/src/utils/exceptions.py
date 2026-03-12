@@ -2,7 +2,7 @@
 """
 Centralized custom exceptions for the test framework.
 Put framework-wide exceptions here so they may be imported from multiple places:
-    from EcommerceAPI.src.utilities.exceptions import SchemaValidationError, UnexpectedStatusCodeError
+    from EcommerceAPI.src.utils.exceptions import SchemaValidationError, UnexpectedStatusCodeError
 """
 
 

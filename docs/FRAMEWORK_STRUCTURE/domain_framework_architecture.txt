@@ -28,6 +28,14 @@ TestEcommerceAPI (project suite/root)
 │     │     │     ├── runtime_metadata.py
 │     │     │     ├── README.md
 │     │     │     └── __init__.py
+│     │     ├── auth/
+│     │     │     ├── base_auth.py.
+│     │     │     ├── oauth1_auth.py
+│     │     │     ├── oauth2_auth.py.py
+│     │     │     ├── jwt_auth.py
+│     │     │     ├── basic_auth.py
+│     │     │     ├── auth_factory.md
+│     │     │     └── __init__.py
 │     │     ├── core/
 │     │     │     ├── http_client.py               ← low level transport
 │     │     │     └── http_response.py

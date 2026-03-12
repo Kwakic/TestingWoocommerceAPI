@@ -22,8 +22,8 @@
 # import pytest
 # import json
 # import os
-# from EcommerceAPI.src.utilities.genericUtilities import generate_random_coupon_code, generate_random_string
-# from EcommerceAPI.src.utilities.data_utils import load_coupon_scenarios
+# from EcommerceAPI.src.utils.genericUtilities import generate_random_coupon_code, generate_random_string
+# from EcommerceAPI.src.utils.data_utils import load_coupon_scenarios
 #
 #
 # @pytest.mark.parametrize("scenario", load_coupon_scenarios())

@@ -9,7 +9,7 @@
 #
 # from EcommerceAPI.src.clients.api_client import APIClient  # Importing the RequestUtility class does not
 # # instantiate anything — it only gives the helper the type, so it can optionally create one if none is supplied.
-# from EcommerceAPI.src.utilities.exceptions import APIRequestException
+# from EcommerceAPI.src.utils.exceptions import APIRequestException
 # from EcommerceAPI.src.orders.dao.orders_dao import OrdersDao
 #
 # logger = logging.getLogger(__name__)
@@ -55,7 +55,7 @@
 #         fixture from conftest (discover_entities should inject it).
 #
 #         Info:
-#             - from EcommerceAPI.src.utilities.requestsUtility import RequestUtility only brings the class
+#             - from EcommerceAPI.src.utils.requestsUtility import RequestUtility only brings the class
 #             (type/constructor) into the module. It does NOT create a client instance.
 #             - The session-scoped request_utility fixture in conftest actually creates the single shared RequestUtility
 #             instance.

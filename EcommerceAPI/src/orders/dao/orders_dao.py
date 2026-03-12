@@ -1,4 +1,4 @@
-from EcommerceAPI.src.utilities.db_utility import DBUtility
+from EcommerceAPI.src.utils.db_utility import DBUtility
 import logging as logger
 
 
