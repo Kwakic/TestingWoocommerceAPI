@@ -73,7 +73,7 @@ TestEcommerceAPI (project suite/root)
 │     │     │            └── __init__.py
 │     │     │
 │     │     │── manual_cleanup_scripts/...
-│     │     ├── utilities/                           ← ⚠ universal/reusable utilities
+│     │     ├── utils/                              ← ⚠ universal/reusable utilities
 │     │     │     ├── __init__.py
 │     │     │     ├── bulk_ops.py
 │     │     │     ├── credentials_utility.py

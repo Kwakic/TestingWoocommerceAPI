@@ -5,15 +5,13 @@ from __future__ import annotations
 import logging
 from typing import Optional, List, Dict, Any
 
-from EcommerceAPI.src.customers.validators.customer_validators import assert_customer_exists_and_matches_api, \
-    assert_customer_retrieved_successfully, assert_customer_identity
+from EcommerceAPI.src.customers.validators.customer_validators import assert_customer_exists_and_matches_api
 from EcommerceAPI.src.utils.pagination_utils import paginate_all_results
 from EcommerceAPI.src.utils.generic_utilities import generate_random_email_and_password
 from EcommerceAPI.src.utils.exceptions import UnexpectedStatusCodeError, SchemaValidationError
 from EcommerceAPI.src.utils.date_timestamp_utils import safe_parse_utc_datetime
 from EcommerceAPI.src.core.http_response import HttpResponse
 from EcommerceAPI.src.customers.api.customers_api import CustomersApi
-
 
 logger = logging.getLogger(__name__)
 
