@@ -12,7 +12,7 @@ TestEcommerceAPI (project suite/root)
 │     ├── ecommerceapitest.egg-info/..
 │     ├── plugins/                                   ← ⚠ ONLY shared plugins here
 │     │     ├── __init__.py
-│     │     ├── _config.py
+│     │     ├── config_pytest.py
 │     │     ├── allure_autogen.py
 │     │     ├── api_fixtures.py
 │     │     ├── config_pytest.py

@@ -46,6 +46,9 @@ class FrameworkConfig:
     # Runtime
     ENV: str
 
+    # Authentication
+    AUTH_TYPE: str
+
     # Discovery
     STRICT_ENTITY_DISCOVERY: bool
 
@@ -101,6 +104,9 @@ def _load_config_from_env() -> FrameworkConfig:
     return FrameworkConfig(
         ENV=os.getenv("ENV", "test"),
 
+        # Authentication method used by APIClient. Supported: oauth1 | oauth2 | jwt | basic
+        AUTH_TYPE=os.getenv("AUTH_TYPE", "oauth1").lower(),
+
         STRICT_ENTITY_DISCOVERY=env_bool("STRICT_ENTITY_DISCOVERY", False),
 
         ENABLE_STRUCTURED_LOGS=env_bool("ENABLE_STRUCTURED_LOGS", True),
@@ -119,7 +125,6 @@ def _load_config_from_env() -> FrameworkConfig:
 
         REQUIRE_ENV=env_bool("REQUIRE_ENV", False),
     )
-
 
 # ============================================================================
 # 🔐 Public accessors

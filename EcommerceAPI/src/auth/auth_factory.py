@@ -1,42 +1,71 @@
 """
 Authentication factory.
 
-Builds authentication strategy based on framework configuration.
+Responsible for selecting the correct authentication
+strategy based on framework configuration.
+
+Auth strategies manage their own credential loading.
 """
 
 from .oauth1_auth import OAuth1Auth
-from .jwt_auth import JWTAuth
-from .basic_auth import BasicAuth
+# from .oauth2_auth import OAuth2Auth
+# from .jwt_auth import JWTAuth
+# from .basic_auth import BasicAuth
 
 
-def build_auth(settings, credentials):
+def build_auth(auth_type: str):
     """
-    Build authentication strategy based on configuration.
+    Build authentication strategy.
 
     Args:
-        settings: framework configuration
-        credentials: loaded credentials
+        auth_type: authentication method defined in framework config
 
     Returns:
         AuthStrategy instance
-    """
 
-    auth_type = settings.AUTH_TYPE.lower()
+    You can add following authentication methods if needed:
 
     if auth_type == "oauth1":
         return OAuth1Auth()
 
-    # # Load WooCommerce OAuth credentials
-    # wc_creds = get_wc_api_keys()
-    # self.auth = OAuth1(wc_creds['wc_key'], wc_creds['wc_secret'])
+    if auth_type == "oauth2":
+        return OAuth2Auth()
 
     if auth_type == "jwt":
-        return JWTAuth(credentials["token"])
+        return JWTAuth()
 
     if auth_type == "basic":
-        return BasicAuth(
-            credentials["username"],
-            credentials["password"]
-        )
+        return BasicAuth()
 
-    raise ValueError(f"Unsupported authentication type: {auth_type}")
+    """
+
+    auth_type = auth_type.lower()
+
+    if auth_type == "oauth1":
+        return OAuth1Auth()
+
+    raise ValueError(
+        f"Unsupported authentication type: {auth_type}. "
+        f"This framework currently supports only OAuth1."
+    )
+
+
+# pytest
+#   ↓
+# config_pytest plugin
+#   ↓
+# runtime_config.get_config()
+#   ↓
+# FrameworkConfig.AUTH_TYPE
+#   ↓
+# auth_resolver.resolve_auth()
+#   ↓
+# auth_factory.build_auth()
+#   ↓
+# AuthStrategy
+#   ↓
+# APIClient
+#   ↓
+# HttpClient
+#   ↓
+# requests

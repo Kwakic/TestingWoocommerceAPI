@@ -83,7 +83,7 @@ from urllib.parse import urlparse
 
 from EcommerceAPI.src.core.http_client import HttpClient
 from EcommerceAPI.src.core.http_response import HttpResponse
-from EcommerceAPI.src.auth.oauth1_auth import OAuth1Auth
+from EcommerceAPI.src.auth.auth_resolver import resolve_auth
 
 # Use central logging/redaction configuration and helpers to avoid duplication
 from EcommerceAPI.src.utils.custom_logger import (
@@ -91,6 +91,7 @@ from EcommerceAPI.src.utils.custom_logger import (
     is_include_payloads,
     redact_obj,
 )
+from EcommerceAPI.src.core.request_context import RequestContext
 
 # Setup logger. Creates a logger specific to the current file/module.
 logger = logging.getLogger(__name__)
@@ -214,8 +215,16 @@ class APIClient:
         self.max_attempts = retries
         self.backoff_factor = backoff
 
-        # Authentication strategy - If none provided, default to OAuth1 for WooCommerce.
-        self.auth_strategy = auth_strategy or OAuth1Auth()
+        # ---------------------------------------------------------
+        # Authentication strategy resolution
+        # Priority:
+        # 1) Explicit injection (used by security tests)
+        # 2) Framework configuration (AUTH_TYPE)
+        # ---------------------------------------------------------
+        if auth_strategy:
+            self.auth_strategy = auth_strategy
+        else:
+            self.auth_strategy = resolve_auth()
 
     # -----------------------------------------
     # URL construction
@@ -235,7 +244,7 @@ class APIClient:
     # -----------------------------------------
     # 🌐 Internal: Send a request with retries/backoff
     # -----------------------------------------
-    def _request_with_backoff(self, method: str, **kwargs) -> requests.Response:
+    def _request_with_backoff(self, ctx: RequestContext):
         """
         Execute an HTTP request with automatic retry and exponential backoff.
 
@@ -259,10 +268,11 @@ class APIClient:
             requests.RequestException: If all retry attempts fail due to network errors.
             RuntimeError: If retries are exhausted unexpectedly.
         """
-        url = kwargs.get("url")
-        headers = kwargs.get("headers")
-        params = kwargs.get("params")
-        json_payload = kwargs.get("json")
+        url = ctx.url
+        headers = ctx.headers
+        params = ctx.params
+        json_payload = ctx.json
+        method = ctx.method
 
         last_exception: requests.RequestException | None = None
 
@@ -414,13 +424,17 @@ class APIClient:
         request_headers = headers or {"Content-Type": "application/json"}
 
         start = time.perf_counter()
-        resp = self._request_with_backoff(
+
+        ctx = RequestContext(
             method=method,
             url=url,
             headers=request_headers,
             params=params,
             json=payload
         )
+
+        resp = self._request_with_backoff(ctx)
+
         elapsed = time.perf_counter() - start
         return resp, elapsed
 
@@ -621,13 +635,17 @@ class APIClient:
         request_headers = headers or {"Content-Type": "application/json"}
 
         start = time.perf_counter()
-        response = self._request_with_backoff(
+
+        ctx = RequestContext(
             method=method,
             url=url,
             headers=request_headers,
             params=params,
             json=payload
         )
+
+        response = self._request_with_backoff(ctx)
+
         duration = time.perf_counter() - start
 
         return self._handle_response(

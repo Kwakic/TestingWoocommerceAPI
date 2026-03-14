@@ -70,6 +70,7 @@ def pytest_sessionstart(session):
         })
 
     log.info("================= FRAMEWORK CONFIG =================")
+    log.info("AUTH_TYPE               : %s", cfg.AUTH_TYPE)
     log.info("STRICT_ENTITY_DISCOVERY : %s", cfg.STRICT_ENTITY_DISCOVERY, extra={
             "suppress_nodeid": True,
             "suppress_correlation": True,

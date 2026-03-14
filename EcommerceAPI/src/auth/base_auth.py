@@ -1,8 +1,7 @@
 """
-Authentication Strategy Base Class.
+Authentication Strategy Interface - Base Class.
 
-This module defines the contract used by the framework to apply
-authentication to outgoing HTTP requests.
+This module defines the contract used by the framework to apply authentication to outgoing HTTP requests.
 
 Enterprise design principle:
 ----------------------------
@@ -19,6 +18,43 @@ Supported implementations may include:
     - Basic Auth
     - HMAC
     - mTLS
+
+Example:
+       JWT: headers["Authorization"] = f"Bearer {self.token}"
+       Basic: request_kwargs["auth"] = (self.username, self.password)
+       OAuth1: request_kwargs["auth"] = self.oauth
+
+    The factory simply selects which strategy to use:
+       - auth_type = settings.AUTH_TYPE.lower()
+
+    Then returns the proper strategy:
+    if auth_type == "oauth1":
+        return OAuth1Auth()
+
+Authentication must be controlled by configuration, not by the client.
+
+The flow:
+
+runtime_config
+      │
+      ▼
+auth_resolver
+      │
+      ▼
+auth_factory
+      │
+      ▼
+AuthStrategy
+      │
+      ▼
+APIClient
+      │
+      ▼
+HttpClient
+      │
+      ▼
+requests
+
 """
 
 from abc import ABC, abstractmethod
