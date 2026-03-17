@@ -68,7 +68,7 @@ class HttpClient:
 
     👉 IMPORTANT:
     JSON parsing happens later in:
-        HttpResponse.from_requests(...)
+        HttpResponse.from_http_requests(...)
 
     ------------------------------------------------------------------------
     🧱 ARCHITECTURE POSITION
@@ -94,12 +94,45 @@ class HttpClient:
     - High-volume test execution (CI/CD)
 
     The flow is: HttpClient → requests.Response → HttpResponse → Helpers/Tests
+
+
+    ------------------------------------------------------------------------
+    Default network timeout (seconds)
+    ------------------------------------------------------------------------
+    IMPORTANT:
+    requests library does NOT enforce a timeout by default.
+    Without a timeout, a network call may block indefinitely if the server stops responding or the connection hangs.
+    Transport layers should ALWAYS enforce a timeout to prevent test suites from freezing.
+    This default can be overridden later if needed by higher layers.
     ------------------------------------------------------------------------
     """
 
-    def __init__(self):
+    def __init__(self, timeout: tuple[int, int] = (5, 30)):
+        """
+        Initialize HTTP client.
+
+        Args:
+            timeout:
+                Default network timeout used for all HTTP requests.
+
+                Format:
+                    (connect_timeout, read_timeout)
+
+                connect_timeout → max time to establish TCP connection
+                read_timeout    → max time waiting for server response
+
+        Why this exists:
+            The requests library has NO default timeout, meaning a request
+            could block forever if the server stops responding.
+
+            Setting a default timeout ensures the transport layer is safe
+            and prevents test suites from hanging indefinitely.
+        """
         # Persistent session improves performance via connection reuse
         self.session = requests.Session()
+
+        # Default request timeout
+        self.timeout = timeout
 
     def request(
         self,
@@ -127,7 +160,7 @@ class HttpClient:
             requests.Response: RAW response object (not parsed)
 
         The return value of this class is specifically designed to be passed into your next layer:
-        HttpResponse.from_requests(response)
+        HttpResponse.from_http_requests(response)
 
         Example:
             response = client.request(
@@ -165,6 +198,7 @@ class HttpClient:
             params=params,
             json=json,  # ✅ SEND JSON (not parse)
             auth=auth,
+            timeout=self.timeout
         )
 
 

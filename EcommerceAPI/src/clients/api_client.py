@@ -506,7 +506,7 @@ class APIClient:
         # --------------------------------------------------------------------
         # 1. Convert RAW → HttpResponse (SINGLE SOURCE OF TRUTH)
         # --------------------------------------------------------------------
-        http_response = HttpResponse.from_requests(response, duration)
+        http_response = HttpResponse.from_http_requests(response, duration)
 
         # Store actual and expected status codes for later reference (for potential test assertion context)
         status_code = http_response.status_code

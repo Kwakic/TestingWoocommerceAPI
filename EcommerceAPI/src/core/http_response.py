@@ -93,7 +93,7 @@ class HttpResponse:
                 ↓
         requests.Response
                 ↓
-        HttpResponse.from_requests(...)  ← HERE
+        HttpResponse.from_http_requests(...)  ← HERE
                 ↓
         HttpResponse (this object)
                 ↓
@@ -164,7 +164,7 @@ class HttpResponse:
     content: Optional[bytes] = None
 
     @classmethod
-    def from_requests(cls, response: requests.Response, elapsed: float) -> "HttpResponse":
+    def from_http_requests(cls, response: requests.Response, elapsed: float) -> "HttpResponse":
         """
         Factory method to convert a raw `requests.Response`
         into a structured HttpResponse object.
@@ -210,7 +210,7 @@ class HttpResponse:
         Example:
         --------------------------------------------------------------------
         raw_response = http_client.request(...)
-        http_response = HttpResponse.from_requests(raw_response, elapsed=0.45)
+        http_response = HttpResponse.from_http_requests(raw_response, elapsed=0.45)
 
         http_response.status_code  → 200
         http_response.json         → {"id": 1, ...}

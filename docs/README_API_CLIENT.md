@@ -140,7 +140,7 @@ requests.Session.request
 requests.Response (RAW)
  │
  ▼
-HttpResponse.from_requests
+HttpResponse.from_http_requests
  │
  ▼
 HttpResponse (CLEAN)
@@ -190,7 +190,7 @@ APIClient (transport orchestrator)
 │     ▼
 │   _handle_response()
 │       │
-│       ├── HttpResponse.from_requests()
+│       ├── HttpResponse.from_http_requests()
 │       │       │
 │       │       ▼
 │       │   HttpResponse (parsed + structured)

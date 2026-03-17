@@ -118,7 +118,7 @@ requests.Session.request
 requests.Response (RAW)
  │
  ▼
-HttpResponse.from_requests
+HttpResponse.from_http_requests
  │
  ▼
 HttpResponse (SAFE)
