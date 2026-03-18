@@ -146,6 +146,7 @@ TestEcommerceAPI (project suite/root)
 │     ├── shared/
 │     │     ├── contracts/                          ← JSON contract schemas (contract testing)
 │     │     │      └── error_schema.py
+│     │     │      └── __init__.py
 │     │     ├── performance/
 │     │     │      ├── test_basic_response_times.py
 │     │     │      └── __init__.py

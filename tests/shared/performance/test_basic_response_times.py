@@ -43,7 +43,7 @@ from EcommerceAPI.src.configs.config_loader import ENV
 logger = logging.getLogger(__name__)
 
 
-pytestmark = [pytest.mark.performance]
+pytestmark = [pytest.mark.performance, pytest.mark.shared,]
 
 
 def _build_display_endpoint(endpoint: str, params: Optional[Dict[str, Any]]) -> str:

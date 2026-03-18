@@ -1,166 +1,281 @@
-# -----------------------------------------------------------------------------
-# GitLab CI: WooCommerce API + DB Tests
-# -----------------------------------------------------------------------------
+# ============================================================
+# GitLab CI — Enterprise Matrix Testing with Governance
+# ============================================================
+#
+# DESIGN GOALS
+# ------------------------------------------------------------
+# - Shared gates (preflight, verify) run ONCE
+# - Entity tests fan out dynamically via child pipeline
+# - Environments are visible in GitLab UI
+# - Deployments are manual & approval-gated
+# - Allure is generated centrally (not per job)
+# - No brittle YAML heredocs inside scripts
+#
+# FILE RESPONSIBILITY
+# ------------------------------------------------------------
+# .gitlab-ci.yml
+#   - pipeline structure
+#   - governance & approvals
+#   - environment wiring
+#   - matrix generation
+#
+# matrix.yml (generated)
+#   - only pytest execution
+#   - per TEAM + ENV job definitions
+# ============================================================
 
-# -----------------------------
-# Define stages first (GitLab requires this at top-level)
-# -----------------------------
 stages:
+  - preflight
+  - deploy
   - discover
   - test
+  - verify
 
-# -----------------------------------------------------------------------------
-# Global defaults for Python jobs with Docker-in-Docker
-# -----------------------------------------------------------------------------
-.default-python:
-  image: docker:27
-  services:
-    - docker:dind
-  variables:
-    DOCKER_HOST: tcp://docker:2375
-    DOCKER_TLS_CERTDIR: ""
-    ENV: docker
-  before_script:
-    # Install Python, pip, docker-compose, curl
-    - apk add --no-cache python3 py3-pip docker-compose curl
-    - pip3 install --upgrade pip
+# ------------------------------------------------------------
+# Global variables (safe defaults)
+# ------------------------------------------------------------
+variables:
+  PYTHON_VERSION: "3.11"
 
-# -----------------------------------------------------------------------------
-# Discover entity test folders dynamically
-# Generates a matrix.yml to trigger one job per entity
-# -----------------------------------------------------------------------------
-discover_services:
-  stage: discover
+  # Space-separated list of environments to test.
+  # Overridable via:
+  # - Run pipeline UI
+  # - Schedules
+  # - Workflow rules (if you ever add them back)
+  TARGET_ENVS: "test"
+
+  # Enable/disable Allure HTML generation
+  AUTO_ALLURE_REPORT: "true"
+
+  # Central reports directory
+  LOG_DIR: "$CI_PROJECT_DIR/reports"
+
+# ============================================================
+# SHARED PREFLIGHT (RUNS ONCE — HARD GATE)
+# ============================================================
+# Purpose:
+# - Fast failure before ANY deploy or test fan-out
+# - Schema validation
+# - Contract checks
+# - Test data sanity
+
+shared_preflight:
+  stage: preflight
   image: python:3.11
   tags:
     - pytest
   script:
-    - echo "🔍 Discovering entity test suites"
-    - set -e
+    - echo "🚦 Running shared preflight checks"
+    - pip install --upgrade pip
+    - pip install -e './EcommerceAPI[dev]'
+    - pytest tests/shared/preflight -s --maxfail=1
+  variables:
+    WC_KEY: $WC_KEY
+    WC_SECRET: $WC_SECRET
+    WP_HOST: $WP_HOST
+    DB_DATABASE: $DB_DATABASE
+    DB_HOST: $DB_HOST
+    DB_PASSWORD: $DB_PASSWORD
+    DB_PORT: $DB_PORT
+    DB_TABLE_PREFIX: $DB_TABLE_PREFIX
+    DB_USER: $DB_USER
 
-    # Determine which services to run
+
+  allow_failure: false
+
+# ============================================================
+# DEPLOYMENT TEMPLATE (MANUAL, APPROVAL-GATED)
+# ============================================================
+# All environments share the same logic.
+# GitLab Environments UI is wired via `environment.name`.
+#
+.deploy_template:
+  stage: deploy
+  image: alpine:3.19
+  needs: ["shared_preflight"]
+  when: manual
+  allow_failure: false
+  script:
+    - echo "🚀 Deploying to $CI_ENVIRONMENT_NAME"
+    - echo "Using API_BASE_URL=$API_BASE_URL"
+    # real deployment command goes here
+
+# -----------------------------
+# TEST ENVIRONMENT
+# -----------------------------
+deploy_test:
+  extends: .deploy_template
+  environment:
+    name: test
+  rules:
+    - if: '$TARGET_ENVS =~ /test/'
+
+# ------------------------------
+# STAGING ENVIRONMENT
+# ------------------------------
+deploy_staging:
+  extends: .deploy_template
+  environment:
+    name: staging
+  rules:
+    - if: '$TARGET_ENVS =~ /staging/'
+
+# -----------------------------
+# PRODUCTION (PROTECTED)
+# -----------------------------
+# - Only runs on tags
+# - Tag protection enforces approval + access control
+#
+deploy_prod:
+  extends: .deploy_template
+  environment:
+    name: prod
+  rules:
+    - if: '$CI_COMMIT_TAG'
+
+# ============================================================
+# DISCOVER SERVICES & GENERATE MATRIX
+# ============================================================
+# Purpose:
+# - Detect entity test folders under tests/
+# - Generate matrix.yml dynamically
+# - One job per TEAM × ENV
+#
+discover_services:
+  stage: discover
+  image: python:3.11
+  needs:
+    - job: deploy_test
+    - job: deploy_staging
+      optional: true
+    - job: deploy_prod
+      optional: true
+  script:
+    - echo "🔍 Discovering entity test suites"
+
+# ------------------------------------------
+    # Discover services (unless SERVICE override)
+    # ------------------------------------------
     - |
       if [ -n "$SERVICE" ]; then
         services="$SERVICE"
         echo "SERVICE override detected: $services"
       else
-        services=$(find tests -maxdepth 1 -mindepth 1 -type d ! -name shared -printf '%f\n' | tr '\n' ' ')
+        services=$(find tests -maxdepth 1 -mindepth 1 -type d \
+          ! -name shared -printf '%f\n' | tr '\n' ' ')
       fi
-
       if [ -z "$services" ]; then
         echo "❌ No entity services found"
         exit 1
       fi
-
       echo "Detected services: $services"
 
-    # Start matrix.yml generation
-    - echo "stages:" > matrix.yml
-    - echo "  - test" >> matrix.yml
-
-    # Loop through detected entities and create jobs dynamically
+    # ------------------------------------------
+    # Generate matrix.yml (CHILD PIPELINE)
+    # ------------------------------------------
     - |
-      for s in $services; do
-        echo "${s}_test:" >> matrix.yml
-        echo "  stage: test" >> matrix.yml
-        echo "  image: python:3.11" >> matrix.yml
+      echo "stages:" > matrix.yml
+      echo "  - test" >> matrix.yml
 
-        # -----------------------------
-        # Services configuration
-        # -----------------------------
-        echo "  services:" >> matrix.yml
-        echo "    - name: mysql:8.0" >> matrix.yml
-        echo "      alias: db" >> matrix.yml
-        echo "      command:" >> matrix.yml
-        echo "        - --default-authentication-plugin=mysql_native_password" >> matrix.yml
-        echo "        - --character-set-server=utf8mb4" >> matrix.yml
-        echo "        - --collation-server=utf8mb4_unicode_ci" >> matrix.yml
-
-        echo "    - name: wordpress:6.8-php8.2-apache" >> matrix.yml
-        echo "      alias: wordpress" >> matrix.yml
-
-        # -----------------------------
-        # Environment variables
-        # -----------------------------
-        echo "  variables:" >> matrix.yml
-        echo "    SERVICE: \${s}" >> matrix.yml
-        echo "    ENV: docker" >> matrix.yml
-        echo "    MYSQL_ROOT_PASSWORD: root" >> matrix.yml
-        echo "    MYSQL_DATABASE: wordpress" >> matrix.yml
-        echo "    MYSQL_USER: wp" >> matrix.yml
-        echo "    MYSQL_PASSWORD: wp" >> matrix.yml
-        echo "    WORDPRESS_DB_HOST: db:3306" >> matrix.yml
-        echo "    WORDPRESS_DB_USER: wp" >> matrix.yml
-        echo "    WORDPRESS_DB_PASSWORD: wp" >> matrix.yml
-        echo "    WORDPRESS_DB_NAME: wordpress" >> matrix.yml
-        echo "    WORDPRESS_TABLE_PREFIX: wp_" >> matrix.yml
-
-        # -----------------------------
-        # Setup Python environment + clients
-        # -----------------------------
-        echo "  before_script:" >> matrix.yml
-        echo "    - pip install --upgrade pip" >> matrix.yml
-        echo "    - pip install -e './EcommerceAPI[dev]'" >> matrix.yml
-        echo "    - apt-get update && apt-get install -y default-mysql-client curl" >> matrix.yml
-
-        # -----------------------------
-        # Wait for MySQL to be ready
-        # -----------------------------
-        echo "    - echo '⏳ Waiting for MySQL to accept connections…'" >> matrix.yml
-        echo "    - |" >> matrix.yml
-        echo "      for i in {1..45}; do" >> matrix.yml
-        echo "        if mysql -h db -P 3306 -u wp -pwp -D wordpress -e 'SELECT 1' >/dev/null 2>&1; then" >> matrix.yml
-        echo "          echo '✅ MySQL is ready'" >> matrix.yml
-        echo "          break" >> matrix.yml
-        echo "        fi" >> matrix.yml
-        echo "        echo \"⏳ Attempt \$i/45: MySQL not ready yet...\"" >> matrix.yml
-        echo "        sleep 2" >> matrix.yml
-        echo "      done" >> matrix.yml
-        echo "    - mysql -h db -P 3306 -u wp -pwp -e 'SELECT VERSION();'" >> matrix.yml
-
-        # -----------------------------
-        # Wait for WordPress to respond
-        # -----------------------------
-        echo "    - echo '⏳ Waiting for WordPress to initialize…'" >> matrix.yml
-        echo "    - sleep 10" >> matrix.yml
-        echo "    - |" >> matrix.yml
-        echo "      for i in {1..30}; do" >> matrix.yml
-        echo "        http_code=\$(curl -s -o /dev/null -w '%{http_code}' http://wordpress/ 2>/dev/null || echo '000')" >> matrix.yml
-        echo "        if [ \"\$http_code\" != \"500\" ] && [ \"\$http_code\" != \"000\" ]; then" >> matrix.yml
-        echo "          echo \"✅ WordPress responding (HTTP \$http_code)\"" >> matrix.yml
-        echo "          break" >> matrix.yml
-        echo "        fi" >> matrix.yml
-        echo "        echo \"⏳ Attempt \$i/30: WordPress HTTP \$http_code\"" >> matrix.yml
-        echo "        sleep 3" >> matrix.yml
-        echo "      done" >> matrix.yml
-        echo "    - curl -s http://wordpress/ | grep -q 'WordPress' && echo '✅ WordPress HTML loaded' || echo '⚠️ WordPress not fully ready'" >> matrix.yml
-
-        # -----------------------------
-        # Run the tests
-        # -----------------------------
-        echo "  script:" >> matrix.yml
-        echo "    - mkdir -p reports/${s}/allure-results" >> matrix.yml
-        echo "    - pytest tests/${s} -s --maxfail=3 --alluredir=reports/${s}/allure-results" >> matrix.yml
-
-        # -----------------------------
-        # Artifacts for reports
-        # -----------------------------
-        echo "  artifacts:" >> matrix.yml
-        echo "    when: always" >> matrix.yml
-        echo "    paths:" >> matrix.yml
-        echo "      - reports/${s}/" >> matrix.yml
+      for env in $TARGET_ENVS
+      do
+        for s in $services
+        do
+          echo "Writing service: ${s}_${env} to matrix.yml"
+          echo "  ${s}_${env}:" >> matrix.yml
+          echo "    stage: test" >> matrix.yml
+          echo "    image: python:3.11" >> matrix.yml
+          echo "    environment:" >> matrix.yml
+          echo "      name: ${env}" >> matrix.yml
+          echo "    variables:" >> matrix.yml
+          echo "      TEAM: ${s}" >> matrix.yml
+          echo "      ENV: ${env}" >> matrix.yml
+          echo "    script:" >> matrix.yml
+          echo "      - pip install --upgrade pip" >> matrix.yml
+          echo "      - pip install -e './EcommerceAPI[dev]'" >> matrix.yml
+          echo "      - mkdir -p reports/${env}/${s}/allure-results" >> matrix.yml
+          echo "      - pytest tests/${s} -s --maxfail=3 \\" >> matrix.yml
+          echo "          --alluredir=reports/${env}/${s}/allure-results \\" >> matrix.yml
+          echo "          --junitxml=reports/${env}/${s}/results.xml" >> matrix.yml
+          echo "    artifacts:" >> matrix.yml
+          echo "      when: always" >> matrix.yml
+          echo "      paths:" >> matrix.yml
+          echo "        - reports/${env}/${s}/" >> matrix.yml
+        done
       done
 
   artifacts:
     paths:
       - matrix.yml
-
-# -----------------------------------------------------------------------------
-# Trigger the dynamically created jobs per entity
-# -----------------------------------------------------------------------------
-entity_tests:
+# ============================================================
+# RUN ENTITY MATRIX (CHILD PIPELINE)
+# ============================================================
+run_entity_matrix:
   stage: test
   trigger:
     include:
       - artifact: matrix.yml
         job: discover_services
+    strategy: depend
+
+# ============================================================
+# ALLURE REPORT AGGREGATION (CENTRALIZED)
+# ============================================================
+# Purpose:
+# - Generate ONE Allure report per environment
+# - Avoid repeated installs in every matrix job
+# - Keep test jobs lightweight and fast
+#
+generate_allure_report:
+  stage: verify
+  image: python:3.11
+  needs: ["run_entity_matrix"]
+  rules:
+    - if: '$AUTO_ALLURE_REPORT == "true"'
+  script:
+    - echo "📊 Generating Allure HTML reports"
+
+    - pip install --upgrade pip
+    - pip install allure-pytest
+
+    - ALLURE_VER="2.27.0"
+    - curl -fsSL "https://github.com/allure-framework/allure2/releases/download/${ALLURE_VER}/allure-${ALLURE_VER}.tgz" | tar -xz
+    - mv "allure-${ALLURE_VER}" /opt/allure
+    - ln -s /opt/allure/bin/allure /usr/bin/allure
+
+    - |
+      for env in $TARGET_ENVS; do
+        if [ -d "reports/$env" ]; then
+          echo "Generating Allure report for $env"
+          allure generate reports/$env \
+            -o reports/$env/allure-report \
+            --clean || true
+        fi
+      done
+
+  artifacts:
+    when: always
+    paths:
+      - reports/**/allure-report
+
+# ============================================================
+# ENVIRONMENT VERIFICATION GATE
+# ============================================================
+# Purpose:
+# - Performance
+# - Smoke
+# - SLO / stability checks
+#
+verify_environment:
+  stage: verify
+  image: python:3.11
+  needs: ["generate_allure_report"]
+  when: manual
+  script:
+    - echo "✅ Running environment verification"
+    - pip install -e './EcommerceAPI[dev]'
+    - pytest tests/shared/performance -s
+
+# NOTE:
+# Matrix generation uses echo-based YAML output
+# (avoids heredoc + IDE parsing issues)

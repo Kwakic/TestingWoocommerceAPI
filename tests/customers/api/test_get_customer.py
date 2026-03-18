@@ -14,10 +14,9 @@ from EcommerceAPI.src.customers.validators.customer_validators import (assert_cu
 logger = logging.getLogger(__name__)
 #  logger.setLevel(logging.DEBUG)  # already set in pytest.ini
 
-pytestmark = [pytest.mark.customers, pytest.mark.regression]
+pytestmark = [pytest.mark.customers, pytest.mark.integration, pytest.mark.regression]
 
 
-@pytest.mark.customers
 @pytest.mark.tcid13
 def test_get_customer_by_email(customer_helper, customers_dao, create_valid_customer):
     """
@@ -186,8 +185,8 @@ def test_get_customer_by_id(customer_helper, customers_dao, create_valid_custome
     logger.info("🎯 Full validation complete for customers ID: %r", customer_id)
 
 
-@pytest.mark.negative_test
 @pytest.mark.tcid17
+@pytest.mark.negative
 def test_get_customer_not_found(customer_helper, customers_dao, create_valid_customer):
     """
     Negative test for retrieving a non-existing customers.

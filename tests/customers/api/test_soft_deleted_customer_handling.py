@@ -8,7 +8,7 @@ faker = Faker()
 logger = logging.getLogger(__name__)
 #  logger.setLevel(logging.DEBUG)  # already set in pytest.ini
 
-pytestmark = [pytest.mark.customers, pytest.mark.smoke, pytest.mark.created_within_window]
+pytestmark = [pytest.mark.customers, pytest.mark.regression, pytest.mark.integration]
 
 
 @pytest.mark.tcid06
@@ -37,7 +37,7 @@ def test_soft_deleted_customer_is_still_returned_by_api(customer_helper, custome
 
     # Step 1 — Create customers (POST /customers handled by fixture)
     logger.info("🛠 Creating a test customers via factory fixture.")
-    # To keep the customers in the DB (i.e., skip deletion), set: customers = create_customer_for_test(skip_cleanup=True)
+    # To keep the customers in the DB (i.e., skip deletion),set: customers = create_customer_for_test(skip_cleanup=True)
     customer = create_valid_customer()  # Default: skip_cleanup=False, validate_response=True
     # No need to assert ID/email. The fixture already does it: customer_helper.assert_valid_customer_response(customers)
 
@@ -91,7 +91,7 @@ def test_soft_deleted_customers_are_excluded_by_custom_filter(
 
     # Step 1 — Create customers
     logger.info("🛠 Creating a test customers via factory fixture.")
-    # To keep the customers in the DB (i.e., skip deletion), set: customers = create_customer_for_test(skip_cleanup=True)
+    # To keep the customers in the DB (i.e., skip deletion),set: customers = create_customer_for_test(skip_cleanup=True)
     customer = create_valid_customer()  # Default: skip_cleanup=False, validate_response=True
     # No need to assert ID/email. The fixture already does it: customer_helper.assert_valid_customer_response(customers)
 

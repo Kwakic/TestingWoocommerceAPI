@@ -57,6 +57,7 @@ logger = logging.getLogger(__name__)
 pytestmark = [
     pytest.mark.security,
     pytest.mark.negative,
+    pytest.mark.shared,
 ]
 
 

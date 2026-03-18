@@ -16,7 +16,7 @@ from tests.shared.contracts.error_schema import error_schema
 
 logger = logging.getLogger(__name__)
 
-pytestmark = [pytest.mark.customers, pytest.mark.regression]
+pytestmark = [pytest.mark.customers, pytest.mark.regression, pytest.mark.integration]
 
 # ------------------------------------------------------------------
 # Invalid payloads used for negative update tests
@@ -129,8 +129,8 @@ def test_update_customer_first_name(customer_helper, customers_dao, create_valid
     )
 
 
-@pytest.mark.negative_test
 @pytest.mark.tcid21
+@pytest.mark.negative
 @pytest.mark.parametrize(
     "case",
     INVALID_UPDATE_PAYLOADS,

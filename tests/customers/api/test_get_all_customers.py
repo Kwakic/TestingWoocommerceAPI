@@ -11,10 +11,12 @@ logger = logging.getLogger(__name__)
 #  logger.setLevel(logging.DEBUG)  # already set in pytest.ini
 
 # Apply shared markers for the test module
-pytestmark = [pytest.mark.customers, pytest.mark.smoke]
+pytestmark = [pytest.mark.customers]
 
 
 @pytest.mark.tcid09
+@pytest.mark.smoke
+@pytest.mark.contract
 def test_get_all_customers_list_not_empty_and_valid_schema(customer_helper, customers_dao):
     """
     Smoke test for GET /customers endpoint.
@@ -48,8 +50,9 @@ def test_get_all_customers_list_not_empty_and_valid_schema(customer_helper, cust
     logger.info("✅ All returned customers conform to schema.")
 
 
-@pytest.mark.regression
 @pytest.mark.tcid10
+@pytest.mark.regression
+@pytest.mark.integration
 def test_get_all_customers_pagination_boundary(customer_helper, customers_dao):
     """
     Verify pagination behavior for GET /customers.
@@ -100,9 +103,9 @@ def test_get_all_customers_pagination_boundary(customer_helper, customers_dao):
     logger.info("✅ All paginated customers conform to schema.")
 
 
-@pytest.mark.negative_test
-@pytest.mark.regression
 @pytest.mark.tcid11
+@pytest.mark.regression
+@pytest.mark.contract
 def test_get_all_customers_empty_list_with_mock(customer_helper, customers_dao):
     """
     Verify that GET /customers handles an empty dataset.
@@ -130,8 +133,9 @@ def test_get_all_customers_empty_list_with_mock(customer_helper, customers_dao):
         logger.info("✅ Successfully mocked empty customers list")
 
 
-@pytest.mark.negative_test
 @pytest.mark.tcid19
+@pytest.mark.negative
+@pytest.mark.regression
 def test_list_customers_created_in_the_future_returns_empty(customer_helper, customers_dao):
     """
     Verify that no customers are returned with a future creation timestamp.

@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 #  logger.setLevel(logging.DEBUG)  # already set in pytest.ini
 
 # Apply shared markers for the test module
-pytestmark = [pytest.mark.customers, pytest.mark.regression, pytest.mark.end_to_end]
+pytestmark = [pytest.mark.customers, pytest.mark.integration, pytest.mark.regression]
 
 
 @pytest.mark.tcid07
@@ -43,7 +43,7 @@ def test_list_customers_created_within_time_range_with_db_check(customer_helper,
 
     # Step 1 — Create customers (fixture performs POST validation)
     logger.info("🛠 Creating a test customers via factory fixture.")
-    # To keep the customers in the DB (i.e., skip deletion), set: customers = create_customer_for_test(skip_cleanup=True)
+    # To keep the customers in the DB (i.e., skip deletion),set: customers = create_customer_for_test(skip_cleanup=True)
     customer = create_valid_customer()  # Default: skip_cleanup=False, validate_response=True
 
     customer_id = customer["id"]
@@ -97,8 +97,8 @@ def test_list_customers_created_within_time_range_with_db_check(customer_helper,
     logger.info("🎯 Full validation complete for customers ID: %r", customer_id)
 
 
-@pytest.mark.negative_test
 @pytest.mark.tcid08
+@pytest.mark.negative
 def test_customer_should_not_returned_when_filtered_outside_creation_time(customer_helper, customers_dao,
                                                                           create_valid_customer):
     """
@@ -117,7 +117,7 @@ def test_customer_should_not_returned_when_filtered_outside_creation_time(custom
 
     # Step 1 — Create customers
     logger.info("🛠 Creating a test customers via factory fixture.")
-    # To keep the customers in the DB (i.e., skip deletion), set: customers = create_customer_for_test(skip_cleanup=True)
+    # To keep the customers in the DB (i.e., skip deletion),set: customers = create_customer_for_test(skip_cleanup=True)
     customer = create_valid_customer()  # Default: skip_cleanup=False, validate_response=True
 
     customer_id = customer["id"]

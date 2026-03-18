@@ -17,7 +17,7 @@ from pathlib import Path
 
 
 from EcommerceAPI.src.utils import custom_logger
-pytestmark = [pytest.mark.preflight]
+pytestmark = [pytest.mark.preflight, pytest.mark.shared]
 
 log = logging.getLogger(__name__)
 

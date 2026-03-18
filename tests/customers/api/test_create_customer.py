@@ -12,7 +12,7 @@ faker = Faker()
 
 logger = logging.getLogger(__name__)  # logger.setLevel(logging.DEBUG) --> Already set in pytest.ini
 
-pytestmark = [pytest.mark.customers, pytest.mark.regression]
+pytestmark = [pytest.mark.regression, pytest.mark.integration,]
 
 INVALID_EMAIL_PAYLOADS = [
     pytest.param(
@@ -123,6 +123,7 @@ def test_bulk_create_customers(qty, customer_helper, customers_dao, create_valid
 # ---------------------------
 @pytest.mark.tcid02
 @pytest.mark.bulk
+@pytest.mark.negative
 @pytest.mark.skip(reason="Edge case validation for qty=0 and qty=101; run manually when needed")
 @pytest.mark.parametrize("qty", [0, 101])
 def test_bulk_create_customers_edge_cases(qty, customer_helper, customers_dao, create_valid_customer):
@@ -188,6 +189,7 @@ def test_bulk_create_customers_edge_cases(qty, customer_helper, customers_dao, c
 # 🧪 Test: Minimal Customer Creation
 # ---------------------------
 @pytest.mark.tcid03
+@pytest.mark.sanity
 def test_create_single_customer_with_email_and_password_only(customer_helper, customers_dao, create_valid_customer):
     """
     Create a customers using the minimum valid payload.
@@ -267,8 +269,9 @@ def generate_address_pairs():
     ]
 
 
-@pytest.mark.skip(reason="Billing/shipping fields optional — no functional difference tested.")
 @pytest.mark.tcid04
+@pytest.mark.sanity
+@pytest.mark.skip(reason="Billing/shipping fields optional — no functional difference tested.")
 @pytest.mark.parametrize("billing, shipping", generate_address_pairs())
 def test_create_customer_with_varied_addresses(
         customer_helper,
@@ -314,9 +317,8 @@ def test_create_customer_with_varied_addresses(
 
     logger.info("🎯 Full validation complete for customers ID: %r", customer_id)
 
-
-@pytest.mark.negative_test
 @pytest.mark.tcid15
+@pytest.mark.negative
 @pytest.mark.parametrize("payload, expected_status_code", INVALID_EMAIL_PAYLOADS)
 def test_create_customer_email_field_validation(customer_helper, customers_dao, customer_api_raw, payload,
                                                 expected_status_code):
@@ -364,9 +366,8 @@ def test_create_customer_email_field_validation(customer_helper, customers_dao, 
 
     logger.info(f"✅ Proper error returned for payload: {payload} → {response['code']}: {response['message']}")
 
-
-@pytest.mark.negative_test
 @pytest.mark.tcid16
+@pytest.mark.negative
 def test_create_customer_fail_for_existing_email(create_valid_customer, customer_api_raw, customer_helper,
                                                  customers_dao):
     """

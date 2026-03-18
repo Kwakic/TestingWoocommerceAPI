@@ -38,7 +38,7 @@ import pytest
 import logging
 log = logging.getLogger(__name__)
 
-pytestmark = [pytest.mark.preflight]
+pytestmark = [pytest.mark.preflight, pytest.mark.shared]
 
 
 # =====================================================================

@@ -1,81 +1,163 @@
+# 🧪 TEST WRITING GUIDE --- TestEcommerceAPI (ENTERPRISE VERSION)
 
-# 🧪 TEST WRITING GUIDE — TestEcommerceAPI
-
-This document explains **how to write tests correctly in the TestEcommerceAPI framework**.
+This document explains **how to write tests correctly in the
+TestEcommerceAPI framework**.
 
 It is intended for:
 
-- QA engineers
-- Developers adding API tests
-- New contributors
+-   QA engineers\
+-   Developers adding API tests\
+-   New contributors
 
-This guide focuses on **practical rules and patterns** used in the project.
+This guide combines: ✔ original framework philosophy\
+✔ real test examples\
+✔ enterprise QA best practices\
+✔ CI execution strategy
 
-For architecture details see:
+------------------------------------------------------------------------
 
-- ARCHITECTURE_QUICK_START.md
-- README_API_TESTING_STANDARDS.md
-- README_API_FRAMEWORK_EXPLAINED.md
-- README_VALIDATORS.md
-
-------------------------------------------------------------------
 # 🧠 Core Philosophy
 
 Tests should be:
 
-✔ readable  
-✔ stable  
-✔ focused on business behavior  
+✔ readable\
+✔ stable\
+✔ focused on business behavior
 
 Tests should **NOT**:
 
-❌ orchestrate complex workflows  
-❌ validate response structure manually  
-❌ call low‑level transport code  
+❌ orchestrate complex workflows\
+❌ validate response structure manually\
+❌ call low‑level transport code
 
 The framework already provides helpers and validators to handle this.
 
-------------------------------------------------------------------
-# 🧱 Test Layers
+------------------------------------------------------------------------
 
-A typical test interacts with these layers:
+# 🧱 Architecture Overview
 
+    HttpClient → APIClient → HttpResponse → API → Helpers → Validators → Tests
+
+### Responsibilities
+
+  Layer          Responsibility
+  -------------- -------------------------------
+  HttpClient     transport + timeout
+  APIClient      retry, logging, orchestration
+  HttpResponse   normalization
+  API            endpoint definition
+  Helpers        workflows
+  Validators     assertions
+  Tests          business validation
+
+------------------------------------------------------------------------
+
+# 📁 Test Structure (MANDATORY)
+
+    tests/
+       customers/
+       orders/
+       products/
+       coupons/
+       shared/
+
+✔ Domain-driven (matches microservices)\
+✔ Enables team ownership\
+✔ Scales easily
+
+❌ DO NOT reorganize by smoke/regression folders
+
+------------------------------------------------------------------------
+
+# 🏷️ Marker Strategy (STANDARDIZED)
+
+## 1. Domain (auto-applied via conftest)
+
+    customers, orders, products, coupons, shared
+
+------------------------------------------------------------------------
+
+## 2. Execution Tier
+
+  Marker       Meaning
+  ------------ -------------------------
+  smoke        critical API health
+  sanity       quick functional checks
+  regression   full coverage
+
+------------------------------------------------------------------------
+
+## 3. Test Type
+
+  Marker        Meaning
+  ------------- ---------------------
+  integration   API + DB validation
+  contract      schema validation
+  negative      invalid input tests
+  e2e           multi-step workflow
+
+------------------------------------------------------------------------
+
+## 4. Specialized
+
+    performance
+    security
+    preflight
+    bulk
+
+------------------------------------------------------------------------
+
+# 🚨 Marker Rules
+
+✔ Max 2--3 markers per test (excluding domain)\
+✔ Domain markers should NOT be manually added\
+✔ Use consistent naming (negative NOT negative_test)
+
+### Example
+
+``` python
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.regression
+]
 ```
-Test
- ↓
-Fixture
- ↓
-Helper
- ↓
-API Layer
- ↓
-APIClient
- ↓
-HttpResponse
- ↓
-Validators
- ↓
-Pydantic Models
-```
 
-Tests should interact mainly with:
+------------------------------------------------------------------------
 
-- **fixtures**
-- **helpers**
-- **validators**
+# 🤖 CI Strategy (STANDARD)
 
-------------------------------------------------------------------
+## Fast pipeline (PR / commit)
+
+    pytest -m "smoke or sanity or preflight"
+
+------------------------------------------------------------------------
+
+## Full validation
+
+    pytest -m "not performance and not security"
+
+------------------------------------------------------------------------
+
+## Nightly
+
+    pytest -m regression
+
+------------------------------------------------------------------------
+
+## Scheduled
+
+    pytest -m performance
+    pytest -m security
+
+------------------------------------------------------------------------
+
 # 🧪 Test Structure
 
-Typical test structure:
+    Arrange → Act → Assert
 
-```
-Arrange → Act → Assert
-```
+### Example
 
-Example:
-
-```python
+``` python
 def test_get_customer_by_id(customer_helper, create_valid_customer):
 
     # Arrange
@@ -97,117 +179,32 @@ def test_get_customer_by_id(customer_helper, create_valid_customer):
     )
 ```
 
-------------------------------------------------------------------
+------------------------------------------------------------------------
+
 # 📦 Fixtures (Factory Pattern)
 
-Fixtures are responsible for **safe test data creation**.
+Fixtures must:
 
-Example fixture:
+✔ create resource\
+✔ validate response\
+✔ register cleanup\
+✔ return dictionary
 
-```
-create_valid_customer
-```
+Example:
 
-Responsibilities:
-
-✔ call helper  
-✔ validate response  
-✔ register cleanup  
-✔ return clean dictionary  
-
-Example usage:
-
-```python
+``` python
 customer = create_valid_customer()
 ```
 
-Returned object:
+❌ Fixtures must NOT return HttpResponse
 
-```
-dict
-```
+------------------------------------------------------------------------
 
-Fixtures **never return HttpResponse**.
-
-------------------------------------------------------------------
-# 🧠 Helpers
-
-Helpers simplify workflows.
-
-Example:
-
-```
-CustomersHelper
-```
-
-Responsibilities:
-
-- call API endpoints
-- orchestrate workflows
-- optionally combine API + DB checks
-
-Example:
-
-```python
-response = customer_helper.update_customer(
-    customer_id,
-    payload=payload,
-    return_http_response=True
-)
-```
-
-Helpers **do not perform assertions**.
-
-------------------------------------------------------------------
-# 🔍 Validators
-
-Validators perform **data validation only**.
-
-They may validate:
-
-- response structure
-- API correctness
-- business rules
-- database consistency
-
-Validators **must NOT fetch data**.
-
-Correct pattern:
-
-```
-Test / Helper fetches data
-        ↓
-Validator validates it
-```
-
-------------------------------------------------------------------
-# 🔧 Positive Tests
-
-Use fixtures whenever possible.
-
-Example:
-
-```python
-customer = create_valid_customer()
-
-assert customer["id"]
-assert customer["email"]
-```
-
-Why:
-
-- fixtures return validated data
-- avoids HTTP complexity
-- keeps tests readable
-
-------------------------------------------------------------------
 # 🔴 Negative Tests
 
-Negative tests usually require **direct helper usage**.
+Use helper or raw API:
 
-Example:
-
-```python
+``` python
 response = customer_helper.create_customer(
     payload={"email": "invalid"},
     return_http_response=True
@@ -216,163 +213,158 @@ response = customer_helper.create_customer(
 assert response.status_code == 400
 ```
 
-Then validate the error payload.
+✔ validate error schema\
+✔ validate business rules
 
-------------------------------------------------------------------
-# 🧪 Database Validation
+------------------------------------------------------------------------
 
-Some tests must verify API ↔ DB consistency.
+# 🧠 Helpers
 
-Example:
+Responsibilities:
 
-```python
-customer_helper.assert_customer_exists_and_matches_db(
-    email,
-    customers_dao
-)
-```
+-   call APIs\
+-   orchestrate workflows\
+-   combine API + DB logic
 
-Use DB validation when:
+❌ DO NOT assert inside helpers
 
-- updating records
-- deleting records
-- validating uniqueness
-- ensuring data persistence
+------------------------------------------------------------------------
 
-------------------------------------------------------------------
+# 🔍 Validators
+
+Responsibilities:
+
+-   validate structure\
+-   validate business logic\
+-   validate DB consistency
+
+❌ DO NOT fetch data
+
+Pattern:
+
+    fetch → validate
+
+------------------------------------------------------------------------
+
+# 🧪 Integration Tests
+
+If test uses DAO:
+
+    API → DB validation
+
+Then it is:
+
+    pytest.mark.integration
+
+------------------------------------------------------------------------
+
 # 📊 Validation Pipeline
 
-Typical validation flow:
+    Transport validation
+          ↓
+    Schema validation
+          ↓
+    Business validation
+          ↓
+    Database validation
 
-```
-Transport validation
-      ↓
-Structure validation (Pydantic)
-      ↓
-Business validation
-      ↓
-Database validation
-```
+------------------------------------------------------------------------
 
-Example:
-
-```python
-customer_model = assert_customer_retrieved_successfully(response)
-
-assert_customer_identity(customer_model, expected_id, expected_email)
-
-assert_customer_matches_db(customer_model, db_customer)
-```
-
-------------------------------------------------------------------
 # ⚠️ Common Mistakes
 
-❌ Mixing abstraction levels
+❌ Mixing abstraction layers
 
-Wrong:
+❌ Manual JSON validation
 
-```python
-customer = create_valid_customer()
-assert customer.status_code == 201
-```
+❌ Overusing helpers for negative tests
 
-Correct:
+------------------------------------------------------------------------
 
-```python
-response = customer_helper.create_customer(return_http_response=True)
-assert response.status_code == 201
-```
+# 🧼 Cleanup Strategy
 
----
+✔ automatic via fixtures\
+✔ avoid leftover data
 
-❌ Manual structure validation
+------------------------------------------------------------------------
 
-Wrong:
+# 📊 Observability
 
-```
-assert "id" in response
-assert "email" in response
-```
+Already included:
 
-Correct:
+✔ structured logging\
+✔ request duration\
+✔ error logging
 
-```
-CustomerModel(**response)
-```
+❌ No need for metrics system
 
-------------------------------------------------------------------
+------------------------------------------------------------------------
+
+# 🔁 Retry & Timeout
+
+✔ HttpClient → timeout\
+✔ APIClient → retry/backoff
+
+------------------------------------------------------------------------
+
+# 🧪 Shared Test Suites
+
+    tests/shared/
+       preflight/
+       security/
+       performance/
+       contracts/
+
+### Preflight
+
+-   API connectivity\
+-   response format
+
+### Security
+
+-   authentication matrix
+
+### Performance
+
+-   response time checks
+
+------------------------------------------------------------------------
+
+# 🚫 What NOT to do
+
+❌ No ResponseAdapter\
+❌ No metrics layer\
+❌ No extra abstraction\
+❌ No folder restructuring\
+❌ No over-tagging
+
+------------------------------------------------------------------------
+
 # 🧠 Golden Rules
 
-1️⃣ Fixtures return validated dictionaries  
-2️⃣ Helpers orchestrate workflows  
-3️⃣ Validators validate data only  
-4️⃣ Tests assert business behavior  
-5️⃣ Transport layers never perform validation  
+1.  Fixtures return validated data\
+2.  Helpers orchestrate\
+3.  Validators validate\
+4.  Tests verify business logic\
+5.  Keep tests simple
 
-------------------------------------------------------------------
+------------------------------------------------------------------------
+
 # 🚀 Final Advice
 
-When writing a test, ask:
+Ask:
 
-- Do I need a fixture?
-- Do I need a helper?
-- Do I need a validator?
+"Does this help me write better tests faster?"
 
-If you follow these patterns, tests will remain:
+If not → skip it.
 
-✔ maintainable  
-✔ readable  
-✔ stable
+------------------------------------------------------------------------
 
+# 🏁 Conclusion
 
-------------------------------------------------------------------
-# 🧪 Shared Test Suites (Framework-Level Tests)
+This framework is:
 
-The framework also contains shared tests that validate infrastructure,
-security, and environment behavior before running entity-specific tests.
+✔ enterprise-ready\
+✔ scalable\
+✔ cleanly designed
 
-Directory structure:
-
-tests/shared/
-
-    preflight/
-        test_api_connectivity.py
-        test_response_format.py
-        test_logging_globals.py
-
-    security/
-        test_authentication_matrix.py
-        test_authentication_success.py
-
-    performance/
-        test_basic_response_times.py
-
-Purpose of each category:
-
-Preflight tests
----------------
-Verify the test environment and framework configuration before executing
-the full test suite.
-
-Examples:
-- API connectivity
-- logging configuration
-- response format validation
-
-Security tests
---------------
-Validate authentication and access control behavior.
-
-Example matrix:
-
-4 entities
-× 4 HTTP methods
-× 3 invalid credential cases
-= 48 security tests
-
-Performance tests
------------------
-Provide lightweight baseline response time checks to detect regressions
-in API responsiveness.
-
-------------------------------------------------------------------
+👉 Focus now on writing tests, not refactoring framework.
