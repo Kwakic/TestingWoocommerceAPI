@@ -121,6 +121,15 @@ pytestmark = [
     pytest.mark.regression
 ]
 ```
+### Big Picture
+
+✅ Domain → customers, orders, etc.
+
+✅ Execution → smoke, sanity, regression
+
+✅ Type → integration, contract, negative, e2e
+
+✅ Special → performance, security, preflight, bulk
 
 ------------------------------------------------------------------------
 

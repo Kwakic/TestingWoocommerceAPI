@@ -16,7 +16,7 @@ from tests.shared.contracts.error_schema import error_schema
 
 logger = logging.getLogger(__name__)
 
-pytestmark = [pytest.mark.customers, pytest.mark.regression, pytest.mark.integration]
+pytestmark = [pytest.mark.integration]
 
 # ------------------------------------------------------------------
 # Invalid payloads used for negative update tests
@@ -56,6 +56,8 @@ INVALID_UPDATE_PAYLOADS = [
 
 
 @pytest.mark.tcid12
+@pytest.mark.smoke
+@pytest.mark.contract
 def test_update_customer_first_name(customer_helper, customers_dao, create_valid_customer):
     """
     Verify that a customers can be updated successfully.
@@ -131,6 +133,8 @@ def test_update_customer_first_name(customer_helper, customers_dao, create_valid
 
 @pytest.mark.tcid21
 @pytest.mark.negative
+@pytest.mark.contract
+@pytest.mark.regression
 @pytest.mark.parametrize(
     "case",
     INVALID_UPDATE_PAYLOADS,
@@ -236,6 +240,7 @@ def test_update_customer_invalid_inputs(
     )
 
 @pytest.mark.tcid29
+@pytest.mark.regression
 def test_validate_date_modified_and_date_modified_gmt(customer_helper, customers_dao):
     """
     Verify that customer modification timestamps are consistent between API and database.

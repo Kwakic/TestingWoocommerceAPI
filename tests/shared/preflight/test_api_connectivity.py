@@ -45,7 +45,6 @@ pytestmark = [pytest.mark.preflight, pytest.mark.shared]
 #  PARAMETRIZED TEST
 # =====================================================================
 
-@pytest.mark.preflight
 @pytest.mark.parametrize(
     "endpoint",
     ["customers", "products", "orders", "coupons"]

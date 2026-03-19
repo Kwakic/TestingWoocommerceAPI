@@ -13,10 +13,12 @@ logger = logging.getLogger(__name__)
 #  logger.setLevel(logging.DEBUG)  # already set in pytest.ini
 
 # Apply shared markers for the test module
-pytestmark = [pytest.mark.customers, pytest.mark.integration, pytest.mark.regression]
+pytestmark = [pytest.mark.integration]
 
 
 @pytest.mark.tcid07
+@pytest.mark.contract
+@pytest.mark.regression
 @pytest.mark.parametrize("minute_offset", [1, 5])
 def test_list_customers_created_within_time_range_with_db_check(customer_helper, customers_dao, minute_offset: int,
                                                                 create_valid_customer):
@@ -99,6 +101,7 @@ def test_list_customers_created_within_time_range_with_db_check(customer_helper,
 
 @pytest.mark.tcid08
 @pytest.mark.negative
+@pytest.mark.regression
 def test_customer_should_not_returned_when_filtered_outside_creation_time(customer_helper, customers_dao,
                                                                           create_valid_customer):
     """

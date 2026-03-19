@@ -12,7 +12,7 @@ faker = Faker()
 
 logger = logging.getLogger(__name__)  # logger.setLevel(logging.DEBUG) --> Already set in pytest.ini
 
-pytestmark = [pytest.mark.regression, pytest.mark.integration,]
+pytestmark = [pytest.mark.integration,]
 
 INVALID_EMAIL_PAYLOADS = [
     pytest.param(
@@ -36,6 +36,8 @@ INVALID_EMAIL_PAYLOADS = [
 # ---------------------------
 @pytest.mark.tcid01
 @pytest.mark.bulk
+@pytest.mark.contract
+@pytest.mark.regression  # Bulk is heavy → NOT sanity/smoke
 @pytest.mark.parametrize("qty", [1, 3, 5])
 def test_bulk_create_customers(qty, customer_helper, customers_dao, create_valid_customer):
     """
@@ -54,6 +56,11 @@ def test_bulk_create_customers(qty, customer_helper, customers_dao, create_valid
         1. Create N customers using bulk utility
         2. Verify each customers exists via API
         3. Verify API data matches database record
+
+    NOTE:
+        This test is marked as CONTRACT because schema validation
+        is performed implicitly via the create_valid_customer fixture
+        (Pydantic validation layer).
     """
 
     # ------------------------
@@ -124,6 +131,7 @@ def test_bulk_create_customers(qty, customer_helper, customers_dao, create_valid
 @pytest.mark.tcid02
 @pytest.mark.bulk
 @pytest.mark.negative
+@pytest.mark.regression  # Bulk is heavy → NOT sanity/smoke
 @pytest.mark.skip(reason="Edge case validation for qty=0 and qty=101; run manually when needed")
 @pytest.mark.parametrize("qty", [0, 101])
 def test_bulk_create_customers_edge_cases(qty, customer_helper, customers_dao, create_valid_customer):
@@ -190,6 +198,8 @@ def test_bulk_create_customers_edge_cases(qty, customer_helper, customers_dao, c
 # ---------------------------
 @pytest.mark.tcid03
 @pytest.mark.sanity
+@pytest.mark.smoke  # smoke ✔ (VERY important endpoint)
+@pytest.mark.contract
 def test_create_single_customer_with_email_and_password_only(customer_helper, customers_dao, create_valid_customer):
     """
     Create a customers using the minimum valid payload.
@@ -270,7 +280,8 @@ def generate_address_pairs():
 
 
 @pytest.mark.tcid04
-@pytest.mark.sanity
+@pytest.mark.regression
+@pytest.mark.contract
 @pytest.mark.skip(reason="Billing/shipping fields optional — no functional difference tested.")
 @pytest.mark.parametrize("billing, shipping", generate_address_pairs())
 def test_create_customer_with_varied_addresses(
@@ -319,6 +330,8 @@ def test_create_customer_with_varied_addresses(
 
 @pytest.mark.tcid15
 @pytest.mark.negative
+@pytest.mark.contract # validates error_schema → contract ✔
+@pytest.mark.regression # not quick → regression
 @pytest.mark.parametrize("payload, expected_status_code", INVALID_EMAIL_PAYLOADS)
 def test_create_customer_email_field_validation(customer_helper, customers_dao, customer_api_raw, payload,
                                                 expected_status_code):
@@ -368,6 +381,8 @@ def test_create_customer_email_field_validation(customer_helper, customers_dao, 
 
 @pytest.mark.tcid16
 @pytest.mark.negative
+@pytest.mark.contract
+@pytest.mark.regression
 def test_create_customer_fail_for_existing_email(create_valid_customer, customer_api_raw, customer_helper,
                                                  customers_dao):
     """

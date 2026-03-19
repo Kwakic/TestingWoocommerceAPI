@@ -14,10 +14,12 @@ from EcommerceAPI.src.customers.validators.customer_validators import (assert_cu
 logger = logging.getLogger(__name__)
 #  logger.setLevel(logging.DEBUG)  # already set in pytest.ini
 
-pytestmark = [pytest.mark.customers, pytest.mark.integration, pytest.mark.regression]
+pytestmark = [pytest.mark.integration]
 
 
 @pytest.mark.tcid13
+@pytest.mark.smoke # Critical → smoke
+@pytest.mark.sanity # Fast → sanity
 def test_get_customer_by_email(customer_helper, customers_dao, create_valid_customer):
     """
     Verify that a customers can be retrieved using the email filter.
@@ -112,6 +114,8 @@ def test_get_customer_by_email(customer_helper, customers_dao, create_valid_cust
 
 
 @pytest.mark.tcid14
+@pytest.mark.smoke # critical endpoint → smoke
+@pytest.mark.contract # includes response validation → contract
 def test_get_customer_by_id(customer_helper, customers_dao, create_valid_customer):
     """
     Verify that a customers can be retrieved by ID.
@@ -187,6 +191,8 @@ def test_get_customer_by_id(customer_helper, customers_dao, create_valid_custome
 
 @pytest.mark.tcid17
 @pytest.mark.negative
+@pytest.mark.contract
+@pytest.mark.regression # not fast / edge → regression
 def test_get_customer_not_found(customer_helper, customers_dao, create_valid_customer):
     """
     Negative test for retrieving a non-existing customers.

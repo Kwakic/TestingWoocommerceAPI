@@ -142,6 +142,7 @@ TestEcommerceAPI (project suite/root)
 │     │            ├── test_get_customer.py
 │     │            ├── test_soft_deleted_customer_handling.py
 │     │            ├── test_update_customer.py
+│     │            ├── test_customer_lifecycle.py
 │     │            └── __init__.py
 │     ├── shared/
 │     │     ├── contracts/                          ← JSON contract schemas (contract testing)

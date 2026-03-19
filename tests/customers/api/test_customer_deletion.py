@@ -11,10 +11,12 @@ logger = logging.getLogger(__name__)
 #  logger.setLevel(logging.DEBUG)  # already set in pytest.ini
 
 
-pytestmark = [pytest.mark.customers, pytest.mark.integration, pytest.mark.regression]
+pytestmark = [pytest.mark.integration]
 
 
 @pytest.mark.tcid05
+@pytest.mark.e2e # lightweight E2E
+@pytest.mark.regression
 def test_customer_deletion_removes_resource(all_resources, customer_helper, customers_dao, create_valid_customer):
     """
     Verify that deleting a customers removes the resource completely.
@@ -92,6 +94,8 @@ def test_customer_deletion_removes_resource(all_resources, customer_helper, cust
 
 @pytest.mark.tcid18
 @pytest.mark.negative
+@pytest.mark.contract
+@pytest.mark.regression
 @pytest.mark.parametrize("minute_offset", [1, 2])
 def test_deleted_customer_not_in_created_after_filter(customer_helper, customers_dao, all_resources,
                                                       create_valid_customer, minute_offset: int):

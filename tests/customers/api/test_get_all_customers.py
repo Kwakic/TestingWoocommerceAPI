@@ -10,8 +10,7 @@ from EcommerceAPI.src.utils.date_timestamp_utils import get_now_utc_floor, to_is
 logger = logging.getLogger(__name__)
 #  logger.setLevel(logging.DEBUG)  # already set in pytest.ini
 
-# Apply shared markers for the test module
-pytestmark = [pytest.mark.customers]
+pytestmark = [pytest.mark.integration]
 
 
 @pytest.mark.tcid09
@@ -52,7 +51,7 @@ def test_get_all_customers_list_not_empty_and_valid_schema(customer_helper, cust
 
 @pytest.mark.tcid10
 @pytest.mark.regression
-@pytest.mark.integration
+@pytest.mark.contract
 def test_get_all_customers_pagination_boundary(customer_helper, customers_dao):
     """
     Verify pagination behavior for GET /customers.
@@ -105,7 +104,6 @@ def test_get_all_customers_pagination_boundary(customer_helper, customers_dao):
 
 @pytest.mark.tcid11
 @pytest.mark.regression
-@pytest.mark.contract
 def test_get_all_customers_empty_list_with_mock(customer_helper, customers_dao):
     """
     Verify that GET /customers handles an empty dataset.
