@@ -218,3 +218,14 @@ If you prefer using the PyCharm buttons:
    - `git remote set-url origin git@github.com:Kwakic/TestingWoocommerceAPI.git`
    - `git push GitHub main`
 
+### The flow is: 
+
+`main → create branch → commit → push → Pull Request → merge → delete branch`
+
+This gives you This gives you:
+
+* safer changes
+* code review (even if it's just you)
+* clean history
+* rollback capability
+
