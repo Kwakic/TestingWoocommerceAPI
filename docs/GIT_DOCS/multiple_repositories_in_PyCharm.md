@@ -268,6 +268,17 @@ inside main.
        - Switch back to main: `git checkout main` or `git switch main`
        - Update your main: `git pull`
        - Delete the local bug branch: `git branch -d QA_bug_4567`
+   * Note: 
+     * `git branch -d `(Safe Delete)
+     * `git branch -D` (Force Delete)
+9. PyCharm's memory so it stops showing up in your lists, you need to "prune" your local view. PyCharm keeps a local record 
+of what was on GitHub until you tell it to refresh.
+Prune the Remote References (The "Ghost" Branch)
+Even though you deleted it on GitHub, PyCharm still thinks origin/QA_bug_4567 exists.
+    * Go to the top menu: `Git > Fetch`.
+    * Alternative (CLI): Run `git fetch GitHub --prune.`
+    * This tells PyCharm: "Check GitHub again and remove any branches that are gone from the server."
+   
 
 ### Summary of "Best Practice"
 You only delete the branch after the code has been successfully merged into the main codebase. Deleting it right after 
@@ -284,7 +295,7 @@ of what was on GitHub until you tell it to refresh.
 1. Prune the Remote References (The "Ghost" Branch)
 Even though you deleted it on GitHub, PyCharm still thinks origin/QA_bug_4567 exists.
    * Go to the top menu: Git > Fetch.
-   * Alternative (CLI): Run git fetch GitHub --prune.
+   * Alternative (CLI): Run `git fetch GitHub --prune.`
    * This tells PyCharm: "Check GitHub again and remove any branches that are gone from the server."
    
 2. Delete the Local Branch
