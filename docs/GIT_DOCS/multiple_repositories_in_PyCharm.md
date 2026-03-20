@@ -287,26 +287,3 @@ Step 5 would be like throwing away the ladder before you've finished climbing on
 
 **Note:** The -u (or --set-upstream) flag is important—it links your local branch to the remote one so that in the future,
 you can just type git push or git pull without specifying the name again.
-
-### To fully remove the branch from
-PyCharm's memory so it stops showing up in your lists, you need to "prune" your local view. PyCharm keeps a local record 
-of what was on GitHub until you tell it to refresh.
-
-1. Prune the Remote References (The "Ghost" Branch)
-Even though you deleted it on GitHub, PyCharm still thinks origin/QA_bug_4567 exists.
-   * Go to the top menu: Git > Fetch.
-   * Alternative (CLI): Run `git fetch GitHub --prune.`
-   * This tells PyCharm: "Check GitHub again and remove any branches that are gone from the server."
-   
-2. Delete the Local Branch
-PyCharm won't delete your local copy of the code automatically (to protect your work).
-   * Open the Branches menu (bottom-right corner or top-left in the New UI).
-   * Find QA_bug_4567 under the Local Branches section.
-   * Hover over it, click the three dots (or right-click), and select Delete.
-   * If a popup asks if you're sure because it's "not fully merged" (due to the Revert), click Delete Anyway.
-   
-3. Clear the "Recent" List
-If you still see the name in the search bar or "Recent" list:
-   * Open the Git tool window (Alt + 9).
-   * Go to the Log tab.
-   * On the left sidebar under Branches, right-click any branch that shouldn't be there and select Delete.
