@@ -252,23 +252,23 @@ This gives you This gives you:
 
 Here is the exact sequence you’ll use every time you start a new task:
 
-1. Create & Switch: git checkout -b QA_bug_4567 (This creates and moves you to the branch).
+1. Create & Switch: `git checkout -b QA_bug_4567` (This creates and moves you to the branch).
 2. Work: Edit your code in PyCharm.
-3. Stage: git add . (Prepares all changed files).
-4. Commit: git commit -m "fixed the bug in the login flow" (Saves the snapshot locally).
-5. Push & Link: git push -u origin QA_bug_4567 (Uploads it and connects it to GitHub).
+3. Stage: `git add .` (Prepares all changed files).
+4. Commit: `git commit -m "fixed the bug in the login flow"` (Saves the snapshot locally).
+5. Push & Link: `git push -u GitHub QA_bug_4567` (Uploads it and connects it to GitHub).
 6. Create a Pull Request (PR): Since the branch is now on GitHub, you (or a teammate) go to the GitHub website to 
 review the code. This is where you "propose" merging your bug fix into the main branch.
 7. Merge: Once the code is approved and the tests pass, you click Merge on GitHub. This officially moves your 
-QA_bug_4567 code into the main branch.
+**QA_bug_4567** code into the main branch.
 8. The "Cleanup" (Delete): This is when you delete the branch. You don't need it anymore because the code is safely 
 inside main.
+   * On GitHub: There is usually a button that says **"Delete branch"** right after you merge.
+   * On your computer (PyCharm):
+       - Switch back to main: `git checkout main` or `git switch main`
+       - Update your main: `git pull`
+       - Delete the local bug branch: `git branch -d QA_bug_4567`
 
-    On GitHub: There is usually a button that says "Delete branch" right after you merge.
-    On your computer (PyCharm):
-        Switch back to main: git checkout main
-        Update your main: git pull
-        Delete the local bug branch: git branch -d QA_bug_4567
 ### Summary of "Best Practice"
 You only delete the branch after the code has been successfully merged into the main codebase. Deleting it right after 
 Step 5 would be like throwing away the ladder before you've finished climbing onto the roof!
@@ -277,3 +277,25 @@ Step 5 would be like throwing away the ladder before you've finished climbing on
 **Note:** The -u (or --set-upstream) flag is important—it links your local branch to the remote one so that in the future,
 you can just type git push or git pull without specifying the name again.
 
+### To fully remove the branch from
+PyCharm's memory so it stops showing up in your lists, you need to "prune" your local view. PyCharm keeps a local record 
+of what was on GitHub until you tell it to refresh.
+
+1. Prune the Remote References (The "Ghost" Branch)
+Even though you deleted it on GitHub, PyCharm still thinks origin/QA_bug_4567 exists.
+   * Go to the top menu: Git > Fetch.
+   * Alternative (CLI): Run git fetch GitHub --prune.
+   * This tells PyCharm: "Check GitHub again and remove any branches that are gone from the server."
+   
+2. Delete the Local Branch
+PyCharm won't delete your local copy of the code automatically (to protect your work).
+   * Open the Branches menu (bottom-right corner or top-left in the New UI).
+   * Find QA_bug_4567 under the Local Branches section.
+   * Hover over it, click the three dots (or right-click), and select Delete.
+   * If a popup asks if you're sure because it's "not fully merged" (due to the Revert), click Delete Anyway.
+   
+3. Clear the "Recent" List
+If you still see the name in the search bar or "Recent" list:
+   * Open the Git tool window (Alt + 9).
+   * Go to the Log tab.
+   * On the left sidebar under Branches, right-click any branch that shouldn't be there and select Delete.
