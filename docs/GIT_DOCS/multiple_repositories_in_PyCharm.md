@@ -217,15 +217,63 @@ If you prefer using the PyCharm buttons:
 - Using GitHub add (or manually in Pycharm: Menu/git/manage remotes):
    - `git remote set-url origin git@github.com:Kwakic/TestingWoocommerceAPI.git`
    - `git push GitHub main`
+  
+## To switch between branches in the CLI
+### 1. The Modern Way (Recommended):
+Starting with Git 2.23, a more intuitive command was added specifically for moving between branches:
+`git switch main`
 
-### The flow is: 
+To go back to your bug branch: `git switch QA_bug_4567`
+
+### 2. The Classic Way
+The older, most common command used by most developers is: `git checkout main`
+
+
+### 3. The "Quick Toggle" Pro-Tip
+If you want to jump back to the previous branch you were just on (without typing the name), use a hyphen:
+bash
+
+`git switch -`
+OR
+`git checkout -`
+
+---
+
+### CREATE NEW BRANCH  
+#### The flow is: 
 
 `main → create branch → commit → push → Pull Request → merge → delete branch`
 
 This gives you This gives you:
-
 * safer changes
 * code review (even if it's just you)
 * clean history
 * rollback capability
+
+Here is the exact sequence you’ll use every time you start a new task:
+
+1. Create & Switch: git checkout -b QA_bug_4567 (This creates and moves you to the branch).
+2. Work: Edit your code in PyCharm.
+3. Stage: git add . (Prepares all changed files).
+4. Commit: git commit -m "fixed the bug in the login flow" (Saves the snapshot locally).
+5. Push & Link: git push -u origin QA_bug_4567 (Uploads it and connects it to GitHub).
+6. Create a Pull Request (PR): Since the branch is now on GitHub, you (or a teammate) go to the GitHub website to 
+review the code. This is where you "propose" merging your bug fix into the main branch.
+7. Merge: Once the code is approved and the tests pass, you click Merge on GitHub. This officially moves your 
+QA_bug_4567 code into the main branch.
+8. The "Cleanup" (Delete): This is when you delete the branch. You don't need it anymore because the code is safely 
+inside main.
+
+    On GitHub: There is usually a button that says "Delete branch" right after you merge.
+    On your computer (PyCharm):
+        Switch back to main: git checkout main
+        Update your main: git pull
+        Delete the local bug branch: git branch -d QA_bug_4567
+### Summary of "Best Practice"
+You only delete the branch after the code has been successfully merged into the main codebase. Deleting it right after 
+Step 5 would be like throwing away the ladder before you've finished climbing onto the roof!
+
+
+**Note:** The -u (or --set-upstream) flag is important—it links your local branch to the remote one so that in the future,
+you can just type git push or git pull without specifying the name again.
 
