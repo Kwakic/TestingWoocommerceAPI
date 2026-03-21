@@ -276,7 +276,7 @@ of what was on GitHub until you tell it to refresh.
 Prune the Remote References (The "Ghost" Branch)
 Even though you deleted it on GitHub, PyCharm still thinks origin/QA_bug_4567 exists.
     * Go to the top menu: `Git > Fetch`.
-    * Alternative (CLI): Run `git fetch GitHub --prune.`
+    * Alternative (CLI): Run `git fetch GitHub --prune`
     * This tells PyCharm: "Check GitHub again and remove any branches that are gone from the server."
    
 
@@ -287,3 +287,5 @@ Step 5 would be like throwing away the ladder before you've finished climbing on
 
 **Note:** The -u (or --set-upstream) flag is important—it links your local branch to the remote one so that in the future,
 you can just type git push or git pull without specifying the name again.
+
+#### NEW BRANCH bug/ticket4375
