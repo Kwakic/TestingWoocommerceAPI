@@ -383,6 +383,12 @@ Check tracking:
 git branch -vv
 ```
 
+Lists all the remote repositories:
+```bash
+`git remote -v`
+```
+It checks currently connected repositories to your local project, along with their specific URLs
+
 ---
 
 ## 🛠 Troubleshooting
