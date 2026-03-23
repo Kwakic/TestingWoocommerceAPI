@@ -4,6 +4,16 @@
   #    ✅ Git auto-converts CRLF → LF when committing from Windows
   #    ✅ Scripts work correctly in Linux CI runners
 
+# Run these commands to apply this file:
+# git add --renormalize .
+# git commit -m "chore: normalize line endings"
+
+
+# or Git config: git config --global core.autocrlf true
+# 👉 Git will automatically:
+  # - normalize line endings on commit
+  # - prevent inconsistencies
+
 * text=auto
 
 *.py     text eol=lf

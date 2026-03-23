@@ -1,0 +1,66 @@
+# What big teams do is NOT a raw .git/hooks/pre-commit script — they use a managed tool so it’s:
+# - versioned in the repo
+# - consistent for everyone
+# - easy to maintain
+
+# ✅ Use the pre-commit framework (Python tool)
+#👉 This replaces manual .git/hooks/pre-commit
+
+# 🚀 Step 1 — Install tool --> pip install pre-commit
+# 🚀 Step 2 — Create config file --> .pre-commit-config.yaml
+# 🚀 Step 3 — Activate it. 👉 This creates the real .git/hooks/pre-commit automatically --> pre-commit install
+
+# 🧠 What happens now
+#On every commit:
+#1. Fix trailing whitespace automatically ✅
+#2. Fix EOF newline automatically ✅
+#3. Format code with black ✅
+#4. Run flake8 ✅
+#5. Run smoke tests ✅
+#6. Block commit if anything fails ❌
+
+# 🔥 Why this is MUCH better than .git sample hook current script
+# | Feature         | Your script  | Enterprise setup |
+#| --------------- | ------------ | ---------------- |
+#| Whitespace fix  | ❌ warn only  | ✅ auto-fix       |
+#| Formatting      | ❌ none       | ✅ black          |
+#| Linting         | ❌ none       | ✅ flake8         |
+#| Test control    | ❌ all tests  | ✅ smoke only     |
+#| Team sharing    | ❌ local only | ✅ repo-wide      |
+#| Maintainability | ❌ manual     | ✅ config-driven  |
+
+repos:
+  # 🔹 Basic formatting & whitespace (fix your current warnings)
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+
+  # 🔹 Python formatting (Black = automatic code formatter)
+  - repo: https://github.com/psf/black
+    rev: 24.4.2
+    hooks:
+      - id: black
+
+  # 🔹 Linting (optional but recommended. Flake8 = code quality checker (linter))
+  # What it checks:
+  # - unused imports
+  # - undefined variables
+  # - bad practices
+  # - style violations
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+
+  # 🔹 Your TEST gate (important for QA)
+  - repo: local
+    hooks:
+      - id: pytest-preflight
+        name: pytest preflight tests
+        entry: pytest -m preflight -q
+        language: system
+        pass_filenames: false
