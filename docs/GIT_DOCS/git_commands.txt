@@ -1,18 +1,10 @@
-git checkout -b chore/dev-setup-and-ci-fixes
-# add/update files (Dockerfile, .dockerignore, docker-compose.matrix.yml, .github/workflows/ci.yml, DEV_SETUP.md, CONTRIBUTING.md)
-git add Dockerfile docker-compose.matrix.yml .dockerignore .github/workflows/ci.yml DEV_SETUP.md CONTRIBUTING.md
-git commit -m "chore: improve Dockerfile, CI discovery, add DEV_SETUP and CONTRIBUTING docs"
-git push origin chore/dev-setup-and-ci-fixes
-# Then open a PR on GitHub and reference the changes
+
+1. Adapt it for GitLab + GitHub dual workflow (you had great notes on that
+2. If you want, I can show you a super clean PyCharm-only workflow where you barely touch the terminal (very useful for daily QA work).
+3. how to protect main branch in GitHub - how to configure PyCharm to warn before committing to main
+4. clean commit strategy for your test framework
+5. how to completely avoid merge conflicts
+6. how to use rebase vs merge (very useful for clean history in your framework)
 
 
-Exact git commands to remove the old file safely:
-git checkout -b chore/merge-onboarding
-# add the merged file (if not already added)
-git add DEVELOPER_ONBOARDING.md
-# remove the duplicate
-git rm DEV_SETUP.md
-git commit -m "chore(docs): merge DEV_SETUP into DEVELOPER_ONBOARDING and remove duplicate"
-git push origin chore/merge-onboarding
-# open PR on GitHub comparing branch to main/develop
-
+What do you mean by Add CI/CD + PR checklist (tests, Allure, etc.)?

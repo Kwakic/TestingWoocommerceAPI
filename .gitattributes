@@ -4,13 +4,38 @@
   #    ✅ Git auto-converts CRLF → LF when committing from Windows
   #    ✅ Scripts work correctly in Linux CI runners
 
+# Run these commands to apply this file:
+# git add --renormalize .
+# git commit -m "chore: normalize line endings"
+
+
+# or Git config: git config --global core.autocrlf true
+# 👉 Git will automatically:
+  # - normalize line endings on commit
+  # - prevent inconsistencies
+
+# 🔹 Normalize all text files automatically
 * text=auto
 
-*.py     text eol=lf
+# 🔹 Enforce LF in repo for source files
+*.py text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+
+# 🔹 Windows scripts (if any)
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+
+# 🔹 Binary files (never modify)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.pdf binary
 *.sh     text eol=lf
-*.yml    text eol=lf
-*.yaml   text eol=lf
-*.md     text eol=lf
 Dockerfile text eol=lf
 
 # # Refresh the file to apply the .gitattributes rules

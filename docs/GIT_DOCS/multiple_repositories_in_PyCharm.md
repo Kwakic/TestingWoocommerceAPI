@@ -66,7 +66,7 @@ This will print a list of your remotes and their URLs:
 
 ### How to Switch "on the Fly"
 
-If the Push dialog shows origin (GitLab) but you want to push to GitHub instead, click the name origin right in that dialog. 
+If the Push dialog shows origin (GitLab) but you want to push to GitHub instead, click the name origin right in that dialog.
 It will turn into a dropdown or text field, allowing you to select your github remote before you confirm the push.
 
 ## To permanently change which remote your branch tracks (so it defaults to either GitHub or GitLab every time you open the Push dialog), you need to `update the Upstream Branch`.
@@ -122,16 +122,16 @@ _(Replace <remote_name> with your remote name and <branch_name> with your branch
 #### How to verify it worked:
 Next time you press your push shortcut, the dialog should automatically suggest the new remote.
 
-## TROUBLESHOOTING 
+## TROUBLESHOOTING
 
 If you receive this error:
 
       `$ git push
       fatal: The current branch main has no upstream branch.
       To push the current branch and set the remote as upstream, use
-      
+
       git push --set-upstream origin main
-      
+
       To have this happen automatically for branches without a tracking
       upstream, see 'push.autoSetupRemote' in 'git help config'`
 
@@ -140,7 +140,7 @@ main branch is "homeless"—it doesn't know which remote (GitLab or GitHub) shou
 Since you want to be able to choose or set a default, here is how to fix that:
 
 ### 1. To set GitLab as the default
-Run this in your terminal:   
+Run this in your terminal:
 
 `git push -u origin main`
 
@@ -149,7 +149,7 @@ Run this in your terminal:
 
 `git push -u github main`
 
-_(Note: -u is shorthand for --set-upstream. Once you do this once, you can just type git push in the future and it will 
+_(Note: -u is shorthand for --set-upstream. Once you do this once, you can just type git push in the future and it will
 remember your choice.)_
 
 ### 3. To push to Both (if you set up the 'both' remote earlier)
@@ -174,26 +174,26 @@ bash
 `git config --global push.autoSetupRemote true`
 
 `This command
-tells Git to automatically create and link remote branches the first time you push them, so you never have to see the 
+tells Git to automatically create and link remote branches the first time you push them, so you never have to see the
 "fatal: The current branch has no upstream branch" error again. `
 
 **How it works:**
 
-- The Problem: Normally, when you create a new local branch and try to run git push, Git stops you because it doesn't 
+- The Problem: Normally, when you create a new local branch and try to run git push, Git stops you because it doesn't
 know where on the server to put it. You are forced to type git push --set-upstream origin your-branch-name.
 - The Fix: With this setting enabled, you can just type git push. Git will automatically:
   - Create a branch with the same name on your remote (like GitHub or GitLab).
-  - Set up "tracking," meaning your local branch is now officially "linked" to that remote version. 
+  - Set up "tracking," meaning your local branch is now officially "linked" to that remote version.
 
 **Breaking down the command:**
 
 - `git config:` Accesses your Git settings.
 - `--global:` Applies this change to every repository on your computer, not just the current one.
-- `push.autoSetupRemote true:` Enables the specific feature that assumes `--set-upstream` on your behalf. 
+- `push.autoSetupRemote true:` Enables the specific feature that assumes `--set-upstream` on your behalf.
 
 **Why use it?**
 It is a "set it and forget it" quality-of-life improvement introduced in Git 2.37.
-It saves you from having to copy-paste that long "fatal" error message every time you start a new branch. 
+It saves you from having to copy-paste that long "fatal" error message every time you start a new branch.
 
 ## Switch between GitLab and GitHub
 If you prefer using the PyCharm buttons:
@@ -217,7 +217,7 @@ If you prefer using the PyCharm buttons:
 - Using GitHub add (or manually in Pycharm: Menu/git/manage remotes):
    - `git remote set-url origin git@github.com:Kwakic/TestingWoocommerceAPI.git`
    - `git push GitHub main`
-  
+
 ## To switch between branches in the CLI
 ### 1. The Modern Way (Recommended):
 Starting with Git 2.23, a more intuitive command was added specifically for moving between branches:
@@ -239,12 +239,34 @@ OR
 
 ---
 
-### CREATE NEW BRANCH  
-#### The flow is: 
+### CREATE NEW BRANCH
+#### The flow is:
 
 `main → create branch → commit → push → Pull Request → merge → delete branch`
 
-This gives you This gives you:
+#### 🔥 Real QA Engineer Workflow (what you SHOULD do)
+        [After merge]
+        ↓
+        Delete branch (remote + local)
+        ↓
+        Checkout main
+        ↓
+        Pull latest changes
+        ↓
+        Create new branch
+        ↓
+        Work + commit
+        ↓
+        Push
+        ↓
+        Create PR
+        ↓
+        Merge
+        ↓
+        Repeat
+
+
+This gives you:
 * safer changes
 * code review (even if it's just you)
 * clean history
@@ -252,40 +274,62 @@ This gives you This gives you:
 
 Here is the exact sequence you’ll use every time you start a new task:
 
-1. Create & Switch: `git checkout -b QA_bug_4567` (This creates and moves you to the branch).
-2. Work: Edit your code in PyCharm.
-3. Stage: `git add .` (Prepares all changed files).
-4. Commit: `git commit -m "fixed the bug in the login flow"` (Saves the snapshot locally).
-5. Push & Link: `git push -u GitHub QA_bug_4567` (Uploads it and connects it to GitHub).
-6. Create a Pull Request (PR): Since the branch is now on GitHub, you (or a teammate) go to the GitHub website to 
+1. Always start from updated main:
+What you should do every time:
+
+        git checkout main
+        git pull origin main
+
+Then you can create a new branch. 👉 This step is mandatory before starting new work.
+Your new branch must come from latest main.
+2. Create a new branch FROM main. Create & Switch: `git checkout -b QA_bug_4567` (This creates and moves you to the branch).
+3. Work: Edit your code in PyCharm.
+4. Stage: `git add .` (Prepares all changed files).
+5. Commit: `git commit -m "fixed the bug in the login flow"` (Saves the snapshot locally).
+6. Push & Link: `git push -u origin QA_bug_4567` (Uploads it and connects it to GitHub).
+7. Create a Pull Request (PR): Since the branch is now on GitHub, you (or a teammate) go to the GitHub website to
 review the code. This is where you "propose" merging your bug fix into the main branch.
-7. Merge: Once the code is approved and the tests pass, you click Merge on GitHub. This officially moves your 
+8. Merge: Once the code is approved and the tests pass, you click Merge on GitHub. This officially moves your
 **QA_bug_4567** code into the main branch.
-8. The "Cleanup" (Delete): This is when you delete the branch. You don't need it anymore because the code is safely 
+9. The "Cleanup" (Delete): This is when you delete the branch. You don't need it anymore because the code is safely
 inside main.
    * On GitHub: There is usually a button that says **"Delete branch"** right after you merge.
+     * You can delete the branch locally as well: ```git push origin --delete refactor/request-utility-step1 ```
    * On your computer (PyCharm):
        - Switch back to main: `git checkout main` or `git switch main`
        - Update your main: `git pull`
        - Delete the local bug branch: `git branch -d QA_bug_4567`
-   * Note: 
-     * `git branch -d `(Safe Delete)
-     * `git branch -D` (Force Delete)
-9. PyCharm's memory so it stops showing up in your lists, you need to "prune" your local view. PyCharm keeps a local record 
+   * Note:
+       * git branch -d → safe delete (only if merged)
+       * git branch -D → force delete (even if not merged ❗)
+10. PyCharm's memory so it stops showing up in your lists, you need to "prune" your local view. PyCharm keeps a local record
 of what was on GitHub until you tell it to refresh.
 Prune the Remote References (The "Ghost" Branch)
 Even though you deleted it on GitHub, PyCharm still thinks origin/QA_bug_4567 exists.
     * Go to the top menu: `Git > Fetch`.
-    * Alternative (CLI): Run `git fetch GitHub --prune`
+    * Alternative (CLI): Run `git fetch origin --prune`
     * This tells PyCharm: "Check GitHub again and remove any branches that are gone from the server."
-   
+
 
 ### Summary of "Best Practice"
-You only delete the branch after the code has been successfully merged into the main codebase. Deleting it right after 
+You only delete the branch after the code has been successfully merged into the main codebase. Deleting it right after
 Step 5 would be like throwing away the ladder before you've finished climbing onto the roof!
 
 
 **Note:** The -u (or --set-upstream) flag is important—it links your local branch to the remote one so that in the future,
 you can just type git push or git pull without specifying the name again.
 
-#### NEW BRANCH bug/ticket4375
+### 🧩 Suggested Branch Naming (for your project)
+
+Given your structured refactoring style:
+
+* feature/... → new functionality
+* fix/... → bug fixes
+* refactor/... → your current work
+* test/... → test improvements
+
+Examples:
+
+    refactor/request-utility-stateless
+    test/customers-negative-cases
+    fix/customer-duplicate-validation
