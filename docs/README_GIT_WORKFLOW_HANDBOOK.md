@@ -81,6 +81,8 @@ git pull origin main
 
 ### 2. Create a new branch
 
+**Note**: Use one branch per ticket/feature if all commits belong to the same ticket/feature.
+
 ```bash
 git checkout -b QA_bug_4567
 ```
@@ -628,6 +630,16 @@ trim trailing whitespace.................................................Failed
 - exit code: 1
 - files were modified by this hook
 ```
+
+---
+
+## 🔍 Git Fetch vs. Git Pull
+
+| Command | What it does | Impact on your code |
+| :--- | :--- | :--- |
+| **git fetch** | Downloads data from remote | **None.** Only updates remote tracking. |
+| **git pull** | `git fetch` + `git merge` | **Updates your local files** immediately. |
+
 
 ---
 ## 📌 Summary
