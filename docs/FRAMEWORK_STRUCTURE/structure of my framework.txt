@@ -928,5 +928,3 @@ TestEcommerceAPI (project suite/root)
 │─── docker-compose.matrix.yml                     ← shared
 │─── Dockerfile                                    ← shared
 └──  pytest.ini                                    ← shared
-
-

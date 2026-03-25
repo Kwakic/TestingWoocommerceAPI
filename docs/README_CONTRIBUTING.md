@@ -101,7 +101,7 @@ All environment variables are:
 - ✅ Parsed **once**
 - ✅ Frozen at **session start**
 
-**Plugins** import resolved constants directly from `_config.py`  
+**Plugins** import resolved constants directly from `_config.py`
 **Tests** rely on fixtures and plugin behavior
 
 ### If your change adds a new behavior flag:

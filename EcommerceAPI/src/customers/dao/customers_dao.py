@@ -9,14 +9,18 @@ logger = logging.getLogger(__name__)
 
 
 # Data access object = (DAO)
-class CustomersDAO(object):  # object in the parenthesis will inherit objects by default in Python 3
+class CustomersDAO(
+    object
+):  # object in the parenthesis will inherit objects by default in Python 3
     """
     Data Access Object for customers (wp_users table).
     """
 
     def __init__(self):
         self.db_helper = DBUtility()
-        self.table_name = f"{self.db_helper.database}.{self.db_helper.table_prefix}users"
+        self.table_name = (
+            f"{self.db_helper.database}.{self.db_helper.table_prefix}users"
+        )
 
     def get_customer_by_email(self, email: str) -> Optional[Dict[str, Any]]:
         """
@@ -39,7 +43,9 @@ class CustomersDAO(object):  # object in the parenthesis will inherit objects by
         sql = f"SELECT * FROM {self.table_name} WHERE user_email = :email LIMIT 1;"
 
         # Parameters must be passed as a tuple (even if there's just one value)
-        params = {"email": email.strip()}  # Ensures we pass a tuple with 1 element to execute()
+        params = {
+            "email": email.strip()
+        }  # Ensures we pass a tuple with 1 element to execute()
         # 🔁 Tuple Use: (email.strip(),)
         # Note the comma: ( ... , ) In Python, ('value') is just a string. But ('value',) is a 1-element tuple — which
         # is required for execute(sql, params) to work correctly with 1 param.
@@ -49,17 +55,23 @@ class CustomersDAO(object):  # object in the parenthesis will inherit objects by
         # credentials, etc. Instead, we create a DB helper class 'db_utility.py' because every connection will need
         # that(repetitive).
         try:
-            rs_sql = self.db_helper.execute_select(sql, params)  # Execute the query securely with the parameter
+            rs_sql = self.db_helper.execute_select(
+                sql, params
+            )  # Execute the query securely with the parameter
             if not rs_sql:  # Handle a case when no result is found
                 logger.info(f" 🔍Verifying DB. NO customers found for email: '{email}'")
                 return None
 
             customer = rs_sql[0]  # Return the first (and only) result from the list
-            logger.debug(f"ℹ️ Found customers for email '{email}': {customer}")  # Log the result at debug level
+            logger.debug(
+                f"ℹ️ Found customers for email '{email}': {customer}"
+            )  # Log the result at debug level
             return customer  # Always returns a single dict or None (not a list)
 
         except Exception as e:  # Log and re-raise any database or logic error
-            logger.exception(f"Error retrieving customers by email '{email}': {e}")  # The only thing you might want to
+            logger.exception(
+                f"Error retrieving customers by email '{email}': {e}"
+            )  # The only thing you might want to
             # do: use logger.exception(...) inside your except blocks instead of logger.error(...) with str(e).
             # logger.exception automatically includes the stack trace, which is helpful for test/debug environments.
             raise
@@ -86,7 +98,9 @@ class CustomersDAO(object):  # object in the parenthesis will inherit objects by
             Number of rows affected (should be 1 if successful).
         """
         if not isinstance(customer_id, int) or customer_id <= 0:
-            raise ValueError(f"Invalid customers ID: {customer_id}. Must be a positive integer.")
+            raise ValueError(
+                f"Invalid customers ID: {customer_id}. Must be a positive integer."
+            )
         sql = f"UPDATE {self.table_name} SET user_status = 1 WHERE ID = :id"
         params = {"id": customer_id}
         try:
@@ -98,7 +112,9 @@ class CustomersDAO(object):  # object in the parenthesis will inherit objects by
                 logger.warning(f"⚠️ {log_msg}")
             return rows_affected
         except Exception as e:
-            logger.exception(f"❌ Failed to soft-delete_it.py customers ID={customer_id}: {e}")
+            logger.exception(
+                f"❌ Failed to soft-delete_it.py customers ID={customer_id}: {e}"
+            )
             raise
 
     def get_customer_by_id(self, customer_id: int) -> Optional[Dict[str, Any]]:
@@ -149,14 +165,19 @@ class CustomersDAO(object):  # object in the parenthesis will inherit objects by
             unix_ts = int(results[0]["meta_value"])
 
             # Convert UNIX → UTC datetime
-            return datetime.fromtimestamp(unix_ts, tz=timezone.utc).replace(microsecond=0)
+            return datetime.fromtimestamp(unix_ts, tz=timezone.utc).replace(
+                microsecond=0
+            )
 
         except Exception as e:
-            logger.exception(f"Error retrieving customers updated date for ID '{customer_id}': {e}")
+            logger.exception(
+                f"Error retrieving customers updated date for ID '{customer_id}': {e}"
+            )
             raise
 
-    def get_random_customer_from_db(self, qty: int = 1,
-                                    filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    def get_random_customer_from_db(
+        self, qty: int = 1, filters: Optional[Dict[str, Any]] = None
+    ) -> List[Dict[str, Any]]:
         """
         Retrieve random customers(s) from the last 5000 entries, optionally filtered by fields in wp_users.
         Args:
@@ -182,8 +203,15 @@ class CustomersDAO(object):  # object in the parenthesis will inherit objects by
         #     - SQL injection via column names
         #     - Runtime errors from invalid field names
         VALID_FILTER_COLUMNS = {
-            "ID", "user_login", "user_email", "user_status", "user_nicename", "user_url", "user_registered",
-            "display_name", "user_activation_key"
+            "ID",
+            "user_login",
+            "user_email",
+            "user_status",
+            "user_nicename",
+            "user_url",
+            "user_registered",
+            "display_name",
+            "user_activation_key",
         }
 
         # It prepares the shared query. If you want to filter by something like user_status = 0, the where_clauses will
@@ -212,29 +240,45 @@ class CustomersDAO(object):  # object in the parenthesis will inherit objects by
             base_sql += " WHERE " + " AND ".join(where_clauses)
 
         # It finalizes the SQL query:
-        base_sql += " ORDER BY id DESC LIMIT 5000;" # recommended way to retrieve the last user; then we randomize in
+        base_sql += " ORDER BY id DESC LIMIT 5000;"  # recommended way to retrieve the last user; then we randomize in
         # our python code
         try:
-            rs_sql = self.db_helper.execute_select(base_sql, params)  # The response will return a list. It uses
+            rs_sql = self.db_helper.execute_select(
+                base_sql, params
+            )  # The response will return a list. It uses
             # DBUtility to execute the query securely with placeholders. This avoids SQL injection.
             if not rs_sql:  # ❗ Check for Empty Result.
                 logger.warning(f"No customers found with filters: {filters}")
-                return []  # Defensive programming: if the query returns nothing, log a warning and return an empty list
-            qty = int(qty)  # 🔢Convert and Validate qty. Ensures qty is an integer (in case the caller passed a string)
-            if qty > len(rs_sql):  # If the requested quantity is more than what's available, it returns the entire list
+                return (
+                    []
+                )  # Defensive programming: if the query returns nothing, log a warning and return an empty list
+            qty = int(
+                qty
+            )  # 🔢Convert and Validate qty. Ensures qty is an integer (in case the caller passed a string)
+            if qty > len(
+                rs_sql
+            ):  # If the requested quantity is more than what's available, it returns the entire list
                 # and logs a warning. Prevents random.sample() from raising a ValueError. E.g., If qty=10 but the result
                 # has only 2 users, it logs a warning and returns both.
-                logger.warning(f"Requested {qty} customers, but only {len(rs_sql)} available. Returning all.")
+                logger.warning(
+                    f"Requested {qty} customers, but only {len(rs_sql)} available. Returning all."
+                )
                 return rs_sql
-            selected_customers = random.sample(rs_sql, qty)  # Randomly selects users from the list without replacement
+            selected_customers = random.sample(
+                rs_sql, qty
+            )  # Randomly selects users from the list without replacement
             # (i.e., no duplicates). random.sample(population, k) guarantees a uniformly random subset of size k. No
             # duplicates, unlike random.choices.
-            logger.debug(f"✅ Randomly selected {qty} customers(s) with filters {filters}: {selected_customers}")
+            logger.debug(
+                f"✅ Randomly selected {qty} customers(s) with filters {filters}: {selected_customers}"
+            )
             return selected_customers  # Logs the selected subset of customers (at debug level). Returns the random
             # selection back to the caller.
 
         except Exception as e:
-            logger.exception(f"Error retrieving random customers(s) with filters {filters}: {e}")
+            logger.exception(
+                f"Error retrieving random customers(s) with filters {filters}: {e}"
+            )
             raise  # If anything goes wrong during the query or selection:
             # - Logs the exception at error level.
             # - Re-raises it so the caller can handle it (or it can fail loudly in tests).

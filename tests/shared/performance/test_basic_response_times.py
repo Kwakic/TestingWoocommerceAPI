@@ -43,7 +43,10 @@ from EcommerceAPI.src.configs.config_loader import ENV
 logger = logging.getLogger(__name__)
 
 
-pytestmark = [pytest.mark.performance, pytest.mark.shared,]
+pytestmark = [
+    pytest.mark.performance,
+    pytest.mark.shared,
+]
 
 
 def _build_display_endpoint(endpoint: str, params: Optional[Dict[str, Any]]) -> str:
@@ -85,13 +88,27 @@ def measure_response_time(
         duration = time.perf_counter() - start
         logger.info("📡 GET %s → completed in %.3fs", display_endpoint, duration)
         return duration, response
-    except (SchemaValidationError, UnexpectedStatusCodeError, APIRequestException) as api_err:
+    except (
+        SchemaValidationError,
+        UnexpectedStatusCodeError,
+        APIRequestException,
+    ) as api_err:
         duration = time.perf_counter() - start
-        logger.exception("❌ GET %s → API failure after %.3fs: %s", display_endpoint, duration, api_err)
+        logger.exception(
+            "❌ GET %s → API failure after %.3fs: %s",
+            display_endpoint,
+            duration,
+            api_err,
+        )
         return duration, None
     except Exception as err:
         duration = time.perf_counter() - start
-        logger.exception("❌ GET %s → unexpected error after %.3fs: %s", display_endpoint, duration, err)
+        logger.exception(
+            "❌ GET %s → unexpected error after %.3fs: %s",
+            display_endpoint,
+            duration,
+            err,
+        )
         return duration, None
 
 
@@ -171,7 +188,8 @@ def test_api_response_times(pytestconfig, api_client, session_metadata):
         # ⚠️ PARTIAL FAILURES
         if failures > 0:
             logger.warning(
-                "⚠️ %s → %d/%d requests failed", name.upper(), failures, iterations)
+                "⚠️ %s → %d/%d requests failed", name.upper(), failures, iterations
+            )
             pytest.xfail(f"{failures}/{iterations} requests failed for {name}")
 
         # 🚨 NO VALID TIMINGS
@@ -210,9 +228,15 @@ def test_api_response_times(pytestconfig, api_client, session_metadata):
 
     logger.info("📊 PERFORMANCE TEST SUMMARY — ENV: %s", ENV.upper())
     if ci_info.get("is_ci"):
-        logger.info("🏗️ CI Provider: %s | Job ID: %s", ci_info.get("provider"), ci_info.get("job_id"))
+        logger.info(
+            "🏗️ CI Provider: %s | Job ID: %s",
+            ci_info.get("provider"),
+            ci_info.get("job_id"),
+        )
     if git_info.get("commit"):
-        logger.info("🔖 Git Commit: %s (%s)", git_info.get("commit"), git_info.get("branch"))
+        logger.info(
+            "🔖 Git Commit: %s (%s)", git_info.get("commit"), git_info.get("branch")
+        )
 
     for name, stats in results.items():
         if "error" in stats:

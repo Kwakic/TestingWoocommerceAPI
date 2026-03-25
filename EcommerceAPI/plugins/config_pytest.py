@@ -27,6 +27,7 @@ from EcommerceAPI.src.configs.runtime_config import (
 # 🧪 Pytest fixtures
 # ============================================================================
 
+
 @pytest.fixture(scope="session")
 def framework_config(pytestconfig) -> FrameworkConfig:
     """
@@ -39,9 +40,7 @@ def framework_config(pytestconfig) -> FrameworkConfig:
 
     # CLI precedence
     if pytestconfig.getoption("--fail-on-empty-list"):
-        cfg = FrameworkConfig(
-            **{**cfg.__dict__, "FAIL_ON_EMPTY_LIST": True}
-        )
+        cfg = FrameworkConfig(**{**cfg.__dict__, "FAIL_ON_EMPTY_LIST": True})
 
     return cfg
 
@@ -56,6 +55,7 @@ def fail_on_empty_list(framework_config: FrameworkConfig) -> bool:
 # 📢 Startup banner (LOGGED ONCE, GUARANTEED)
 # ============================================================================
 
+
 def pytest_sessionstart(session):
     """
     Emit a single authoritative configuration snapshot at startup.
@@ -64,17 +64,25 @@ def pytest_sessionstart(session):
     cfg = get_config()
 
     log.info("================= SESSION START ====================")
-    log.info("Session ID : %s", SESSION_ID, extra={
+    log.info(
+        "Session ID : %s",
+        SESSION_ID,
+        extra={
             "suppress_nodeid": True,
             "suppress_correlation": True,
-        })
+        },
+    )
 
     log.info("================= FRAMEWORK CONFIG =================")
     log.info("AUTH_TYPE               : %s", cfg.AUTH_TYPE)
-    log.info("STRICT_ENTITY_DISCOVERY : %s", cfg.STRICT_ENTITY_DISCOVERY, extra={
+    log.info(
+        "STRICT_ENTITY_DISCOVERY : %s",
+        cfg.STRICT_ENTITY_DISCOVERY,
+        extra={
             "suppress_nodeid": True,
             "suppress_correlation": True,
-        })
+        },
+    )
     log.info("FAIL_ON_EMPTY_LIST      : %s", cfg.FAIL_ON_EMPTY_LIST)
     log.info("PERF_ITERATIONS         : %s", cfg.PERF_ITERATIONS)
     log.info("AUTO_ALLURE_REPORT      : %s", cfg.AUTO_ALLURE_REPORT)

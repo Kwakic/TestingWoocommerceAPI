@@ -53,7 +53,7 @@ import logging
 
 from EcommerceAPI.src.core.http_response import HttpResponse
 from EcommerceAPI.src.customers.validators.customer_db_validators import (
-    assert_customer_matches_db
+    assert_customer_matches_db,
 )
 
 from EcommerceAPI.src.customers.models.customer_model import CustomerModel
@@ -90,13 +90,15 @@ def assert_valid_customer_response(customer: Dict[str, Any]) -> CustomerModel:
     """
     # Pydantic parses and validates the dictionary.
     # If anything is wrong (missing fields, wrong types, invalid email) Pydantic raises a ValidationError immediately.
-    customer_model = CustomerModel(**customer)  # This is a dictionary unpacking. Take all key-value pairs from the
+    customer_model = CustomerModel(
+        **customer
+    )  # This is a dictionary unpacking. Take all key-value pairs from the
     # customers dict and pass them as named arguments.
 
     logger.info(
         "✅ Customer structure valid: id=%s, email=%s",
         customer_model.id,
-        customer_model.email
+        customer_model.email,
     )
 
     # -------------------------------------------------------
@@ -108,8 +110,7 @@ def assert_valid_customer_response(customer: Dict[str, Any]) -> CustomerModel:
 
 
 def assert_single_customer_by_email(
-    customers: List[Dict[str, Any]],
-    email: str
+    customers: List[Dict[str, Any]], email: str
 ) -> CustomerModel:
     """
     Validate that exactly ONE customers exists for a given email in a dataset response (list endpoint).
@@ -130,9 +131,9 @@ def assert_single_customer_by_email(
 
     matches = [c for c in customers if c.get("email") == email]
 
-    assert len(matches) == 1, (
-        f"❌ Expected 1 customers for {email}, found {len(matches)}"
-    )
+    assert (
+        len(matches) == 1
+    ), f"❌ Expected 1 customers for {email}, found {len(matches)}"
 
     # Validate structure via Pydantic
     customer_model = assert_valid_customer_response(matches[0])
@@ -140,7 +141,7 @@ def assert_single_customer_by_email(
     logger.info(
         "✅ Customer found in dataset: id=%s email=%s",
         customer_model.id,
-        customer_model.email
+        customer_model.email,
     )
 
     return customer_model
@@ -170,16 +171,16 @@ def assert_customer_creation_failed(response: dict):
     # Base error contract validation
     assert_customer_error_response(response)
 
-    assert response["data"]["status"] == 400, (
-        f"Expected status 400, got {response['data']['status']}"
-    )
+    assert (
+        response["data"]["status"] == 400
+    ), f"Expected status 400, got {response['data']['status']}"
 
-    assert response['code'] == "registration-error-email-exists", (
+    assert response["code"] == "registration-error-email-exists", (
         f"Invalid Error code. Current: '{response['code']}', "
         f"Expected: 'registration-error-email-exists'"
     )
 
-    assert "An account is already registered" in str(response['message'])
+    assert "An account is already registered" in str(response["message"])
 
 
 def assert_customer_not_found_error(response):
@@ -194,15 +195,19 @@ def assert_customer_not_found_error(response):
     # Base error contract validation
     assert_customer_error_response(response)
 
-    assert response["data"]["status"] == 404, (
-        f"Expected status 404, got {response['data']['status']}"
+    assert (
+        response["data"]["status"] == 404
+    ), f"Expected status 404, got {response['data']['status']}"
+
+    assert response["code"] == "wc_user_invalid_id", (
+        f"Invalid Error code. Current: '{response['code']}', "
+        f"Expected: 'wc_user_invalid_id' "
     )
 
-    assert response['code'] == "wc_user_invalid_id", (f"Invalid Error code. Current: '{response['code']}', "
-                                                      f"Expected: 'wc_user_invalid_id' ")
-
-    assert response['message'] == "Invalid user ID.", (f"Invalid Error message. Current: '{response['message']}', "
-                                                       f"Expected: 'Invalid user ID'")
+    assert response["message"] == "Invalid user ID.", (
+        f"Invalid Error message. Current: '{response['message']}', "
+        f"Expected: 'Invalid user ID'"
+    )
 
 
 def assert_customer_retrieved_successfully(response: HttpResponse) -> CustomerModel:
@@ -217,9 +222,9 @@ def assert_customer_retrieved_successfully(response: HttpResponse) -> CustomerMo
         CustomerModel
     """
 
-    assert response.status_code == 200, (
-        f"GET /customers fetching failed. Expected 200, got {response.status_code}. Response: {response.text}"
-    )
+    assert (
+        response.status_code == 200
+    ), f"GET /customers fetching failed. Expected 200, got {response.status_code}. Response: {response.text}"
 
     data = response.json
 
@@ -230,9 +235,9 @@ def assert_customer_retrieved_successfully(response: HttpResponse) -> CustomerMo
 
 
 def assert_customer_exists_and_matches_api(
-        customers: List[Dict[str, Any]],
-        email: str,
-        db_customer: Dict[str, Any],
+    customers: List[Dict[str, Any]],
+    email: str,
+    db_customer: Dict[str, Any],
 ) -> None:
     """
     Validate that the returned customers matches the expected identity.
@@ -278,7 +283,7 @@ def assert_customer_exists_and_matches_api(
     logger.info(
         "✅ Customer found in API response (id=%s, email=%s)",
         customer.id,
-        customer.email
+        customer.email,
     )
 
     # -------------------------------------------------------
@@ -287,19 +292,14 @@ def assert_customer_exists_and_matches_api(
     # Compare API response with database record
     assert_customer_matches_db(customer, db_customer)
 
-    logger.info(
-        "✅ Customer matches database record (ID=%s)",
-        db_customer["ID"]
-    )
+    logger.info("✅ Customer matches database record (ID=%s)", db_customer["ID"])
 
 
 # -------------------------------------------------------
 # 🧠 BUSINESS VALIDATION
 # -------------------------------------------------------
 def assert_customer_identity(
-    customer: CustomerModel,
-    expected_id: int,
-    expected_email: str
+    customer: CustomerModel, expected_id: int, expected_email: str
 ) -> None:
     """
     Validate that the returned customers matches the expected identity.
@@ -335,21 +335,19 @@ def assert_customer_identity(
     # -------------------------------------------------------
     # Validate customers ID
     # -------------------------------------------------------
-    assert customer.id == expected_id, (
-        f"❌ Customer ID mismatch: expected {expected_id}, got {customer.id}"
-    )
+    assert (
+        customer.id == expected_id
+    ), f"❌ Customer ID mismatch: expected {expected_id}, got {customer.id}"
 
     # -------------------------------------------------------
     # Validate customers email
     # -------------------------------------------------------
-    assert customer.email == expected_email, (
-        f"❌ Customer email mismatch: expected {expected_email}, got {customer.email}"
-    )
+    assert (
+        customer.email == expected_email
+    ), f"❌ Customer email mismatch: expected {expected_email}, got {customer.email}"
 
     logger.info(
-        "✅ Customer identity verified (id=%s, email=%s)",
-        customer.id,
-        customer.email
+        "✅ Customer identity verified (id=%s, email=%s)", customer.id, customer.email
     )
 
 
@@ -357,8 +355,7 @@ def assert_customer_identity(
 # 🚨 GENERIC ERROR VALIDATION
 # -------------------------------------------------------
 def assert_customer_error_response(
-    response: dict,
-    expected_status: int | None = None
+    response: dict, expected_status: int | None = None
 ) -> None:
     """
     Validate the standard WooCommerce error response structure.
@@ -389,9 +386,9 @@ def assert_customer_error_response(
     # -------------------------------------------------------
     # Basic contract validation
     # -------------------------------------------------------
-    assert isinstance(response, dict), (
-        f"❌ Expected error response dict, got: {type(response)}"
-    )
+    assert isinstance(
+        response, dict
+    ), f"❌ Expected error response dict, got: {type(response)}"
     assert "code" in response, f"❌ Missing 'code' in response: {response}"
     assert "message" in response, f"❌ Missing 'message' in response: {response}"
     assert "data" in response, f"❌ Missing 'data' in response: {response}"
@@ -405,12 +402,12 @@ def assert_customer_error_response(
     # -------------------------------------------------------
     # Check HTTP status
     # -------------------------------------------------------
-    assert "status" in response["data"], (
-        f"❌ Missing 'status' in response['data']: {response}"
-    )
+    assert (
+        "status" in response["data"]
+    ), f"❌ Missing 'status' in response['data']: {response}"
 
     logger.info(
         "✅ Valid error response received (code=%s status=%s)",
         response["code"],
-        response["data"]["status"]
+        response["data"]["status"],
     )

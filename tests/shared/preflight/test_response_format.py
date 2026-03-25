@@ -1,6 +1,10 @@
 import pytest
 
-pytestmark = [pytest.mark.preflight, pytest.mark.shared, pytest.mark.contract,]
+pytestmark = [
+    pytest.mark.preflight,
+    pytest.mark.shared,
+    pytest.mark.contract,
+]
 
 ENTITIES = [
     "customers",

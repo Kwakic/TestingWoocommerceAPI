@@ -35,6 +35,7 @@ SESSION_ID: str = os.getenv("SESSION_ID") or os.urandom(4).hex()
 # 🧱 Framework Configuration Dataclass
 # ============================================================================
 
+
 @dataclass(frozen=True)
 class FrameworkConfig:
     """
@@ -103,28 +104,22 @@ def _load_config_from_env() -> FrameworkConfig:
     """
     return FrameworkConfig(
         ENV=os.getenv("ENV", "test"),
-
         # Authentication method used by APIClient. Supported: oauth1 | oauth2 | jwt | basic
         AUTH_TYPE=os.getenv("AUTH_TYPE", "oauth1").lower(),
-
         STRICT_ENTITY_DISCOVERY=env_bool("STRICT_ENTITY_DISCOVERY", False),
-
         ENABLE_STRUCTURED_LOGS=env_bool("ENABLE_STRUCTURED_LOGS", True),
         ENABLE_JSON_PRETTY=env_bool("ENABLE_JSON_PRETTY", False),
         LOG_PAYLOADS=env_bool("LOG_PAYLOADS", False),
         REDACT_SENSITIVE_FIELDS=env_bool("REDACT_SENSITIVE_FIELDS", True),
         DISABLE_LOG_EMOJIS=env_bool("DISABLE_LOG_EMOJIS", False),
-
         KEEP_STRUCTURED_LOGS=int(os.getenv("KEEP_STRUCTURED_LOGS", "3")),
         LOG_DIR=Path(os.getenv("LOG_DIR", "reports/logs")),
-
         FAIL_ON_EMPTY_LIST=env_bool("FAIL_ON_EMPTY_LIST", False),
         PERF_ITERATIONS=int(os.getenv("PERF_ITERATIONS", "5")),
-
         AUTO_ALLURE_REPORT=env_bool("AUTO_ALLURE_REPORT", True),
-
         REQUIRE_ENV=env_bool("REQUIRE_ENV", False),
     )
+
 
 # ============================================================================
 # 🔐 Public accessors

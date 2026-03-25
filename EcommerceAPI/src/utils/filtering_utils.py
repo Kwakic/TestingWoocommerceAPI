@@ -1,10 +1,9 @@
-
 def filter_out_soft_deleted(
     items: list[dict],
     get_db_record_fn,
     id_field: str = "email",
     deleted_flag: str = "user_status",
-    deleted_value: int = 1
+    deleted_value: int = 1,
 ) -> list[dict]:
     """
     Generic filter to remove soft-deleted entities based on DB flag.

@@ -198,7 +198,5 @@ class HttpClient:
             params=params,
             json=json,  # ✅ SEND JSON (not parse)
             auth=auth,
-            timeout=self.timeout
+            timeout=self.timeout,
         )
-
-

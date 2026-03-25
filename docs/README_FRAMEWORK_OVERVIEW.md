@@ -1,6 +1,6 @@
 # Framework Overview — TestEcommerceAPI 🚀
 
-A short, high-level introduction for new contributors, product/QA teams, and cross-team readers.  
+A short, high-level introduction for new contributors, product/QA teams, and cross-team readers.
 Covers purpose, quick-start steps, key conventions, and where to find deeper docs (see README_ARCHITECTURE.md for architecture details).
 
 ---
@@ -112,17 +112,17 @@ For full developer setup and step-by-step onboarding, see: `DEVELOPER_ONBOARDING
 
 ## Common questions & tips
 
-- “Why two pyproject files?”  
+- “Why two pyproject files?”
   Keeps packaging metadata close to the package while keeping repo-level tool configs (pytest/linters) at root.
 
-- “Why editable install?”  
+- “Why editable install?”
   Makes `EcommerceAPI` importable without mangling `PYTHONPATH` and reflects live changes during development.
 
-- “Where are test failures reported?”  
+- “Where are test failures reported?”
   - Human: pytest console and Allure HTML (CI uploads artifacts).
   - Machine: structured JSONL logs under `reports/` (when enabled).
 
-- “How to debug warnings & import-order issues?”  
+- “How to debug warnings & import-order issues?”
   - Run pytest without `--disable-warnings` (override addopts) and consider lazy imports for plugin modules. See `EcommerceAPI/plugins/logging_plugin.py` and `_config.py` for patterns.
 
 ---
@@ -144,4 +144,4 @@ For full developer setup and step-by-step onboarding, see: `DEVELOPER_ONBOARDING
 
 ---
 
-This document is the high-level landing page for contributors and stakeholders. For architecture details see `README_ARCHITECTURE.md`.  
+This document is the high-level landing page for contributors and stakeholders. For architecture details see `README_ARCHITECTURE.md`.

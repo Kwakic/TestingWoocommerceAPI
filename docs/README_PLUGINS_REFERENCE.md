@@ -94,10 +94,10 @@ This is the **only place** allowed to read env vars.
 
 ## Forbidden Patterns (Hard Rules)
 
-❌ Plugin importing plugin  
-❌ Plugin calling os.getenv  
-❌ Shared mutable globals in plugins  
-❌ Config duplicated outside config_pytest  
+❌ Plugin importing plugin
+❌ Plugin calling os.getenv
+❌ Shared mutable globals in plugins
+❌ Config duplicated outside config_pytest
 ❌ Runtime state hidden in logging
 
 ---

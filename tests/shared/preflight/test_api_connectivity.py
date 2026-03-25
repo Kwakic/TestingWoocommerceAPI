@@ -36,6 +36,7 @@ This acts as:
 
 import pytest
 import logging
+
 log = logging.getLogger(__name__)
 
 pytestmark = [pytest.mark.preflight, pytest.mark.shared]
@@ -45,10 +46,8 @@ pytestmark = [pytest.mark.preflight, pytest.mark.shared]
 #  PARAMETRIZED TEST
 # =====================================================================
 
-@pytest.mark.parametrize(
-    "endpoint",
-    ["customers", "products", "orders", "coupons"]
-)
+
+@pytest.mark.parametrize("endpoint", ["customers", "products", "orders", "coupons"])
 def test_api_endpoint_available(api_client, endpoint):
     """
     Preflight API availability check.

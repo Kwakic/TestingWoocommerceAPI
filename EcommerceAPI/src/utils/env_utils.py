@@ -64,7 +64,7 @@ def env_bool(varname: str, default: bool = False) -> bool:
 """
 🧩 How it actually works in your test:
 
-In your test_schema_validation, you use a fixture like fail_on_empty_list (from your large_conf.py) that calls 
+In your test_schema_validation, you use a fixture like fail_on_empty_list (from your large_conf.py) that calls
 _env_bool("FAIL_ON_EMPTY_LIST").
 So:
 - In local runs, if you execute:

@@ -18,7 +18,7 @@ order_schema = {
         "line_items": {"type": "array"},
         "payment_method": {"type": "string"},
         "billing": {"type": "object"},
-        "shipping": {"type": "object"}
+        "shipping": {"type": "object"},
     },
-    "required": ["id", "status", "line_items", "payment_method"]
+    "required": ["id", "status", "line_items", "payment_method"],
 }

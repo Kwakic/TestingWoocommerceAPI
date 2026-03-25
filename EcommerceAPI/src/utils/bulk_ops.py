@@ -59,11 +59,15 @@ def bulk_create_and_validate_resources(
     logger.info(f"🔍 Validating {qty} created {label}(s)")
     errors = []
 
-    for identifier in identifiers:  # For each created identifier (email), run validate_fn() on it.
+    for (
+        identifier
+    ) in identifiers:  # For each created identifier (email), run validate_fn() on it.
         try:
             # Call the provided validation function
             validate_fn(identifier)
-        except AssertionError as e:  # Any failure is caught and saved, but doesn’t stop the test immediately
+        except (
+            AssertionError
+        ) as e:  # Any failure is caught and saved, but doesn’t stop the test immediately
             # (so you see all errors at once). Collect validation errors but don’t fail immediately
             errors.append(str(e))
 
@@ -80,4 +84,3 @@ def bulk_create_and_validate_resources(
 # 3️⃣	Loop: create N customers	Inside bulk_create_and_validate_resources()
 # 4️⃣	Loop: validate each one	Inside bulk_create_and_validate_resources()
 # 5️⃣	Assert all validations passed	Final step of the utility
-

@@ -20,20 +20,15 @@ Rule of thumb:
 API_HOSTS = {
     # Local development (tests run on host, WordPress in Docker)
     "test": "http://localhost:8888/kwakiweb/wp-json/wc/v3/",
-
     # Docker environment (tests run IN Docker, same network as WordPress)
     # ⚠️ CRITICAL: Use service name "wordpress", NOT "localhost"
     "docker": "http://wordpress/wp-json/wc/v3/",  # ✅ For GitLab CI (uses docker-compose)
-
     # Local without Docker
     "local": "http://localhost:8888/kwakiweb/wp-json/wc/v3/",  # ✅ For local dev (no Docker)
-
     # Development server
     "dev": "http://host.docker.internal:8888/kwakiweb/wp-json/wc/v3/",  # ✅ For local Docker → local WordPress
-
     # Staging environment (real server)
     "staging": "https://staging.example.com/wp-json/wc/v3/",
-
     # Production (real server)
     "prod": "https://api.example.com/wp-json/wc/v3/",
 }

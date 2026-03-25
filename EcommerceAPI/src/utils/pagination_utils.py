@@ -10,7 +10,9 @@ import time
 from copy import deepcopy
 
 
-def paginate_all_results(api_client, endpoint, params=None, max_pages=1000, retries=3, retry_delay=1.0):
+def paginate_all_results(
+    api_client, endpoint, params=None, max_pages=1000, retries=3, retry_delay=1.0
+):
     """
         Generic pagination handler for WooCommerce-style endpoints with simple retry logic.
 
@@ -42,7 +44,9 @@ def paginate_all_results(api_client, endpoint, params=None, max_pages=1000, retr
 
         while attempt < retries and not success:
             try:
-                logger.debug(f"📦 Fetching {endpoint} page {i} (attempt {attempt + 1}/{retries})")
+                logger.debug(
+                    f"📦 Fetching {endpoint} page {i} (attempt {attempt + 1}/{retries})"
+                )
                 http_response = api_client.get(endpoint, params=params)
 
                 # ✅ Validate status code for pagination calls
@@ -62,27 +66,38 @@ def paginate_all_results(api_client, endpoint, params=None, max_pages=1000, retr
 
                 # Safety: ensure response is an iterable list. Stop pagination if no response or empty list is returned
                 if not response:
-                    logger.info(f"⛔ No more results at page {i}. Ending pagination for '{endpoint}'")
+                    logger.info(
+                        f"⛔ No more results at page {i}. Ending pagination for '{endpoint}'"
+                    )
                     return all_items  # ✅ STOP EVERYTHING
 
                 if not isinstance(response, list):
-                    raise TypeError(f"Expected list response for pagination, got {type(response)}")
+                    raise TypeError(
+                        f"Expected list response for pagination, got {type(response)}"
+                    )
 
                 success = True
             except Exception as e:
                 attempt += 1
-                logger.warning(f"⚠️ Error fetching page {i} (attempt {attempt}) for '{endpoint}': {e}")
+                logger.warning(
+                    f"⚠️ Error fetching page {i} (attempt {attempt}) for '{endpoint}': {e}"
+                )
                 if attempt < retries:
                     time.sleep(retry_delay)
                 else:
-                    logger.error(f"❌ Giving up on page {i} after {retries} failed attempts.")
+                    logger.error(
+                        f"❌ Giving up on page {i} after {retries} failed attempts."
+                    )
                     break
 
         if success and response:
             all_items.extend(response)
 
-    logger.debug(f"✅ Completed paginated fetch for '{endpoint}' — Total items: {len(all_items)}")
+    logger.debug(
+        f"✅ Completed paginated fetch for '{endpoint}' — Total items: {len(all_items)}"
+    )
     return all_items
+
 
 # NOTE: You can to make this retry logic configurable via environment variable (e.g. PAGINATION_RETRY_COUNT)?
 # That’s sometimes handy when you run tests on unstable remote WooCommerce hosts.

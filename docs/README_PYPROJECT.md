@@ -2,7 +2,7 @@
 
 This project uses two `pyproject.toml` files on purpose:
 
-- Root-level: `./pyproject.toml` — tool configuration for the whole repo (pytest options, linting settings, etc.).  
+- Root-level: `./pyproject.toml` — tool configuration for the whole repo (pytest options, linting settings, etc.).
 - Package-level: `./EcommerceAPI/pyproject.toml` — packaging metadata for the installable framework (name, version, dependencies, extras).
 
 Short answer: keep them separate. That’s the recommended layout for a repo that contains a shared, installable package plus a top-level test/CI suite.
@@ -79,7 +79,7 @@ Docker / CI notes
 - GitLab dynamic pipelines: the discover job generates a `matrix.yml` artifact at runtime — that artifact is referenced in `artifacts: paths: - matrix.yml`.
 
 Troubleshooting — “0 tests collected” checklist 🧰
-1. Don’t use filters while debugging (avoid `-m`, `-k`, `-q`).  
+1. Don’t use filters while debugging (avoid `-m`, `-k`, `-q`).
    Run:
    ```bash
    pytest --collect-only -q tests/
@@ -110,7 +110,7 @@ Troubleshooting — “0 tests collected” checklist 🧰
    ```
 
 Suggested small edits you may want to make (quick list)
-- Standardize extras name: use `dev` everywhere.  
+- Standardize extras name: use `dev` everywhere.
 - Keep root pytest block; remove any duplicate pytest sections in `EcommerceAPI/pyproject.toml` (only if you want repo-level tests to control discovery). If you need a different pytest config inside `EcommerceAPI/` (rare), keep it but be explicit when running tests from that folder.
 - Add a `.dockerignore` to speed builds:
   ```
@@ -131,4 +131,3 @@ Where to merge vs keep separate (decision guide)
 - Merge into a single `pyproject.toml` only if:
   - This repo is a single-package project and you prefer one-file config.
   - You’re comfortable moving packaging metadata to repo root and adjusting paths.
-

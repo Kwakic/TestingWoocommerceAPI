@@ -146,15 +146,19 @@ class HttpResponse:
     If you debug and want to see formatted response to JSON then use the "Professional API Log" Style (Cleanest)
     If you want to see the headers and the body formatted exactly like a real JSON API response (using " and true),
     run this snippet in your Pdb:
-    (Pdb) import json; print(f"Status: {response.status_code}\nHeaders: {json.dumps(response.headers, indent=2)}\nBody: {json.dumps(response.json, indent=2)}")
+    (Pdb) import json; print(f"Status: {response.status_code}\nHeaders: {json.dumps(response.headers, indent=2)}\nBody:
+    {json.dumps(response.json, indent=2)}")
     or to see also the text, content and elapsed:
-    (Pdb) import json; print(f"\n--- API RESPONSE ---\nURL: {response.url}\nStatus: {response.status_code}\nElapsed: {response.elapsed}s\n\nHEADERS:\n{json.dumps(response.headers, indent=2)}\n\nJSON BODY:\n{json.dumps(response.json, indent=2)}\n\nRAW TEXT:\n{response.text}\n\nRAW CONTENT (BYTES):\n{response.content}\n--------------------")
+    (Pdb) import json; print(f"\n--- API RESPONSE ---\nURL: {response.url}\nStatus: {response.status_code}\nElapsed:
+    {response.elapsed}s\n\nHEADERS:\n{json.dumps(response.headers, indent=2)}\n\nJSON BODY:\n{json.dumps(response.json,
+    indent=2)}\n\nRAW TEXT:\n{response.text}\n\nRAW CONTENT (BYTES):\n{response.content}\n--------------------")
 
     To see the response in JSON: Convert the Python dictionary into a JSON-formatted string:
     (Pdb)  import json; print(json.dumps(customers, indent=4))
 
     ------------------------------------------------------------------------
     """
+
     status_code: int
     headers: Dict[str, str]
     json: Optional[Any]
@@ -164,7 +168,9 @@ class HttpResponse:
     content: Optional[bytes] = None
 
     @classmethod
-    def from_http_requests(cls, response: requests.Response, elapsed: float) -> "HttpResponse":
+    def from_http_requests(
+        cls, response: requests.Response, elapsed: float
+    ) -> "HttpResponse":
         """
         Factory method to convert a raw `requests.Response`
         into a structured HttpResponse object.
@@ -229,7 +235,7 @@ class HttpResponse:
             text=response.text,
             url=response.url,
             elapsed=elapsed,
-            content=response.content
+            content=response.content,
         )
 
     # It returns raw requests.Response

@@ -42,6 +42,7 @@ MACHINE = os.getenv("MACHINE", "machine1").lower()
 #  SECTION 2: Auto-detect microservice based on working directory
 # =====================================================================
 
+
 @lru_cache(maxsize=None)
 def detect_service() -> str:
     """
@@ -145,7 +146,10 @@ def _config_module_exists(path: Path) -> bool:
     tests_dir = path / "tests"
     if tests_dir.is_dir():
         for entry in tests_dir.iterdir():
-            if entry.is_dir() and (entry / "configs" / f"config_{entry.name}.py").exists():
+            if (
+                entry.is_dir()
+                and (entry / "configs" / f"config_{entry.name}.py").exists()
+            ):
                 return True
     return False
 
@@ -153,6 +157,7 @@ def _config_module_exists(path: Path) -> bool:
 # =====================================================================
 #  SECTION 3: Dynamic import of per-service config
 # =====================================================================
+
 
 @lru_cache(maxsize=None)
 def load_service_config(service: str):
@@ -203,6 +208,7 @@ def load_service_config(service: str):
 #  SECTION 4: API Host Resolution
 # =====================================================================
 
+
 def get_api_host(service: Optional[str] = None) -> str:
     """
     Returns the shared API URL for the given microservice and active ENV.
@@ -222,14 +228,10 @@ def get_api_host(service: Optional[str] = None) -> str:
 
     hosts = getattr(module, "API_HOSTS", None)
     if hosts is None:
-        raise RuntimeError(
-            f"Config module for '{service}' does not define API_HOSTS"
-        )
+        raise RuntimeError(f"Config module for '{service}' does not define API_HOSTS")
 
     if ENV not in hosts:
-        raise RuntimeError(
-            f"ENV='{ENV}' missing from API_HOSTS in config_{service}"
-        )
+        raise RuntimeError(f"ENV='{ENV}' missing from API_HOSTS in config_{service}")
 
     return hosts[ENV]
 
@@ -237,6 +239,7 @@ def get_api_host(service: Optional[str] = None) -> str:
 # =====================================================================
 #  SECTION 5: DB Configuration (secure from .env only)
 # =====================================================================
+
 
 def get_db_config() -> Dict[str, Any]:
     """
@@ -275,6 +278,7 @@ def get_db_config() -> Dict[str, Any]:
 #  SECTION 6: Unified Config Object (Convenience)
 # =====================================================================
 
+
 def get_config() -> Dict[str, Any]:
     """
     Returns a strongly structured config dictionary for direct use by tests,
@@ -294,13 +298,14 @@ def get_config() -> Dict[str, Any]:
         "machine": MACHINE,
         "service": service,
         "api_host": get_api_host(service),
-        "db": get_db_config()
+        "db": get_db_config(),
     }
 
 
 # =====================================================================
 #  SECTION 7: Minimal debug helper
 # =====================================================================
+
 
 def debug_print() -> None:
     """Prints resolved configuration (for troubleshooting only)."""

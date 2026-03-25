@@ -8,13 +8,13 @@ The design avoids hardcoding service names inside shared code and keeps sensitiv
 
 ## High‑Level Principles
 
-- Each microservice owns its own API_HOSTS  
+- Each microservice owns its own API_HOSTS
   - customers, orders, products, etc. define their own base URLs
-- No shared utility imports config_customers, config_orders, etc. directly  
+- No shared utility imports config_customers, config_orders, etc. directly
   - Shared code is service‑agnostic
-- Logging, reporting, api_client never care which service they run under  
+- Logging, reporting, api_client never care which service they run under
   - They only read environment selectors (ENV, MACHINE) and runtime context
-- Secrets live only in `.env` or CI  
+- Secrets live only in `.env` or CI
   - No credentials or real DB details in service configs
 
 ---
@@ -221,10 +221,10 @@ Logging / Reporting | Observability | ❌ | Fully generic
 
 ## 9. Key Benefits
 
-- Zero hardcoded service names in shared code  
-- Clear ownership boundaries (service owns endpoints, shared code owns environment selectors)  
-- Easy onboarding for new microservices  
-- CI/CD friendly (secrets kept in CI or `.env`)  
+- Zero hardcoded service names in shared code
+- Clear ownership boundaries (service owns endpoints, shared code owns environment selectors)
+- Easy onboarding for new microservices
+- CI/CD friendly (secrets kept in CI or `.env`)
 - Minimal coupling, maximal reuse
 
 ---

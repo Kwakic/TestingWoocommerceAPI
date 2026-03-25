@@ -1,11 +1,16 @@
-
 import pytest
 import logging
 from unittest.mock import patch
 from datetime import timedelta
 
-from EcommerceAPI.src.customers.validators.customer_validators import assert_valid_customer_response
-from EcommerceAPI.src.utils.date_timestamp_utils import get_now_utc_floor, to_iso_utc, safe_parse_utc_datetime
+from EcommerceAPI.src.customers.validators.customer_validators import (
+    assert_valid_customer_response,
+)
+from EcommerceAPI.src.utils.date_timestamp_utils import (
+    get_now_utc_floor,
+    to_iso_utc,
+    safe_parse_utc_datetime,
+)
 
 logger = logging.getLogger(__name__)
 #  logger.setLevel(logging.DEBUG)  # already set in pytest.ini
@@ -16,7 +21,9 @@ pytestmark = [pytest.mark.integration]
 @pytest.mark.tcid09
 @pytest.mark.smoke
 @pytest.mark.contract
-def test_get_all_customers_list_not_empty_and_valid_schema(customer_helper, customers_dao):
+def test_get_all_customers_list_not_empty_and_valid_schema(
+    customer_helper, customers_dao
+):
     """
     Smoke test for GET /customers endpoint.
 
@@ -35,7 +42,9 @@ def test_get_all_customers_list_not_empty_and_valid_schema(customer_helper, cust
 
     # Ensure API returned customers
     assert customers, "❌ No customers returned from GET /customers"
-    assert isinstance(customers, list), f"Expected list of customers, got: {type(customers)}"
+    assert isinstance(
+        customers, list
+    ), f"Expected list of customers, got: {type(customers)}"
 
     logger.info(f"✅ Retrieved {len(customers)} customers.")
 
@@ -44,7 +53,9 @@ def test_get_all_customers_list_not_empty_and_valid_schema(customer_helper, cust
         try:
             assert_valid_customer_response(cust)
         except Exception as e:
-            pytest.fail(f"❌ Customer schema validation failed for ID={cust.get('id')}: {e}")
+            pytest.fail(
+                f"❌ Customer schema validation failed for ID={cust.get('id')}: {e}"
+            )
 
     logger.info("✅ All returned customers conform to schema.")
 
@@ -71,22 +82,32 @@ def test_get_all_customers_pagination_boundary(customer_helper, customers_dao):
     per_page = 5
     max_pages = 20  # Safeguard: increase if dataset is large
 
-    logger.info(f"🟢 Testing pagination boundary with per_page={per_page}, max_pages={max_pages}")
+    logger.info(
+        f"🟢 Testing pagination boundary with per_page={per_page}, max_pages={max_pages}"
+    )
 
-    params = {'per_page': per_page}
-    all_customers = customer_helper.list_customers_paginated(params=params, max_pages=max_pages)
+    params = {"per_page": per_page}
+    all_customers = customer_helper.list_customers_paginated(
+        params=params, max_pages=max_pages
+    )
 
     assert all_customers, "❌ No customers returned from paginated GET /customers"
-    assert isinstance(all_customers, list), f"Expected list of customers, got: {type(all_customers)}"
+    assert isinstance(
+        all_customers, list
+    ), f"Expected list of customers, got: {type(all_customers)}"
 
     # 	Added truncation warning if page cap is reached
     if len(all_customers) >= per_page * max_pages:
-        logger.warning(f"⚠️ Retrieved exactly {len(all_customers)} customers, "
-                       f"which matches per_page * max_pages. Results may be truncated.")
+        logger.warning(
+            f"⚠️ Retrieved exactly {len(all_customers)} customers, "
+            f"which matches per_page * max_pages. Results may be truncated."
+        )
 
     # Ensure pagination did not return duplicate customers
-    ids = [c['id'] for c in all_customers]
-    assert len(ids) == len(set(ids)), "❌ Duplicate customers found across paginated results"
+    ids = [c["id"] for c in all_customers]
+    assert len(ids) == len(
+        set(ids)
+    ), "❌ Duplicate customers found across paginated results"
 
     logger.info(f"✅ Retrieved {len(all_customers)} unique customers across pages.")
 
@@ -95,7 +116,9 @@ def test_get_all_customers_pagination_boundary(customer_helper, customers_dao):
         try:
             assert_valid_customer_response(cust)
         except Exception as e:
-            logger.error(f"❌ Schema validation failed for customers ID={cust.get('id')}: {e}")
+            logger.error(
+                f"❌ Schema validation failed for customers ID={cust.get('id')}: {e}"
+            )
             logger.debug(f"Offending customers JSON: {cust}")
             pytest.fail(f"❌ Customer schema invalid for ID={cust.get('id')}")
 
@@ -122,19 +145,23 @@ def test_get_all_customers_empty_list_with_mock(customer_helper, customers_dao):
     - You get a fully isolated test that doesn't depend on DB state.
     """
 
-    with patch.object(customer_helper, 'list_customers_paginated', return_value=[]):
+    with patch.object(customer_helper, "list_customers_paginated", return_value=[]):
         logger.info("🟢 Mocking list_customers_paginated to return empty list")
         customers = customer_helper.list_customers_paginated()
 
         # Ensure mocked response returns empty dataset
-        assert customers == [], "❌ Expected empty list from mocked call_list_all_customers_paginated"
+        assert (
+            customers == []
+        ), "❌ Expected empty list from mocked call_list_all_customers_paginated"
         logger.info("✅ Successfully mocked empty customers list")
 
 
 @pytest.mark.tcid19
 @pytest.mark.negative
 @pytest.mark.regression
-def test_list_customers_created_in_the_future_returns_empty(customer_helper, customers_dao):
+def test_list_customers_created_in_the_future_returns_empty(
+    customer_helper, customers_dao
+):
     """
     Verify that no customers are returned with a future creation timestamp.
 
@@ -185,8 +212,10 @@ def test_list_customers_created_in_the_future_returns_empty(customer_helper, cus
     # - it collects the matching items (cust) into a new list (future_customers)
     tolerance = timedelta(seconds=1)
     future_customers = [
-        cust for cust in filtered_customers
-        if safe_parse_utc_datetime(cust.get("date_created_gmt", "")) > (now_utc + tolerance)
+        cust
+        for cust in filtered_customers
+        if safe_parse_utc_datetime(cust.get("date_created_gmt", ""))
+        > (now_utc + tolerance)
     ]
 
     # Step 4 — Ensure no customers exist beyond tolerance window
@@ -195,7 +224,9 @@ def test_list_customers_created_in_the_future_returns_empty(customer_helper, cus
         f"Possible clock drift or invalid timestamp. Base time: {created_after}"
     )
 
-    logger.info(f"✅ No customers found beyond {created_after} (+1s buffer) — test passed")
+    logger.info(
+        f"✅ No customers found beyond {created_after} (+1s buffer) — test passed"
+    )
 
     # Optional debug logging for unexpected timestamps
     for cust in filtered_customers:

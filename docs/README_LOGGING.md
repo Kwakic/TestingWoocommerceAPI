@@ -30,26 +30,26 @@ Key environment variables
 Set these in CI or a local `.env` file as needed.
 
 Core toggles
-- ENABLE_STRUCTURED_LOGS=false  
+- ENABLE_STRUCTURED_LOGS=false
   - When `true` the framework writes a structured JSONL file for the run (opt-in).
-- ENABLE_JSON_PRETTY=false  
+- ENABLE_JSON_PRETTY=false
   - When `true` pretty-prints structured JSON (larger files).
-- LOG_DIR (optional)  
+- LOG_DIR (optional)
   - Base directory for structured files when enabled (defaults to `EcommerceAPItest/tests/api/logs`).
-- KEEP_STRUCTURED_LOGS=3  
+- KEEP_STRUCTURED_LOGS=3
   - Number of structured JSONL files to keep (pruning applies only when structured logging is enabled).
 
 Security / payloads
-- REDACT_SENSITIVE_FIELDS=true  
+- REDACT_SENSITIVE_FIELDS=true
   - Automatic redaction of known sensitive keys (default: enabled). Keep enabled in CI.
-- LOG_PAYLOADS=false  
+- LOG_PAYLOADS=false
   - Controls whether request/response payloads are included in structured logs (masked when redaction enabled). Use with caution in CI.
 
 Runtime API (programmatic toggles)
 ----------------------------------
-- set_redaction(bool) / is_redaction_enabled()  
+- set_redaction(bool) / is_redaction_enabled()
   - Toggle or query redaction at runtime.
-- set_include_payloads(bool) / is_include_payloads()  
+- set_include_payloads(bool) / is_include_payloads()
   - Toggle whether payloads are included in structured output.
 
 Important behavior notes
@@ -61,7 +61,7 @@ Important behavior notes
 
 Where structured logs are written
 -------------------------------
-- `{LOG_DIR or default}/<ENV>/test_debug_structured_<TIMESTAMP>.jsonl`  
+- `{LOG_DIR or default}/<ENV>/test_debug_structured_<TIMESTAMP>.jsonl`
   - Default base: `EcommerceAPItest/tests/api/logs/<ENV>/`
   - Files are timestamped and pruned by modification time; pruning keeps the newest `KEEP_STRUCTURED_LOGS`.
 

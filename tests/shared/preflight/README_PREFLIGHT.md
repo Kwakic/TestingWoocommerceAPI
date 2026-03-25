@@ -1,12 +1,12 @@
 ## Overview
-The **Preflight Test Suite** performs *framework-level and environment diagnostics*  
+The **Preflight Test Suite** performs *framework-level and environment diagnostics*
 **before any environment-dependent or business-level tests are executed**.
 
-Preflight is intentionally **lightweight and non-invasive**.  
+Preflight is intentionally **lightweight and non-invasive**.
 It verifies that the **test framework itself** is correctly wired and that the
 execution environment is sane — **not** that the deployed application behaves correctly.
 
-> 🔑 **Important change**  
+> 🔑 **Important change**
 > API schema validation tests have been **moved out of preflight** and now live in the
 > **Shared Contract Test Suite**. Preflight no longer requires a live application.
 

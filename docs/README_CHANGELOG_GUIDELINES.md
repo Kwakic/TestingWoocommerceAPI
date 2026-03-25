@@ -97,13 +97,13 @@ Template snippet to copy into `CHANGELOG.md`
 ```markdown
 ## [Unreleased]
 ### Added
-- 
+-
 
 ### Changed
-- 
+-
 
 ### Fixed
-- 
+-
 ```
 
 If you want, I can:

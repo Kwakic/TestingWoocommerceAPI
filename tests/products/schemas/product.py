@@ -12,6 +12,7 @@ Notes:
 - An `product_error_schema` is provided to match typical WooCommerce error responses
   (same style as your existing error_schema in the customers schema).
 """
+
 from typing import Dict, Any
 
 # Schema for normal product object responses
@@ -24,7 +25,7 @@ product_schema: Dict[str, Any] = {
         "name": {"type": "string"},
         "type": {
             "type": "string",
-            "enum": ["simple", "grouped", "external", "variable"]
+            "enum": ["simple", "grouped", "external", "variable"],
         },
         # regular_price may be:
         #   - a numeric string (e.g. "12.99")
@@ -34,9 +35,9 @@ product_schema: Dict[str, Any] = {
             "anyOf": [
                 {"type": "string", "pattern": r"^\d+(\.\d{1,2})?$"},
                 {"type": "string", "enum": [""]},
-                {"type": "null"}
+                {"type": "null"},
             ],
-            "description": "Product's regular price as string (may be empty or null when unset)"
+            "description": "Product's regular price as string (may be empty or null when unset)",
         },
         "status": {"type": "string"},
         # common additional properties that may appear; we keep them permissive
@@ -49,7 +50,7 @@ product_schema: Dict[str, Any] = {
         "_links": {"type": "object"},
     },
     # allow WooCommerce to add new fields without breaking this preflight check
-    "additionalProperties": True
+    "additionalProperties": True,
 }
 
 # Schema for error responses that some endpoints return (same style as your error_schema)
@@ -58,31 +59,28 @@ product_error_schema: Dict[str, Any] = {
     "properties": {
         "code": {
             "type": "string",
-            "description": "Machine-readable error code (e.g., 'woocommerce_rest_invalid_param')"
+            "description": "Machine-readable error code (e.g., 'woocommerce_rest_invalid_param')",
         },
-        "message": {
-            "type": "string",
-            "description": "Human-readable error message"
-        },
+        "message": {"type": "string", "description": "Human-readable error message"},
         "data": {
             "type": "object",
             "properties": {
                 "status": {
                     "type": "integer",
-                    "description": "HTTP status code (typically 400 or 500)"
+                    "description": "HTTP status code (typically 400 or 500)",
                 },
                 "params": {
                     "description": "Optional list of invalid params or extra data",
                     "oneOf": [
                         {"type": "array", "items": {"type": "string"}},
-                        {"type": "object"}
-                    ]
-                }
+                        {"type": "object"},
+                    ],
+                },
             },
             "required": ["status"],
-            "additionalProperties": True
-        }
+            "additionalProperties": True,
+        },
     },
     "required": ["code", "message", "data"],
-    "additionalProperties": False
+    "additionalProperties": False,
 }

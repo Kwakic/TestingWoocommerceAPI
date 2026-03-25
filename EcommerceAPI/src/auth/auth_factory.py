@@ -8,6 +8,7 @@ Auth strategies manage their own credential loading.
 """
 
 from .oauth1_auth import OAuth1Auth
+
 # from .oauth2_auth import OAuth2Auth
 # from .jwt_auth import JWTAuth
 # from .basic_auth import BasicAuth

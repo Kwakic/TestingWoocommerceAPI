@@ -153,8 +153,8 @@ assert_customer_matches_db(customer, db_customer)
 
 ## 💬 Final Takeaway
 
-> 🔥 One clear validation layer is better than multiple confusing ones  
-> 🔥 Simplicity > abstraction  
+> 🔥 One clear validation layer is better than multiple confusing ones
+> 🔥 Simplicity > abstraction
 
 ---
 

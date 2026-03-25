@@ -236,9 +236,9 @@ print(wrapped.json)
 
 # ⚠️ WHEN NOT TO USE request_raw
 
-❌ Normal tests  
-❌ Validation  
-❌ Business logic  
+❌ Normal tests
+❌ Validation
+❌ Business logic
 
 ---
 
@@ -299,12 +299,12 @@ assert data["id"]
 
 # 🚀 FINAL SUMMARY
 
-✔ HttpClient → raw transport  
-✔ APIClient  → orchestration  
-✔ HttpResponse → safe abstraction  
-✔ Helpers → clean business data  
-✔ Tests → validation  
-✔ request_raw → debugging only  
+✔ HttpClient → raw transport
+✔ APIClient  → orchestration
+✔ HttpResponse → safe abstraction
+✔ Helpers → clean business data
+✔ Tests → validation
+✔ request_raw → debugging only
 
 ---
 

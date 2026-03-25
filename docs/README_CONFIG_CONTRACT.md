@@ -2,7 +2,7 @@
 
 **Authoritative and normative definition of configuration behavior in the EcommerceAPI test framework.**
 
-This document defines **what** configuration is, **where** it lives, **who** owns it, and **how** it may be consumed.  
+This document defines **what** configuration is, **where** it lives, **who** owns it, and **how** it may be consumed.
 If behavior is unclear, **this document wins**.
 
 ---
@@ -17,7 +17,7 @@ This contract exists to guarantee:
 - ✅ **Strict ownership boundaries**
 - ✅ **Safe refactoring without behavioral drift**
 
-> **Configuration is not an implementation detail.**  
+> **Configuration is not an implementation detail.**
 > It is a **framework-level contract**.
 
 ---
@@ -167,7 +167,7 @@ By following this contract, the framework guarantees:
 
 ## 🔟 Final Principle (Non-Negotiable)
 
-> **If a value affects framework behavior,  
+> **If a value affects framework behavior,
 > it must be defined, parsed, and logged in `_config.py`.**
 
 **Everything else is runtime state.**

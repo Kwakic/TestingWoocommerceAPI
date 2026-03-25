@@ -67,7 +67,9 @@ def assert_has_key(field: str, obj: Dict[str, Any]) -> None:
     """
     Ensure field exists in an object.
     """
-    assert field in obj, f"❌ Missing required field '{field}'. Got keys: {list(obj.keys())}"
+    assert (
+        field in obj
+    ), f"❌ Missing required field '{field}'. Got keys: {list(obj.keys())}"
 
 
 def assert_has_int(field: str, obj: Dict[str, Any]) -> None:
@@ -77,7 +79,9 @@ def assert_has_int(field: str, obj: Dict[str, Any]) -> None:
     assert_has_key(field, obj)
     value = obj[field]
 
-    assert isinstance(value, int), f"❌ Field '{field}' must be int. Got: {value} ({type(value)})"
+    assert isinstance(
+        value, int
+    ), f"❌ Field '{field}' must be int. Got: {value} ({type(value)})"
 
 
 def assert_has_str(field: str, obj: Dict[str, Any]) -> None:
@@ -87,7 +91,9 @@ def assert_has_str(field: str, obj: Dict[str, Any]) -> None:
     assert_has_key(field, obj)
     value = obj[field]
 
-    assert isinstance(value, str), f"❌ Field '{field}' must be str. Got: {value} ({type(value)})"
+    assert isinstance(
+        value, str
+    ), f"❌ Field '{field}' must be str. Got: {value} ({type(value)})"
 
 
 # ------------------------------------------------------------------
@@ -132,9 +138,13 @@ def assert_entity_exists_in_api(
     entity = entities[0]
 
     # ✅ Strict access (structure assumed valid)
-    assert entity[field] == identifier, f"❌ {field} mismatch: expected {identifier}, got {entity[field]}"
+    assert (
+        entity[field] == identifier
+    ), f"❌ {field} mismatch: expected {identifier}, got {entity[field]}"
 
-    assert isinstance(entity["id"], int) and entity["id"] > 0, f"❌ Invalid entity ID: {entity['id']}"
+    assert (
+        isinstance(entity["id"], int) and entity["id"] > 0
+    ), f"❌ Invalid entity ID: {entity['id']}"
 
     return entity
 
@@ -181,11 +191,13 @@ def assert_entity_matches_db(
 
     assert db_entity, "❌ No DB record found"
 
-    assert str(db_entity[id_field_db]) == str(entity[id_field_api]), \
-        "❌ DB ID does not match API ID"
+    assert str(db_entity[id_field_db]) == str(
+        entity[id_field_api]
+    ), "❌ DB ID does not match API ID"
 
-    assert db_entity[email_field_db] == entity[email_field_api], \
-        "❌ DB email does not match API email"
+    assert (
+        db_entity[email_field_db] == entity[email_field_api]
+    ), "❌ DB email does not match API email"
 
 
 # ------------------------------------------------------------------
@@ -238,12 +250,16 @@ def assert_single_entity_by_field(
     #     if c.get("email") == email:
     #         matches.append(c)
 
-    assert len(matches) == 1, f"❌ Expected exactly 1 entity for {field}={value}, found {len(matches)}"
+    assert (
+        len(matches) == 1
+    ), f"❌ Expected exactly 1 entity for {field}={value}, found {len(matches)}"
 
     entity = matches[0]
 
     # ✅ Now strict access
-    assert entity[field] == value, f"❌ {field} mismatch after filtering: {entity[field]}"
+    assert (
+        entity[field] == value
+    ), f"❌ {field} mismatch after filtering: {entity[field]}"
 
     return entity
 

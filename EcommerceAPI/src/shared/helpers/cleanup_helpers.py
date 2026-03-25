@@ -84,7 +84,9 @@ def cleanup_items(
     seen_ids: Set[Any] = set()
     already_deleted_ids = already_deleted_ids or set()
 
-    resource_ids_list = list(resource_ids) if not isinstance(resource_ids, list) else resource_ids
+    resource_ids_list = (
+        list(resource_ids) if not isinstance(resource_ids, list) else resource_ids
+    )
 
     if not resource_ids_list:
         msg = skip_message or f"🧹 Nothing to clean up for {label}(s)."
@@ -98,7 +100,9 @@ def cleanup_items(
     for resource_id in resource_ids_list:
         # De-duplicate within the same run
         if resource_id in seen_ids:
-            logger.debug(f"ℹ️ {label.capitalize()} ID {resource_id} already queued for cleanup. Skipping duplicate.")
+            logger.debug(
+                f"ℹ️ {label.capitalize()} ID {resource_id} already queued for cleanup. Skipping duplicate."
+            )
             skipped += 1
             continue
 
@@ -106,7 +110,9 @@ def cleanup_items(
 
         # Skip if test already deleted it manually
         if resource_id in already_deleted_ids:
-            logger.debug(f"↪️ Skipping {label} ID {resource_id} — already deleted during test execution.")
+            logger.debug(
+                f"↪️ Skipping {label} ID {resource_id} — already deleted during test execution."
+            )
             manually_deleted += 1
             continue
 
@@ -120,7 +126,9 @@ def cleanup_items(
         except Exception as e:
             # Normalize message for heuristic checks
             err_msg = str(e).lower()
-            if any(keyword in err_msg for keyword in ["not found", "does not exist", "404"]):
+            if any(
+                keyword in err_msg for keyword in ["not found", "does not exist", "404"]
+            ):
                 logger.warning(
                     f"⚠️ {label.capitalize()} ID {resource_id} not found during teardown. Likely already deleted."
                 )
@@ -132,7 +140,9 @@ def cleanup_items(
         # Format summary
     summary_parts = [f"{deleted} deleted"]
     if manually_deleted:
-        summary_parts.append(f"{manually_deleted} skipped (already deleted during test execution)")
+        summary_parts.append(
+            f"{manually_deleted} skipped (already deleted during test execution)"
+        )
     if skipped:
         summary_parts.append(f"{skipped} skipped (duplicate)")
     if failed:
@@ -149,7 +159,9 @@ def cleanup_items(
 # -------------------------------------------------
 # Factory helpers — create pre-bound cleanup callables
 # -------------------------------------------------
-def make_cleanup_partial(api_client: APIClient, resource_type: str, label: Optional[str] = None) -> Callable[..., None]:
+def make_cleanup_partial(
+    api_client: APIClient, resource_type: str, label: Optional[str] = None
+) -> Callable[..., None]:
     """
     Create a pre-bound cleanup callable for a specific resource type using the provided API client.
 
@@ -161,7 +173,9 @@ def make_cleanup_partial(api_client: APIClient, resource_type: str, label: Optio
     Returns:
         Callable that accepts the same args as cleanup_items except "delete_method" and "resource_type".
     """
-    return partial(cleanup_items, resource_type, delete_method=api_client.delete, label=label)
+    return partial(
+        cleanup_items, resource_type, delete_method=api_client.delete, label=label
+    )
 
 
 def make_all_cleanups(api_client: Any) -> Dict[str, Callable[..., None]]:
@@ -178,6 +192,7 @@ def make_all_cleanups(api_client: Any) -> Dict[str, Callable[..., None]]:
         "customers": make_cleanup_partial(api_client, "customers", label="customers"),
         "coupons": make_cleanup_partial(api_client, "coupons", label="coupon"),
     }
+
 
 # -------------------------------------------------
 # Optional: module-level helpers (explicit opt-in)
@@ -213,19 +228,27 @@ def _require_default_api_client() -> Any:
 
 def cleanup_orders(resource_ids: Iterable[Any], **kwargs) -> None:
     api_client = _require_default_api_client()
-    return make_cleanup_partial(api_client, "orders", label="order")(resource_ids, **kwargs)
+    return make_cleanup_partial(api_client, "orders", label="order")(
+        resource_ids, **kwargs
+    )
 
 
 def cleanup_products(resource_ids: Iterable[Any], **kwargs) -> None:
     api_client = _require_default_api_client()
-    return make_cleanup_partial(api_client, "products", label="product")(resource_ids, **kwargs)
+    return make_cleanup_partial(api_client, "products", label="product")(
+        resource_ids, **kwargs
+    )
 
 
 def cleanup_customers(resource_ids: Iterable[Any], **kwargs) -> None:
     api_client = _require_default_api_client()
-    return make_cleanup_partial(api_client, "customers", label="customers")(resource_ids, **kwargs)
+    return make_cleanup_partial(api_client, "customers", label="customers")(
+        resource_ids, **kwargs
+    )
 
 
 def cleanup_coupons(resource_ids: Iterable[Any], **kwargs) -> None:
     api_client = _require_default_api_client()
-    return make_cleanup_partial(api_client, "coupons", label="coupon")(resource_ids, **kwargs)
+    return make_cleanup_partial(api_client, "coupons", label="coupon")(
+        resource_ids, **kwargs
+    )

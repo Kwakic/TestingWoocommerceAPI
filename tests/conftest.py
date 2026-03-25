@@ -29,8 +29,7 @@ def api_base_url() -> str:
 
     if service not in service_modules:
         raise RuntimeError(
-            f"Unknown SERVICE='{service}'. "
-            f"Valid values: {list(service_modules)}"
+            f"Unknown SERVICE='{service}'. " f"Valid values: {list(service_modules)}"
         )
 
     module = importlib.import_module(service_modules[service])
