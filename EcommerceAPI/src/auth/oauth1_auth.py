@@ -28,10 +28,7 @@ class OAuth1Auth(AuthStrategy):
 
         wc_creds = get_wc_api_keys()
 
-        self.oauth = OAuth1(
-            wc_creds["wc_key"],
-            wc_creds["wc_secret"]
-        )
+        self.oauth = OAuth1(wc_creds["wc_key"], wc_creds["wc_secret"])
 
     def apply(self, request_kwargs: Dict[str, Any]) -> Dict[str, Any]:
         """

@@ -105,10 +105,10 @@ A comprehensive guide to running WooCommerce tests in Docker containers
 9. [ ] Common Issues & Troubleshooting
 10. [ ] CI/CD Integration
 11. [ ] Quick Reference
-[ ] 
+[ ]
 🎯 Introduction
 
-This guide teaches you how to run a complete WooCommerce API test suite using Docker. Instead of testing against 
+This guide teaches you how to run a complete WooCommerce API test suite using Docker. Instead of testing against
 production or requiring a local XAMPP/MAMP setup, everything runs in isolated Docker containers on the same network.
 What You'll Build
 
@@ -256,7 +256,7 @@ Why:
 Required Software
 
     bash
-    
+
     # Check versions
     docker --version        # Docker 20.10+ recommended
     docker compose version  # Docker Compose v2.0+ (plugin version)
@@ -466,25 +466,25 @@ services:
   # ============================================================
   # Why separate database? WordPress needs persistent storage
   # for posts, users, WooCommerce products, etc.
-  
+
   db:
     image: mysql:8.0                  # Official MySQL image
     container_name: wc-db             # Fixed name (easier to reference)
-    
+
     environment:
       # Database credentials (WordPress will use these)
       MYSQL_DATABASE: wordpress
       MYSQL_USER: wp
       MYSQL_PASSWORD: wp
       MYSQL_ROOT_PASSWORD: root
-    
+
     volumes:
       # Persist database data on host (survives container restart)
       - db_data:/var/lib/mysql
-    
+
     networks:
       - wc-net                        # Connect to shared network
-    
+
     healthcheck:
       # Ensure MySQL is ready before WordPress starts
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
@@ -494,32 +494,32 @@ services:
   # ============================================================
   # WordPress + WooCommerce
   # ============================================================
-  
+
   wordpress:
     image: wordpress:6.4-php8.2-apache
     container_name: wc-wp
-    
+
     depends_on:
       db:
         condition: service_healthy    # Wait for MySQL to be ready
-    
+
     environment:
       # Tell WordPress how to connect to database
       WORDPRESS_DB_HOST: db           # Hostname = service name!
       WORDPRESS_DB_NAME: wordpress
       WORDPRESS_DB_USER: wp
       WORDPRESS_DB_PASSWORD: wp
-    
+
     ports:
       # Map host port 8888 to container port 80
       # This is ONLY for browser access from your laptop
       # Other containers use http://wordpress (no port needed)
       - "8888:80"
-    
+
     volumes:
       # Persist WordPress files (themes, plugins, uploads)
       - wp_data:/var/www/html
-    
+
     networks:
       - wc-net
 
@@ -563,9 +563,9 @@ x-test-template: &test-template
   build:
     context: .                        # Build from current directory
     dockerfile: Dockerfile            # Use our custom Dockerfile
-  
+
   image: ecommerceapi-tests:latest    # Tag the built image
-  
+
   environment:
     # Override Dockerfile defaults
     API_ENV: docker                   # Use docker URLs (http://wordpress)
@@ -574,18 +574,18 @@ x-test-template: &test-template
     LOG_DIR: "/app/reports/logs"
     ENABLE_JSON_PRETTY: "false"
     KEEP_STRUCTURED_LOGS: "3"
-    
+
     # Pass secrets from host environment
     WC_KEY: "${WC_KEY}"               # Reads from .env or export
     WC_SECRET: "${WC_SECRET}"
-  
+
   volumes:
     # Mount tests read-only (container can't modify your test files)
     - ./tests:/app/tests:ro
-    
+
     # Mount reports read-write (container writes results to host)
     - ./reports:/app/reports
-  
+
   networks:
     - wc-net                          # Join WordPress network
 
@@ -598,7 +598,7 @@ services:
   customers:
     <<: *test-template                # Inherit from template
     profiles: ["customers"]           # Only run when --profile customers
-    
+
     command:
       # pytest arguments (entry point is already pytest from Python image)
       - tests/customers               # Test directory
@@ -653,20 +653,20 @@ Why this file?
 API_HOSTS = {
     # Local development (tests run on host, WordPress in Docker)
     "test": "http://localhost:8888/kwakiweb/wp-json/wc/v3/",
-    
+
     # Docker environment (tests run IN Docker, same network as WordPress)
     # ⚠️ CRITICAL: Use service name "wordpress", NOT "localhost"
     "docker": "http://wordpress/wp-json/wc/v3/",
-    
+
     # Local without Docker
     "local": "http://localhost:8888/wp-json/wc/v3/",
-    
+
     # Development server
     "dev": "http://localhost:8888/kwakiweb/wp-json/wc/v3/",
-    
+
     # Staging environment (real server)
     "staging": "https://staging.example.com/wp-json/wc/v3/",
-    
+
     # Production (real server)
     "prod": "https://api.example.com/wp-json/wc/v3/",
 }
@@ -706,7 +706,7 @@ Why -d (detached mode)?
 Verify it worked:
 
     bash
-    
+
     docker ps
 
 Expected output:
@@ -721,7 +721,7 @@ Step 2: Check Network Exists
 Command:
 
     bash
-    
+
     docker network ls | grep wc
 
 Expected output:
@@ -741,7 +741,7 @@ Step 3: Configure WordPress
 Open browser:
 
     Code
-    
+
     http://localhost:8888/wp-admin
 
 3b. Complete Initial Setup
@@ -771,7 +771,7 @@ bash
 
     # Install and activate WooCommerce
     docker exec wc-wp wp plugin install woocommerce --activate --allow-root
-    
+
     # Skip onboarding wizard
     docker exec wc-wp wp option update woocommerce_onboarding_profile '{"skipped":true}' --format=json --allow-root
 
@@ -787,7 +787,7 @@ Step 4: Generate API Credentials
 Direct URL:
 
     Code
-    
+
     http://localhost:8888/wp-admin/admin.php?page=wc-settings&tab=advanced&section=keys
 
 Or manually:
@@ -806,9 +806,9 @@ Or manually:
 4c. Copy Credentials
 
 You'll see:
-    
+
     Code
-    
+
     Consumer key:     ck_abc123...
     Consumer secret:  cs_xyz789...
 
@@ -818,27 +818,27 @@ Step 5: Save Credentials
 Create .env file in project root:
 
     bash
-    
+
     cd ~/TestEcommerceAPI
     nano .env  # or use your favorite editor
 
 File contents:
 
     bash
-    
+
     WC_KEY=ck_YOUR_ACTUAL_KEY_HERE
     WC_SECRET=cs_YOUR_ACTUAL_SECRET_HERE
 
 Verify:
 
     bash
-    
+
     cat .env
 
 Set permissions (recommended):
 
     bash
-    
+
     chmod 600 .env  # Only you can read/write
 
 Why .env file?
@@ -853,7 +853,7 @@ Step 6: Build Test Image
 Command:
 
     bash
-    
+
     docker compose -f docker-compose.matrix.yml --profile customers build
 
 Why` --profile customers?`
@@ -893,7 +893,7 @@ COPY tests	           -    Copy test files into image
 Verify image exists:
 
     bash
-    
+
     docker images | grep ecommerceapi
 
 Expected:
@@ -951,7 +951,7 @@ Step 8: Check Results
 List report files:
 
     bash
-    
+
     ls -R reports/
 
 Expected structure:
@@ -988,7 +988,7 @@ Cause: Services use profiles, but you didn't specify one.
 
 Fix:
     bash
-    
+
     docker compose -f docker-compose.matrix.yml --profile customers build
 
 Issue 2: "Network wc-net declared as external, but could not be found"
@@ -1003,7 +1003,7 @@ Cause: Network name has project prefix, but compose file expects exact name.
 Check actual network name:
 
     bash
-    
+
     docker network ls | grep wc
 
 Output:
@@ -1055,7 +1055,7 @@ Dockerfile
 
     # ❌ Remove this:
     # COPY pyproject_root.toml README.md ./
-    
+
     # ✅ Use this:
     COPY EcommerceAPI ./EcommerceAPI
     COPY README.md ./README.md  # Only if README.md exists
@@ -1071,13 +1071,13 @@ Diagnosis steps:
 A. Verify WordPress is running
 
     bash
-    
+
     docker ps | grep wordpress
 
 B. Test DNS resolution
 
     bash
-    
+
     docker run --rm --network testecommerceapi_wc-net \
       alpine:latest ping -c 3 wordpress
 
@@ -1127,7 +1127,7 @@ A. Credentials not passed to container
 Check if env vars are set:
 
     bash
-    
+
     docker compose -f docker-compose.matrix.yml --profile customers \
       run --rm customers env | grep WC_
 
@@ -1147,7 +1147,7 @@ B. Wrong credentials
 Test credentials manually:
 
     bash
-    
+
     curl -u "$(grep WC_KEY .env | cut -d= -f2):$(grep WC_SECRET .env | cut -d= -f2)" \
       http://localhost:8888/wp-json/wc/v3/system_status
 
@@ -1168,7 +1168,7 @@ YAML
     db:
       healthcheck:
         test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-    
+
     wordpress:
       depends_on:
         db:
@@ -1176,7 +1176,7 @@ YAML
 
 If still occurs:
     bash
-    
+
     # Restart WordPress after MySQL is healthy
     docker compose -f docker-compose.wp.yml restart wordpress
 
@@ -1189,17 +1189,17 @@ Code
 
 Find what's using the port:
     bash
-    
+
     # Windows (Git Bash)
     netstat -ano | grep 8888
-    
+
     # Mac/Linux
     lsof -i :8888
 
 Solutions:
 Option A: Stop the conflicting service
     bash
-    
+
     # If it's another Docker container
     docker ps  # Find container ID
     docker stop <container_id>
@@ -1313,100 +1313,100 @@ What happens:
 Essential Commands
 
     bash
-    
+
     # ============================================================
     # WordPress Management
     # ============================================================
-    
+
     # Start WordPress + MySQL
     docker compose -f docker-compose.wp.yml up -d
-    
+
     # Stop (keeps data)
     docker compose -f docker-compose.wp.yml stop
-    
+
     # Stop and remove containers (keeps volumes)
     docker compose -f docker-compose.wp.yml down
-    
+
     # Stop and remove everything (⚠️ deletes database!)
     docker compose -f docker-compose.wp.yml down -v
-    
+
     # View logs
     docker compose -f docker-compose.wp.yml logs -f wordpress
-    
+
     # ============================================================
     # Test Image Management
     # ============================================================
-    
+
     # Build test image
     docker compose -f docker-compose.matrix.yml --profile customers build
-    
+
     # Rebuild without cache
     docker compose -f docker-compose.matrix.yml --profile customers build --no-cache
-    
+
     # Remove image
     docker rmi ecommerceapi-tests:latest
-    
+
     # ============================================================
     # Running Tests
     # ============================================================
-    
+
     # Run single service
     docker compose -f docker-compose.matrix.yml \
       --profile customers \
       up --abort-on-container-exit --remove-orphans
-    
+
     # Run multiple services
     docker compose -f docker-compose.matrix.yml \
       --profile customers --profile orders \
       up --abort-on-container-exit --remove-orphans
-    
+
     # Run interactively (shell access)
     docker compose -f docker-compose.matrix.yml \
       --profile customers \
       run --rm customers bash
-    
+
     # ============================================================
     # Debugging
     # ============================================================
-    
+
     # Check running containers
     docker ps
-    
+
     # Check networks
     docker network ls
-    
+
     # Inspect network
     docker network inspect testecommerceapi_wc-net
-    
+
     # Test connectivity
     docker run --rm --network testecommerceapi_wc-net \
       curlimages/curl:latest curl http://wordpress
-    
+
     # Check container logs
     docker logs wc-wp
-    
+
     # Shell into WordPress container
     docker exec -it wc-wp bash
-    
+
     # Shell into test container (after starting it)
     docker exec -it testecommerceapi-customers-1 bash
-    
+
     # ============================================================
     # Cleanup
     # ============================================================
-    
+
     # Remove stopped containers
     docker container prune -f
-    
+
     # Remove unused images
     docker image prune -a -f
-    
+
     # Remove unused volumes (⚠️ deletes data!)
     docker volume prune -f
-    
+
     # Remove unused networks
     docker network prune -f
-    
+
     # Nuclear option (remove everything)
     docker system prune -a --volumes -f
 
@@ -1414,7 +1414,7 @@ Essential Commands
 🐳 Command Breakdown
 
     bash
-    
+
     docker build -t woocommerce-test .
 
 What it does:
@@ -1537,38 +1537,38 @@ The multi-stage build keeps your image smaller by:
 Now that the image is built, you can:
 1. Verify the image exists:
     bash
-    
+
     docker images | grep woocommerce-test
 
 2. Run tests with this image:
     bash
-    
+
     docker run --rm woocommerce-test pytest tests/customers -v
 
 3. Or use with docker-compose:
     bash
-    
+
     docker compose -f docker-compose.matrix.yml --profile customers up
 
 💡 Pro Tips
 To rebuild without cache (fresh build):
     bash
-    
+
     docker build --no-cache -t woocommerce-test .
 
 To see detailed build output:
     bash
-    
+
     docker build --progress=plain -t woocommerce-test .
 
 To inspect the image:
     bash
-    
+
     docker inspect woocommerce-test
 
 To check image size:
     bash
-    
+
     docker images woocommerce-test
 
 
@@ -1593,7 +1593,7 @@ File Structure Quick Lookup
 Code
 
     Where is...?
-    
+
     ├─ Test code?               → tests/
     ├─ Test results?            → reports/
     ├─ Logs?                    → reports/logs/
@@ -1698,7 +1698,7 @@ Next Steps
 
 Step 1: Start WordPress + MySQL (Backend Infrastructure)
     bash
-    
+
     docker compose -f docker-compose.wp.yml up -d
 
 What happens:
@@ -1710,7 +1710,7 @@ What happens:
 
 Verification:
     bash
-    
+
     docker ps
 # You should see: wc-wp and wc-db running
 
@@ -1718,7 +1718,7 @@ Status: ✅ WordPress + MySQL running ✅ Private network created
 
 Step 2: Configure WordPress (One-Time)
     bash
-    
+
     # Open browser
     http://localhost:8888/wp-admin
 
@@ -1731,7 +1731,7 @@ What to do:
 
 Verification:
     bash
-    
+
     cat .env
     # Should show: WC_KEY=ck_... and WC_SECRET=cs_...
 
@@ -1740,12 +1740,12 @@ Status: ✅ WooCommerce configured ✅ API credentials ready
 
 Step 3: Build Test Runner Image
     bash
-    
+
     docker compose -f docker-compose.matrix.yml --profile customers build
 
 OR (what you just did):
     bash
-    
+
     docker build -t woocommerce-test .
 
 What happens:
@@ -1757,7 +1757,7 @@ What happens:
 
 Verification:
     bash
-    
+
     docker images | grep -E "ecommerceapi|woocommerce"
 
 Status: ✅ Test runner image ready
@@ -1765,7 +1765,7 @@ Status: ✅ Test runner image ready
 ▶️ Phase 3: Run Tests (Repeatable - Do This Every Time)
 Step 4: Run Tests
     bash
-    
+
     docker compose -f docker-compose.matrix.yml \
       --profile customers \
       up --abort-on-container-exit --remove-orphans
@@ -1782,7 +1782,7 @@ What happens:
 
 Verification:
     bash
-    
+
     ls -la reports/customers/allure-results/
     # Should see JSON test result files
 
@@ -1862,7 +1862,7 @@ Code
 
 Let me show you what's running right now on your machine:
     bash
-    
+
     # Check what's running
     docker ps
 
@@ -1917,7 +1917,7 @@ Your Host Machine
 🔄 Typical Daily Workflow
 Morning Setup (Once)
     bash
-    
+
     # 1. Start infrastructure (if not already running)
     docker compose -f docker-compose.wp.yml up -d
 
@@ -1926,27 +1926,27 @@ Morning Setup (Once)
 
 Development Cycle (Repeat)
     bash
-    
+
     # 3. Edit your test files in ./tests/
     # (Use VS Code, PyCharm, etc.)
-    
+
     # 4. Run tests (no rebuild needed if only tests changed)
     docker compose -f docker-compose.matrix.yml \
       --profile customers \
       up --abort-on-container-exit
-    
+
     # 5. Check results
     ls reports/customers/allure-results/
-    
+
     # 6. View Allure report (optional)
     allure serve reports/customers/allure-results/
 
 When You Change Framework Code
     bash
-    
+
     # Rebuild image (framework code changed)
     docker compose -f docker-compose.matrix.yml --profile customers build
-    
+
     # Then run tests again
     docker compose -f docker-compose.matrix.yml \
       --profile customers \
@@ -1954,10 +1954,10 @@ When You Change Framework Code
 
 End of Day Cleanup (Optional)
     bash
-    
+
     # Stop WordPress (keeps data)
     docker compose -f docker-compose.wp.yml stop
-    
+
     # OR completely remove (deletes database)
     docker compose -f docker-compose.wp.yml down -v
 
@@ -1965,22 +1965,22 @@ End of Day Cleanup (Optional)
 
 Run these commands to see what you have:
     bash
-    
+
     # 1. Check running containers
     docker ps
-    
+
     # 2. Check networks
     docker network ls | grep wc
-    
+
     # 3. Check images
     docker images | grep -E "ecommerceapi|woocommerce|wordpress|mysql"
-    
+
     # 4. Check if WordPress is accessible
     curl http://localhost:8888
-    
+
     # 5. Check test files
     ls -la tests/
-    
+
     # 6. Check if .env exists
     cat .env
 
@@ -1996,7 +1996,7 @@ Answer: Not quite! Here's the order:
 
 Next Command to Execute:
     bash
-    
+
     docker compose -f docker-compose.matrix.yml \
       --profile customers \
       up --abort-on-container-exit --remove-orphans
@@ -2098,7 +2098,7 @@ In the final phase, we execute the tests to ensure the application functions as 
 ### Command Comparison
 Command 1: With Flags ✅ (Recommended for Tests)
     bash
-    
+
     docker compose -f docker-compose.matrix.yml \
       --profile customers \
       up --abort-on-container-exit --remove-orphans
@@ -2154,7 +2154,7 @@ Use when:
 
 IMPORTANT: This flag is dangerous when you have docker-compose.wp.yml running!
     `bash
-    
+
     --remove-orphans  # ⚠️ Will STOP and REMOVE wc-wp and wc-db!`
 
 It considers wc-wp and wc-db as "orphans" because they're from a different compose file.
@@ -2164,10 +2164,10 @@ It considers wc-wp and wc-db as "orphans" because they're from a different compo
 **For Local Development** (Keep WordPress Running)
 
     bash
-    
+
     # Start WordPress (in background)
     docker compose -f docker-compose.wp.yml up -d
-    
+
     # Run tests WITHOUT --remove-orphans
     docker compose -f docker-compose.matrix.yml --profile customers up --abort-on-container-exit
 
@@ -2178,10 +2178,10 @@ It considers wc-wp and wc-db as "orphans" because they're from a different compo
 **For CI/CD Pipeline**
 
     `bash
-    
+
     # Start WordPress
     docker compose -f docker-compose.wp.yml up -d
-    
+
     # Run tests with cleanup
     docker compose -f docker-compose.matrix.yml \
       --profile customers \
@@ -2193,12 +2193,12 @@ It considers wc-wp and wc-db as "orphans" because they're from a different compo
 For Debugging (See All Logs)
     `
     bash
-    
+
     # Run without --abort-on-container-exit
     docker compose -f docker-compose.matrix.yml \
       --profile customers \
       up
-    
+
     # Press Ctrl+C when done`
 
 ✅ See full logs
@@ -2208,7 +2208,7 @@ For Debugging (See All Logs)
 📋 Quick Reference
 
 |Scenario                |Command
-| :---                   | :--- 
+| :---                   | :---
 |Normal test run	     |up --abort-on-container-exit
 |Debugging	             |up (no flags)
 |CI/CD	                 |up --abort-on-container-exit --remove-orphans
@@ -2219,7 +2219,7 @@ For Debugging (See All Logs)
 Since you want to use your local WordPress, use this:
 
     bash
-    
+
     # Option 1: Use local WordPress (no Docker WordPress needed)
     docker compose -f docker-compose.matrix.yml \
       --profile customers \
@@ -2228,10 +2228,10 @@ Since you want to use your local WordPress, use this:
 OR if you want to use Docker WordPress:
 
     `bash
-    
+
     # Start WordPress first
     docker compose -f docker-compose.wp.yml up -d
-    
+
     # Run tests (without --remove-orphans to keep WordPress running)
     docker compose -f docker-compose.matrix.yml \
       --profile customers \
@@ -2260,10 +2260,10 @@ GitLab CI	                Docker Compose pipeline	                              
 For Local Development (pytest on Windows):
 
     bash
-    
+
     # Make sure Docker WordPress is NOT running
     docker compose -f docker-compose.wp.yml down
-    
+
     # Run tests locally
     pytest -v -m tcid333 -r s
 
@@ -2273,10 +2273,10 @@ For Local Development (pytest on Windows):
 For Docker Tests (testing containerization locally):
 
     bash
-    
+
     # Stop Docker WordPress (if running)
     docker compose -f docker-compose.wp.yml down
-    
+
     # Use ENV=dev to point to local WordPress
     docker compose -f docker-compose.matrix.yml --profile customers up --abort-on-container-exit
 
@@ -2300,20 +2300,20 @@ YAML
 Step 1: Start WordPress Stack
 
     bash
-    
+
     # Start WordPress + MySQL
     docker compose -f docker-compose.wp.yml up -d
-    
+
     # Wait for services to be ready
     sleep 20
-    
+
     # Verify containers are running
     docker ps
 
 Step 2: Install WordPress + WooCommerce
 
     bash
-    
+
     # Install WordPress
     docker exec wc-wp wp core install \
       --url="http://localhost:8888" \
@@ -2323,35 +2323,35 @@ Step 2: Install WordPress + WooCommerce
       --admin_email="admin@test.com" \
       --skip-email \
       --allow-root
-    
+
     # Verify installation
     docker exec wc-wp wp core is-installed --allow-root
-    
+
     # Install WooCommerce
     docker exec wc-wp wp plugin install woocommerce --activate --allow-root
-    
+
     # Verify WooCommerce is active
     docker exec wc-wp wp plugin list --allow-root
 
 Step 3: Run Tests in Docker
 
     bash
-    
+
     # Run customer tests
     docker compose -f docker-compose.matrix.yml \
       --profile customers \
       up --abort-on-container-exit
-    
+
     # Or run all tests
     docker compose -f docker-compose.matrix.yml \
       --profile customers \
       --profile orders \
       up --abort-on-container-exit
-    
+
     Step 4: Cleanup (When Done)
 
     bash
-    
+
     # Stop and remove all containers
     docker compose -f docker-compose.wp.yml down -v
     docker compose -f docker-compose.matrix.yml down -v
@@ -2361,16 +2361,16 @@ Step 3: Run Tests in Docker
 Create scripts/run-docker-tests.sh:
 
     bash
-    
+
     #!/bin/bash
     set -e
-    
+
     echo "🚀 Starting WordPress stack..."
     docker compose -f docker-compose.wp.yml up -d
-    
+
     echo "⏳ Waiting for services to be ready..."
     sleep 30
-    
+
     echo "📦 Installing WordPress..."
     docker exec wc-wp wp core install \
       --url="http://localhost:8888" \
@@ -2380,28 +2380,28 @@ Create scripts/run-docker-tests.sh:
       --admin_email="admin@test.com" \
       --skip-email \
       --allow-root
-    
+
     echo "🛒 Installing WooCommerce..."
     docker exec wc-wp wp plugin install woocommerce --activate --allow-root
-    
+
     echo "✅ WordPress setup complete!"
     echo ""
     echo "🧪 Running tests..."
-    
+
     # Run tests with specified profile (default: customers)
     PROFILE=${1:-customers}
     docker compose -f docker-compose.matrix.yml \
       --profile "$PROFILE" \
       up --abort-on-container-exit
-    
+
     # Capture exit code
     EXIT_CODE=$?
-    
+
     echo ""
     echo "🧹 Cleaning up..."
     docker compose -f docker-compose.wp.yml down -v
     docker compose -f docker-compose.matrix.yml down -v
-    
+
     exit $EXIT_CODE
 
 **Make it executable:**
@@ -2416,7 +2416,7 @@ bash
 
     # Check the file
     ls -la scripts/
-    
+
     # Should show:
     # -rwxr-xr-x ... run-docker-tests.sh
     #  ^^^
@@ -2427,13 +2427,13 @@ bash
 **Run it - Usage:**
 
     bash
-    
+
     # Run customer tests From project root (TestEcommerceAPI/)
     ./scripts/run-docker-tests.sh customers
-    
+
     # Run order tests
     ./scripts/run-docker-tests.sh orders
-    
+
     # Run product tests
     ./scripts/run-docker-tests.sh products
 
@@ -2443,13 +2443,13 @@ bash
 
     # Make sure you're in the project root
     pwd  # Should show: /c/Users/kwaki/TestEcommerceAPI
-    
+
     # Check if file exists
     ls -la scripts/run-docker-tests.sh
-    
+
     # If it shows -rw-r--r-- (not executable), run:
     chmod +x scripts/run-docker-tests.sh
-    
+
     # Now run:
     ./scripts/run-docker-tests.sh customers
 
@@ -2460,17 +2460,17 @@ bash
 Manual Commands:
 
     bash
-    
+
     # 1. Start WordPress
     docker compose -f docker-compose.wp.yml up -d
-    
+
     # 2. Setup (one-time)
     docker exec wc-wp wp core install --url="http://localhost:8888" --title="Test" --admin_user="admin" --admin_password="admin" --admin_email="test@test.com" --skip-email --allow-root
     docker exec wc-wp wp plugin install woocommerce --activate --allow-root
-    
+
     # 3. Run tests
     docker compose -f docker-compose.matrix.yml --profile customers up --abort-on-container-exit
-    
+
     # 4. Cleanup
     docker compose -f docker-compose.wp.yml down -v
 
@@ -2485,7 +2485,7 @@ bash
 Option 1: Use Local WordPress (Fast)
 
     bash
-    
+
     # No Docker needed!
     pytest -v -m tcid333 -r s
 
@@ -2538,11 +2538,11 @@ GitLab CI	        (automatic)                              Docker WordPress
 
 Create the script and try it! 🚀
     `bash
-    
+
     # Create script
     mkdir -p scripts
     # Copy the script content above to scripts/run-docker-tests.sh
     chmod +x scripts/run-docker-tests.sh
-    
+
     # Run it
     ./scripts/run-docker-tests.sh customers`

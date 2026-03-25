@@ -6,10 +6,12 @@ from json import loads
 
 from tests.shared.contracts.error_schema import error_schema
 
-from EcommerceAPI.src.customers.validators.customer_validators import (assert_customer_not_found_error,
-                                                                       assert_customer_retrieved_successfully,
-                                                                       assert_customer_identity,
-                                                                       assert_single_customer_by_email,)
+from EcommerceAPI.src.customers.validators.customer_validators import (
+    assert_customer_not_found_error,
+    assert_customer_retrieved_successfully,
+    assert_customer_identity,
+    assert_single_customer_by_email,
+)
 
 logger = logging.getLogger(__name__)
 #  logger.setLevel(logging.DEBUG)  # already set in pytest.ini
@@ -18,8 +20,8 @@ pytestmark = [pytest.mark.integration]
 
 
 @pytest.mark.tcid13
-@pytest.mark.smoke # Critical → smoke
-@pytest.mark.sanity # Fast → sanity
+@pytest.mark.smoke  # Critical → smoke
+@pytest.mark.sanity  # Fast → sanity
 def test_get_customer_by_email(customer_helper, customers_dao, create_valid_customer):
     """
     Verify that a customers can be retrieved using the email filter.
@@ -61,16 +63,15 @@ def test_get_customer_by_email(customer_helper, customers_dao, create_valid_cust
 
     # Request HttpResponse wrapper so we can validate status code (return_http_response=True)
     response = customer_helper.get_customer_by_email(
-        email=email,
-        return_http_response=True
+        email=email, return_http_response=True
     )
 
     # -------------------------------------------
     # 🚦 Step 3 — Transport validation (FAIL FAST)
     # -------------------------------------------
-    assert response.status_code == 200, (
-        f"Expected 200, got {response.status_code}. Response: {response.text}"
-    )
+    assert (
+        response.status_code == 200
+    ), f"Expected 200, got {response.status_code}. Response: {response.text}"
 
     # -------------------------------------------
     # 📦 Step 4 — Extract dataset
@@ -81,10 +82,7 @@ def test_get_customer_by_email(customer_helper, customers_dao, create_valid_cust
     # -------------------------------------------
     # 🔍 Step 5 — Extract the correct customers from dataset
     # -------------------------------------------
-    customer_model = assert_single_customer_by_email(
-        customers,
-        email
-    )
+    customer_model = assert_single_customer_by_email(customers, email)
     # -------------------------------------------
     # 🧠 Step 6 — Identity validation
     # -------------------------------------------
@@ -93,9 +91,7 @@ def test_get_customer_by_email(customer_helper, customers_dao, create_valid_cust
     assert_customer_identity(customer_model, customer_id, email)
 
     logger.info(
-        "✅ Fetched customers matches created one: ID=%s, Email=%s",
-        customer_id,
-        email
+        "✅ Fetched customers matches created one: ID=%s, Email=%s", customer_id, email
     )
 
     # -------------------------------------------
@@ -105,17 +101,14 @@ def test_get_customer_by_email(customer_helper, customers_dao, create_valid_cust
     #   - API fetch
     #   - DB lookup
     #   - API ↔ DB validation
-    customer_helper.assert_customer_exists_and_matches_db(
-        email,
-        customers_dao
-    )
+    customer_helper.assert_customer_exists_and_matches_db(email, customers_dao)
 
     logger.info("🎯 Full validation complete for customers ID: %r", customer_id)
 
 
 @pytest.mark.tcid14
-@pytest.mark.smoke # critical endpoint → smoke
-@pytest.mark.contract # includes response validation → contract
+@pytest.mark.smoke  # critical endpoint → smoke
+@pytest.mark.contract  # includes response validation → contract
 def test_get_customer_by_id(customer_helper, customers_dao, create_valid_customer):
     """
     Verify that a customers can be retrieved by ID.
@@ -154,8 +147,7 @@ def test_get_customer_by_id(customer_helper, customers_dao, create_valid_custome
 
     # Request HttpResponse wrapper so we can validate status code (return_http_response=True)
     response = customer_helper.get_customer_by_id(
-        customer_id,
-        return_http_response=True
+        customer_id, return_http_response=True
     )
 
     # -------------------------------------------
@@ -170,9 +162,7 @@ def test_get_customer_by_id(customer_helper, customers_dao, create_valid_custome
     assert_customer_identity(customer_model, customer_id, email)
 
     logger.info(
-        "✅ Fetched customers matches created one: ID=%s, Email=%s",
-        customer_id,
-        email
+        "✅ Fetched customers matches created one: ID=%s, Email=%s", customer_id, email
     )
     # -------------------------------------------
     # 🗄 Step 5 — API vs DB consistency validation
@@ -181,10 +171,7 @@ def test_get_customer_by_id(customer_helper, customers_dao, create_valid_custome
     #   - GET /customers list
     #   - DB lookup via DAO
     #   - API vs DB validation
-    customer_helper.assert_customer_exists_and_matches_db(
-        email,
-        customers_dao
-    )
+    customer_helper.assert_customer_exists_and_matches_db(email, customers_dao)
 
     logger.info("🎯 Full validation complete for customers ID: %r", customer_id)
 
@@ -192,7 +179,7 @@ def test_get_customer_by_id(customer_helper, customers_dao, create_valid_custome
 @pytest.mark.tcid17
 @pytest.mark.negative
 @pytest.mark.contract
-@pytest.mark.regression # not fast / edge → regression
+@pytest.mark.regression  # not fast / edge → regression
 def test_get_customer_not_found(customer_helper, customers_dao, create_valid_customer):
     """
     Negative test for retrieving a non-existing customers.

@@ -2,7 +2,7 @@
 
 This document gives a **high‑level overview** of the pytest plugins shipped with the EcommerceAPI test framework.
 
-It is intentionally **not exhaustive**.  
+It is intentionally **not exhaustive**.
 Authoritative rules and contracts live in **PLUGINS_REFERENCE.md**.
 
 ---
@@ -58,8 +58,8 @@ Do **not** reorder casually.
 - Apply redaction and emoji rules
 - Attach GLOBAL logging metadata **from runtime configs**
 
-❌ Must not define config  
-❌ Must not read env directly  
+❌ Must not define config
+❌ Must not read env directly
 ❌ Must not be imported by other plugins
 
 ---

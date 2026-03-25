@@ -66,6 +66,7 @@ pytestmark = [
 # Test authentication strategy
 # ------------------------------------------------------------------
 
+
 class InvalidOAuthStrategy(AuthStrategy):
     """
     Test-only authentication strategy used to simulate invalid OAuth credentials.
@@ -76,6 +77,7 @@ class InvalidOAuthStrategy(AuthStrategy):
 
     def __init__(self, key: str, secret: str):
         from requests_oauthlib import OAuth1
+
         self.oauth = OAuth1(key, secret)
 
     def apply(self, request_kwargs):
@@ -111,6 +113,7 @@ METHOD_MATRIX = [
 # Invalid credential combinations
 # ------------------------------------------------------------------
 
+
 def invalid_auth_cases() -> List[Tuple[str, str, str]]:
     """
     Generate invalid OAuth credential scenarios.
@@ -136,6 +139,7 @@ def invalid_auth_cases() -> List[Tuple[str, str, str]]:
 # ------------------------------------------------------------------
 # Authentication security test
 # ------------------------------------------------------------------
+
 
 @pytest.mark.parametrize("entity", ENTITIES)
 @pytest.mark.parametrize("method, needs_id, needs_payload", METHOD_MATRIX)
@@ -183,8 +187,7 @@ def test_authentication_rejects_invalid_credentials(
     base_url = api_client.base_url
 
     test_client = APIClient(
-        base_url,
-        auth_strategy=InvalidOAuthStrategy(invalid_key, invalid_secret)
+        base_url, auth_strategy=InvalidOAuthStrategy(invalid_key, invalid_secret)
     )
 
     # --------------------------------------------------------------

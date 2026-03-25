@@ -30,15 +30,14 @@ script:
 
 def list_microservices():
     return sorted(
-        d.name for d in MICROSERVICES_DIR.iterdir()
+        d.name
+        for d in MICROSERVICES_DIR.iterdir()
         if d.is_dir() and not d.name.startswith("_")
     )
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Unified QA Test Runner"
-    )
+    parser = argparse.ArgumentParser(description="Unified QA Test Runner")
 
     parser.add_argument(
         "--service",
@@ -47,22 +46,12 @@ def main():
     )
 
     parser.add_argument(
-        "--all",
-        action="store_true",
-        help="Run ALL microservices (matrix-auto)."
+        "--all", action="store_true", help="Run ALL microservices (matrix-auto)."
     )
 
-    parser.add_argument(
-        "--perf",
-        action="store_true",
-        help="Run performance tests."
-    )
+    parser.add_argument("--perf", action="store_true", help="Run performance tests.")
 
-    parser.add_argument(
-        "--html",
-        action="store_true",
-        help="Generate HTML report."
-    )
+    parser.add_argument("--html", action="store_true", help="Generate HTML report.")
 
     args = parser.parse_args()
 

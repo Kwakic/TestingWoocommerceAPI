@@ -64,9 +64,9 @@ assert customer["id"]
 assert customer["email"]
 ```
 
-✔ No HTTP noise  
-✔ Always valid data  
-✔ Safe for juniors  
+✔ No HTTP noise
+✔ Always valid data
+✔ Safe for juniors
 
 ---
 
@@ -101,8 +101,8 @@ response = customer_helper.create_customer(
 assert response.status_code == 400
 ```
 
-✔ Required for error scenarios  
-✔ Do NOT use fixtures here  
+✔ Required for error scenarios
+✔ Do NOT use fixtures here
 
 ---
 
@@ -186,12 +186,12 @@ assert response.status_code == 201
 
 Fixtures act as **Gatekeepers**:
 
-✔ Call helper  
-✔ Validate status  
-✔ Extract JSON  
-✔ Validate schema  
-✔ Register cleanup  
-✔ Return clean dict  
+✔ Call helper
+✔ Validate status
+✔ Extract JSON
+✔ Validate schema
+✔ Register cleanup
+✔ Return clean dict
 
 ---
 
@@ -208,11 +208,11 @@ Fixtures act as **Gatekeepers**:
 
 # 🚀 Summary
 
-✔ Fixtures → validated dict  
-✔ Helpers → optional HttpResponse  
-✔ Tests → business logic  
-✔ No validation in transport layers  
-✔ request_raw → debugging only  
+✔ Fixtures → validated dict
+✔ Helpers → optional HttpResponse
+✔ Tests → business logic
+✔ No validation in transport layers
+✔ request_raw → debugging only
 
 ---
 

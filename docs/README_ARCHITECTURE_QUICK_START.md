@@ -29,11 +29,11 @@ TestEcommerceAPI is a **modular enterprise API testing framework** for validatin
 
 It provides:
 
-✔ shared test utilities  
-✔ reusable helpers  
-✔ consistent validation patterns  
-✔ structured logging  
-✔ Allure reporting  
+✔ shared test utilities
+✔ reusable helpers
+✔ consistent validation patterns
+✔ structured logging
+✔ Allure reporting
 ✔ CI matrix execution
 
 
@@ -235,8 +235,8 @@ Validators **ONLY validate data**.
 
 They must NOT:
 
-❌ fetch API data  
-❌ query database  
+❌ fetch API data
+❌ query database
 ❌ orchestrate workflows
 
 Correct architecture:
@@ -283,10 +283,10 @@ Fixtures act as **gatekeepers**.
 
 They:
 
-✔ call helpers  
-✔ validate status codes  
-✔ validate response structure  
-✔ register cleanup  
+✔ call helpers
+✔ validate status codes
+✔ validate response structure
+✔ register cleanup
 ✔ return safe data to tests
 
 
@@ -383,8 +383,8 @@ coupons
 
 Benefits:
 
-✔ parallel execution  
-✔ faster feedback  
+✔ parallel execution
+✔ faster feedback
 ✔ failure isolation
 
 
@@ -404,10 +404,10 @@ Test            → assert behavior
 ------------------------------------------------------------------
 # 📌 Golden Rules
 
-1️⃣ Tests own validation logic  
-2️⃣ Validators only validate data  
-3️⃣ Helpers orchestrate workflows  
-4️⃣ Transport layers never perform validation  
+1️⃣ Tests own validation logic
+2️⃣ Validators only validate data
+3️⃣ Helpers orchestrate workflows
+4️⃣ Transport layers never perform validation
 5️⃣ Structure validation happens via Pydantic models
 
 
@@ -434,9 +434,9 @@ The framework follows **enterprise QA architecture patterns** used by large engi
 
 Key goals:
 
-✔ clear separation of concerns  
-✔ maintainable validation logic  
-✔ readable tests  
+✔ clear separation of concerns
+✔ maintainable validation logic
+✔ readable tests
 ✔ reliable CI execution
 
 

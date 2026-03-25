@@ -1,4 +1,13 @@
-from typing import Dict, Any, Iterator, Optional, TYPE_CHECKING, Iterable, TypeVar, Generic
+from typing import (
+    Dict,
+    Any,
+    Iterator,
+    Optional,
+    TYPE_CHECKING,
+    Iterable,
+    TypeVar,
+    Generic,
+)
 from collections.abc import Mapping
 
 T = TypeVar("T")
@@ -37,10 +46,10 @@ class EntitiesRegistry(Mapping[str, T], Generic[T]):
         # Expose attribute-style access for keys that are valid Python identifiers.
         for k, v in self._map.items():
             if (
-                    isinstance(k, str)
-                    and k.isidentifier()
-                    and not hasattr(self, k)
-                    and k not in ("keys", "items", "values", "get")
+                isinstance(k, str)
+                and k.isidentifier()
+                and not hasattr(self, k)
+                and k not in ("keys", "items", "values", "get")
             ):
                 object.__setattr__(self, k, v)
 

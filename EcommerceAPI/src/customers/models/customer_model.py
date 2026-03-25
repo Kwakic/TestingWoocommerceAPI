@@ -48,6 +48,7 @@ from pydantic import BaseModel, EmailStr, ConfigDict, model_validator
 # Base API Model
 # ============================================================
 
+
 class APIModel(BaseModel):
     """
     Base model used by all API response models.
@@ -60,8 +61,8 @@ class APIModel(BaseModel):
     """
 
     model_config = ConfigDict(
-        extra="allow",            # Allow unknown API fields
-        frozen=True,              # Prevent any field change. Make an object immutable
+        extra="allow",  # Allow unknown API fields
+        frozen=True,  # Prevent any field change. Make an object immutable
         # validate_assignment=True  # Validate when fields are changed. Note: If the model is frozen, mutation is
         # impossible, so validate_assignment becomes useless.
     )
@@ -86,6 +87,7 @@ class APIModel(BaseModel):
 # Address Model
 # ============================================================
 
+
 class AddressModel(APIModel):
     """
     Represents billing or shipping address information.
@@ -107,6 +109,7 @@ class AddressModel(APIModel):
 # ============================================================
 # Customer Model
 # ============================================================
+
 
 class CustomerModel(APIModel):
     """

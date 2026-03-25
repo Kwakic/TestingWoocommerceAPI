@@ -20,8 +20,8 @@ class DBUtility:
             pool_recycle=1800,
             pool_pre_ping=True,
         )
-        self.table_prefix = creds['table_prefix']
-        self.database = creds['database']
+        self.table_prefix = creds["table_prefix"]
+        self.database = creds["database"]
 
     def execute_select(self, sql: str, params=None) -> List[Dict[str, Any]]:
         with self.engine.connect() as conn:
@@ -33,4 +33,3 @@ class DBUtility:
             with conn.begin():
                 result = conn.execute(text(sql), params or {})
                 return result.rowcount
-

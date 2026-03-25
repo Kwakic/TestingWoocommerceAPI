@@ -92,7 +92,10 @@ class CustomersApi:
     # ------------------------------------------------------------------
     # READ (by email - filtered list shortcut)
     # ------------------------------------------------------------------
-    def get_customer_by_email(self, email: str,) -> HttpResponse:
+    def get_customer_by_email(
+        self,
+        email: str,
+    ) -> HttpResponse:
         """
         GET /customers?email={email}
 
@@ -110,7 +113,9 @@ class CustomersApi:
     # ------------------------------------------------------------------
     # READ (list)
     # ------------------------------------------------------------------
-    def list_customers(self, *, params: Optional[Dict[str, Any]] = None) -> HttpResponse:
+    def list_customers(
+        self, *, params: Optional[Dict[str, Any]] = None
+    ) -> HttpResponse:
         """
         GET /customers
 
@@ -141,7 +146,11 @@ class CustomersApi:
 
         return self.api_client.delete(endpoint, params={"force": force})
 
-    def update_customer(self, customer_id: Any, payload: Dict[str, Any],) -> HttpResponse:
+    def update_customer(
+        self,
+        customer_id: Any,
+        payload: Dict[str, Any],
+    ) -> HttpResponse:
         """
         PUT /customers/{id}
         """

@@ -36,7 +36,9 @@ def truncate_preview(obj: Any, max_chars: int = 1000) -> str:
             text = obj.decode(errors="replace") if isinstance(obj, bytes) else obj
         else:
             # Try to produce compact JSON for common objects
-            text = json.dumps(obj, default=str, ensure_ascii=False, separators=(",", ":"), indent=None)
+            text = json.dumps(
+                obj, default=str, ensure_ascii=False, separators=(",", ":"), indent=None
+            )
     except (TypeError, ValueError, OverflowError):
         #  Non-serializable objects fallback to repr()
         text = repr(obj)
@@ -61,7 +63,7 @@ On instance['price']:
 
 But when printed via repr(e)[:300], your pytest log line might look like this:
 "
-products: schema validation failed for id=102 (sample_size=10, fail_on_empty=True): ValidationError("'price' is not of 
+products: schema validation failed for id=102 (sample_size=10, fail_on_empty=True): ValidationError("'price' is not of
 type 'number'\n\nFailed validating 'type' in schema['properties']['price']:\n    {'type': 'number'}\nOn instance
 ['price']:\n    '24.99'")...
 "
@@ -88,7 +90,7 @@ def _truncate_preview(obj: Any, max_chars: int = 1000) -> str:
 "
 Your log would look like this:
 "
-products: schema validation failed for id=102 (sample_size=10, fail_on_empty=True): 
+products: schema validation failed for id=102 (sample_size=10, fail_on_empty=True):
 "ValidationError: 'price' is not of type 'number'
 
 Failed validating 'type' in schema['properties']['price']:
@@ -112,7 +114,7 @@ Imagine the API returns a long JSON error:
 "
 Using repr(e)[:300]:
 "
-orders: failed to fetch list (fail_on_empty=False): Exception("APIError: {'code': 'woocommerce_rest_cannot_view', 
+orders: failed to fetch list (fail_on_empty=False): Exception("APIError: {'code': 'woocommerce_rest_cannot_view',
 'message': 'Sorry, you cannot list resources.', 'data': {'status': 401, 'params': {...}}}")[:300]
 "
 Hard to read.
@@ -120,7 +122,7 @@ All inline, with truncated braces, no clear JSON formatting.
 
 Using _truncate_preview(e):
 "
-orders: failed to fetch list (fail_on_empty=False): 
+orders: failed to fetch list (fail_on_empty=False):
 {
   "code": "woocommerce_rest_cannot_view",
   "message": "Sorry, you cannot list resources.",

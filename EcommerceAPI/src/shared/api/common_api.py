@@ -30,8 +30,8 @@ class CommonApi:
     # GENERIC: GET (list)
     # ------------------------
     def get_all(
-            self,
-            params: Optional[Dict[str, Any]] = None,
+        self,
+        params: Optional[Dict[str, Any]] = None,
     ) -> HttpResponse:
         return self.api_client.get(
             self.endpoint,
@@ -48,25 +48,18 @@ class CommonApi:
     # GENERIC: POST
     # ------------------------
     def create(self, payload: Dict[str, Any]) -> HttpResponse:
-        return self.api_client.post(
-            self.endpoint,
-            payload=payload
-        )
+        return self.api_client.post(self.endpoint, payload=payload)
 
     # ------------------------
     # GENERIC: PUT
     # ------------------------
     def update(self, resource_id: int, payload: Dict[str, Any]) -> HttpResponse:
-        return self.api_client.put(
-            f"{self.endpoint}/{resource_id}",
-            payload=payload
-        )
+        return self.api_client.put(f"{self.endpoint}/{resource_id}", payload=payload)
 
     # ------------------------
     # GENERIC: DELETE
     # ------------------------
     def delete(self, resource_id: int, force: bool = True) -> HttpResponse:
         return self.api_client.delete(
-            f"{self.endpoint}/{resource_id}",
-            params={"force": force}
+            f"{self.endpoint}/{resource_id}", params={"force": force}
         )

@@ -103,7 +103,12 @@ logger.setLevel(logging.DEBUG)
 #   This prefers the central runtime toggle from custom_logger but falls back to the legacy env var for compatibility.
 # - SENSITIVE_KEYS: canonical sensitive keys set (lowercased) used for fast, shallow masking.
 # ------------------------------------------------------------------
-LOG_PAYLOADS = is_include_payloads() or os.getenv("LOG_PAYLOADS", "").lower() in ("1", "true", "yes", "on")
+LOG_PAYLOADS = is_include_payloads() or os.getenv("LOG_PAYLOADS", "").lower() in (
+    "1",
+    "true",
+    "yes",
+    "on",
+)
 SENSITIVE_KEYS = {k.lower() for k in DEFAULT_SENSITIVE_KEYS}
 
 
@@ -145,7 +150,10 @@ def _mask_sensitive(payload: typing.Any) -> typing.Any:
                     key_name = str(key).lower()
                 except (TypeError, ValueError):
                     # Key cannot be stringified in a normal way; leave it as-is and continue.
-                    logger.debug("Non-stringable dict key %r when masking payload; leaving key unchanged", key)
+                    logger.debug(
+                        "Non-stringable dict key %r when masking payload; leaving key unchanged",
+                        key,
+                    )
 
                 if key_name and key_name in SENSITIVE_KEYS:
                     masked[key] = "***"
@@ -160,14 +168,15 @@ def _mask_sensitive(payload: typing.Any) -> typing.Any:
         # Defensive fallback: try central redact (slower but recursive) on narrow exceptions only.
         logger.debug(
             "Payload shallow masking encountered %s; falling back to recursive redaction.",
-            exc.__class__.__name__
+            exc.__class__.__name__,
         )
         try:
             redacted = redact_obj(payload)
             return redacted
         except (TypeError, ValueError, AttributeError) as exc2:
             logger.warning(
-                "Final fallback failed during payload masking: %s", exc2.__class__.__name__
+                "Final fallback failed during payload masking: %s",
+                exc2.__class__.__name__,
             )
             return "<unserializable-payload>"
 
@@ -188,12 +197,9 @@ class APIClient:
     For business-level interactions, use API layer (e.g., CustomersApi).
     ------------------------------------------------------------------------
     """
+
     def __init__(
-        self,
-        base_url: str,
-        retries: int = 3,
-        backoff: float = 2.0,
-        auth_strategy=None
+        self, base_url: str, retries: int = 3, backoff: float = 2.0, auth_strategy=None
     ):
         """
         Initialize API client.
@@ -292,12 +298,19 @@ class APIClient:
                 if response is None:
                     raise RuntimeError("HttpClient.request() returned no response")
 
-                if response.status_code in {429, 500, 502, 503, 504} and attempt < self.max_attempts:
-                    sleep_time = self.backoff_factor ** attempt + uniform(0, 1)
+                if (
+                    response.status_code in {429, 500, 502, 503, 504}
+                    and attempt < self.max_attempts
+                ):
+                    sleep_time = self.backoff_factor**attempt + uniform(0, 1)
                     logger.warning(
                         f"Retry {attempt} on {url} after {sleep_time:.2f}s "
                         f"(status {response.status_code})",
-                        extra={"event": "request.retry", "method": method.upper(), "endpoint": url},
+                        extra={
+                            "event": "request.retry",
+                            "method": method.upper(),
+                            "endpoint": url,
+                        },
                     )
                     time.sleep(sleep_time)
                     continue
@@ -308,10 +321,14 @@ class APIClient:
                 last_exception = exc
 
                 if attempt < self.max_attempts:
-                    sleep_time = self.backoff_factor ** attempt + uniform(0, 1)
+                    sleep_time = self.backoff_factor**attempt + uniform(0, 1)
                     logger.warning(
                         f"Retry {attempt} due to exception: {exc}. Sleeping {sleep_time:.3f}s",
-                        extra={"event": "request.exception", "method": method.upper(), "endpoint": url},
+                        extra={
+                            "event": "request.exception",
+                            "method": method.upper(),
+                            "endpoint": url,
+                        },
                     )
                     time.sleep(sleep_time)
                     continue
@@ -326,98 +343,98 @@ class APIClient:
     # 🧪 Low-level utility for raw REST API calls (mainly for negative tests or debugging).
     # -------------------------------------------------------------------------
     def request_raw(
-            self,
-            method: str,
-            endpoint: str,
-            *,
-            params: dict = None,
-            payload: dict = None,
-            headers: dict = None,
+        self,
+        method: str,
+        endpoint: str,
+        *,
+        params: dict = None,
+        payload: dict = None,
+        headers: dict = None,
     ) -> tuple[requests.Response, float]:
         """
-        ⚠️ ADVANCED USE ONLY!
+                ⚠️ ADVANCED USE ONLY!
 
-        Perform an HTTP request and return the raw requests.Response and elapsed time.
+                Perform an HTTP request and return the raw requests.Response and elapsed time.
 
-        In other words: "Give me raw response, but still use framework infrastructure"
+                In other words: "Give me raw response, but still use framework infrastructure"
 
-        ------------------------------------------------------------------------
-        🎯 PURPOSE
-        ------------------------------------------------------------------------
-        Provides direct, low-level access to the underlying HTTP response.
+                ------------------------------------------------------------------------
+                🎯 PURPOSE
+                ------------------------------------------------------------------------
+                Provides direct, low-level access to the underlying HTTP response.
 
-        This method bypasses:
-            - HttpResponse wrapping
-            - Logging abstraction
-            - Any higher-level processing
+                This method bypasses:
+                    - HttpResponse wrapping
+                    - Logging abstraction
+                    - Any higher-level processing
 
-        ------------------------------------------------------------------------
-        🧪 WHEN TO USE
-        ------------------------------------------------------------------------
-        Use ONLY when you need full control over the raw response:
+                ------------------------------------------------------------------------
+                🧪 WHEN TO USE
+                ------------------------------------------------------------------------
+                Use ONLY when you need full control over the raw response:
 
-            - Inspect request/response at transport level
-            - Access attributes not exposed by HttpResponse
-            - Debug edge cases or unexpected API behavior
-            - Advanced negative testing scenarios
-            - Investigating headers / encoding
-            - Inspecting .request object
+                    - Inspect request/response at transport level
+                    - Access attributes not exposed by HttpResponse
+                    - Debug edge cases or unexpected API behavior
+                    - Advanced negative testing scenarios
+                    - Investigating headers / encoding
+                    - Inspecting .request object
 
-            Or Something is unclear or broken like ("When HttpResponse is not enough to understand what’s happening"):
-            - API returns weird error
-            - JSON parsing fails
-            - headers look wrong
-            - encoding issues
-            - redirects / auth issues
--
-        ------------------------------------------------------------------------
-        ⚠️ IMPORTANT
-        ------------------------------------------------------------------------
-        - Returns raw `requests.Response` (NOT HttpResponse)
-        - JSON parsing is NOT safe (response.json() may raise)
-        - No abstraction — use carefully
+                    Or Something is unclear or broken like ("When HttpResponse is not enough to understand what’s happening"):
+                    - API returns weird error
+                    - JSON parsing fails
+                    - headers look wrong
+                    - encoding issues
+                    - redirects / auth issues
+        -
+                ------------------------------------------------------------------------
+                ⚠️ IMPORTANT
+                ------------------------------------------------------------------------
+                - Returns raw `requests.Response` (NOT HttpResponse)
+                - JSON parsing is NOT safe (response.json() may raise)
+                - No abstraction — use carefully
 
-        ------------------------------------------------------------------------
-        RETURNS
-        ------------------------------------------------------------------------
-        tuple:
-            (requests.Response, elapsed_time_seconds)
+                ------------------------------------------------------------------------
+                RETURNS
+                ------------------------------------------------------------------------
+                tuple:
+                    (requests.Response, elapsed_time_seconds)
 
-        ------------------------------------------------------------------------
-        EXAMPLE
-        ------------------------------------------------------------------------
-        resp, elapsed = APIClient.request_raw(
-            method="post",
-            endpoint="customers",
-            payload={"email": ""}
-        )
+                ------------------------------------------------------------------------
+                EXAMPLE
+                ------------------------------------------------------------------------
+                resp, elapsed = APIClient.request_raw(
+                    method="post",
+                    endpoint="customers",
+                    payload={"email": ""}
+                )
 
-        assert resp.status_code == 400
+                assert resp.status_code == 400
 
-        # Manual parsing (may raise if not JSON)
-        body = resp.json()
+                # Manual parsing (may raise if not JSON)
+                body = resp.json()
 
-        ------------------------------------------------------------------------
-        The difference between request_raw() and HttpClient.request()
-        Both ultimately hit requests and return requests.Response
-        ------------------------------------------------------------------------
-        |              | `request_raw()`               | `HttpClient.request()`  |
-        | ------------ | ----------------------------  | ----------------------  |
-        | Layer        | RequestUtility (mid-level)    | HttpClient (low-level)  |
-        | URL handling | ✅ builds endpoint → full URL | ❌ expects full URL     |
-        | Auth         | ✅ already configured         | ✅ handled internally   |
-        | Retries      | ✅ YES (via backoff)          | ❌ NO                   |
-        | Logging      | ❌ minimal / none             | ❌ none                 |
-        | Intended use | testing/debugging             | transport only          |
+                ------------------------------------------------------------------------
+                The difference between request_raw() and HttpClient.request()
+                Both ultimately hit requests and return requests.Response
+                ------------------------------------------------------------------------
+                |              | `request_raw()`               | `HttpClient.request()`  |
+                | ------------ | ----------------------------  | ----------------------  |
+                | Layer        | RequestUtility (mid-level)    | HttpClient (low-level)  |
+                | URL handling | ✅ builds endpoint → full URL | ❌ expects full URL     |
+                | Auth         | ✅ already configured         | ✅ handled internally   |
+                | Retries      | ✅ YES (via backoff)          | ❌ NO                   |
+                | Logging      | ❌ minimal / none             | ❌ none                 |
+                | Intended use | testing/debugging             | transport only          |
 
-        ------------------------------------------------------------------------
-        ⚠️ ADVANCED USE ONLY
-        ------------------------------------------------------------------------
-        This method is NOT used in normal tests.
+                ------------------------------------------------------------------------
+                ⚠️ ADVANCED USE ONLY
+                ------------------------------------------------------------------------
+                This method is NOT used in normal tests.
 
-        Prefer using standard methods (get/post/etc.) which return HttpResponse.
+                Prefer using standard methods (get/post/etc.) which return HttpResponse.
 
-        Use request_raw() only when truly necessary.
+                Use request_raw() only when truly necessary.
         """
 
         url = self._build_url(endpoint)
@@ -426,11 +443,7 @@ class APIClient:
         start = time.perf_counter()
 
         ctx = RequestContext(
-            method=method,
-            url=url,
-            headers=request_headers,
-            params=params,
-            json=payload
+            method=method, url=url, headers=request_headers, params=params, json=payload
         )
 
         resp = self._request_with_backoff(ctx)
@@ -463,11 +476,11 @@ class APIClient:
             return "<unserializable-response-body>"
 
     def _handle_response(
-            self,
-            response: requests.Response,
-            duration: float = None,
-            method: str = None,
-            log_payload: dict = None,
+        self,
+        response: requests.Response,
+        duration: float = None,
+        method: str = None,
+        log_payload: dict = None,
     ) -> HttpResponse:
         """
         Handle HTTP response lifecycle: normalize → log → return.
@@ -516,9 +529,7 @@ class APIClient:
         # --------------------------------------------------------------------
         # Use parsed JSON if available, otherwise fallback to raw text
         response_body = (
-            http_response.json
-            if http_response.json is not None
-            else http_response.text
+            http_response.json if http_response.json is not None else http_response.text
         )
 
         # --------------------------------------------------------------------
@@ -555,7 +566,7 @@ class APIClient:
         logger.info(
             f"✅ {method.upper()} {endpoint_name} → Status code: {status_code} "
             f"(completed in {duration:.3f}s)",
-            extra=extra_meta
+            extra=extra_meta,
         )
 
         # --------------------------------------------------------------------
@@ -565,10 +576,7 @@ class APIClient:
         if status_code >= 400:
             body_str = self._format_error_body(response_body)
 
-            logger.debug(
-                body_str,
-                extra={**extra_meta, "event": "request.error_body"}
-            )
+            logger.debug(body_str, extra={**extra_meta, "event": "request.error_body"})
 
         # --------------------------------------------------------------------
         # 8. Return normalized response
@@ -582,66 +590,62 @@ class APIClient:
     # ⚙️ Internal: Shared request logic for all verbs
     # -----------------------------------------
     def _request(
-            self,
-            method: str,
-            endpoint: str,
-            params: dict = None,
-            payload: dict = None,
-            headers: dict = None,
+        self,
+        method: str,
+        endpoint: str,
+        params: dict = None,
+        payload: dict = None,
+        headers: dict = None,
     ) -> HttpResponse:
         """
-            It constructs and executes an HTTP request (any verb).
+          It constructs and executes an HTTP request (any verb).
 
-            Core HTTP request handler.
-            It builds full URL, performs the request with retry/backoff, handles response parsing, validation, logging,
-            and error raising.
+          Core HTTP request handler.
+          It builds full URL, performs the request with retry/backoff, handles response parsing, validation, logging,
+          and error raising.
 
-            Internal handler for all HTTP methods. Orchestrates the request lifecycle.
-            - It constructs the full URL.
-            - It records the start time.
-            - It calls _request_with_backoff(), which:
-                - Makes the actual request (with retry/backoff logic for 500s, 429, etc.).
-                - Returns the raw response object from requests.
-            - Then it calls _handle_response(), passing:
-                - The raw response
-            - And finally the _handle_response():
-                - Saves the actual status code and response JSON.
-                - Compares actual vs. expected status code.
-                - If they don't match, it raises an UnexpectedStatusCodeError, stopping execution unless caught.
-                - If they do match, it returns the parsed JSON body (or text).
+          Internal handler for all HTTP methods. Orchestrates the request lifecycle.
+          - It constructs the full URL.
+          - It records the start time.
+          - It calls _request_with_backoff(), which:
+              - Makes the actual request (with retry/backoff logic for 500s, 429, etc.).
+              - Returns the raw response object from requests.
+          - Then it calls _handle_response(), passing:
+              - The raw response
+          - And finally the _handle_response():
+              - Saves the actual status code and response JSON.
+              - Compares actual vs. expected status code.
+              - If they don't match, it raises an UnexpectedStatusCodeError, stopping execution unless caught.
+              - If they do match, it returns the parsed JSON body (or text).
 
-          Note:
-             - Positive tests → using CustomersHelper + create_customer_for_test() fixture.
-             - Negative tests → going low-level directly to requests_utility.post(...). E.g., for negative tests:
-             test_update_customer.py (@pytest.mark.tcid21) or test_create_customer.py (@pytest.mark.tcid15)
-             Negative tests are fundamentally different — they:
-                 - Expect failure
-                 - Require raw responses
-                 - Should not auto-generate valid input
-             Helpers are used for a positive path, raw API for negative path.
-             Raw_customer_api used only where failure is expected
+        Note:
+           - Positive tests → using CustomersHelper + create_customer_for_test() fixture.
+           - Negative tests → going low-level directly to requests_utility.post(...). E.g., for negative tests:
+           test_update_customer.py (@pytest.mark.tcid21) or test_create_customer.py (@pytest.mark.tcid15)
+           Negative tests are fundamentally different — they:
+               - Expect failure
+               - Require raw responses
+               - Should not auto-generate valid input
+           Helpers are used for a positive path, raw API for negative path.
+           Raw_customer_api used only where failure is expected
 
-            Args:
-                method (str): HTTP verb ('get', 'post', etc.)
-                endpoint (str): API endpoint path (relative to base_url).
-                params (dict, optional): Query parameters for GET/DELETE.
-                payload (dict, optional): JSON body for POST/PUT.
-                headers (dict, optional): HTTP headers.
+          Args:
+              method (str): HTTP verb ('get', 'post', etc.)
+              endpoint (str): API endpoint path (relative to base_url).
+              params (dict, optional): Query parameters for GET/DELETE.
+              payload (dict, optional): JSON body for POST/PUT.
+              headers (dict, optional): HTTP headers.
 
-            Returns:
-                HttpResponse
-            """
+          Returns:
+              HttpResponse
+        """
         url = self._build_url(endpoint)
         request_headers = headers or {"Content-Type": "application/json"}
 
         start = time.perf_counter()
 
         ctx = RequestContext(
-            method=method,
-            url=url,
-            headers=request_headers,
-            params=params,
-            json=payload
+            method=method, url=url, headers=request_headers, params=params, json=payload
         )
 
         response = self._request_with_backoff(ctx)
@@ -707,10 +711,10 @@ class APIClient:
     """
 
     def get(
-            self,
-            endpoint: str,
-            params: dict = None,
-            headers: dict = None,
+        self,
+        endpoint: str,
+        params: dict = None,
+        headers: dict = None,
     ) -> HttpResponse:
         """
         Performs a GET request.
@@ -729,10 +733,10 @@ class APIClient:
         )
 
     def post(
-            self,
-            endpoint: str,
-            payload: dict = None,
-            headers: dict = None,
+        self,
+        endpoint: str,
+        payload: dict = None,
+        headers: dict = None,
     ) -> HttpResponse:
         """
         Performs a POST request.
@@ -751,10 +755,10 @@ class APIClient:
         )
 
     def put(
-            self,
-            endpoint: str,
-            payload: dict = None,
-            headers: dict = None,
+        self,
+        endpoint: str,
+        payload: dict = None,
+        headers: dict = None,
     ) -> HttpResponse:
         """
         Performs a PUT request.
@@ -773,10 +777,10 @@ class APIClient:
         )
 
     def delete(
-            self,
-            endpoint: str,
-            params: dict = None,
-            headers: dict = None,
+        self,
+        endpoint: str,
+        params: dict = None,
+        headers: dict = None,
     ) -> HttpResponse:
         """
         Performs a DELETE request.

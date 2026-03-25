@@ -1,4 +1,3 @@
-
 """
 Centralized custom exceptions for the test framework.
 Put framework-wide exceptions here so they may be imported from multiple places:
@@ -42,11 +41,13 @@ class APIRequestException(Exception):
 
 class SchemaValidationError(APIRequestException):
     """Raised when response fails JSON schema validation."""
+
     pass
 
 
 class UnexpectedStatusCodeError(APIRequestException):
     """Raised when HTTP status doesn't match expectations."""
+
     pass
 
 
@@ -57,5 +58,5 @@ class UnexpectedStatusCodeError(APIRequestException):
 
 class PayloadLoggingError(Exception):
     """Raised when payload or params cannot be serialized for logging."""
-    pass
 
+    pass

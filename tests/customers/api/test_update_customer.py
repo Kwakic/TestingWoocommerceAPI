@@ -1,13 +1,14 @@
-
 import pytest
 import logging
 
 from jsonschema import validate
 from datetime import timezone
 
-from EcommerceAPI.src.customers.validators.customer_validators import (assert_customer_identity,
-                                                                       assert_valid_customer_response,
-                                                                       assert_customer_error_response)
+from EcommerceAPI.src.customers.validators.customer_validators import (
+    assert_customer_identity,
+    assert_valid_customer_response,
+    assert_customer_error_response,
+)
 from EcommerceAPI.src.utils.generic_utilities import generate_random_email_and_password
 
 from EcommerceAPI.src.utils.date_timestamp_utils import precise_parse_utc_datetime
@@ -58,7 +59,9 @@ INVALID_UPDATE_PAYLOADS = [
 @pytest.mark.tcid12
 @pytest.mark.smoke
 @pytest.mark.contract
-def test_update_customer_first_name(customer_helper, customers_dao, create_valid_customer):
+def test_update_customer_first_name(
+    customer_helper, customers_dao, create_valid_customer
+):
     """
     Verify that a customers can be updated successfully.
 
@@ -77,7 +80,9 @@ def test_update_customer_first_name(customer_helper, customers_dao, create_valid
     # Step 1 — Create customers (POST handled by fixture)
     logger.info("🛠 Creating a test customers for updating name and email.")
     # To keep the customers in the DB (i.e.,skip deletion), set: customers = create_customer_for_test(skip_cleanup=True)
-    customer = create_valid_customer()  # Default: skip_cleanup=False, validate_response=True
+    customer = (
+        create_valid_customer()
+    )  # Default: skip_cleanup=False, validate_response=True
 
     customer_id = customer["id"]
     # original_email = customers["email"]
@@ -86,14 +91,16 @@ def test_update_customer_first_name(customer_helper, customers_dao, create_valid
     updated_first_name = "QAUpdated"
     updated_email = "mart_hanz@golp.com"
 
-    logger.info(f"🔁 Updating customers ID={customer_id} with first_name='{updated_first_name}' "
-                f"and email='{updated_email}'")
+    logger.info(
+        f"🔁 Updating customers ID={customer_id} with first_name='{updated_first_name}' "
+        f"and email='{updated_email}'"
+    )
 
     # Use the helper's injected api_client (singular) to perform raw update call
     response = customer_helper.update_customer(
         customer_id,
         payload={"first_name": updated_first_name, "email": updated_email},
-        return_http_response=True
+        return_http_response=True,
     )
 
     assert response.status_code == 200, (
@@ -110,11 +117,7 @@ def test_update_customer_first_name(customer_helper, customers_dao, create_valid
 
     # Step 5 — Identity validation
     # Ensure we updated the correct customers
-    assert_customer_identity(
-        customer_model,
-        customer_id,
-        updated_email
-    )
+    assert_customer_identity(customer_model, customer_id, updated_email)
 
     # Step 6 — Business field validation
     # Validate that the update actually modified the first_name
@@ -127,7 +130,7 @@ def test_update_customer_first_name(customer_helper, customers_dao, create_valid
         "✅ Customer update verified: ID=%s first_name=%s email=%s",
         customer_model.id,
         customer_model.first_name,
-        customer_model.email
+        customer_model.email,
     )
 
 
@@ -222,22 +225,23 @@ def test_update_customer_invalid_inputs(
 
     db_customer = customers_dao.get_customer_by_email(email=original_email)
 
-    assert db_customer is not None, (
-        "❌ Original customers no longer exists in the database"
-    )
+    assert (
+        db_customer is not None
+    ), "❌ Original customers no longer exists in the database"
 
-    assert db_customer["ID"] == customer_id, (
-        "❌ Customer ID mismatch after failed update"
-    )
+    assert (
+        db_customer["ID"] == customer_id
+    ), "❌ Customer ID mismatch after failed update"
 
-    assert db_customer["user_email"] == original_email, (
-        "❌ Customer email was modified after failed update"
-    )
+    assert (
+        db_customer["user_email"] == original_email
+    ), "❌ Customer email was modified after failed update"
 
     logger.info(
         "✅ Database record remains unchanged after rejected update (customer_id=%s)",
         customer_id,
     )
+
 
 @pytest.mark.tcid29
 @pytest.mark.regression
@@ -270,8 +274,7 @@ def test_validate_date_modified_and_date_modified_gmt(customer_helper, customers
     # -------------------------------------------------------------
     logger.info("🛠 Retrieving random active customer from DB.")
     customer = customers_dao.get_random_customer_from_db(
-        qty=1,
-        filters={"user_status": 0}
+        qty=1, filters={"user_status": 0}
     )
 
     if not customer:
@@ -293,21 +296,14 @@ def test_validate_date_modified_and_date_modified_gmt(customer_helper, customers
     # -------------------------------------------------------------
     rand_email = generate_random_email_and_password()["email"]
 
-    payload = {
-        "email": rand_email,
-        "billing": {"phone": "36555888666"}
-    }
+    payload = {"email": rand_email, "billing": {"phone": "36555888666"}}
 
     response = customer_helper.update_customer(
-        customer_id=db_id,
-        payload=payload,
-        return_http_response=True
+        customer_id=db_id, payload=payload, return_http_response=True
     )
 
     # Fail fast if update request failed
-    assert response.status_code == 200, (
-        f"PUT /customers update failed: {response.text}"
-    )
+    assert response.status_code == 200, f"PUT /customers update failed: {response.text}"
 
     # -------------------------------------------------------------
     # Step 3 — Validate response structure
@@ -322,16 +318,12 @@ def test_validate_date_modified_and_date_modified_gmt(customer_helper, customers
     # -------------------------------------------------------------
     # Step 4 — Validate identity and business change
     # -------------------------------------------------------------
-    assert_customer_identity(
-        customer_model,
-        db_id,
-        customer_model.email
-    )
+    assert_customer_identity(customer_model, db_id, customer_model.email)
 
     # Ensure update actually changed the email
-    assert db_email != customer_model.email, (
-        f"❌ Customer email mismatch: expected change from {db_email} to {customer_model.email}"
-    )
+    assert (
+        db_email != customer_model.email
+    ), f"❌ Customer email mismatch: expected change from {db_email} to {customer_model.email}"
 
     # -------------------------------------------------------------
     # Step 5 — Validate creation timestamp remains unchanged
@@ -353,14 +345,13 @@ def test_validate_date_modified_and_date_modified_gmt(customer_helper, customers
     # -------------------------------------------------------------
     db_modified_after = customers_dao.get_customers_updated_date(db_id)
 
-    assert db_modified_after != db_modified_before, (
-        "❌ DB modified timestamp did not change after update"
-    )
+    assert (
+        db_modified_after != db_modified_before
+    ), "❌ DB modified timestamp did not change after update"
 
     # -------------------------------------------------------------
     # Step 7 — Validate API modification timestamp matches DB
     # -------------------------------------------------------------
-    assert api_modified_at == db_modified_after, (
-        f"❌ Modified timestamp mismatch: DB={db_modified_after}, API={api_modified_at}"
-    )
-
+    assert (
+        api_modified_at == db_modified_after
+    ), f"❌ Modified timestamp mismatch: DB={db_modified_after}, API={api_modified_at}"

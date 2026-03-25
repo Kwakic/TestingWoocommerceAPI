@@ -1,33 +1,55 @@
 import pytest
 import logging
 
-from faker import Faker  # To avoid hardcoding, we use faker to generate fake data for us
+from faker import (
+    Faker,
+)  # To avoid hardcoding, we use faker to generate fake data for us
 
 from EcommerceAPI.src.utils.bulk_ops import bulk_create_and_validate_resources
-from EcommerceAPI.src.customers.validators.customer_validators import assert_customer_creation_failed
+from EcommerceAPI.src.customers.validators.customer_validators import (
+    assert_customer_creation_failed,
+)
 from jsonschema import validate
 from tests.shared.contracts.error_schema import error_schema
 
 faker = Faker()
 
-logger = logging.getLogger(__name__)  # logger.setLevel(logging.DEBUG) --> Already set in pytest.ini
+logger = logging.getLogger(
+    __name__
+)  # logger.setLevel(logging.DEBUG) --> Already set in pytest.ini
 
-pytestmark = [pytest.mark.integration,]
+pytestmark = [
+    pytest.mark.integration,
+]
 
 INVALID_EMAIL_PAYLOADS = [
     pytest.param(
-        {"email": "plainaddress", "password": "TestPass1"}, 400, id="no-at-symbol"),
-    pytest.param(
-        {"email": "@no-local-part.com", "password": "TestPass1"}, 400, id="missing-local-part"),
-    pytest.param(
-        {"email": "Outlook Contact <outlook-contact@domain.com>", "password": "TestPass1"}, 400, id="name-included"
+        {"email": "plainaddress", "password": "TestPass1"}, 400, id="no-at-symbol"
     ),
     pytest.param(
-        {"email": "no-at.domain.com", "password": "TestPass1"}, 400, id="missing-at"),
+        {"email": "@no-local-part.com", "password": "TestPass1"},
+        400,
+        id="missing-local-part",
+    ),
     pytest.param(
-        {"email": "user@gmail", "password": "TestPass1"}, 400, id="missing-Top-Level Domain"),
+        {
+            "email": "Outlook Contact <outlook-contact@domain.com>",
+            "password": "TestPass1",
+        },
+        400,
+        id="name-included",
+    ),
     pytest.param(
-        {}, 400, id="missing-email-field")  # ❌ Missing email (the only required field).)
+        {"email": "no-at.domain.com", "password": "TestPass1"}, 400, id="missing-at"
+    ),
+    pytest.param(
+        {"email": "user@gmail", "password": "TestPass1"},
+        400,
+        id="missing-Top-Level Domain",
+    ),
+    pytest.param(
+        {}, 400, id="missing-email-field"
+    ),  # ❌ Missing email (the only required field).)
 ]
 
 
@@ -39,7 +61,9 @@ INVALID_EMAIL_PAYLOADS = [
 @pytest.mark.contract
 @pytest.mark.regression  # Bulk is heavy → NOT sanity/smoke
 @pytest.mark.parametrize("qty", [1, 3, 5])
-def test_bulk_create_customers(qty, customer_helper, customers_dao, create_valid_customer):
+def test_bulk_create_customers(
+    qty, customer_helper, customers_dao, create_valid_customer
+):
     """
     Test bulk creation of customers.
 
@@ -74,15 +98,23 @@ def test_bulk_create_customers(qty, customer_helper, customers_dao, create_valid
         # Default: skip_cleanup=False, validate_response=True
         customer = create_valid_customer(
             billing={
-                "first_name": "John", "last_name": "Doe",
-                "address_1": "123 Test St", "city": "Austin",
-                "state": "TX", "postcode": "73301", "country": "US"
+                "first_name": "John",
+                "last_name": "Doe",
+                "address_1": "123 Test St",
+                "city": "Austin",
+                "state": "TX",
+                "postcode": "73301",
+                "country": "US",
             },
             shipping={
-                "first_name": "John", "last_name": "Doe",
-                "address_1": "123 Test St", "city": "Austin",
-                "state": "TX", "postcode": "73301", "country": "US"
-            }
+                "first_name": "John",
+                "last_name": "Doe",
+                "address_1": "123 Test St",
+                "city": "Austin",
+                "state": "TX",
+                "postcode": "73301",
+                "country": "US",
+            },
         )
 
         # Extract identifiers used later for validation
@@ -110,18 +142,14 @@ def test_bulk_create_customers(qty, customer_helper, customers_dao, create_valid
 
         # API Fetch + API VALIDATION + DB FETCH + DB VALIDATION
         customer_helper.assert_customer_exists_and_matches_db(
-            email=email,
-            dao=customers_dao
+            email=email, dao=customers_dao
         )
 
     # -------------------------------------------------------
     # 🚀 Run the bulk utility: create + validate + teardown
     # -------------------------------------------------------
     bulk_create_and_validate_resources(
-        create_fn=create_fn,
-        validate_fn=validate_fn,
-        qty=qty,
-        label="customers"
+        create_fn=create_fn, validate_fn=validate_fn, qty=qty, label="customers"
     )
 
 
@@ -132,9 +160,13 @@ def test_bulk_create_customers(qty, customer_helper, customers_dao, create_valid
 @pytest.mark.bulk
 @pytest.mark.negative
 @pytest.mark.regression  # Bulk is heavy → NOT sanity/smoke
-@pytest.mark.skip(reason="Edge case validation for qty=0 and qty=101; run manually when needed")
+@pytest.mark.skip(
+    reason="Edge case validation for qty=0 and qty=101; run manually when needed"
+)
 @pytest.mark.parametrize("qty", [0, 101])
-def test_bulk_create_customers_edge_cases(qty, customer_helper, customers_dao, create_valid_customer):
+def test_bulk_create_customers_edge_cases(
+    qty, customer_helper, customers_dao, create_valid_customer
+):
     """
     Edge case test for bulk creation.
 
@@ -153,7 +185,9 @@ def test_bulk_create_customers_edge_cases(qty, customer_helper, customers_dao, c
     # Called by the bulk utility to create one customers.
     # The fixture already performs POST validation and cleanup registration.
     def create_fn():
-        customer = create_valid_customer()  # Default: skip_cleanup=False, validate_response=True
+        customer = (
+            create_valid_customer()
+        )  # Default: skip_cleanup=False, validate_response=True
 
         email = customer["email"]
         customer_id = customer["id"]
@@ -178,8 +212,7 @@ def test_bulk_create_customers_edge_cases(qty, customer_helper, customers_dao, c
         """
         # API Fetch + API VALIDATION + DB FETCH + DB VALIDATION
         customer_helper.assert_customer_exists_and_matches_db(
-            email=email,
-            dao=customers_dao
+            email=email, dao=customers_dao
         )
 
     # -------------------------------------------------------
@@ -189,7 +222,7 @@ def test_bulk_create_customers_edge_cases(qty, customer_helper, customers_dao, c
         create_fn=create_fn,
         validate_fn=validate_fn,
         qty=qty,
-        label=f"customer_edge_case_{qty}"
+        label=f"customer_edge_case_{qty}",
     )
 
 
@@ -200,7 +233,9 @@ def test_bulk_create_customers_edge_cases(qty, customer_helper, customers_dao, c
 @pytest.mark.sanity
 @pytest.mark.smoke  # smoke ✔ (VERY important endpoint)
 @pytest.mark.contract
-def test_create_single_customer_with_email_and_password_only(customer_helper, customers_dao, create_valid_customer):
+def test_create_single_customer_with_email_and_password_only(
+    customer_helper, customers_dao, create_valid_customer
+):
     """
     Create a customers using the minimum valid payload.
 
@@ -219,15 +254,16 @@ def test_create_single_customer_with_email_and_password_only(customer_helper, cu
     # Step 1 — Create customers (fixture performs POST validation)
     logger.info("🛠 Creating a test customers via factory fixture.")
     # To keep the customers in the DB(i.e., skip deletion), set: customers = create_customer_for_test(skip_cleanup=True)
-    customer = create_valid_customer()  # Default: skip_cleanup=False, validate_response=True
+    customer = (
+        create_valid_customer()
+    )  # Default: skip_cleanup=False, validate_response=True
 
     customer_id = customer["id"]
     email = customer["email"]
 
     # Step 2 — Verify API response matches database record
     customer_helper.assert_customer_exists_and_matches_db(
-        email=email,
-        dao=customers_dao
+        email=email, dao=customers_dao
     )
 
     logger.info("🎯 Full validation complete for customers ID: %r", customer_id)
@@ -282,14 +318,12 @@ def generate_address_pairs():
 @pytest.mark.tcid04
 @pytest.mark.regression
 @pytest.mark.contract
-@pytest.mark.skip(reason="Billing/shipping fields optional — no functional difference tested.")
+@pytest.mark.skip(
+    reason="Billing/shipping fields optional — no functional difference tested."
+)
 @pytest.mark.parametrize("billing, shipping", generate_address_pairs())
 def test_create_customer_with_varied_addresses(
-        customer_helper,
-        customers_dao,
-        billing,
-        shipping,
-        create_valid_customer
+    customer_helper, customers_dao, billing, shipping, create_valid_customer
 ):
     """
     Create customers with different billing and shipping addresses.
@@ -314,7 +348,9 @@ def test_create_customer_with_varied_addresses(
     # -------------------------------------------
     # ✅ Create customers via fixture factory
     # -------------------------------------------
-    logger.info("🛠 Creating a test customers via factory fixture with parameterized billing and shipping addresses")
+    logger.info(
+        "🛠 Creating a test customers via factory fixture with parameterized billing and shipping addresses"
+    )
     # To keep the customers in the DB(i.e.,skip deletion), pass: customers = create_customer_for_test(skip_cleanup=True)
     customer = create_valid_customer(billing=billing, shipping=shipping)
     customer_id = customer["id"]
@@ -322,19 +358,20 @@ def test_create_customer_with_varied_addresses(
 
     # Verify API response matches database record
     customer_helper.assert_customer_exists_and_matches_db(
-        email=email,
-        dao=customers_dao
+        email=email, dao=customers_dao
     )
 
     logger.info("🎯 Full validation complete for customers ID: %r", customer_id)
 
+
 @pytest.mark.tcid15
 @pytest.mark.negative
-@pytest.mark.contract # validates error_schema → contract ✔
-@pytest.mark.regression # not quick → regression
+@pytest.mark.contract  # validates error_schema → contract ✔
+@pytest.mark.regression  # not quick → regression
 @pytest.mark.parametrize("payload, expected_status_code", INVALID_EMAIL_PAYLOADS)
-def test_create_customer_email_field_validation(customer_helper, customers_dao, customer_api_raw, payload,
-                                                expected_status_code):
+def test_create_customer_email_field_validation(
+    customer_helper, customers_dao, customer_api_raw, payload, expected_status_code
+):
     """
     Negative test for invalid email values during customers creation.
 
@@ -377,14 +414,18 @@ def test_create_customer_email_field_validation(customer_helper, customers_dao, 
     # --------------------------------------------
     validate(instance=response, schema=error_schema)
 
-    logger.info(f"✅ Proper error returned for payload: {payload} → {response['code']}: {response['message']}")
+    logger.info(
+        f"✅ Proper error returned for payload: {payload} → {response['code']}: {response['message']}"
+    )
+
 
 @pytest.mark.tcid16
 @pytest.mark.negative
 @pytest.mark.contract
 @pytest.mark.regression
-def test_create_customer_fail_for_existing_email(create_valid_customer, customer_api_raw, customer_helper,
-                                                 customers_dao):
+def test_create_customer_fail_for_existing_email(
+    create_valid_customer, customer_api_raw, customer_helper, customers_dao
+):
     """
     Negative test: creating a customers with an already existing email.
 
@@ -404,11 +445,15 @@ def test_create_customer_fail_for_existing_email(create_valid_customer, customer
     # -------------------------------
     #  ✅ Create customers via fixture factory
     # -------------------------------
-    logger.info("🛠 Creating a negative test when it is expected to fail for existing email.")
-    existing_customer = create_valid_customer()  # Default: skip_cleanup=False, validate_response=True
+    logger.info(
+        "🛠 Creating a negative test when it is expected to fail for existing email."
+    )
+    existing_customer = (
+        create_valid_customer()
+    )  # Default: skip_cleanup=False, validate_response=True
     # To keep the customers in the DB(i.e.,skip deletion), pass: customers = create_customer_for_test(skip_cleanup=True)
 
-    email = existing_customer['email']
+    email = existing_customer["email"]
 
     # -------------------------------
     #  ✅ Re-create customers via fixture factory
@@ -417,7 +462,7 @@ def test_create_customer_fail_for_existing_email(create_valid_customer, customer
 
     payload = {
         "email": email,
-        "password": "Password1"  # must pass something, doesn't need to match
+        "password": "Password1",  # must pass something, doesn't need to match
     }
 
     # -------------------------------------------
@@ -447,12 +492,13 @@ def test_create_customer_fail_for_existing_email(create_valid_customer, customer
 
     # API Fetch + API VALIDATION + DB FETCH + DB VALIDATION
     customer_helper.assert_customer_exists_and_matches_db(
-        email=email,
-        dao=customers_dao
+        email=email, dao=customers_dao
     )
 
     # --------------------------------------------
     # 📋 Validate error schema and contents
     # --------------------------------------------
     validate(instance=response, schema=error_schema)
-    logger.info(f"✅ Proper error returned for payload: {payload} → {response['code']}: {response['message']}")
+    logger.info(
+        f"✅ Proper error returned for payload: {payload} → {response['code']}: {response['message']}"
+    )

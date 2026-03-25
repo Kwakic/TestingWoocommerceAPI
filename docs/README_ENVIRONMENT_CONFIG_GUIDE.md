@@ -1,6 +1,6 @@
 # 🧭 Environment & Configuration Guide
 
-**Practical guide for developers, QA, and CI users.**  
+**Practical guide for developers, QA, and CI users.**
 For authoritative rules, see `CONFIG_CONTRACT.md`.
 
 ---
@@ -60,8 +60,8 @@ if FAIL_ON_EMPTY_LIST:
     ...
 ```
 
-**There is no reload.**  
-**There is no mutation.**  
+**There is no reload.**
+**There is no mutation.**
 **Configuration is frozen at startup.**
 
 ---
@@ -181,7 +181,7 @@ AUTO_ALLURE_REPORT=true
 
 ## 🔟 Final Reminder
 
-> **Configuration is static and declarative.**  
+> **Configuration is static and declarative.**
 > **Runtime state is dynamic and contextual.**
 
 **Mixing them causes bugs — the framework prevents that by design.**

@@ -13,8 +13,9 @@ pytestmark = [pytest.mark.integration]
 
 @pytest.mark.tcid06
 @pytest.mark.regression
-def test_soft_deleted_customer_is_still_returned_by_api(customer_helper, customers_dao, all_resources,
-                                                        create_valid_customer):
+def test_soft_deleted_customer_is_still_returned_by_api(
+    customer_helper, customers_dao, all_resources, create_valid_customer
+):
     """
     Verify WooCommerce soft-delete behavior.
 
@@ -39,7 +40,9 @@ def test_soft_deleted_customer_is_still_returned_by_api(customer_helper, custome
     # Step 1 — Create customers (POST /customers handled by fixture)
     logger.info("🛠 Creating a test customers via factory fixture.")
     # To keep the customers in the DB (i.e., skip deletion),set: customers = create_customer_for_test(skip_cleanup=True)
-    customer = create_valid_customer()  # Default: skip_cleanup=False, validate_response=True
+    customer = (
+        create_valid_customer()
+    )  # Default: skip_cleanup=False, validate_response=True
     # No need to assert ID/email. The fixture already does it: customer_helper.assert_valid_customer_response(customers)
 
     customer_id = customer["id"]
@@ -53,8 +56,9 @@ def test_soft_deleted_customer_is_still_returned_by_api(customer_helper, custome
     # Step 3 — Verify DB reflects soft deletion
     updated_customer = customers_dao.get_customer_by_id(customer_id)
     assert updated_customer is not None, "❌ Customer not found in DB after soft delete"
-    assert str(updated_customer["user_status"]) == "1", (f"❌ Expected user_status=1, "
-                                                         f"got {updated_customer['user_status']}")
+    assert str(updated_customer["user_status"]) == "1", (
+        f"❌ Expected user_status=1, " f"got {updated_customer['user_status']}"
+    )
     logger.info("✅ DB confirms soft-deleted customers with user_status=1")
 
     # Step 4 — Confirm API still returns soft-deleted customers
@@ -70,9 +74,7 @@ def test_soft_deleted_customer_is_still_returned_by_api(customer_helper, custome
 @pytest.mark.tcid30
 @pytest.mark.regression
 def test_soft_deleted_customers_are_excluded_by_custom_filter(
-    customer_helper,
-    customers_dao,
-    create_valid_customer
+    customer_helper, customers_dao, create_valid_customer
 ):
     """
     Verify that custom filtering removes soft-deleted customers.
@@ -94,7 +96,9 @@ def test_soft_deleted_customers_are_excluded_by_custom_filter(
     # Step 1 — Create customers
     logger.info("🛠 Creating a test customers via factory fixture.")
     # To keep the customers in the DB (i.e., skip deletion),set: customers = create_customer_for_test(skip_cleanup=True)
-    customer = create_valid_customer()  # Default: skip_cleanup=False, validate_response=True
+    customer = (
+        create_valid_customer()
+    )  # Default: skip_cleanup=False, validate_response=True
     # No need to assert ID/email. The fixture already does it: customer_helper.assert_valid_customer_response(customers)
 
     customer_id = customer["id"]
@@ -114,9 +118,9 @@ def test_soft_deleted_customers_are_excluded_by_custom_filter(
 
     raw_ids = [c["id"] for c in raw_customers]
 
-    assert customer_id in raw_ids, (
-        "❌ Soft-deleted customers should STILL appear in raw API response (Woo behavior)"
-    )
+    assert (
+        customer_id in raw_ids
+    ), "❌ Soft-deleted customers should STILL appear in raw API response (Woo behavior)"
 
     # Step 4 — Apply custom filtering utility
     filtered_customers = filter_out_soft_deleted(
@@ -124,12 +128,12 @@ def test_soft_deleted_customers_are_excluded_by_custom_filter(
         get_db_record_fn=customers_dao.get_customer_by_email,
         id_field="email",
         deleted_flag="user_status",
-        deleted_value=1
+        deleted_value=1,
     )
 
     filtered_ids = [c["id"] for c in filtered_customers]
 
     # Step 5 — Ensure soft-deleted customers is excluded
-    assert customer_id not in filtered_ids, (
-        "❌ Soft-deleted customers was NOT filtered out by custom logic"
-    )
+    assert (
+        customer_id not in filtered_ids
+    ), "❌ Soft-deleted customers was NOT filtered out by custom logic"

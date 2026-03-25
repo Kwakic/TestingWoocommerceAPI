@@ -16,7 +16,7 @@ pytest -m tcid03 -q -r s --clean-alluredir --alluredir=reports/customers/test/al
 ```
 
 2. Copy the history (only after the test finishes, after a generating report):
-    
+
    This injects previous history into your fresh results folder so the generator can see it.
 ```powershell
 cp -r reports/allure-report/history reports/allure-results/
@@ -34,11 +34,11 @@ allure generate reports/customers/test/allure-results -o reports/customers/test/
 
 4. Open Allure UI:
 
-   Note: Use allure open if you already generated a static report in Step 3. Use allure serve if you want to 
+   Note: Use allure open if you already generated a static report in Step 3. Use allure serve if you want to
    skip Step 3 and generate a temporary report in one go.
 ```powershell
-allure open reports/allure-report 
-# or 
+allure open reports/allure-report
+# or
 allure serve reports/allure-results
 ```
 
@@ -54,14 +54,14 @@ By copying the history folder into the new allure-results directory, the Allure 
 
 
 ## Summary
-- `allure-pytest` (Python package) is the pytest adapter that writes raw Allure results (JSON + attachments) during test runs.  
-- `allure` (Allure CLI / Allure2) is a separate Java-based command‑line tool that converts those raw results into an interactive HTML report.  
+- `allure-pytest` (Python package) is the pytest adapter that writes raw Allure results (JSON + attachments) during test runs.
+- `allure` (Allure CLI / Allure2) is a separate Java-based command‑line tool that converts those raw results into an interactive HTML report.
 - Workflow:
   1. Run pytest with `--alluredir=...` → writes JSON result files.
   2. Run `allure generate` or `allure serve` → produces/serves HTML.
 
 ## Prerequisites
-- Python 3.9+ (your virtualenv / project Python)  
+- Python 3.9+ (your virtualenv / project Python)
   - Java JRE/JDK (8+).  **Java is required only to generate or serve HTML reports**, not to run pytest.
 - Verify with:
   ```powershell
@@ -103,10 +103,10 @@ By copying the history folder into the new allure-results directory, the Allure 
 Allure CLI is a Java tool and must be installed separately. Choose one method below.
 
 ### A) Manual download (no admin required) — recommended if Chocolatey/Scoop not available
-1. Pick a release on GitHub: https://github.com/allure-framework/allure2/releases  
+1. Pick a release on GitHub: https://github.com/allure-framework/allure2/releases
 2. Download `allure-<version>.zip` and extract to e.g.:
-   `C:\Users\<you>\tools\allure-<version>`  
-3. Add `.../bin` to your PATH (User environment).  
+   `C:\Users\<you>\tools\allure-<version>`
+3. Add `.../bin` to your PATH (User environment).
 4. Verify:
    ```powershell
    allure --version
@@ -134,7 +134,7 @@ From project root (use your venv / activate `.venv`):
   ```powershell
   Remove-Item .\allure-results\* -Recurse -Force
   ```
-  
+
 - Optional cleanup:
   ```powershell
    pytest --clean-alluredir --alluredir=reports/allure-results

@@ -1,10 +1,6 @@
 import pytest
 
-pytestmark = [
-    pytest.mark.security,
-    pytest.mark.smoke,
-    pytest.mark.shared
-]
+pytestmark = [pytest.mark.security, pytest.mark.smoke, pytest.mark.shared]
 
 ENTITIES = [
     "customers",

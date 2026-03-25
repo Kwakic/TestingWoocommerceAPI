@@ -127,7 +127,7 @@ pytest tests/customers/api/test_create_customer.py::test_name -q -vv
 ---
 
 ## Troubleshooting: “0 tests collected”
-1. Avoid filters while debugging (`-m`, `-k`, `-q`).  
+1. Avoid filters while debugging (`-m`, `-k`, `-q`).
    Run `pytest --collect-only -q tests/`.
 2. Confirm package importable (see step 5 above).
 3. Check for environment-level filters:

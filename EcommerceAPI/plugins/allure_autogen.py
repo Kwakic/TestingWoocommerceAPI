@@ -125,6 +125,7 @@ _COMPLETED_TESTS = 0
 # Allure results directory resolution
 # ============================================================================
 
+
 def _locate_alluredir(config) -> Optional[Path]:
     """
     Resolve Allure results directory.
@@ -153,6 +154,7 @@ def _locate_alluredir(config) -> Optional[Path]:
 # ============================================================================
 # Allure Environment properties/metadata (UI-visible)
 # ============================================================================
+
 
 def get_framework_version() -> str:
     """
@@ -241,10 +243,14 @@ def _write_allure_environment(cfg, results_dir: Path) -> None:
         env_file = results_dir / "environment.properties"
         env_file.write_text("\n".join(lines), encoding="utf-8")
 
-        log.info("Allure environment properties generated → %s", results_dir, extra={
-            "suppress_nodeid": True,
-            "suppress_correlation": True,
-        })
+        log.info(
+            "Allure environment properties generated → %s",
+            results_dir,
+            extra={
+                "suppress_nodeid": True,
+                "suppress_correlation": True,
+            },
+        )
 
     except Exception as exc:
         # Reporting must NEVER block tests
@@ -282,10 +288,14 @@ def _write_allure_categories(results_dir: Path) -> None:
         file = results_dir / "categories.json"
         file.write_text(json.dumps(categories, indent=2), encoding="utf-8")
 
-        log.info("Allure categories.json generated → %s", results_dir, extra={
-            "suppress_nodeid": True,
-            "suppress_correlation": True,
-        })
+        log.info(
+            "Allure categories.json generated → %s",
+            results_dir,
+            extra={
+                "suppress_nodeid": True,
+                "suppress_correlation": True,
+            },
+        )
 
     except Exception as exc:
         log.debug(
@@ -401,6 +411,7 @@ def _attach_ci_links():
 # Pytest hooks
 # ============================================================================
 
+
 def pytest_collection_finish(session):
     """
     Capture total number of collected tests.
@@ -462,6 +473,7 @@ def pytest_sessionstart(session):
 # Framework configuration snapshot (attachment)
 # ============================================================================
 
+
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_call(item):
     """
@@ -494,8 +506,7 @@ def pytest_runtest_call(item):
 
             # Convert Path objects → strings
             snapshot = {
-                k: (str(v) if hasattr(v, "__fspath__") else v)
-                for k, v in raw.items()
+                k: (str(v) if hasattr(v, "__fspath__") else v) for k, v in raw.items()
             }
 
             snapshot["SESSION_ID"] = _SESSION_ID
@@ -561,6 +572,7 @@ def pytest_runtest_logreport(report):
 # Pytest session finish
 # ============================================================================
 
+
 @pytest.hookimpl(trylast=True)
 def pytest_sessionfinish(session, exitstatus):
     """
@@ -624,6 +636,7 @@ def pytest_sessionfinish(session, exitstatus):
         log.error("Allure generation failed (exit code %s)", exc.returncode)
     except Exception as exc:
         log.exception("Unexpected Allure generation error: %s", exc)
+
 
 # 🧠 Allure only displays these labels visually:
 # This is not documented clearly, but it is hardcoded in Allure frontend.

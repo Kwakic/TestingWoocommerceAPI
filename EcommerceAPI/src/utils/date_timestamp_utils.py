@@ -1,4 +1,3 @@
-
 # utils/date_timestamp_utils.py
 
 import logging
@@ -11,10 +10,10 @@ logger = logging.getLogger(__name__)
 
 
 def build_created_after_before_window(
-        base_time: datetime,
-        before_minutes: int = 1,
-        after_minutes: int = 5,
-        negative: bool = False
+    base_time: datetime,
+    before_minutes: int = 1,
+    after_minutes: int = 5,
+    negative: bool = False,
 ) -> Tuple[str, str]:
     """
     Builds a timestamp window around a given base_time for use in filtering resources by creation time.
@@ -56,23 +55,46 @@ def build_created_after_before_window(
         Tuple[str, str]: (created_after, created_before) as ISO 8601 UTC-formatted strings with 'Z' suffix.
     """
 
-    if not negative:  # Builds a window that includes base_time .It uses a real base_time for accuracy (rather than
+    if (
+        not negative
+    ):  # Builds a window that includes base_time .It uses a real base_time for accuracy (rather than
         # naïve datetime.now()), Strip microseconds
-        created_after = (base_time - timedelta(minutes=after_minutes)).replace(microsecond=0).isoformat().replace(
-            "+00:00", "Z")
-        created_before = (base_time + timedelta(minutes=before_minutes)).replace(microsecond=0).isoformat().replace(
-            "+00:00", "Z")
+        created_after = (
+            (base_time - timedelta(minutes=after_minutes))
+            .replace(microsecond=0)
+            .isoformat()
+            .replace("+00:00", "Z")
+        )
+        created_before = (
+            (base_time + timedelta(minutes=before_minutes))
+            .replace(microsecond=0)
+            .isoformat()
+            .replace("+00:00", "Z")
+        )
     else:  # Builds a window that excludes base_time (inverted range)
-        created_after = (base_time + timedelta(minutes=after_minutes)).replace(microsecond=0).isoformat().replace(
-            "+00:00", "Z")
-        created_before = (base_time - timedelta(minutes=before_minutes)).replace(microsecond=0).isoformat().replace(
-            "+00:00", "Z")
+        created_after = (
+            (base_time + timedelta(minutes=after_minutes))
+            .replace(microsecond=0)
+            .isoformat()
+            .replace("+00:00", "Z")
+        )
+        created_before = (
+            (base_time - timedelta(minutes=before_minutes))
+            .replace(microsecond=0)
+            .isoformat()
+            .replace("+00:00", "Z")
+        )
 
     return created_after, created_before
 
 
-def get_customers_in_window(helper, created_at: datetime, before_min: int = 1, after_min: int = 1,
-                            negative: bool = False):
+def get_customers_in_window(
+    helper,
+    created_at: datetime,
+    before_min: int = 1,
+    after_min: int = 1,
+    negative: bool = False,
+):
     """
     Fetches customers from API filtered by a time window around `created_at`.
 
@@ -92,15 +114,16 @@ def get_customers_in_window(helper, created_at: datetime, before_min: int = 1, a
         base_time=created_at,
         before_minutes=before_min,
         after_minutes=after_min,
-        negative=negative
+        negative=negative,
     )
 
-    logger.info(f"🔍 Filtering customers using window:"
-                f" created_after={created_after}, created_before={created_before}, negative={negative}")
+    logger.info(
+        f"🔍 Filtering customers using window:"
+        f" created_after={created_after}, created_before={created_before}, negative={negative}"
+    )
 
     customers = helper.list_customers_paginated(
-        created_after=created_after,
-        created_before=created_before
+        created_after=created_after, created_before=created_before
     )
 
     logger.info(f"📞 API returned {len(customers)} customers in the filtered window.")
@@ -230,6 +253,7 @@ def get_now_utc_floor() -> datetime:
     Returns the current time in UTC with microseconds stripped (rounded to the nearest second).
     """
     return datetime.now(timezone.utc).replace(microsecond=0)
+
 
 def unix_to_utc_datetime(unix_ts: int) -> datetime:
     return datetime.fromtimestamp(unix_ts, tz=timezone.utc).replace(microsecond=0)

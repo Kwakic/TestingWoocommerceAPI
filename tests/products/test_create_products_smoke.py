@@ -74,7 +74,8 @@
 #
 #     # Assert specific field validation detail
 #     assert 'type' in rs['data']['params'], "Expected 'type' to be in 'params'"
-#     assert "not one of simple" in rs['data']['params']['type'], f"Unexpected param error message: {rs['data']['params']['type']}"
+#     assert "not one of simple" in rs['data']['params']['type'],
+#     f"Unexpected param error message: {rs['data']['params']['type']}"
 #
 #     # Optional: check deep error structure if needed
 #     details = rs['data'].get('details', {})

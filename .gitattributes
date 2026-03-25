@@ -13,6 +13,15 @@
 # 👉 Git will automatically:
   # - normalize line endings on commit
   # - prevent inconsistencies
+# Avoid it if: You are working in a professional team; you should insist on a .gitattributes file to ensure the
+# repo stays clean for everyone
+
+# The best practice for modern development—especially in teams—is to use a
+  #.gitattributes file
+# While git config --global core.autocrlf true was a standard recommendation for years, it has major drawbacks
+# compared to the file-based approach.
+
+
 
 # 🔹 Normalize all text files automatically
 * text=auto
@@ -64,7 +73,7 @@ Dockerfile text eol=lf
   ## Push
   #git push
 
-#$ git add . warning: in the working copy of 'docs/docker install guide.md',
+#$ git add . warning: in the working copy of 'docs/README_DOCKER_INSTALL_GUIDE.md',
 #CRLF will be replaced by LF the next time Git touches it warning: in the working copy of
 #'tests/customers/configs/config_customers.py', CRLF will be replaced by LF the next time Git touches it warning:
 #in the working copy of 'tests/shared/performance/conftest.py', CRLF will be replaced by LF the next time Git touches

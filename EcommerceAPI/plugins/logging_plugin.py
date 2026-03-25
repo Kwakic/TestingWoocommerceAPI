@@ -197,7 +197,9 @@ def pytest_configure(config):
             log.debug("Loaded .env from: %s", env_path)
         except Exception as load_err:
             # Narrow failure: if dotenv fails unexpectedly, log debug but continue.
-            log.debug("Failed loading .env from %s: %s", env_path, load_err, exc_info=True)
+            log.debug(
+                "Failed loading .env from %s: %s", env_path, load_err, exc_info=True
+            )
 
     # 2) Resolve CLI/env toggles (CLI wins)
     opt = getattr(config, "option", None)
@@ -208,7 +210,9 @@ def pytest_configure(config):
     enable_json_pretty = bool(getattr(opt, "enable_json_pretty", False)) or env_bool(
         "ENABLE_JSON_PRETTY", default=False
     )
-    log_payloads = bool(getattr(opt, "log_payloads", False)) or env_bool("LOG_PAYLOADS", default=False)
+    log_payloads = bool(getattr(opt, "log_payloads", False)) or env_bool(
+        "LOG_PAYLOADS", default=False
+    )
     redact_sensitive = bool(getattr(opt, "redact_sensitive_fields", False)) or env_bool(
         "REDACT_SENSITIVE_FIELDS", default=True
     )
@@ -220,16 +224,22 @@ def pytest_configure(config):
             keep_structured_logs = int(keep_structured_cli)
         except (TypeError, ValueError):
             keep_structured_logs = 3
-            log.warning("Invalid CLI keep_structured_logs=%r, falling back to %s", keep_structured_cli,
-                        keep_structured_logs)
+            log.warning(
+                "Invalid CLI keep_structured_logs=%r, falling back to %s",
+                keep_structured_cli,
+                keep_structured_logs,
+            )
     else:
         ks_env = os.getenv("KEEP_STRUCTURED_LOGS")
         try:
             keep_structured_logs = int(ks_env) if ks_env is not None else 3
         except (TypeError, ValueError):
             keep_structured_logs = 3
-            log.warning("Invalid KEEP_STRUCTURED_LOGS=%r in env, falling back to %s", ks_env,
-                        keep_structured_logs)
+            log.warning(
+                "Invalid KEEP_STRUCTURED_LOGS=%r in env, falling back to %s",
+                ks_env,
+                keep_structured_logs,
+            )
 
     # Default LOG_DIR: use pytest root / reports / logs (can be overridden by LOG_DIR env)
     log_dir_cli = getattr(opt, "log_dir", None)
@@ -248,7 +258,10 @@ def pytest_configure(config):
             if perf_env is not None:
                 try:
                     config.option.perf_iterations = int(perf_env)
-                    log.debug("Using PERF_ITERATIONS from env: %s", config.option.perf_iterations)
+                    log.debug(
+                        "Using PERF_ITERATIONS from env: %s",
+                        config.option.perf_iterations,
+                    )
                 except (TypeError, ValueError):
                     log.warning(
                         "Invalid PERF_ITERATIONS=%r in env; keeping existing value %r",
@@ -258,7 +271,9 @@ def pytest_configure(config):
     except Exception as perf_err:
         # Defensive: do not break pytest startup for unexpected errors here (nothing here should abort pytest startup;
         # surface debug info.)
-        log.debug("Failed to apply PERF_ITERATIONS from env: %s", perf_err, exc_info=True)
+        log.debug(
+            "Failed to apply PERF_ITERATIONS from env: %s", perf_err, exc_info=True
+        )
 
     # 3) Apply redaction/payload toggles (so factory/formatters see consistent flags)
     set_redaction(bool(redact_sensitive))
@@ -271,7 +286,9 @@ def pytest_configure(config):
         # so that message is rendered with CustomFormatter (includes [ENV: ...], etc.).
     except TypeError as install_err:
         # Signature mismatch or other TypeError — surface as error-level for triage (narrow catch)
-        log.exception("Failed to install LogRecord factory (TypeError): %s", install_err)
+        log.exception(
+            "Failed to install LogRecord factory (TypeError): %s", install_err
+        )
 
     # 5) Suppress noisy third-party loggers (coarse-level)
     NOISY_LOGGERS = [
@@ -305,7 +322,10 @@ def pytest_configure(config):
         formatter = CustomFormatter(
             LOG_FORMAT,
             datefmt=LOG_DATEFMT,
-            use_emojis=not bool(os.getenv("DISABLE_LOG_EMOJIS", "").lower() in ("1", "true", "yes", "on")),
+            use_emojis=not bool(
+                os.getenv("DISABLE_LOG_EMOJIS", "").lower()
+                in ("1", "true", "yes", "on")
+            ),
         )
         root_logger = logging.getLogger()
         for handler in list(root_logger.handlers):
@@ -313,7 +333,11 @@ def pytest_configure(config):
                 handler.setFormatter(formatter)
     except (TypeError, ValueError, AttributeError) as fmt_err:
         # Best-effort; do not fail pytest startup if formatting changes fail
-        log.debug("Applying CustomFormatter to root handlers failed: %s", fmt_err, exc_info=True)
+        log.debug(
+            "Applying CustomFormatter to root handlers failed: %s",
+            fmt_err,
+            exc_info=True,
+        )
 
     # 6) Internal noisy loggers: remove their StreamHandlers but keep propagation, lower level
     INTERNAL_NOISY = [
@@ -322,7 +346,9 @@ def pytest_configure(config):
     ]
     for name in INTERNAL_NOISY:
         lg = logging.getLogger(name)
-        lg.handlers[:] = [h for h in lg.handlers if not isinstance(h, logging.StreamHandler)]
+        lg.handlers[:] = [
+            h for h in lg.handlers if not isinstance(h, logging.StreamHandler)
+        ]
         lg.propagate = True
         if lg.getEffectiveLevel() > logging.DEBUG:
             lg.setLevel(logging.DEBUG)
@@ -358,7 +384,10 @@ def pytest_configure(config):
                 formatter = CustomFormatter(
                     LOG_FORMAT,
                     datefmt=LOG_DATEFMT,
-                    use_emojis=not bool(os.getenv("DISABLE_LOG_EMOJIS", "").lower() in ("1", "true", "yes", "on")),
+                    use_emojis=not bool(
+                        os.getenv("DISABLE_LOG_EMOJIS", "").lower()
+                        in ("1", "true", "yes", "on")
+                    ),
                 )
             root_logger = logging.getLogger()
             for handler in list(root_logger.handlers):
@@ -366,7 +395,11 @@ def pytest_configure(config):
                     # set formatter explicitly (defensive)
                     handler.setFormatter(formatter)
     except (TypeError, ValueError, AttributeError) as reapply_err:
-        log.debug("Re-applying CustomFormatter to root handlers failed: %s", reapply_err, exc_info=True)
+        log.debug(
+            "Re-applying CustomFormatter to root handlers failed: %s",
+            reapply_err,
+            exc_info=True,
+        )
 
     # -------------------------------------------------------------------------
     # Ensure startup messages are formatted with CustomFormatter
@@ -385,7 +418,10 @@ def pytest_configure(config):
                 startup_formatter = CustomFormatter(
                     LOG_FORMAT,
                     datefmt=LOG_DATEFMT,
-                    use_emojis=not bool(os.getenv("DISABLE_LOG_EMOJIS", "").lower() in ("1", "true", "yes", "on")),
+                    use_emojis=not bool(
+                        os.getenv("DISABLE_LOG_EMOJIS", "").lower()
+                        in ("1", "true", "yes", "on")
+                    ),
                 )
             root_logger = logging.getLogger()
             temp_startup_handler = logging.StreamHandler(sys.stdout)
@@ -396,7 +432,9 @@ def pytest_configure(config):
             # Add it temporarily so subsequent log.*() calls here use the intended format
             root_logger.addHandler(temp_startup_handler)
     except (TypeError, ValueError, OSError) as temp_err:
-        log.debug("Failed to attach temporary startup handler: %s", temp_err, exc_info=True)
+        log.debug(
+            "Failed to attach temporary startup handler: %s", temp_err, exc_info=True
+        )
 
     # Emit the "Installed custom LogRecord factory." startup message but only AFTER the factory is installed and a
     # formatter/handler are in place so it is formatted the same way as before (including nodeid and correlation id
@@ -412,7 +450,11 @@ def pytest_configure(config):
         )
     except (TypeError, ValueError, AttributeError) as emit_err:
         # Catch narrow, expected logging-related errors only.
-        log.debug("Failed emitting LogRecord factory install message: %s", emit_err, exc_info=True)
+        log.debug(
+            "Failed emitting LogRecord factory install message: %s",
+            emit_err,
+            exc_info=True,
+        )
 
     # 8) Attach GLOBAL_METADATA (git/CI/session) for structured logs; keep handling narrow for malformed metadata
     try:
@@ -430,9 +472,17 @@ def pytest_configure(config):
             },
         )
         # Suppress nodeid for this session-level message too
-        log.info("GLOBAL_METADATA attached: %s", SESSION_METADATA, extra={"suppress_nodeid": True})
+        log.info(
+            "GLOBAL_METADATA attached: %s",
+            SESSION_METADATA,
+            extra={"suppress_nodeid": True},
+        )
     except (KeyError, TypeError, ValueError) as meta_err:
-        log.debug("Failed to attach GLOBAL_METADATA due to malformed SESSION_METADATA: %s", meta_err, exc_info=True)
+        log.debug(
+            "Failed to attach GLOBAL_METADATA due to malformed SESSION_METADATA: %s",
+            meta_err,
+            exc_info=True,
+        )
 
     # Remove the temporary startup handler now that we've emitted the startup lines.
     # NOTE!!! If you remove the block below, it will generate logs twice!!!
@@ -441,7 +491,11 @@ def pytest_configure(config):
             logging.getLogger().removeHandler(temp_startup_handler)
     except (ValueError, RuntimeError) as rem_temp_err:
         # don't fail pytest startup if removing fails; log a narrow exception
-        log.debug("Failed to remove temporary startup handler: %s", rem_temp_err, exc_info=True)
+        log.debug(
+            "Failed to remove temporary startup handler: %s",
+            rem_temp_err,
+            exc_info=True,
+        )
 
 
 # ----------------------------
@@ -462,7 +516,11 @@ def pytest_unconfigure(config):
         logging.setLogRecordFactory(_ORIGINAL_RECORD_FACTORY)
     except Exception as restore_err:
         # Unexpected but non-fatal; surface for triage.
-        log.debug("Failed to restore original LogRecord factory: %s", restore_err, exc_info=True)
+        log.debug(
+            "Failed to restore original LogRecord factory: %s",
+            restore_err,
+            exc_info=True,
+        )
 
     root = logging.getLogger()
 
@@ -474,10 +532,17 @@ def pytest_unconfigure(config):
                     root.removeHandler(h)
                 except Exception as remove_temp_err:
                     log.debug(
-                        "Failed removing temporary startup handler %s: %s", h, remove_temp_err, exc_info=True
+                        "Failed removing temporary startup handler %s: %s",
+                        h,
+                        remove_temp_err,
+                        exc_info=True,
                     )
     except Exception as scan_err:
-        log.debug("Error while scanning handlers for temp startup removal: %s", scan_err, exc_info=True)
+        log.debug(
+            "Error while scanning handlers for temp startup removal: %s",
+            scan_err,
+            exc_info=True,
+        )
 
     # Close and remove structured JSONL handlers we added during configure_logging
     for handler in list(root.handlers):
@@ -485,11 +550,21 @@ def pytest_unconfigure(config):
             try:
                 handler.close()
             except Exception as close_err:
-                log.debug("Failed closing structured handler %s: %s", handler, close_err, exc_info=True)
+                log.debug(
+                    "Failed closing structured handler %s: %s",
+                    handler,
+                    close_err,
+                    exc_info=True,
+                )
             try:
                 root.removeHandler(handler)
             except Exception as remove_err:
-                log.debug("Failed removing structured handler %s: %s", handler, remove_err, exc_info=True)
+                log.debug(
+                    "Failed removing structured handler %s: %s",
+                    handler,
+                    remove_err,
+                    exc_info=True,
+                )
 
 
 # ======================================================================================
@@ -541,14 +616,19 @@ def pytest_runtest_protocol(item):
             _formatter = CustomFormatter(
                 LOG_FORMAT,
                 datefmt=LOG_DATEFMT,
-                use_emojis=not os.getenv("DISABLE_LOG_EMOJIS", "").lower() in ("1", "true", "yes", "on"),
+                use_emojis=not os.getenv("DISABLE_LOG_EMOJIS", "").lower()
+                in ("1", "true", "yes", "on"),
             )
             _root = logging.getLogger()
             for _h in list(_root.handlers):
                 if isinstance(_h, logging.StreamHandler):
                     _h.setFormatter(_formatter)
     except (TypeError, ValueError, AttributeError) as runtime_fmt_err:
-        log.debug("Re-applying CustomFormatter at runtest_protocol failed: %s", runtime_fmt_err, exc_info=True)
+        log.debug(
+            "Re-applying CustomFormatter at runtest_protocol failed: %s",
+            runtime_fmt_err,
+            exc_info=True,
+        )
 
     # Set nodeid and correlation_id early (do NOT synthesize defaults here)
     nodeid_token = log_context.test_nodeid.set(item.nodeid)
@@ -574,12 +654,20 @@ def pytest_runtest_protocol(item):
         try:
             log_context.correlation_id.reset(corr_token)
         except ValueError as ve:
-            log.debug("Failed to reset correlation_id ContextVar (ValueError): %s", ve, exc_info=True)
+            log.debug(
+                "Failed to reset correlation_id ContextVar (ValueError): %s",
+                ve,
+                exc_info=True,
+            )
 
         try:
             log_context.test_nodeid.reset(nodeid_token)
         except ValueError as ve:
-            log.debug("Failed to reset test_nodeid ContextVar (ValueError): %s", ve, exc_info=True)
+            log.debug(
+                "Failed to reset test_nodeid ContextVar (ValueError): %s",
+                ve,
+                exc_info=True,
+            )
 
 
 # ======================================================================================

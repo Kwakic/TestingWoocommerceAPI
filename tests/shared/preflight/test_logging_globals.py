@@ -17,6 +17,7 @@ from pathlib import Path
 
 
 from EcommerceAPI.src.utils import custom_logger
+
 pytestmark = [pytest.mark.preflight, pytest.mark.shared]
 
 log = logging.getLogger(__name__)
@@ -33,8 +34,12 @@ def test_attach_global_metadata_contains_expected_keys():
 
     # Attach and assert GLOBAL_METADATA has the merged keys (guard against mutation from other tests)
     custom_logger.GLOBAL_METADATA.clear()
-    custom_logger.attach_global_logging_metadata(env=sample_meta["env"], session_id=sample_meta["session_id"],
-                                                 ci_info=ci_info, git_info=git_info)
+    custom_logger.attach_global_logging_metadata(
+        env=sample_meta["env"],
+        session_id=sample_meta["session_id"],
+        ci_info=ci_info,
+        git_info=git_info,
+    )
 
     gm = custom_logger.GLOBAL_METADATA
     assert gm["env"] == "test"
@@ -79,4 +84,3 @@ def test_last_structured_log_set_when_enabled(tmp_path, monkeypatch):
     except PermissionError as e:
         # Common on Windows / CI; log for visibility but don't fail preflight
         logger.warning("Could not remove temp log dir %s: %s", tmp_log_dir, e)
-

@@ -4,49 +4,54 @@
 import logging as logger
 import random
 import string
-import pprint
+
+# import pprint
 import time
-from typing import Optional, Dict  # This line is included because of type hints in the function signatures:
+from typing import (
+    Optional,
+    Dict,
+)  # This line is included because of type hints in the function signatures:
 
 
-def generate_random_email_and_password(domain: Optional[str] = None,
-                                       email_prefix: Optional[str] = None) -> Dict[str, str]:
+def generate_random_email_and_password(
+    domain: Optional[str] = None, email_prefix: Optional[str] = None
+) -> Dict[str, str]:
     """
-        Generate a random email and password with optional custom domain and prefix.
+    Generate a random email and password with optional custom domain and prefix.
 
-        Args:
-            domain (Optional[str]): The domain to use in the email address. Defaults to 'supersqa.com'.
-            email_prefix (Optional[str]): The prefix before the email's random string. Defaults to 'testuser'.
+    Args:
+        domain (Optional[str]): The domain to use in the email address. Defaults to 'supersqa.com'.
+        email_prefix (Optional[str]): The prefix before the email's random string. Defaults to 'testuser'.
 
-        Returns:
-            Dict[str, str]: Dictionary containing 'email' and 'password' keys.
-        """
+    Returns:
+        Dict[str, str]: Dictionary containing 'email' and 'password' keys.
+    """
 
     logger.debug("📝 Generating random email and password.")
 
     # Below, we set our defaults, so that the user doesn't need to provide a domain
     if domain is None:
-        domain = 'supersqa.com'
+        domain = "supersqa.com"
     if email_prefix is None:
-        email_prefix = 'testuser'
+        email_prefix = "testuser"
 
     #
-    random_string = ''.join(random.choices(string.ascii_lowercase, k=10))
+    random_string = "".join(random.choices(string.ascii_lowercase, k=10))
     email = f"{email_prefix}_{random_string}@{domain}"
 
     #
     password_chars = string.ascii_letters + string.digits + string.punctuation
-    password = ''.join(random.choices(password_chars, k=20))
+    password = "".join(random.choices(password_chars, k=20))
 
-    credentials = {'email': email, 'password': password}
+    credentials = {"email": email, "password": password}
     logger.debug(f"📝 Generated credentials email and password: {credentials}")
 
     return credentials
 
 
-def generate_random_string(length: int = 10,
-                           prefix: Optional[str] = None,
-                           suffix: Optional[str] = None) -> str:
+def generate_random_string(
+    length: int = 10, prefix: Optional[str] = None, suffix: Optional[str] = None
+) -> str:
     """
     Generate a random alphabetic string with optional prefix and suffix.
 
@@ -58,7 +63,7 @@ def generate_random_string(length: int = 10,
     Returns:
         str: The resulting string.
     """
-    core = ''.join(random.choices(string.ascii_letters, k=length))
+    core = "".join(random.choices(string.ascii_letters, k=length))
 
     if prefix:
         core = prefix + core
@@ -69,7 +74,9 @@ def generate_random_string(length: int = 10,
 
 
 # ✅ Refactored version of the random string generator with strong validation and fallback options
-def generate_random_combination(length: int = 12, prefix: Optional[str] = None, suffix: Optional[str] = None) -> str:
+def generate_random_combination(
+    length: int = 12, prefix: Optional[str] = None, suffix: Optional[str] = None
+) -> str:
     # It produces clean, random alphanumeric strings with optional prefix/suffix.
     # It raises an error if length <= 0
     """
@@ -89,7 +96,7 @@ def generate_random_combination(length: int = 12, prefix: Optional[str] = None, 
     if length <= 0:
         raise ValueError("❌ 'length' must be a positive integer")
 
-    core = ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+    core = "".join(random.choices(string.ascii_letters + string.digits, k=length))
 
     if prefix:
         core = prefix + core
@@ -111,8 +118,11 @@ def strip_keys(d: dict, exclude=("email", "password")) -> dict:
     Returns a new dict with specified keys removed.
     Useful for avoiding duplication when passing payload both as direct args and kwargs.
     """
-    return {k: v for k, v in d.items() if k not in exclude}  # Loops through every key-value pair in the input
+    return {
+        k: v for k, v in d.items() if k not in exclude
+    }  # Loops through every key-value pair in the input
     # dictionary d and Keeps only those keys that are not in the exclude tuple.
+
 
 # Then in your test file: customers = create_customer_for_test(email=email, password=password, **strip_keys(payload))
 # Instead of doing this every time: additional_fields = {
@@ -184,10 +194,12 @@ def safe_product_name(prefix: str = "Product") -> str:
     """
     # Timestamp-based suffix to help ensure uniqueness across tests
     timestamp_suffix = str(int(time.time() * 1000))[-6:]
-    return generate_random_combination(length=6, prefix=f"{prefix}-", suffix=timestamp_suffix)
+    return generate_random_combination(
+        length=6, prefix=f"{prefix}-", suffix=timestamp_suffix
+    )
 
 
-def generate_random_coupon_code(length=10, prefix='', suffix=''):
+def generate_random_coupon_code(length=10, prefix="", suffix=""):
     """
     Generate a random coupon code with optional prefix and suffix.
 
@@ -199,19 +211,20 @@ def generate_random_coupon_code(length=10, prefix='', suffix=''):
     if not isinstance(length, int) or length < 0:
         raise ValueError("`length` must be a non-negative integer.")
 
-    prefix = str(prefix) if prefix else ''
-    suffix = str(suffix) if suffix else ''
+    prefix = str(prefix) if prefix else ""
+    suffix = str(suffix) if suffix else ""
 
-    middle = ''.join(random.choices(string.ascii_uppercase, k=length))
+    middle = "".join(random.choices(string.ascii_uppercase, k=length))
     return f"{prefix}{middle}{suffix}"
 
 
-if __name__ == '__main__':
-    from pprint import pprint
-    # pprint(generate_random_email_and_password())
-    pprint(generate_random_string(prefix='Test_', suffix='_End'))
-    # pprint(generate_random_combination(prefix='Item-', suffix='-XYZ'))
-    # pprint(generate_random_coupon_code(suffix='2025'))
+# if __name__ == "__main__":
+#     from pprint import pprint
+#
+#     # pprint(generate_random_email_and_password())
+#     pprint(generate_random_string(prefix="Test_", suffix="_End"))
+#     # pprint(generate_random_combination(prefix='Item-', suffix='-XYZ'))
+#     # pprint(generate_random_coupon_code(suffix='2025'))
 
 
 # 📘 Code Explanation

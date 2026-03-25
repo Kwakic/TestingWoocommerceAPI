@@ -5,10 +5,15 @@ from __future__ import annotations
 import logging
 from typing import Optional, List, Dict, Any
 
-from EcommerceAPI.src.customers.validators.customer_validators import assert_customer_exists_and_matches_api
+from EcommerceAPI.src.customers.validators.customer_validators import (
+    assert_customer_exists_and_matches_api,
+)
 from EcommerceAPI.src.utils.pagination_utils import paginate_all_results
 from EcommerceAPI.src.utils.generic_utilities import generate_random_email_and_password
-from EcommerceAPI.src.utils.exceptions import UnexpectedStatusCodeError, SchemaValidationError
+from EcommerceAPI.src.utils.exceptions import (
+    UnexpectedStatusCodeError,
+    SchemaValidationError,
+)
 from EcommerceAPI.src.utils.date_timestamp_utils import safe_parse_utc_datetime
 from EcommerceAPI.src.core.http_response import HttpResponse
 from EcommerceAPI.src.customers.api.customers_api import CustomersApi
@@ -90,12 +95,12 @@ class CustomersHelper(object):
     # Create / CRUD helpers
     # ------------------------
     def create_customer(
-            self,
-            email: Optional[str] = None,
-            password: Optional[str] = None,
-            auto_generate: bool = True,
-            return_http_response: bool = False,
-            **kwargs,
+        self,
+        email: Optional[str] = None,
+        password: Optional[str] = None,
+        auto_generate: bool = True,
+        return_http_response: bool = False,
+        **kwargs,
     ) -> Dict[str, Any] | HttpResponse:
         """
         Create a customers via CustomersApi.
@@ -152,9 +157,9 @@ class CustomersHelper(object):
         if auto_generate:
             if not email:
                 ep = generate_random_email_and_password()
-                email = ep['email']
+                email = ep["email"]
             if not password:
-                password = 'Password1'
+                password = "Password1"
 
         # --------------------------------------------------------------
         # Build payload (skip None values)
@@ -164,9 +169,9 @@ class CustomersHelper(object):
         # payload = {k: v for k, v in {'email': email, 'password': password, **kwargs}.items() if v is not None} # or:
         payload: Dict[str, Any] = {}
         if email is not None:
-            payload['email'] = email
+            payload["email"] = email
         if password is not None:
-            payload['password'] = password
+            payload["password"] = password
         # payload.update(kwargs) adds all those extra key-value pairs to the payload
         payload.update(kwargs)
 
@@ -196,7 +201,8 @@ class CustomersHelper(object):
                         response_json = resp.json()
                     except Exception as parse_err:
                         logger.exception(
-                            "🚫 Failed to parse error response JSON from create_customer: %s", parse_err
+                            "🚫 Failed to parse error response JSON from create_customer: %s",
+                            parse_err,
                         )
                         # Re-raise the original exception since we cannot provide structured error body
                         raise
@@ -213,11 +219,11 @@ class CustomersHelper(object):
             raise
 
     def update_customer(
-            self,
-            customer_id: int,
-            payload: Optional[Dict[str, Any]] = None,
-            return_http_response: bool = False,
-            **kwargs,
+        self,
+        customer_id: int,
+        payload: Optional[Dict[str, Any]] = None,
+        return_http_response: bool = False,
+        **kwargs,
     ) -> Dict[str, Any] | HttpResponse:
         """
         Update customers fields.
@@ -240,10 +246,16 @@ class CustomersHelper(object):
         # ✅ Then merge kwargs (same behavior as create_customer)
         final_payload.update(kwargs)
 
-        logger.debug("🟢 Updating customers %s with payload keys: %r", customer_id, list(final_payload.keys()))
+        logger.debug(
+            "🟢 Updating customers %s with payload keys: %r",
+            customer_id,
+            list(final_payload.keys()),
+        )
 
         try:
-            http_response = self.customers_api.update_customer(customer_id=customer_id, payload=final_payload)
+            http_response = self.customers_api.update_customer(
+                customer_id=customer_id, payload=final_payload
+            )
 
             if return_http_response:
                 return http_response
@@ -265,21 +277,19 @@ class CustomersHelper(object):
             raise
 
     def get_customer_by_id(
-            self,
-            customer_id: int,
-            return_http_response: bool = False
+        self, customer_id: int, return_http_response: bool = False
     ) -> Dict[str, Any] | HttpResponse:
         """
-         Retrieve a customers by their ID.
+        Retrieve a customers by their ID.
 
-         Args:
-             customer_id (int): Customer ID.
-             return_http_response:  - False (default) → returns parsed JSON (dict)
-                                    - True → returns HttpResponse (status_code, headers, elapsed, etc.)
+        Args:
+            customer_id (int): Customer ID.
+            return_http_response:  - False (default) → returns parsed JSON (dict)
+                                   - True → returns HttpResponse (status_code, headers, elapsed, etc.)
 
-         Returns:
-             dict: Parsed customers JSON response + HTTP response
-         """
+        Returns:
+            dict: Parsed customers JSON response + HTTP response
+        """
         # logger.debug(f"🟢 Calling 'Get Customer' for ID {customer_id}.")
         logger.debug("🟢 Calling 'Get Customer' for ID %s.", customer_id)
 
@@ -291,9 +301,7 @@ class CustomersHelper(object):
         return http_response.json
 
     def get_customer_by_email(
-            self,
-            email: str,
-            return_http_response: bool = False
+        self, email: str, return_http_response: bool = False
     ) -> Dict[str, Any] | HttpResponse:
         """
         Retrieve a customers by email.
@@ -324,9 +332,7 @@ class CustomersHelper(object):
         return customers[0]
 
     def delete_customer(
-            self,
-            customer_id: int,
-            return_http_response: bool = False
+        self, customer_id: int, return_http_response: bool = False
     ) -> Dict[str, Any] | HttpResponse:
         """
         Delete (hard delete) a customers by ID using force=true.
@@ -355,12 +361,12 @@ class CustomersHelper(object):
     # Listing / Pagination
     # ------------------------
     def list_customers_paginated(
-            self,
-            params: Optional[Dict[str, Any]] = None,
-            max_pages: int = 1000,
-            created_before: Optional[str] = None,
-            created_after: Optional[str] = None,
-            email: Optional[str] = None,
+        self,
+        params: Optional[Dict[str, Any]] = None,
+        max_pages: int = 1000,
+        created_before: Optional[str] = None,
+        created_after: Optional[str] = None,
+        email: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """
         Fetch all customers using the shared paginate_all_results utility and optionally filter by creation
@@ -401,7 +407,7 @@ class CustomersHelper(object):
         params.setdefault("per_page", 100)
 
         if email:
-            params['email'] = email.lower()
+            params["email"] = email.lower()
 
         # -------------------------------------------
         # 🚀 Paginate through all pages using the utility
@@ -508,7 +514,6 @@ class CustomersHelper(object):
         assert_customer_exists_and_matches_api(customers, email, db_customer)
 
         logger.info("✅ Customer validated against API and DB (email=%s)", email)
-
 
 
 # # NOTE!! Keep this main block for local debugging only. Remove or guard it before committing if you prefer to avoid

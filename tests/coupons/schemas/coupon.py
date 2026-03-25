@@ -9,6 +9,7 @@ Note:
 - error_schema mirrors the general error schema used across other resource models to keep validation
   consistent when helpers validate error responses.
 """
+
 # Basic coupon schema (keeps lenient behavior to allow API evolution)
 coupon_schema = {
     "type": "object",
@@ -56,36 +57,28 @@ error_schema = {
     "properties": {
         "code": {
             "type": "string",
-            "description": "Machine-readable error code (e.g., 'woocommerce_rest_invalid_email')"
+            "description": "Machine-readable error code (e.g., 'woocommerce_rest_invalid_email')",
         },
-        "message": {
-            "type": "string",
-            "description": "Human-readable error message"
-        },
+        "message": {"type": "string", "description": "Human-readable error message"},
         "data": {
             "type": "object",
             "properties": {
                 "status": {
                     "type": "integer",
-                    "description": "HTTP status code (typically 400 or 500)"
+                    "description": "HTTP status code (typically 400 or 500)",
                 },
                 "params": {
                     "description": "Optional list of invalid parameters or object with details",
                     "oneOf": [
-                        {
-                            "type": "array",
-                            "items": {"type": "string"}
-                        },
-                        {
-                            "type": "object"  # Accepts {"email": "..."} or similar
-                        }
-                    ]
-                }
+                        {"type": "array", "items": {"type": "string"}},
+                        {"type": "object"},  # Accepts {"email": "..."} or similar
+                    ],
+                },
             },
             "required": ["status"],
-            "additionalProperties": True
-        }
+            "additionalProperties": True,
+        },
     },
     "required": ["code", "message", "data"],
-    "additionalProperties": False
+    "additionalProperties": False,
 }

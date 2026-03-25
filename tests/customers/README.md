@@ -2,7 +2,7 @@
 
 *(Matrix-aligned, framework-compatible, and future-proof)*
 
-This directory contains all automated API tests, data models, schemas, fixtures, and plugins dedicated to the Customers microservice.  
+This directory contains all automated API tests, data models, schemas, fixtures, and plugins dedicated to the Customers microservice.
 It follows the unified test framework architecture, enables CI autodiscovery, and is structured for maximum coverage and future extensibility.
 
 ---
@@ -179,7 +179,7 @@ Validate every response using Pydantic/models in `schemas/`:
 - Add helpers into `helpers/` (optional)
 - Update/add fixtures in `plugins/`
 - New/updated tests go in `api/`
-- Run full suite locally:  
+- Run full suite locally:
   `pytest tests/customers -vv`
 - Update `CHANGELOG.md` (required for CI+docs)
 
@@ -187,22 +187,22 @@ Validate every response using Pydantic/models in `schemas/`:
 
 ## 8. ▶️ Running Customers Tests
 
-**Quick Run:**  
+**Quick Run:**
 ```bash
 pytest tests/customers -q
 ```
 
-**Verbose:**  
+**Verbose:**
 ```bash
 pytest tests/customers -vv
 ```
 
-**HTML Report + Structured Logs:**  
+**HTML Report + Structured Logs:**
 ```bash
 pytest tests/customers --auto-html-report --log-cli-level=INFO
 ```
 
-**Override environment in CI-style:**  
+**Override environment in CI-style:**
 ```bash
 ENABLE_STRUCTURED_LOGS=true LOG_PAYLOADS=false pytest tests/customers --auto-html-report
 ```
@@ -249,9 +249,9 @@ ENABLE_STRUCTURED_LOGS=true LOG_PAYLOADS=false pytest tests/customers --auto-htm
 
 ## 12. ℹ️ Notes
 
-✔ Matrix-compliant, future-proof  
-✔ Defensive & thorough coverage  
-✔ CI-ready, HTML/log artifact support  
-✔ Standardized with all microservices  
-✔ Actively maintained, test utilities provided  
+✔ Matrix-compliant, future-proof
+✔ Defensive & thorough coverage
+✔ CI-ready, HTML/log artifact support
+✔ Standardized with all microservices
+✔ Actively maintained, test utilities provided
 ✔ Rate limiting/auth isolation: test-ready for future endpoint features

@@ -38,7 +38,9 @@ import logging
 import pytest
 
 from EcommerceAPI.src.shared.helpers.cleanup_helpers import set_default_api_client
-from EcommerceAPI.src.customers.validators.customer_validators import assert_valid_customer_response
+from EcommerceAPI.src.customers.validators.customer_validators import (
+    assert_valid_customer_response,
+)
 from EcommerceAPI.src.clients.api_client import APIClient
 
 log = logging.getLogger(__name__)
@@ -171,10 +173,7 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
         # 1️⃣ Call helper → HttpResponse
         # By setting flag "return_http_response=True" it returns HttpResponse necessary to validate status_code...
         # -----------------------------------------
-        response = customer_helper.create_customer(
-            return_http_response=True,
-            **kwargs
-        )
+        response = customer_helper.create_customer(return_http_response=True, **kwargs)
 
         # -----------------------------------------------------------------
         # 2️⃣ Transport validation (FAIL FAST) Status validated BEFORE JSON
@@ -212,6 +211,7 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
             log.debug("ℹ️ Skipped registering customers %s for cleanup.", customer["id"])
 
         return customer
+
     return _create_customer
 
 

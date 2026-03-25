@@ -16,8 +16,7 @@ logger = logging.getLogger(__name__)
 # So we use strict access (obj["key"]) instead of .get() to enforce contract correctness.
 # ------------------------------------------------------------------
 def assert_customer_matches_db(
-    customer: CustomerModel,
-    db_customer: Dict[str, any]
+    customer: CustomerModel, db_customer: Dict[str, any]
 ) -> None:
     """
     Validate that the API customers object matches the corresponding database record.
@@ -53,15 +52,12 @@ def assert_customer_matches_db(
     # -------------------------------------------------------
     # Compare API data with database values.
 
-    assert str(db_customer["ID"]) == str(customer.id), (
-        "❌ DB ID does not match API ID"
-    )
+    assert str(db_customer["ID"]) == str(customer.id), "❌ DB ID does not match API ID"
 
-    assert db_customer["user_email"] == customer.email, (
-        "❌ DB email does not match API email"
-    )
+    assert (
+        db_customer["user_email"] == customer.email
+    ), "❌ DB email does not match API email"
 
     logger.info(
-        "✅ Assertion passed: API customers matches DB record (ID=%s)",
-        customer.id
+        "✅ Assertion passed: API customers matches DB record (ID=%s)", customer.id
     )

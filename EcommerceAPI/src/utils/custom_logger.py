@@ -82,7 +82,9 @@ LAST_STRUCTURED_LOG: Optional[str] = None
 GLOBAL_METADATA: Dict[str, Any] = {}
 
 
-def attach_global_logging_metadata(env: str, session_id: str, ci_info: dict, git_info: dict) -> None:
+def attach_global_logging_metadata(
+    env: str, session_id: str, ci_info: dict, git_info: dict
+) -> None:
     """
     Attach shared metadata that will be injected into every structured JSON log entry.
 
@@ -91,18 +93,25 @@ def attach_global_logging_metadata(env: str, session_id: str, ci_info: dict, git
     This should be called once after configure_logging() so JSONFormatter includes these keys.
     Example keys added: env, session_id, ci_provider, ci_job_id, is_ci, git_commit, git_branch.
     """
-    GLOBAL_METADATA.update({
-        "env": env,
-        "session_id": session_id,
-        **ci_info,
-        **git_info,
-    })
+    GLOBAL_METADATA.update(
+        {
+            "env": env,
+            "session_id": session_id,
+            **ci_info,
+            **git_info,
+        }
+    )
 
 
 # ----------------------------------------------------------------------
 # Module environment toggles (import-time defaults, adjustable at runtime)
 # ----------------------------------------------------------------------
-_REDACT_ENABLED = os.getenv("REDACT_SENSITIVE_FIELDS", "1").lower() in ("1", "true", "yes", "on")
+_REDACT_ENABLED = os.getenv("REDACT_SENSITIVE_FIELDS", "1").lower() in (
+    "1",
+    "true",
+    "yes",
+    "on",
+)
 _INCLUDE_PAYLOADS = os.getenv("LOG_PAYLOADS", "").lower() in ("1", "true", "yes", "on")
 
 
@@ -217,7 +226,7 @@ def redact_obj(obj: Any, sensitive_keys: Optional[Iterable[str]] = None) -> Any:
             # Pattern: "key": "value" OR 'key': 'value'
             s = re.sub(
                 rf'(?i)(["\']?)\b({keys_re})\1\s*[:=]\s*(["\'])(.*?)\3',
-                lambda m: f'{m.group(1)}{m.group(2)}{m.group(1)}: {m.group(3)}***{m.group(3)}',
+                lambda m: f"{m.group(1)}{m.group(2)}{m.group(1)}: {m.group(3)}***{m.group(3)}",
                 s,
             )
             # Pattern: key = value (unquoted)
@@ -227,7 +236,7 @@ def redact_obj(obj: Any, sensitive_keys: Optional[Iterable[str]] = None) -> Any:
                 s,
             )
             # Pattern: Authorization: Bearer <token>
-            s = re.sub(r'(?i)(authorization\s*:\s*bearer\s+)[^\s,]+', r'\1***', s)
+            s = re.sub(r"(?i)(authorization\s*:\s*bearer\s+)[^\s,]+", r"\1***", s)
             return s
 
         # Non-container, non-string types -> return as-is
@@ -270,9 +279,14 @@ class CustomFormatter(logging.Formatter):
 
     SENSITIVE_KEYS = DEFAULT_SENSITIVE_KEYS
 
-    def __init__(self, fmt=None, datefmt=None, style='%', use_emojis=True):
+    def __init__(self, fmt=None, datefmt=None, style="%", use_emojis=True):
         super().__init__(fmt, datefmt, style)
-        env_disable = os.getenv("DISABLE_LOG_EMOJIS", "").lower() in ("1", "true", "yes", "on")
+        env_disable = os.getenv("DISABLE_LOG_EMOJIS", "").lower() in (
+            "1",
+            "true",
+            "yes",
+            "on",
+        )
         self.use_emojis = use_emojis and not env_disable
 
     @staticmethod
@@ -286,7 +300,7 @@ class CustomFormatter(logging.Formatter):
             "\U00002702-\U000027B0"
             "\U000024C2-\U0001F251"
             "]+",
-            flags=re.UNICODE
+            flags=re.UNICODE,
         )
         return emoji_pattern.sub("", msg)
 
@@ -389,7 +403,9 @@ class JSONFormatter(logging.Formatter):
         str(val).
     """
 
-    def __init__(self, pretty: bool = False, sensitive_keys: Optional[Iterable[str]] = None):
+    def __init__(
+        self, pretty: bool = False, sensitive_keys: Optional[Iterable[str]] = None
+    ):
         super().__init__()
         self.pretty = pretty
         self.sensitive_keys = sensitive_keys or DEFAULT_SENSITIVE_KEYS
@@ -450,7 +466,9 @@ class JSONFormatter(logging.Formatter):
         """
         # timestamp (robust to odd underlying values)
         try:
-            record_time = to_iso_utc(datetime.fromtimestamp(record.created, timezone.utc))
+            record_time = to_iso_utc(
+                datetime.fromtimestamp(record.created, timezone.utc)
+            )
         except (OverflowError, OSError, ValueError):
             # Fallback that still produces a stable UTC string with 'Z'
             # Use timezone-aware now instead of deprecated datetime.utcnow()
@@ -524,7 +542,11 @@ class JSONFormatter(logging.Formatter):
                 log.debug("JSONFormatter: failed formatting exc_info: %s", e)
 
         # Serialize to JSON (preserve Unicode)
-        return json.dumps(obj, indent=2, ensure_ascii=False) if self.pretty else json.dumps(obj, ensure_ascii=False)
+        return (
+            json.dumps(obj, indent=2, ensure_ascii=False)
+            if self.pretty
+            else json.dumps(obj, ensure_ascii=False)
+        )
 
 
 # ==============================================================================================
@@ -587,15 +609,26 @@ class TeamRoutingJSONLHandler(logging.Handler):
         except (OSError, IOError) as e:
             # I/O errors are the most commonly expected failure (disk full, permission, transient NFS).
             # Do not raise; log and let logging's handleError produce diagnostics.
-            log.debug("Structured JSONL I/O error for team '%s': %s", team, e, exc_info=True)
+            log.debug(
+                "Structured JSONL I/O error for team '%s': %s", team, e, exc_info=True
+            )
             self.handleError(record)
         except (TypeError, ValueError) as e:
             # Formatting/serialization errors while producing the line — handle gracefully.
-            log.debug("Structured JSONL formatting error for team '%s': %s", team, e, exc_info=True)
+            log.debug(
+                "Structured JSONL formatting error for team '%s': %s",
+                team,
+                e,
+                exc_info=True,
+            )
             self.handleError(record)
         except Exception as e:
             # Last-resort catch: we still must not interrupt test execution, but surface details to the module logger.
-            log.exception("Unexpected error in TeamRoutingJSONLHandler.emit (team=%s): %s", team, e)
+            log.exception(
+                "Unexpected error in TeamRoutingJSONLHandler.emit (team=%s): %s",
+                team,
+                e,
+            )
             self.handleError(record)
 
     def _get_stream(self, team: str) -> TextIO:
@@ -619,11 +652,11 @@ class TeamRoutingJSONLHandler(logging.Handler):
 
         if team not in self._streams:
             logs_dir = (
-                    self.base_dir
-                    # / "logs"
-                    / team
-                    # / "logs"
-                    / ENV  # ✅ dynamic environment folder
+                self.base_dir
+                # / "logs"
+                / team
+                # / "logs"
+                / ENV  # ✅ dynamic environment folder
             )
 
             # Ensure directory exists
@@ -645,12 +678,16 @@ class TeamRoutingJSONLHandler(logging.Handler):
                     except (OSError, PermissionError) as e:
                         log.debug(
                             "Failed to remove old structured log %s: %s",
-                            old, e, exc_info=True
+                            old,
+                            e,
+                            exc_info=True,
                         )
             except OSError as e:
                 log.debug(
                     "Could not prune structured logs in %s: %s",
-                    logs_dir, e, exc_info=True
+                    logs_dir,
+                    e,
+                    exc_info=True,
                 )
             # ------------------------------------------------------------------
 
@@ -662,8 +699,7 @@ class TeamRoutingJSONLHandler(logging.Handler):
                 LAST_STRUCTURED_LOG = str(path.resolve())
             except (OSError, IOError) as e:
                 log.debug(
-                    "Failed to open structured log file %s: %s",
-                    path, e, exc_info=True
+                    "Failed to open structured log file %s: %s", path, e, exc_info=True
                 )
                 raise
 
@@ -699,9 +735,12 @@ def _resolve_project_root() -> Path:
     """
     p = Path(__file__).resolve()
     for parent in p.parents:
-        if ((parent / ".git").exists() or (parent / "pyproject_root.toml").exists() or
-                (parent / "setup.cfg").exists() or
-                (parent / "README.md").exists()):
+        if (
+            (parent / ".git").exists()
+            or (parent / "pyproject_root.toml").exists()
+            or (parent / "setup.cfg").exists()
+            or (parent / "README.md").exists()
+        ):
             return parent
     # fallback: try to move up 3 levels (typical layout: <repo>/EcommerceAPI/src/utils/...)
     try:
@@ -753,9 +792,24 @@ def configure_logging() -> logging.Logger:
     # ------------------------------------------------------------------
     # Feature flags
     # ------------------------------------------------------------------
-    disable_emojis_env = os.getenv("DISABLE_LOG_EMOJIS", "").lower() in ("1", "true", "yes", "on")
-    enable_structured = os.getenv("ENABLE_STRUCTURED_LOGS", "").lower() in ("1", "true", "yes", "on")
-    enable_pretty = os.getenv("ENABLE_JSON_PRETTY", "").lower() in ("1", "true", "yes", "on")
+    disable_emojis_env = os.getenv("DISABLE_LOG_EMOJIS", "").lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+    enable_structured = os.getenv("ENABLE_STRUCTURED_LOGS", "").lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+    enable_pretty = os.getenv("ENABLE_JSON_PRETTY", "").lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
 
     use_emojis = (not is_ci) and (not disable_emojis_env)
 
@@ -792,8 +846,7 @@ def configure_logging() -> logging.Logger:
 
         # Remove any stale handler (pytest process reuse safe)
         root.handlers = [
-            h for h in root.handlers
-            if getattr(h, "name", None) != handler_name
+            h for h in root.handlers if getattr(h, "name", None) != handler_name
         ]
 
         handler = TeamRoutingJSONLHandler(

@@ -122,7 +122,12 @@ log = logging.getLogger(__name__)
 # ----------------------------------------------------------------
 # Strict discovery mode (opt-in, CI friendly)
 # ----------------------------------------------------------------
-STRICT_ENTITY_DISCOVERY = os.getenv("STRICT_ENTITY_DISCOVERY", "0").lower() in ("1", "true", "yes", "on",)
+STRICT_ENTITY_DISCOVERY = os.getenv("STRICT_ENTITY_DISCOVERY", "0").lower() in (
+    "1",
+    "true",
+    "yes",
+    "on",
+)
 
 
 # ----------------------------------------------------------------
@@ -132,6 +137,7 @@ class ResourceType(str, Enum):
     """
     Standardized resource type names used when registering or cleaning up created test resources.
     """
+
     CUSTOMER = "customers"
     PRODUCT = "products"
     COUPON = "coupons"
@@ -162,6 +168,7 @@ class EntityBundle:
         db_record = dao.get_customer_by_id(customers["id"])
 
     """
+
     helper: Any
     dao: Any
     delete_method: Callable[[str], Any]
@@ -186,6 +193,7 @@ class SharedAPIResources(TypedDict, total=False):
     Note: Kept as TypedDict for runtime compatibility; use AllResources for ergonomic attribute access.
 
     """
+
     register_resource: Callable[[str, str], None]
     mark_resource_deleted: Callable[[str, str], None]
     api_client: Any
@@ -300,7 +308,11 @@ def discover_entities(api_client: APIClient) -> Dict[str, EntityBundle]:
         entity_lower = entity_name.lower()
 
         # Conservative singular prefix (customers -> customers)
-        prefix = entity_lower[:-1] if entity_lower.endswith("s") and len(entity_lower) > 1 else entity_lower
+        prefix = (
+            entity_lower[:-1]
+            if entity_lower.endswith("s") and len(entity_lower) > 1
+            else entity_lower
+        )
 
         # Step 1: predictable module filename candidates (deduped)
         candidate_modules = list(
@@ -367,7 +379,8 @@ def discover_entities(api_client: APIClient) -> Dict[str, EntityBundle]:
             (
                 getattr(helper_mod, attr)
                 for attr in dir(helper_mod)
-                if attr.lower().startswith(entity.lower()) and attr.lower().endswith("helper")
+                if attr.lower().startswith(entity.lower())
+                and attr.lower().endswith("helper")
             ),
             None,
         )
@@ -391,7 +404,9 @@ def discover_entities(api_client: APIClient) -> Dict[str, EntityBundle]:
         # Resolve protocol and delete method
         protocol_key = api_protocol_map.get(entity)
         protocol_util = protocol_utils.get(protocol_key)
-        delete_method = getattr(protocol_util, "delete", None) if protocol_util else None
+        delete_method = (
+            getattr(protocol_util, "delete", None) if protocol_util else None
+        )
 
         if not delete_method:
             msg = f"No delete method found for entity '{entity}'."
@@ -433,7 +448,11 @@ def discover_entities(api_client: APIClient) -> Dict[str, EntityBundle]:
                 helper_instance = helper_cls(api_instance)
                 log.debug("✅ [%s] Instantiated helper with API client", entity)
             except TypeError as e:
-                log.error("❌ [%s] Helper signature incompatible with API client: %s", entity, e)
+                log.error(
+                    "❌ [%s] Helper signature incompatible with API client: %s",
+                    entity,
+                    e,
+                )
                 continue
 
             # Step 3: Instantiate DAO if it's a class
@@ -453,9 +472,7 @@ def discover_entities(api_client: APIClient) -> Dict[str, EntityBundle]:
 
             # Step 4: Register the entity bundle
             entities[entity] = EntityBundle(
-                helper=helper_instance,
-                dao=dao_instance,
-                delete_method=delete_method
+                helper=helper_instance, dao=dao_instance, delete_method=delete_method
             )
 
         except (ImportError, TypeError, ValueError, RuntimeError) as e:
@@ -541,19 +558,17 @@ def shared_api_resources(api_client: APIClient) -> SharedAPIResources:
     if STRICT_ENTITY_DISCOVERY:
         if not entity_registry:
             raise RuntimeError(
-                "❌ No API entities discovered. "
-                "Check helper/DAO naming conventions."
+                "❌ No API entities discovered. " "Check helper/DAO naming conventions."
             )
 
         incomplete = [
-            name for name, bundle in entity_registry.items()
+            name
+            for name, bundle in entity_registry.items()
             if not bundle.helper or not bundle.dao or not bundle.delete_method
         ]
 
         if incomplete:
-            raise RuntimeError(
-                f"❌ Incomplete entity bundles discovered: {incomplete}"
-            )
+            raise RuntimeError(f"❌ Incomplete entity bundles discovered: {incomplete}")
 
     # log.debug(f"Entity registry keys: {list(entity_registry.keys())}")
     # Internal tracking for created and deleted resources
@@ -565,7 +580,11 @@ def shared_api_resources(api_client: APIClient) -> SharedAPIResources:
         if resource_id not in tracked_resources[res_type]:
             tracked_resources[res_type].append(resource_id)
         else:
-            log.warning("⚠️ Duplicate %s ID %s already registered — ignoring.", res_type[:-1], resource_id)
+            log.warning(
+                "⚠️ Duplicate %s ID %s already registered — ignoring.",
+                res_type[:-1],
+                resource_id,
+            )
 
     def mark_resource_deleted(res_type: str, resource_id: str):
         """Mark a resource as already deleted manually — will be skipped during teardown."""
@@ -576,7 +595,10 @@ def shared_api_resources(api_client: APIClient) -> SharedAPIResources:
 
     # The resource fixture exposes helpers, DAOs, delete methods, and tracking utils
     data = {
-        **{f"{entity}_helper": bundle.helper for entity, bundle in entity_registry.items()},
+        **{
+            f"{entity}_helper": bundle.helper
+            for entity, bundle in entity_registry.items()
+        },
         **{f"{entity}_dao": bundle.dao for entity, bundle in entity_registry.items()},
         "api_client": api_client,
         "register_resource": register_resource,
@@ -597,13 +619,16 @@ def shared_api_resources(api_client: APIClient) -> SharedAPIResources:
                 continue
             bundle = entity_registry.get(resource_type)
             if not bundle:
-                log.warning(f"No entity bundle for {resource_type} — skipping teardown.")
+                log.warning(
+                    f"No entity bundle for {resource_type} — skipping teardown."
+                )
                 continue
             delete_func = bundle.delete_method
             already_deleted_ids = deleted_resources.get(resource_type, set())
             total_created = len(set(resource_ids))
             # Import cleanup_items only when needed (to avoid import cycles)
             from EcommerceAPI.src.shared.helpers.cleanup_helpers import cleanup_items
+
             cleanup_items(
                 resource_type=resource_type,
                 resource_ids=resource_ids,
@@ -611,12 +636,16 @@ def shared_api_resources(api_client: APIClient) -> SharedAPIResources:
                 label=resource_type[:-1],
                 summary_log=summary_log,
                 total_created=total_created,
-                already_deleted_ids=already_deleted_ids
+                already_deleted_ids=already_deleted_ids,
             )
 
         # Print teardown summary
-        created_counts = {rtype: len(set(ids)) for rtype, ids in tracked_resources.items()}
-        log.info("\n\n🧹 ====================================== CLEANUP SUMMARY ======================================")
+        created_counts = {
+            rtype: len(set(ids)) for rtype, ids in tracked_resources.items()
+        }
+        log.info(
+            "\n\n🧹 ====================================== CLEANUP SUMMARY ======================================"
+        )
         log.info(f"📊 Created during test run: {created_counts}")
         log.info("🧾 Cleanup total summary:")
         for line in summary_log:
@@ -631,7 +660,9 @@ def shared_api_resources(api_client: APIClient) -> SharedAPIResources:
 # Optional ergonomic wrapper for shared_api_resources
 # ----------------------------------------------------------------
 @pytest.fixture(scope="module")
-def shared_api_resources_obj(shared_api_resources: SharedAPIResources) -> EntitiesRegistry[Any]:
+def shared_api_resources_obj(
+    shared_api_resources: SharedAPIResources,
+) -> EntitiesRegistry[Any]:
     """
     Optional wrapper that exposes both Mapping and attribute-style access for the shared_api_resources fixture
     produced elsewhere in conftest.
@@ -642,7 +673,9 @@ def shared_api_resources_obj(shared_api_resources: SharedAPIResources) -> Entiti
       or still use dict-style:
         shared_api_resources_obj["register_resource"](...)
     """
-    return EntitiesRegistry.from_dict(shared_api_resources)  # EntitiesRegistry accepts any dict-like
+    return EntitiesRegistry.from_dict(
+        shared_api_resources
+    )  # EntitiesRegistry accepts any dict-like
 
 
 # ----------------------------------------------------------------
@@ -696,7 +729,9 @@ class AllResources:
         if isinstance(name, str) and name in entities:
             return entities[name]
 
-        raise AttributeError(f"{type(self).__name__!s} object has no attribute {name!r}")
+        raise AttributeError(
+            f"{type(self).__name__!s} object has no attribute {name!r}"
+        )
 
     def __dir__(self):
         """
@@ -754,6 +789,7 @@ def all_resources(shared_api_resources: SharedAPIResources) -> AllResources:
 # ----------------------------------------------------------------
 # Generic cross-domain entity access fixtures
 # ----------------------------------------------------------------
+
 
 @pytest.fixture
 def entity_helper(all_resources) -> Callable[[str], Any]:
