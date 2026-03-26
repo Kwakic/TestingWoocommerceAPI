@@ -64,6 +64,40 @@ git push both
 
 👉 No terminal needed
 
+
+---
+
+
+# 🔥Professional Workflow
+
+```
+[After merge]
+↓
+Delete branch (remote + local)
+↓
+Checkout main
+↓
+Pull latest changes
+↓
+(Optional) git fetch --prune
+↓
+Create new branch
+↓
+Work + commit
+↓
+Push
+↓
+Create PR
+↓
+Merge
+↓
+Repeat
+```
+
+
+
+
+
 ---
 
 ## ✅ Step-by-Step CLI Workflow Guide
@@ -72,7 +106,12 @@ git push both
 
 ```bash
 git checkout main
+
 git pull origin main
+
+# If you receive a message: There is no tracking information for the current branch.
+# Git doesn't know: which remote? which branch? Run following command to set it:
+git branch --set-upstream-to=origin/main main
 ```
 
 👉 Mandatory before starting new work
@@ -312,40 +351,6 @@ git pull --rebase origin main
 ```
 
 
-
----
-
-
-# 🔥 Final Professional Workflow
-
-```
-[After merge]
-↓
-Delete branch (remote + local)
-↓
-Checkout main
-↓
-Pull latest changes
-↓
-(Optional) git fetch --prune
-↓
-Create new branch
-↓
-Work + commit
-↓
-Push
-↓
-Create PR
-↓
-Merge
-↓
-Repeat
-```
-
-
----
-
-
 ---
 
 ## 🔀 Switching Branches
@@ -430,7 +435,7 @@ git config --global push.autoSetupRemote true
 **The Problem:**
 
 Normally, when you create a new local branch and try to run git push, Git stops you because it doesn't know where on
-the server to put it. You are forced to type git push --set-upstream origin your-branch-name.
+the server to put it. You are forced to type `git push --set-upstream origin your-branch-name`.
 
 **The Fix:**
 
