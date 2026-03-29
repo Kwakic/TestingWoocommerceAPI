@@ -148,7 +148,10 @@ git commit -m "Fix: login flow bug"
 ### 6. Push branch
 
 ```bash
+git push --set-upstream origin QA_bug_4567
+# or shortcut:
 git push -u origin QA_bug_4567
+
 ```
 ---
 
