@@ -106,19 +106,70 @@ git pull origin main
 
 # If you receive a message: There is no tracking information for the current branch.
 # Git doesn't know: which remote? which branch? Run following command to set it:
-git branch --set-upstream-to=origin/main main
+git branch --set-upstream-to=origin/main
+# or a shortcut:
+git branch -u origin/main
 ```
 
 👉 Mandatory before starting new work
 
+_Note: You usually only need to run `git branch -u origin/main` once per machine. After that, a simple git pull is enough._
+
+---
+### 2. If you have an existing branch then merge possible changes from the main branch into your current branch.
+
+Before you do Step 2 or Step 7 (the merges`git merge main`), your "**Working Directory**" must be clean.
+
+If you have half-finished code that isn't ready to commit, Git will block the merge.
+
+You have two choices before you merge main into your branch:
+
+1.**The "Commit" way**: If your code is "good enough," just run following commands:
+
+```bash
+git add .
+git commit -m "WIP: working on login"
+```
+Now your directory is clean.
+
+2.**The "Stash" way:** If your code is a mess and you don't want to commit it yet, use Git Stash.
+It’s like a temporary drawer for your work.
+
+**The Stash Workflow:**
+- `git stash` (Your half-finished changes disappear; the directory is now "clean").
+- `git merge main` (Combine the new team updates).
+- `git stash pop` (Your half-finished changes reappear on top of the new code).
+
+
+To avoid conflicts and ensure your current branch (fix/bug_ticket_1235) is up-to-date:
+
+```
+# go back to main branch
+git checkout main
+
+# check for updates
+git fetch origin main
+
+# check the changes
+git status
+```
+
+If there are changes on the main branch then run following commands:
+
+```bash
+git pull main
+git checkout fix/bug_ticket_1235
+git merge origin/main
+```
+
 ---
 
-### 2. Create a new branch
+### 3. Create a new branch (in case you don't have any)
 
 **Note**: Use one branch per ticket/feature if all commits belong to the same ticket/feature.
 
 ```bash
-git checkout -b QA_bug_4567
+git checkout -b fix/bug_ticket_1235
 ```
 
 ---
@@ -148,23 +199,62 @@ git commit -m "Fix: login flow bug"
 ### 6. Push branch
 
 ```bash
-git push --set-upstream origin QA_bug_4567
-# or shortcut:
-git push -u origin QA_bug_4567
+git push
+
+# if it's a new branch run following command:
+git push --set-upstream origin fix/bug_ticket_1235
+# or a shortcut:
+git push -u origin fix/bug_ticket_1235
 
 ```
 ---
 
-### 7. Before creating PR (IMPORTANT)
+### 7.a. Before creating PR do `git merge main` (IMPORTANT)
 
-To avoid conflicts and ensure your branch is up-to-date: (same file changed in both branches):
+To avoid conflicts and ensure your branch is up-to-date.
 
-**Fix** = rebase and resolve (or skip if safe)
+**Merge says:** "Take the new changes from main and tie them to my branch with a knot (a merge commit)."
+
+A "**Merge-based**" strategy is more transparent and less risky for beginners then rebase—merging because it doesn't rewrite history.
+
+```bash
+# go back to main branch
+git checkout main
+
+# check for updates
+git fetch origin main
+
+# check the changes
+git status
+```
+
+If there are changes run following commands:
+
+```bash
+git pull main
+git checkout fix/bug_ticket_1235
+git merge origin/main
+```
+
+---
+
+### 7.b. Before creating PR (IMPORTANT)
+
+To avoid conflicts and ensure your branch is up-to-date: (same file changed in both branches).
+
+**Rebase says:** "Lift up my work, let the new main changes slide in underneath, and then put my work back on top."
+
+It rewrites history: It technically deletes your old commits and creates brand new ones. If someone else is also working
+on your branch, their Git will get very confused.
+
+Rebase and resolve (or skip if safe):
 
 
 ```bash
 git fetch origin
 git rebase origin/main
+# Result: Your commits just move to the very tip of the timeline.
+# No extra "Merge" commit.
 git push --force-with-lease
 ```
 
@@ -179,6 +269,8 @@ So normal push won’t work → you MUST use:
 
 #### 🎯 Note: Rebase only when needed (before PR or when branch is outdated), not after every commit.
 
+
+---
 
 ---
 
@@ -203,23 +295,32 @@ So normal push won’t work → you MUST use:
 #### Delete remote branch (GitHub)
 - Click "Delete branch"
 
-OR
+or in CLI run this command:
 
 ```bash
-git push origin --delete QA_bug_4567
+git push origin --delete fix/bug_ticket_1235
 ```
 
-#### Delete local branch
+#### Delete local branch (Local Cleanup)
+
+If you used "`Squash and Merge`" on GitHub, your local machine might think your branch isn't fully merged yet
+(because the commit IDs changed during the squash).
+
+If `git branch -d` gives you an error, use the capital `-D` to force delete it, since you know the work is safe on GitHub:
 
 ```bash
 git checkout main
 git pull origin main
-git branch -d QA_bug_4567
+git branch -d fix/bug_ticket_1235
+# or
+git branch -D fix/bug_ticket_1235
+
 ```
 
 ---
 
-## 🔄 Optional: Clean stale branches
+
+### 11. Optional: Clean stale branches
 
 ```bash
 git fetch origin --prune
@@ -727,12 +828,47 @@ trim trailing whitespace.................................................Failed
 ---
 
 ## 🔍 Git Fetch vs. Git Pull
+In Git, `git fetch` is a "safe" command that downloads the latest changes (commits, files, and branches) from a remote repository
+(like GitHub) to your local machine without merging them into your actual work.
+
+Think of `git fetch` as checking the mail and git pull as opening the mail and acting on it.
+
+### 1. The "Safety First" Approach
+
+- Scenario: You know your teammate pushed code, but you're worried it might break your current work.
+- Command: `git fetch`
+- Result: You can now see their new commits in your history (via git log), but your code files don't change.
+You are safe to keep working.
+
+### 2. The "Update Me Now" Approach
+
+- Scenario: You just sat down to work and want your local files to match exactly what is on GitHub right now.
+- Command: `git pull`
+- Result: Git downloads the data and updates your files immediately. If there are conflicts, you'll have to fix them right now.
+
+### 3. The "Comparison" Approach
+
+- Scenario: You want to see exactly how many commits you are "behind" the rest of the team.
+- Commands:
+    ```
+    git fetch (Updates your local records)
+    git status
+  ```
+- Result: Git will tell you: "Your branch is behind 'origin/main' by 3 commits." No files were moved or changed in the process.
+
 
 | Command | What it does | Impact on your code |
 | :--- | :--- | :--- |
 | **git fetch** | Downloads data from remote | **None.** Only updates remote tracking. |
 | **git pull** | `git fetch` + `git merge` | **Updates your local files** immediately. |
 
+---
+## Git logs:
+..........
+
+```
+git log --oneline --graph
+```
 
 ---
 ## 📌 Summary
