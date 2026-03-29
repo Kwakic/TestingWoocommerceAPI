@@ -65,10 +65,10 @@ git push both
 👉 No terminal needed
 
 
----
 
 
-# 🔥Professional Workflow
+
+## 🔥 Workflow
 
 ```
 [After merge]
@@ -94,10 +94,6 @@ Merge
 Repeat
 ```
 
-
-
-
-
 ---
 
 ## ✅ Step-by-Step CLI Workflow Guide
@@ -106,7 +102,6 @@ Repeat
 
 ```bash
 git checkout main
-
 git pull origin main
 
 # If you receive a message: There is no tracking information for the current branch.
@@ -130,7 +125,7 @@ git checkout -b QA_bug_4567
 
 ### 3. Work on your code
 
-Make changes in PyCharm.
+Make changes in code/file in PyCharm.
 
 ---
 
@@ -153,12 +148,41 @@ git commit -m "Fix: login flow bug"
 ### 6. Push branch
 
 ```bash
+git push --set-upstream origin QA_bug_4567
+# or shortcut:
 git push -u origin QA_bug_4567
+
 ```
+---
+
+### 7. Before creating PR (IMPORTANT)
+
+To avoid conflicts and ensure your branch is up-to-date: (same file changed in both branches):
+
+**Fix** = rebase and resolve (or skip if safe)
+
+
+```bash
+git fetch origin
+git rebase origin/main
+git push --force-with-lease
+```
+
+👉 Always rebase your branch on the latest main before creating a pull request.
+
+🧠 Why force push is needed
+After rebase: Git rewrites commit history
+
+So normal push won’t work → you MUST use:
+
+`git push --force-with-lease`
+
+#### 🎯 Note: Rebase only when needed (before PR or when branch is outdated), not after every commit.
+
 
 ---
 
-### 7. Create Pull Request (PR)
+### 8. Create Pull Request (PR)
 
 - Go to GitHub
 - Click "Compare & pull request"
@@ -167,14 +191,14 @@ git push -u origin QA_bug_4567
 
 ---
 
-### 8. Merge PR
+### 9. Merge PR
 
-- Use "Squash and merge" (recommended)
+- Use "`Squash and merge`" (recommended)
 - Ensures clean commit history
 
 ---
 
-### 9. Cleanup (Delete branch)
+### 10. Cleanup (Delete branch)
 
 #### Delete remote branch (GitHub)
 - Click "Delete branch"
@@ -216,6 +240,70 @@ git fetch origin --prune
 git push -u origin branch-name
 ```
 Links local and remote branch for future pushes
+
+## 🧠 Troubleshooting - conflict
+A conflict happens when the same file is changed in two branches and Git cannot decide which version to keep when combining them.
+
+You can encounter a conflict like:
+
+1. You had a branch e.g. `bug/ticket4375`
+2. Meanwhile `main` got new changes. Someone (or you via another PR) updated main.
+3. Both changed the same files. Both you and main modified for example: `README files`
+4. Then you tried to combine them → conflict. So Git said: I don't know which version is correct"
+5. What triggered the conflict: `Conflict = same file changed in two places + you try to combine them`
+6. In my case, combining happened during: `git rebase origin/main`
+
+- Conflict = same file changed in both branches
+- Fix = rebase and resolve (or skip if safe)
+
+
+### 🔧 How to fix it
+
+`git rebase --skip`
+
+👉 Meaning: "Ignore this problematic commit"
+
+Git saw those changes already existed → skipped them → no conflict
+
+### 🧠 Why it worked
+
+`Your commits (line ending changes) were already in main`
+
+So skipping = safe ✅
+
+## 🚀 How to avoid this in the future
+✅ Rule 1 — Keep your branch updated
+
+Before finishing work or creating PR:
+
+```
+git fetch origin
+git rebase origin/main
+```
+
+✅ Rule 2 — Don’t wait too long
+
+If you work for a long time on a branch:
+
+`Rebase occasionally (once per day is enough)`
+
+✅ Rule 3 — Expect conflicts on shared files
+
+👉 Change often → higher chance of conflict
+
+✅ Rule 4 — Don’t panic
+
+`Conflicts are normal in Git`
+
+They do NOT mean:
+
+* you did something wrong ❌
+* your code is broken ❌
+
+### ⚠️ One-line prevention rule
+Always rebase your branch on the latest main before creating a pull request.
+
+
 
 ---
 
