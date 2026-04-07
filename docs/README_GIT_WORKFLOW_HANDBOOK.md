@@ -4,8 +4,8 @@
 
 # 🚀 Overview
 This guide expands the standard Git workflow with:
-- Dual GitHub + GitLab setup
-- PyCharm-only workflow
+- Changing Remotes, Dual GitHub + GitLab setup
+- PyCharm + CLI workflow
 - Branch protection
 - Commit strategy
 - Merge conflict avoidance
@@ -21,9 +21,45 @@ main → create branch → commit → push → PR → merge → delete branch
 
 ---
 
-# 🌐 1. Dual GitLab + GitHub Workflow
+# 🌐 1. Changing Remotes, Dual GitHub + GitLab setup
 
-## Setup "both" remote
+## I. Changing Remotes
+
+To interact with a specific remote, include its name (e.g., origin or GitLab) in your command:
+
+* **To Push:**
+
+    * Push to GitHub: `git push origin <branch-name>`
+    * Push to GitLab: `git push GitLab <branch-name>`
+
+
+* **To Pull:**
+
+    * Pull from GitHub: `git pull origin <branch-name>`
+    * Pull from GitLab: `git pull GitLab <branch-name>`
+
+
+* **To Fetch Updates:**
+
+  * `git fetch GitLab` or `git fetch origin`
+  * Get updates from all remotes at once: `git fetch --all`
+
+### Setting a Default Remote (Upstream)**
+
+If you want a branch to always use a specific remote by default (so you can just type `git push` or `git pull`),
+you can set the "**upstream**" tracking:
+
+```
+# Link the current local branch to GitLab's main branch
+git push -u GitLab main
+```
+
+**Note:** The `-u `(or `--set-upstream`) flag remembers your choice for that specific branch.
+
+Once the upstream is set, you can use just `git pull `or `git push` without specifying the remote (`GitLab`) or branch
+(`main`) each time.
+
+## II. Setup "both" remote
 
 ```bash
 git remote add both <GitLab-URL>
@@ -43,7 +79,7 @@ git push both
 
 ---
 
-# 🧑‍💻 2. PyCharm-Only Workflow (No Terminal)
+# 🧑‍💻 2.a. PyCharm-Only Workflow (No Terminal)
 
 ### Daily flow
 
@@ -64,37 +100,8 @@ git push both
 
 👉 No terminal needed
 
-
-
-
-
-## 🔥 Workflow
-
-```
-[After merge]
-↓
-Delete branch (remote + local)
-↓
-Checkout main
-↓
-Pull latest changes
-↓
-(Optional) git fetch --prune
-↓
-Create new branch
-↓
-Work + commit
-↓
-Push
-↓
-Create PR
-↓
-Merge
-↓
-Repeat
-```
-
 ---
+# 🧑‍💻 2.b. CLI Workflow (Terminal)
 
 ## ✅ Step-by-Step CLI Workflow Guide
 
@@ -496,16 +503,6 @@ git pull --rebase origin main
 
 # 🔀 6. Rebase vs Merge
 
-## Merge (default)
-
-```bash
-git merge main
-```
-
-✔ Keeps full history
-❌ Creates extra merge commits
-
----
 
 ## Rebase (clean history)
 
@@ -517,7 +514,51 @@ git pull --rebase origin main
 ✔ Cleaner logs
 ❌ Requires care
 
+An example of `git rebase origin/main` is standard best practice—as long as you are currently sitting on your private
+feature branch when you run it.
+
+### ✅ 1. The Good Practice (Updating your branch)
+If you are on `bug/ticket_fix_1234` and run:
+
+```
+bash
+
+git fetch origin
+git rebase origin/main
+```
+
+This is great. You are taking your private, unmerged commits and "lifting" them to sit on top of the latest work from
+the team.
+
+**Why:** It keeps your history clean and ensures your code works with the very latest version of the project before you
+submit a Pull Request.
+
+### ❌ 2. The Bad Practice (Rebasing Main itself)
+If you are on the main branch and run:
+
+```
+bash
+
+git checkout main
+git rebase some-other-feature  # BAD
+# OR
+git rebase (any command that changes existing main commits) # BAD
+```
+
+This is the "never do this" zone. If you rewrite the history of main and then git push --force, you break the repository
+for everyone else on the team. Their local main will no longer match the server, and they’ll get "diverged branch" errors.
+
+## Merge (default)
+
+```bash
+git merge main
+```
+
+✔ Keeps full history
+❌ Creates extra merge commits
+
 ---
+
 
 ## When to use what?
 
@@ -526,9 +567,17 @@ git pull --rebase origin main
 | Team/shared branch | Merge |
 | Personal feature branch | Rebase |
 
----
 
-# ⚡ Recommended for YOU
+### 🏷️ Summary: Where are you standing?
+The "**safety**" of a rebase depends entirely on which branch you are currently on:
+
+- **On your private branch?** Rebase away! It’s your sandbox. It makes your eventual Pull Request look professional and easy
+to review.
+
+- **On a shared/production branch**? Stick to git merge or git pull. Never rewrite history that others are counting on.
+
+
+## ⚡ Recommended for YOU
 
 Since you:
 - work solo or small team
@@ -539,6 +588,43 @@ Since you:
 git pull --rebase origin main
 ```
 
+
+### The Breakdown
+
+`git pull --rebase origin main` is simply a shortcut (an "alias" of sorts) for running those two commands manually.
+
+| Step | `git fetch` + `git rebase` | `git pull --rebase` |
+| :--- | :--- | :--- |
+| **Step 1** | `git fetch origin` (Downloads new data) | Done automatically in the background. |
+| **Step 2** | `git rebase origin/main` (Moves your commits) | Done automatically in the background. |
+
+### 🧠 Why use one over the other?
+**1. Use the two-step (fetch then rebase) if:**
+
+- **You're cautious:** You want to run git log origin/main after fetching to see what your teammates actually changed
+before you commit to rebasing your work on top of it.
+- **You're debugging:** If a rebase goes wrong, it's sometimes easier to see exactly where it failed when running the
+commands individually.
+
+**2. Use the one-liner (pull --rebase) if:**
+
+- **You're in a flow:** You trust the incoming changes and just want to sync up as fast as possible.
+- **You hate "Merge" commits:** You want to avoid that "Merge branch 'main' of..." commit message that a standard git pull creates.
+
+`git pull --rebase origin main` is a pro move for keeping your local work clean. It’s a shortcut that does two
+things in one command:
+
+1. **Fetch:** Grabs the latest commits from the remote main.
+2. **Rebase:** Takes your local, unpushed commits and "lifts" them to sit on top of those new incoming commits.
+
+## 🧠 Why people love it:
+Without `--rebase`, a standard `git pull` performs a merge. This often creates a "clutter" commit that says something
+like "Merge branch 'main' of github.com..." every time you sync.
+
+Using -`-rebase` avoids that extra commit, keeping your branch history a perfectly straight line.
+
+## 🧪 The Bottom Line:
+As long as you are standing on your private feature branch, `git pull --rebase` is the cleanest way to stay up to date.
 
 ---
 
