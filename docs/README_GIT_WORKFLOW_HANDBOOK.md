@@ -197,6 +197,22 @@ git add .
 
 ### 5. Commit changes
 
+If you own `.pre-commit-config.yaml` file the best practice is to run `pre-commit run --all-files` before to run
+`git commit -m "....."`
+
+#### Why to run it?
+
+* **Automatic Fixing**: If a hook (like a code formatter) modifies your files, those new changes will be unstaged. You will
+need to git add them again before you can successfully commit.
+* **Manual verification**: Running it manually after git add lets you catch and fix errors before entering the commit message interface.
+
+```bash
+# It is used to check every file in the repository, not just the staged ones.
+pre-commit run --all-files
+```
+
+Now run the commit:
+
 ```bash
 git commit -m "Fix: login flow bug"
 ```
@@ -826,15 +842,40 @@ To see exactly which line endings are currently in your index (i/) and your work
 
 ---
 
-## 📚 Configuration file  .pre-commit-config.yaml
+# 📚 Configuration file  .pre-commit-config.yaml
 
 `.pre-commit-config.yaml` is the configuration file for pre-commit, a framework used to manage and maintain multi-language Git hooks.
 
 Placed at the root of a repository, this file tells the tool which automated checks (hooks) to run every time you
-attempt a git commit. If any of these checks fail, the commit is blocked, ensuring that only high-quality, formatted
+attempt a `git commit`. If any of these checks fail, the commit is blocked, ensuring that only high-quality, formatted
 code enters your repository.
 
-### 🧠 Key Functions
+### 🧠 Here is how high-level teams typically handle it:
+
+### 1. "Shift Left" (Local Enforcement)
+Companies want to catch bugs before they reach the server.
+
+* **Onboarding:** When a new dev joins, they run pre-commit install. This hooks into their local Git.
+
+* **Automatic Checks:** Every time they run git commit, the hooks run. If a file has trailing whitespace or fails a test, the
+commit is blocked locally. This saves time and CI (Continuous Integration) costs.
+
+### 2. CI/CD Gatekeeper (The "Safety Net")
+Even if a developer skips the local check (using --no-verify), the CI pipeline (GitHub Actions, GitLab CI, or Jenkins)
+runs the exact same checks.
+
+* The pipeline runs `pre-commit run --all-files`.
+* If it fails, the **Merge Request (MR)** or **Pull Request (PR)** is blocked. You cannot merge broken or poorly formatted code.
+
+### 3. Centralized Shared Configs
+In very large companies (hundreds of repos), they don't copy-paste the config.
+
+* They create a "**Global Pre-commit Repo**".
+* Individual projects then reference those "central" hooks so that every project in the company follows the same
+Python/Black/Linting standards automatically.
+
+
+### 🔄 Key Functions
 
 - **Defining Hooks**: It lists the external repositories and specific "hook IDs" to be used, such as Black for Python formatting or Prettier for web technologies.
 - **Version Control**: It specifies the exact version (rev) of each tool to use, ensuring that every developer on a team runs the exact same checks.
@@ -858,18 +899,18 @@ pre-commit run --all-files
 * fix files
 * maybe fail once
 * then pass on next commit
-*
- What big teams do is NOT a raw `.git/hooks/pre-commit` script — they use a managed tool so it’s:
+
+ What big teams do is NOT a raw `.git/hooks/pre-commit` script — they use a managed tool (e.g. file: `.pre-commit-config.yaml`) so it’s:
  - versioned in the repo
  - consistent for everyone
  - easy to maintain
 
- ✅ Use the pre-commit framework (Python tool) 👉 This replaces manual `.git/hooks/pre-commit`
+ ✅ Use the pre-commit framework (Python tool `.pre-commit-config.yaml`) 👉 This replaces manual `.git/hooks/pre-commit`
 
  🔥 Why this is MUCH better than .git sample hook current script.
 
- | Feature         | Your script  | Enterprise setup |
-| --------------- | ------------ | ---------------- |
+ | Feature         | Script       | Enterprise setup |
+| --------------- |--------------| ---------------- |
 | Whitespace fix  | ❌ warn only  | ✅ auto-fix       |
 | Formatting      | ❌ none       | ✅ black          |
 | Linting         | ❌ none       | ✅ flake8         |
