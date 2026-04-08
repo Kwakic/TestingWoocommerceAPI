@@ -155,11 +155,29 @@ You have two choices before you merge main into your branch:
 
 ### 1️⃣ The "Commit" way:
 
-If your code is "good enough," just run following commands:
-
+If your code is "good enough," move changes from your working directory to the staging area:
 
 ```bash
 git add .
+```
+
+If you own `.pre-commit-config.yaml` file the best practice is to run `pre-commit run --all-files` before to run
+`git commit -m "....."`
+
+#### Why to run it?
+
+* **Automatic Fixing**: If a hook (like a code formatter) modifies your files, those new changes will be unstaged. You will
+need to git add them again before you can successfully commit.
+* **Manual verification**: Running it manually after git add lets you catch and fix errors before entering the commit message interface.
+
+```bash
+# It is used to check every file in the repository, not just the staged ones.
+pre-commit run --all-files
+```
+
+Now run the commit:
+
+```bash
 git commit -m "WIP: working on login"
 ```
 Now your directory is clean.
