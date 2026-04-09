@@ -263,7 +263,6 @@ git merge origin/main
 
 ```
 git fetch origin main  # Download newest stuff from server
-git status # Alternativelly, check the changes made
 git merge origin/main  # Merge that data directly into your fix branch
 ```
 ### 💡 Why the "Pro" way wins:
