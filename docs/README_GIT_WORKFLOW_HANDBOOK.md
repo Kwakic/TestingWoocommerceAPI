@@ -166,13 +166,14 @@ If you own `.pre-commit-config.yaml` file the best practice is to run `pre-commi
 
 #### Why to run it?
 
+* Run pre-commit before committing to **catch and fix issues early**
 * **Automatic Fixing**: If a hook (like a code formatter) modifies your files, those new changes will be unstaged. You will
 need to git add them again before you can successfully commit.
 * **Manual verification**: Running it manually after git add lets you catch and fix errors before entering the commit message interface.
 
 ```bash
-# It is used to check every file in the repository, not just the staged ones.
-pre-commit run --all-files
+# This runs only on staged files (what you just added)
+pre-commit run
 ```
 
 Now run the commit:
@@ -185,6 +186,8 @@ Now your directory is clean.
 ---
 
 ### 2️⃣ The "Stash" way:
+
+Use git stash when your changes are not ready to commit.
 
 #### ✅ Why this is better than committing?
 
@@ -306,32 +309,8 @@ git stash pop
 ☝️ Tip: If you have brand-new files that you haven't even "added" yet, use `git stash -u` to make sure those untracked files are tucked away too.
 
 ---
-## 🔹 Step 6 — 🔄 Run pre-commit file if exists
 
-
-If you own `.pre-commit-config.yaml` file the best practice is to run `pre-commit run --all-files` before to run
-`git commit -m "....."`
-
-#### Why to run it?
-
-* **Automatic Fixing**: If a hook (like a code formatter) modifies your files, those new changes will be unstaged. You will
-need to git add them again before you can successfully commit.
-* **Manual verification**: Running it manually after git add lets you catch and fix errors before entering the commit message interface.
-
-```bash
-# It is used to check every file in the repository, not just the staged ones.
-pre-commit run --all-files
-```
-
-Now run the commit:
-
-```bash
-git commit -m "Fix: login flow bug"
-```
-
----
-
-### 6. Push branch
+## 🔹 Step 6 — 🚀 Push the branch
 
 ```bash
 git push
@@ -344,7 +323,9 @@ git push -u origin fix/bug_ticket_1235
 ```
 ---
 
-### 7.a. Before creating PR do `git merge main` (IMPORTANT)
+
+
+## 🔹 Step 7.a. Before creating PR do `git merge main` (IMPORTANT)
 
 To avoid conflicts and ensure your branch is up-to-date.
 
@@ -373,7 +354,7 @@ git merge origin/main
 
 ---
 
-### 7.b. Before creating PR (IMPORTANT)
+## 🔹 7.b. Before creating PR (IMPORTANT)
 
 To avoid conflicts and ensure your branch is up-to-date: (same file changed in both branches).
 
