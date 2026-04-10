@@ -4,8 +4,8 @@
 
 # 🚀 Overview
 This guide expands the standard Git workflow with:
-- Dual GitHub + GitLab setup
-- PyCharm-only workflow
+- Changing Remotes, Dual GitHub + GitLab setup
+- PyCharm + CLI workflow
 - Branch protection
 - Commit strategy
 - Merge conflict avoidance
@@ -16,14 +16,52 @@ This guide expands the standard Git workflow with:
 # 🔁 Standard Workflow
 
 ```
-main → create branch → commit → push → PR → merge → delete branch
+main → create branch → work on code → commit → push → PR → merge → delete branch
 ```
 
 ---
 
-# 🌐 1. Dual GitLab + GitHub Workflow
+# 🌐 1. Changing Remotes, Dual GitHub + GitLab setup
 
-## Setup "both" remote
+##   🔄  Changing Remotes
+
+To interact with a specific remote, include its name (e.g., origin or GitLab) in your command:
+
+* **To Push:**
+
+    * Push to GitHub: `git push origin <branch-name>`
+    * Push to GitLab: `git push GitLab <branch-name>`
+
+
+* **To Pull:**
+
+    * Pull from GitHub: `git pull origin <branch-name>`
+    * Pull from GitLab: `git pull GitLab <branch-name>`
+
+
+* **To Fetch Updates:**
+
+  * `git fetch GitLab` or `git fetch origin`
+  * Get updates from all remotes at once: `git fetch --all`
+
+### Setting a Default Remote (Upstream)**
+
+If you want a branch to always use a specific remote by default (so you can just type `git push` or `git pull`),
+you can set the "**upstream**" tracking:
+
+```
+# Link the current local branch to GitLab's main branch
+git push -u GitLab main
+```
+
+**Note:** The `-u `(or `--set-upstream`) flag remembers your choice for that specific branch.
+
+Once the upstream is set, you can use just `git pull `or `git push` without specifying the remote (`GitLab`) or branch
+(`main`) each time.
+
+---
+
+## 🔧 Setup "both" remote
 
 ```bash
 git remote add both <GitLab-URL>
@@ -31,19 +69,19 @@ git remote set-url --add --push both <GitHub-URL>
 git remote set-url --add --push both <GitLab-URL>
 ```
 
-## Push to both
+###  Push to both
 
 ```bash
 git push both
 ```
 
-## PyCharm alternative
+### PyCharm alternative
 - Open Push dialog (Ctrl+Shift+K)
 - Select remote (origin / github)
 
 ---
 
-# 🧑‍💻 2. PyCharm-Only Workflow (No Terminal)
+# 🧑‍💻 2.a. PyCharm-Only Workflow (No Terminal)
 
 ### Daily flow
 
@@ -64,41 +102,12 @@ git push both
 
 👉 No terminal needed
 
-
-
-
-
-## 🔥 Workflow
-
-```
-[After merge]
-↓
-Delete branch (remote + local)
-↓
-Checkout main
-↓
-Pull latest changes
-↓
-(Optional) git fetch --prune
-↓
-Create new branch
-↓
-Work + commit
-↓
-Push
-↓
-Create PR
-↓
-Merge
-↓
-Repeat
-```
-
 ---
+# 🧑‍💻 2.b. Step-by-Step CLI Workflow Guide (Terminal)
 
-## ✅ Step-by-Step CLI Workflow Guide
 
-### 1. Always start from updated main
+
+## 🔹Step 1 — ✅ Always start from updated main
 
 ```bash
 git checkout main
@@ -109,37 +118,110 @@ git pull origin main
 git branch --set-upstream-to=origin/main
 # or a shortcut:
 git branch -u origin/main
+# You usually only need to run `git branch -u origin/main` once per machine. After that, a simple git pull is enough.
 ```
 
-👉 Mandatory before starting new work
-
-_Note: You usually only need to run `git branch -u origin/main` once per machine. After that, a simple git pull is enough._
+❗Mandatory before starting new work. This gets your local main up to speed with the server in one go.
 
 ---
-### 2. If you have an existing branch then merge possible changes from the main branch into your current branch.
 
-Before you do Step 2 or Step 7 (the merges`git merge main`), your "**Working Directory**" must be clean.
+## 🔹Step 2 —  🛠️ Create a new branch (in case you don't have any)
 
-If you have half-finished code that isn't ready to commit, Git will block the merge.
+**Note**: Use one branch per ticket/feature if all commits belong to the same ticket/feature.
+
+```bash
+git checkout -b fix/bug_ticket_1235
+```
+
+---
+
+## 🔹 Step 3 — 👩🏻‍💻 Work on code
+
+Make changes in code/file in PyCharm.
+
+---
+
+## 🔹 Step 4 —  📝 Stage and commit changes before merging it
+
+Before you do next step (the merges: `git merge main` to avoid possible conflict when we push our code from fixing branch),
+your "Working Directory" must be clean.
+
+Git protects your work by blocking any merge that might overwrite your uncommitted changes. If you have half-finished
+code that isn't ready to commit, Git will block the merge.
+
+
 
 You have two choices before you merge main into your branch:
 
-1.**The "Commit" way**: If your code is "good enough," just run following commands:
+### 1️⃣ The "Commit" way:
+
+If your code is "good enough," move changes from your working directory to the staging area:
 
 ```bash
 git add .
+```
+
+If you own `.pre-commit-config.yaml` file the best practice is to run `pre-commit run --all-files` before to run
+`git commit -m "....."`
+
+#### Why to run it?
+
+* Run pre-commit before committing to **catch and fix issues early**
+* **Automatic Fixing**: If a hook (like a code formatter) modifies your files, those new changes will be unstaged. You will
+need to git add them again before you can successfully commit.
+* **Manual verification**: Running it manually after git add lets you catch and fix errors before entering the commit message interface.
+
+```bash
+# This runs only on staged files (what you just added)
+pre-commit run
+```
+
+Now run the commit:
+
+```bash
 git commit -m "WIP: working on login"
 ```
 Now your directory is clean.
 
-2.**The "Stash" way:** If your code is a mess and you don't want to commit it yet, use Git Stash.
-It’s like a temporary drawer for your work.
+---
 
-**The Stash Workflow:**
-- `git stash` (Your half-finished changes disappear; the directory is now "clean").
-- `git merge main` (Combine the new team updates).
-- `git stash pop` (Your half-finished changes reappear on top of the new code).
+### 2️⃣ The "Stash" way:
 
+Use git stash when your changes are not ready to commit.
+
+#### ✅ Why this is better than committing?
+
+* Keeps history clean (no cluttering your history): You don't have to make messy commits like "saving progress" or
+"work-in-progress" etc. just to get a merge to work.
+
+* If your code is a mess and you don't want to commit it yet, the standard "Git Pro" move is to use `git stash`.
+It’s like a temporary drawer for your work (pause).
+
+This allows you to pull in updates from main even if you have half-finished code sitting in your fix branch.
+
+Stash your work. Move your uncommitted changes to a temporary storage area by running following command:
+
+```
+git stash
+```
+
+💡 _Your half-finished changes disappear; the directory is now "clean"_
+
+---
+
+
+## 🔹 Step 5 — 🔄 Merge possible changes from the main branch into your fix branch.
+
+Merging `main` into your current branch (like a "fix" or "feature" branch) is a best practice used to detect and resolve
+conflicts early before your code ever reaches the shared repository.
+
+### 💡 Why merging is the "Best Practice"
+
+* **Conflict Resolution:** It allows you to deal with any overlapping changes made by teammates while you are still in your own safe space. It is much better to fix a conflict locally on your branch than to break the shared main branch or a Pull Request.
+* **Testing against the "Future"**: By merging main, you are testing your changes against the most up-to-date version of the project. This ensures your fix still works with new code others have added.
+* **Cleaner Pull Requests**: Most platforms like GitHub or GitLab will not let you merge a Pull Request if it has conflicts with the target branch. Updating your branch first makes the final merge into main a "clean" one.
+
+### 1️⃣ Download the latest updates: Grab everything from the server.
 
 To avoid conflicts and ensure your current branch (fix/bug_ticket_1235) is up-to-date:
 
@@ -150,53 +232,84 @@ git checkout main
 # check for updates
 git fetch origin main
 
-# check the changes
+# check the changes made
 git status
 ```
+### 2️⃣ Merge into your branch: Combine the new main code into your current fix branch.
 
 If there are changes on the main branch then run following commands:
 
 ```bash
-git pull main
+git pull origin main
 git checkout fix/bug_ticket_1235
 git merge origin/main
 ```
 
 ---
 
-### 3. Create a new branch (in case you don't have any)
+### 🚀 Pro-Tip: The "One-Liner"
 
-**Note**: Use one branch per ticket/feature if all commits belong to the same ticket/feature.
+If you don't want to keep switching back and forth to the main branch, you can do this while staying on your fix branch:
 
-```bash
-git checkout -b fix/bug_ticket_1235
+❌ Instead of doing this:
+
+```
+git checkout main
+git pull origin main
+git checkout fix/bug_ticket_1235
+git merge origin/main
+```
+✅️ Simply stay on your fixing branch and run following commands:
+
+```
+git fetch origin main  # Download newest stuff from server
+git merge origin/main  # Merge that data directly into your fix branch
+```
+### 💡 Why the "Pro" way wins:
+
+* **You never have to leave your fix branch**, and your local main stays out of the way.
+* **No Context Switching:** You don't have to checkout main, wait for your IDE to reload files, then checkout back.
+* **Cleaner Local Main:** Your local main branch doesn't even need to be updated. You’re pulling from the "source of truth" (the server) directly into your feature.
+* **Speed:** It’s fewer commands and less disk activity for your computer.
+
+By using `git fetch origin main`, you download the latest code into a hidden folder (the remote-tracking branch `origin/main`)
+without touching your own files. Then, `git merge origin/main` brings those specific updates into your work.
+
+### 💡 Why this works?
+
+In Git, `git pull` is essentially a combination of `git fetch` followed immediately by `git merge`. By breaking these apart, you gain more control:
+
+* `git fetch origin main`: Specifically downloads the latest history from the `main` branch on the server (`origin`) and
+stores it in your local remote-tracking branch, usually named `origin/main`.
+* `git merge origin/main`: Integrates those specific downloaded changes into your current branch (e.g., `fix-branch`)
+without ever needing to touch your local `main` branch.
+
+⚠️ _One small catch: If you ever actually need to work on your local main branch later, it will still be "old" until you
+eventually run `git pull` on it. But for daily development on a fix branch, the Pro way is much faster._
+
+---
+
+### 3️⃣ If used `git stash` bring your work back: Pop your changes out of storage and put them back on top.
+
+```
+git stash pop
 ```
 
----
+* **Safety first**: If `git stash pop` causes a conflict with the new code from `main`, Git will tell you immediately.
+* **Efficiency**: You never have to leave your fix branch or `checkout` to `main` at all.
 
-### 3. Work on your code
+### Key Commands for stash Flow
 
-Make changes in code/file in PyCharm.
+* `git stash`: Saves your uncommitted changes and resets your branch to a "clean" state.
+* `git stash list`: Shows you all the bits of work you currently have tucked away.
+* `git stash pop`: Re-applies the most recent stash and removes it from your storage list.
+* `git stash apply`: Re-applies the stash but keeps it in storage (useful if you're nervous and want a backup).
 
----
-
-### 4. Stage changes
-
-```bash
-git add .
-```
+☝️ Tip: If you have brand-new files that you haven't even "added" yet, use `git stash -u` to make sure those untracked files are tucked away too.
 
 ---
 
-### 5. Commit changes
-
-```bash
-git commit -m "Fix: login flow bug"
-```
-
----
-
-### 6. Push branch
+## 🔹 Step 6 — 🚀 Push the branch
 
 ```bash
 git push
@@ -209,7 +322,9 @@ git push -u origin fix/bug_ticket_1235
 ```
 ---
 
-### 7.a. Before creating PR do `git merge main` (IMPORTANT)
+
+
+## 🔹 Step 7.a. Before creating PR do `git merge main` (IMPORTANT)
 
 To avoid conflicts and ensure your branch is up-to-date.
 
@@ -238,7 +353,7 @@ git merge origin/main
 
 ---
 
-### 7.b. Before creating PR (IMPORTANT)
+## 🔹 7.b. Before creating PR (IMPORTANT)
 
 To avoid conflicts and ensure your branch is up-to-date: (same file changed in both branches).
 
@@ -416,7 +531,7 @@ Always rebase your branch on the latest main before creating a pull request.
 2. Click **Branches**
 3. Add rule for `main`
 
-## Recommended settings:
+## 📌 Recommended settings:
 - Require pull request before merging
 - Require status checks (CI)
 - Require branches to be up to date
@@ -496,16 +611,6 @@ git pull --rebase origin main
 
 # 🔀 6. Rebase vs Merge
 
-## Merge (default)
-
-```bash
-git merge main
-```
-
-✔ Keeps full history
-❌ Creates extra merge commits
-
----
 
 ## Rebase (clean history)
 
@@ -517,7 +622,53 @@ git pull --rebase origin main
 ✔ Cleaner logs
 ❌ Requires care
 
+An example of `git rebase origin/main` is standard best practice—as long as you are currently sitting on your private
+feature branch when you run it.
+
+### ✅ 1. The Good Practice (Updating your branch)
+If you are on `bug/ticket_fix_1234` and run:
+
+```
+bash
+
+git fetch origin
+git rebase origin/main
+```
+
+This is great. You are taking your private, unmerged commits and "lifting" them to sit on top of the latest work from
+the team.
+
+**Why:** It keeps your history clean and ensures your code works with the very latest version of the project before you
+submit a Pull Request.
+
+### ❌ 2. The Bad Practice (Rebasing Main itself)
+If you are on the main branch and run:
+
+```
+bash
+
+git checkout main
+git rebase some-other-feature  # BAD
+# OR
+git rebase (any command that changes existing main commits) # BAD
+```
+
+This is the "never do this" zone. If you rewrite the history of main and then git push --force, you break the repository
+for everyone else on the team. Their local main will no longer match the server, and they’ll get "diverged branch" errors.
+
+## Merge (default)
+
+`git merge` is the command used to combine the history and changes from one branch into another
+
+```bash
+git merge main
+```
+
+* ✔ Keeps full history
+* ❌ Creates extra merge commits
+
 ---
+
 
 ## When to use what?
 
@@ -526,9 +677,17 @@ git pull --rebase origin main
 | Team/shared branch | Merge |
 | Personal feature branch | Rebase |
 
----
 
-# ⚡ Recommended for YOU
+### 🏷️ Summary: Where are you standing?
+The "**safety**" of a rebase depends entirely on which branch you are currently on:
+
+- **On your private branch?** Rebase away! It’s your sandbox. It makes your eventual Pull Request look professional and easy
+to review.
+
+- **On a shared/production branch**? Stick to git merge or git pull. Never rewrite history that others are counting on.
+
+
+## ⚡ Recommended for YOU
 
 Since you:
 - work solo or small team
@@ -539,6 +698,43 @@ Since you:
 git pull --rebase origin main
 ```
 
+
+### The Breakdown
+
+`git pull --rebase origin main` is simply a shortcut (an "alias" of sorts) for running those two commands manually.
+
+| Step | `git fetch` + `git rebase` | `git pull --rebase` |
+| :--- | :--- | :--- |
+| **Step 1** | `git fetch origin` (Downloads new data) | Done automatically in the background. |
+| **Step 2** | `git rebase origin/main` (Moves your commits) | Done automatically in the background. |
+
+### 🧠 Why use one over the other?
+**1. Use the two-step (fetch then rebase) if:**
+
+- **You're cautious:** You want to run git log origin/main after fetching to see what your teammates actually changed
+before you commit to rebasing your work on top of it.
+- **You're debugging:** If a rebase goes wrong, it's sometimes easier to see exactly where it failed when running the
+commands individually.
+
+**2. Use the one-liner (pull --rebase) if:**
+
+- **You're in a flow:** You trust the incoming changes and just want to sync up as fast as possible.
+- **You hate "Merge" commits:** You want to avoid that "Merge branch 'main' of..." commit message that a standard git pull creates.
+
+`git pull --rebase origin main` is a pro move for keeping your local work clean. It’s a shortcut that does two
+things in one command:
+
+1. **Fetch:** Grabs the latest commits from the remote main.
+2. **Rebase:** Takes your local, unpushed commits and "lifts" them to sit on top of those new incoming commits.
+
+## 🧠 Why people love it:
+Without `--rebase`, a standard `git pull` performs a merge. This often creates a "clutter" commit that says something
+like "Merge branch 'main' of github.com..." every time you sync.
+
+Using -`-rebase` avoids that extra commit, keeping your branch history a perfectly straight line.
+
+## 🧪 The Bottom Line:
+As long as you are standing on your private feature branch, `git pull --rebase` is the cleanest way to stay up to date.
 
 ---
 
@@ -740,15 +936,40 @@ To see exactly which line endings are currently in your index (i/) and your work
 
 ---
 
-## 📚 Configuration file  .pre-commit-config.yaml
+# 📚 Configuration file  .pre-commit-config.yaml
 
 `.pre-commit-config.yaml` is the configuration file for pre-commit, a framework used to manage and maintain multi-language Git hooks.
 
 Placed at the root of a repository, this file tells the tool which automated checks (hooks) to run every time you
-attempt a git commit. If any of these checks fail, the commit is blocked, ensuring that only high-quality, formatted
+attempt a `git commit`. If any of these checks fail, the commit is blocked, ensuring that only high-quality, formatted
 code enters your repository.
 
-### 🧠 Key Functions
+### 🧠 Here is how high-level teams typically handle it:
+
+### 1. "Shift Left" (Local Enforcement)
+Companies want to catch bugs before they reach the server.
+
+* **Onboarding:** When a new dev joins, they run pre-commit install. This hooks into their local Git.
+
+* **Automatic Checks:** Every time they run git commit, the hooks run. If a file has trailing whitespace or fails a test, the
+commit is blocked locally. This saves time and CI (Continuous Integration) costs.
+
+### 2. CI/CD Gatekeeper (The "Safety Net")
+Even if a developer skips the local check (using --no-verify), the CI pipeline (GitHub Actions, GitLab CI, or Jenkins)
+runs the exact same checks.
+
+* The pipeline runs `pre-commit run --all-files`.
+* If it fails, the **Merge Request (MR)** or **Pull Request (PR)** is blocked. You cannot merge broken or poorly formatted code.
+
+### 3. Centralized Shared Configs
+In very large companies (hundreds of repos), they don't copy-paste the config.
+
+* They create a "**Global Pre-commit Repo**".
+* Individual projects then reference those "central" hooks so that every project in the company follows the same
+Python/Black/Linting standards automatically.
+
+
+### 🔄 Key Functions
 
 - **Defining Hooks**: It lists the external repositories and specific "hook IDs" to be used, such as Black for Python formatting or Prettier for web technologies.
 - **Version Control**: It specifies the exact version (rev) of each tool to use, ensuring that every developer on a team runs the exact same checks.
@@ -772,18 +993,18 @@ pre-commit run --all-files
 * fix files
 * maybe fail once
 * then pass on next commit
-*
- What big teams do is NOT a raw `.git/hooks/pre-commit` script — they use a managed tool so it’s:
+
+ What big teams do is NOT a raw `.git/hooks/pre-commit` script — they use a managed tool (e.g. file: `.pre-commit-config.yaml`) so it’s:
  - versioned in the repo
  - consistent for everyone
  - easy to maintain
 
- ✅ Use the pre-commit framework (Python tool) 👉 This replaces manual `.git/hooks/pre-commit`
+ ✅ Use the pre-commit framework (Python tool `.pre-commit-config.yaml`) 👉 This replaces manual `.git/hooks/pre-commit`
 
  🔥 Why this is MUCH better than .git sample hook current script.
 
- | Feature         | Your script  | Enterprise setup |
-| --------------- | ------------ | ---------------- |
+ | Feature         | Script       | Enterprise setup |
+| --------------- |--------------| ---------------- |
 | Whitespace fix  | ❌ warn only  | ✅ auto-fix       |
 | Formatting      | ❌ none       | ✅ black          |
 | Linting         | ❌ none       | ✅ flake8         |
