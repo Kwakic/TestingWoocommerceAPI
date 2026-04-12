@@ -212,7 +212,7 @@ git stash
 
 ## 🔹 Step 5. 🔄 Check for possible changes on the main branch (IMPORTANT)
 
-You have two ways to avoid conflicts on main branch: no.1.`git merge` and no.2.`git rebase` _(ℹ️ more info in the article rebase vs merge)._
+You have two ways to avoid conflicts on main branch: `git merge` and `git rebase` _(ℹ️ more info in the article rebase vs merge)._
 
 It ensures your branch has the **latest updates** from `main` so your code is compatible with the "current reality" of the project.
 Even though you are the only person working on your fix branch, other people are working on `main`.
@@ -261,7 +261,8 @@ git status
 
 ---
 
-### 2️⃣ [no.1. Merge]: Merge into your branch: Combine the new main code into your current fix branch.
+### 2️⃣ Merge or Rebase
+### 🟢 I. [option-merge]: Merge into your branch: Combine the new main code into your current fix branch.
 
 **Merge says:** "Take the new changes from main and tie them to my branch with a knot (a merge commit)."
 
@@ -275,7 +276,7 @@ git pull origin main
 git checkout fix/bug_ticket_1235
 git merge origin/main
 ```
-### 2️⃣ [no.2. Rebase]: Rebase your branch: Combine the new main code into your current fix branch.
+### 🟢 II. [option-rebase]: Rebase your branch: Combine the new main code into your current fix branch.
 
 **Rebase says:** "Lift up my work, let the new main changes slide in underneath, and then put my work back on top."
 
