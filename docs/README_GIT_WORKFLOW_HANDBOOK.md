@@ -405,9 +405,9 @@ So normal push won’t work → you MUST use:
 
 ---
 
-### 10. Cleanup (Delete branch)
+## 🔹 Step 10 — 🗑️ Cleanup (Delete branch)
 
-#### Delete remote branch (GitHub)
+### 1️⃣ 🌿 Delete remote branch (GitHub)
 - Click "Delete branch"
 
 or in CLI run this command:
@@ -416,21 +416,23 @@ or in CLI run this command:
 git push origin --delete fix/bug_ticket_1235
 ```
 
-#### Delete local branch (Local Cleanup)
+### 2️⃣ 🌿 Delete local branch (Local Cleanup)
 
 If you used "`Squash and Merge`" on GitHub, your local machine might think your branch isn't fully merged yet
 (because the commit IDs changed during the squash).
 
-If `git branch -d` gives you an error, use the capital `-D` to force delete it, since you know the work is safe on GitHub:
-
 ```bash
+# 1. Switch to another branch (usually main):
 git checkout main
+# 2. Pull last update:
 git pull origin main
+# 3. Delete the branch:
 git branch -d fix/bug_ticket_1235
 # or
 git branch -D fix/bug_ticket_1235
 
 ```
+📝 Note: If `git branch -d fix/bug_ticket_1235` gives you an error, use the capital `-D` to force delete it, since you know the work is safe on GitHub:
 
 ---
 
@@ -600,7 +602,7 @@ Here is a breakdown of what each part of the command does:
 * `--graph:` Adds a text-based ASCII graph (using symbols like *, |, and /) on the left side of the output to visualize branching and merging.
 * `-10`: Limits the output to only the 10 most recent commits in the history.
 
-**Logs output explained:**
+**🧠 Logs output explained:**
 ```
 *  = a commit
 |  = branch line continues
@@ -778,8 +780,30 @@ Using -`-rebase` avoids that extra commit, keeping your branch history a perfect
 As long as you are standing on your private feature branch, `git pull --rebase` is the cleanest way to stay up to date.
 
 ---
+## 7. 🍒 git cherry-pick
 
-## 🔀 Switching Branches
+`git cherry-pick `is a command that allows you to select specific, individual commits from one branch and apply them to another.
+
+Unlike `git merge `or `git rebase`, which integrate entire branch histories, cherry-picking gives you "surgical precision"
+to move only the exact changes you need.
+
+### 🧠 How It Works
+When you cherry-pick a commit, Git calculates the changes (diff) introduced by that commit and applies them to your
+current working branch.
+
+* **New Commit**: It creates a new commit object on your target branch with a unique SHA identifier, even if the content is
+identical to the original.
+* **Original Unchanged**: The original commit remains exactly where it was in its source branch.
+
+### 📝 Common Use Cases
+
+* **Hotfixes**: If you find a critical bug in a feature branch but aren't ready to merge the whole feature yet, you can cherry-pick just the fix commit into your production branch.
+* **Undo/Correct Mistakes**: If you accidentally committed code to the wrong branch, you can cherry-pick it onto the correct one and then revert it on the original.
+* **Backporting**: Bringing specific features or bug fixes from a newer version of the software (e.g., main) back to an older, supported release branch.
+
+---
+
+## 🔀 8. Switching Branches
 
 ### Modern way
 
@@ -802,7 +826,7 @@ git switch -
 
 ---
 
-## 🔗 Upstream Branch (Tracking)
+## 9. 🔗 Upstream Branch (Tracking)
 
 Set upstream manually:
 
