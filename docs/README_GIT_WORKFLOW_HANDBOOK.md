@@ -1272,10 +1272,24 @@ git branch -vv
 ```
 
 Lists all the remote repositories:
+
+It checks currently connected repositories to your local project, along with their specific URLs
+
 ```bash
 `git remote -v`
 ```
-It checks currently connected repositories to your local project, along with their specific URLs
+
+List only remote branches:
+
+```
+git branch -a
+```
+
+List everything:
+
+```
+git branch -r
+```
 
 ---
 
