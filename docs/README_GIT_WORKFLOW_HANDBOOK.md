@@ -602,30 +602,8 @@ Here is a breakdown of what each part of the command does:
 * `--graph:` Adds a text-based ASCII graph (using symbols like *, |, and /) on the left side of the output to visualize branching and merging.
 * `-10`: Limits the output to only the 10 most recent commits in the history.
 
-**🧠 Logs output explained:**
-```
-*  = a commit
-|  = branch line continues
-\  = branch splits or merges
-/  = branch joins back
-```
-
-**🔍 An example:**
-```
-*   71ba5d3 (HEAD -> fix/bug_ticke_666, origin/fix/bug_ticke_666)
-|\
-| * a3554a7 (origin/main)
-* | 2403d53 no.1
-* | 4bc468b Merge...
-|\|
-```
-🧠 How to read it (step-by-step)
-🔝 This line:
-
-
-
-
 ---
+
 
 # 🧠 5. How to Avoid Merge Conflicts
 
@@ -997,6 +975,61 @@ To see exactly which line endings are currently in your index (i/) and your work
 | **Consistency** | Guaranteed for all team members | Depends on everyone's setup |
 | **Precision** | Target specific extensions | Applies to everything |
 | **Safety** | Prevents binary file corruption | Risk of corrupting binaries |
+
+
+---
+
+# ⚡ Git Shortcuts (set, edit, delete)
+
+## 🗃️ Set shortcut:
+
+```
+git config --global alias.lg "log --oneline --graph --decorate --all -10"
+```
+
+📝 _Note: You don't need --no-pager inside the Git alias because Git aliases automatically handle the output correctly,
+but you can add it if you strictly want to bypass the pager._
+
+### 🔥 Now you only run shortcut:
+
+```
+git lg
+```
+
+## ✏️ Edit the shortcut
+
+### 1. Overwrite it via Command Line
+Simply run the `git config `command again with the **new** definition. Git will automatically overwrite the old `lg` alias
+with whatever you type last:
+
+```
+git config --global alias.lg "log --oneline --graph --decorate --all -20"
+```
+_(In this example, I changed -10 to -20 to show more commits)._
+
+### 2. Edit the Git Config File (Recommended)
+If the command is getting long and you want to see exactly what you've saved, it's often easier to edit your global
+config file directly:
+
+```
+git config --global --edit"
+```
+
+Look for the `[alias] `section. It will look like this:
+
+```
+[alias]
+    lg = log --oneline --graph --decorate --all -10
+```
+_Modify the text after the = sign, save the file, and close it. The changes take effect immediately._
+
+
+## 🗑️ How to Delete an Alias
+If you want to start over or remove it entirely:
+
+```
+git config --global --unset alias.lg
+```
 
 
 ---
