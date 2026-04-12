@@ -584,6 +584,47 @@ test/customers-negative-cases
 
 ---
 
+## 🔍 Check history of commits.
+It provides a condensed, visual representation of your repository's recent commit history.
+
+`git log --oneline --graph --decorate --all -10`
+
+If you don’t want to enter the pager:
+
+`git --no-pager log --oneline --graph --decorate --all -10`
+
+Here is a breakdown of what each part of the command does:
+
+* `--oneline:` Each commit is condensed into a single line that includes a shortened version of the commit hash and the first line of the commit message.
+* `--decorate:` Displays the names of branches, tags, and HEAD next to the commits they currently point to.
+* `--graph:` Adds a text-based ASCII graph (using symbols like *, |, and /) on the left side of the output to visualize branching and merging.
+* `-10`: Limits the output to only the 10 most recent commits in the history.
+
+**Logs output explained:**
+```
+*  = a commit
+|  = branch line continues
+\  = branch splits or merges
+/  = branch joins back
+```
+
+**🔍 An example:**
+```
+*   71ba5d3 (HEAD -> fix/bug_ticke_666, origin/fix/bug_ticke_666)
+|\
+| * a3554a7 (origin/main)
+* | 2403d53 no.1
+* | 4bc468b Merge...
+|\|
+```
+🧠 How to read it (step-by-step)
+🔝 This line:
+
+
+
+
+---
+
 # 🧠 5. How to Avoid Merge Conflicts
 
 ## Golden Rule:
