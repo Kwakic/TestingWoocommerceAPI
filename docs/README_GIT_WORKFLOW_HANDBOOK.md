@@ -4,12 +4,14 @@
 
 # 🚀 Overview
 This guide expands the standard Git workflow with:
-- Changing Remotes, Dual GitHub + GitLab setup
-- PyCharm + CLI workflow
-- Branch protection
-- Commit strategy
-- Merge conflict avoidance
-- Rebase vs Merge
+
+* Changing Remotes, Dual GitHub + GitLab setup
+* PyCharm + CLI workflows
+* Branch protection
+* Continuous Integration (CI) with Pytest
+* Commit strategy
+* Merge conflict avoidance
+* Rebase vs Merge
 
 ---
 
@@ -81,7 +83,7 @@ git push both
 
 ---
 
-# 🧑‍💻 2.a. PyCharm-Only Workflow (No Terminal)
+# 🧑‍💻 2.[a]. PyCharm-Only Workflow (No Terminal)
 
 ### Daily flow
 
@@ -103,11 +105,11 @@ git push both
 👉 No terminal needed
 
 ---
-# 🧑‍💻 2.b. Step-by-Step CLI Workflow Guide (Terminal)
+# 🧑‍💻 2.[b]. Step-by-Step CLI Workflow Guide (Terminal)
 
 
 
-## 🔹Step 1 — ✅ Always start from updated main
+## 🔹Step 1. ✅ Always start from updated main
 
 ```bash
 git checkout main
@@ -125,7 +127,7 @@ git branch -u origin/main
 
 ---
 
-## 🔹Step 2 —  🛠️ Create a new branch (in case you don't have any)
+## 🔹Step 2. 🛠️ Create a new branch (in case you don't have any)
 
 **Note**: Use one branch per ticket/feature if all commits belong to the same ticket/feature.
 
@@ -135,20 +137,19 @@ git checkout -b fix/bug_ticket_1235
 
 ---
 
-## 🔹 Step 3 — 👩🏻‍💻 Work on code
+## 🔹 Step 3. 👩🏻‍💻 Work on code
 
 Make changes in code/file in PyCharm.
 
 ---
 
-## 🔹 Step 4 —  📝 Stage and commit changes before merging it
+## 🔹 Step 4. 📝 Stage and commit
 
-Before you do next step (the merges: `git merge main` to avoid possible conflict when we push our code from fixing branch),
+Before you do next step (do merge/rebase to avoid possible conflict when we push our code from fixing branch),
 your "Working Directory" must be clean.
 
 Git protects your work by blocking any merge that might overwrite your uncommitted changes. If you have half-finished
 code that isn't ready to commit, Git will block the merge.
-
 
 
 You have two choices before you merge main into your branch:
@@ -209,17 +210,39 @@ git stash
 
 ---
 
+## 🔹 Step 5. 🔄 Check for possible changes on the main branch (IMPORTANT)
 
-## 🔹 Step 5 — 🔄 Merge possible changes from the main branch into your fix branch.
+You have two ways to avoid conflicts on main branch: no.1.`git merge` and no.2.`git rebase` _(ℹ️ more info in the article rebase vs merge)._
 
-Merging `main` into your current branch (like a "fix" or "feature" branch) is a best practice used to detect and resolve
+It ensures your branch has the **latest updates** from `main` so your code is compatible with the "current reality" of the project.
+Even though you are the only person working on your fix branch, other people are working on `main`.
+
+Merging/rebasing `main` into your current branch (like a "fix" or "feature" branch) is a best practice used to detect and resolve
 conflicts early before your code ever reaches the shared repository.
 
-### 💡 Why merging is the "Best Practice"
+### 💡 Why merging/rebasing is the "Best Practice before pushing your code?"
 
 * **Conflict Resolution:** It allows you to deal with any overlapping changes made by teammates while you are still in your own safe space. It is much better to fix a conflict locally on your branch than to break the shared main branch or a Pull Request.
-* **Testing against the "Future"**: By merging main, you are testing your changes against the most up-to-date version of the project. This ensures your fix still works with new code others have added.
+* **Testing against the "Future"**: By merging/rebasing main, you are testing your changes against the most up-to-date version of the project. This ensures your fix still works with new code others have added.
 * **Cleaner Pull Requests**: Most platforms like GitHub or GitLab will not let you merge a Pull Request if it has conflicts with the target branch. Updating your branch first makes the final merge into main a "clean" one.
+
+### 👉 Here is the "Why" in a real-world scenario:
+
+1. **Monday**: You start your fix branch. main is at Version A.
+2. **Tuesday**: You are still working. A teammate merges a big change into main. main is now at Version B.
+3. **Wednesday**: You finish. If you try to merge your code (based on Version A) into main (which is now Version B), GitHub might get confused or show a Merge Conflict.
+
+### ✅ By doing this step:
+
+* You bring Version B into your fix branch locally.
+* If your teammate's new code breaks your fix, you see it immediately on your computer.
+* You fix it, test it, and then push.
+* When you finally open the PR, GitHub sees that your branch already "knows" about Version B. The merge button turns green, and everything is smooth.
+
+### ✨ The Golden Rule:
+Always merge/rebase main into your branch before you merge your branch into main. It keeps the "drama" on your local machine and keeps the shared main branch clean and working.
+
+---
 
 ### 1️⃣ Download the latest updates: Grab everything from the server.
 
@@ -229,13 +252,21 @@ To avoid conflicts and ensure your current branch (fix/bug_ticket_1235) is up-to
 # go back to main branch
 git checkout main
 
-# check for updates
+# check for possible updates
 git fetch origin main
 
-# check the changes made
+# check for possible changes made in main branch
 git status
 ```
-### 2️⃣ Merge into your branch: Combine the new main code into your current fix branch.
+
+---
+
+### 2️⃣ [no.1. Merge]: Merge into your branch: Combine the new main code into your current fix branch.
+
+**Merge says:** "Take the new changes from main and tie them to my branch with a knot (a merge commit)."
+
+A "**Merge-based**" strategy is more transparent and less risky for beginners then rebase—merging because it doesn't rewrite history.
+
 
 If there are changes on the main branch then run following commands:
 
@@ -244,6 +275,28 @@ git pull origin main
 git checkout fix/bug_ticket_1235
 git merge origin/main
 ```
+### 2️⃣ [no.2. Rebase]: Rebase your branch: Combine the new main code into your current fix branch.
+
+**Rebase says:** "Lift up my work, let the new main changes slide in underneath, and then put my work back on top."
+
+It rewrites history: It technically deletes your old commits and creates brand new ones. If someone else is also working
+on your branch, their Git will get very confused.
+
+Rebase and resolve (or skip if safe):
+
+```bash
+git fetch origin
+git rebase origin/main
+# Result: Your commits just move to the very tip of the timeline.
+# No extra "Merge" commit.
+```
+
+🧠 Why force push is needed
+After rebase: Git rewrites commit history
+
+So normal push won’t work → you MUST use:
+
+`git push --force-with-lease`
 
 ---
 
@@ -264,6 +317,8 @@ git merge origin/main
 ```
 git fetch origin main  # Download newest stuff from server
 git merge origin/main  # Merge that data directly into your fix branch
+# or if using rebase:
+git rebase origin/main
 ```
 ### 💡 Why the "Pro" way wins:
 
@@ -309,9 +364,10 @@ git stash pop
 
 ---
 
-## 🔹 Step 6 — 🚀 Push the branch
+## 🔹 Step 6. 🚀 Push the branch
 
 ```bash
+# Option 1. if used merge in previous step run following command
 git push
 
 # if it's a new branch run following command:
@@ -319,41 +375,48 @@ git push --set-upstream origin fix/bug_ticket_1235
 # or a shortcut:
 git push -u origin fix/bug_ticket_1235
 
+# Option 2. if used rebase you MUST run following command instead:
+git push --force-with-lease
 ```
+
+### 💡 Why force push is needed
+
+After `git rebase`: Git rewrites commit history
+
+So normal push won’t work → you MUST use:
+
+`git push --force-with-lease`
+
 ---
 
+## 🔹 Step 7. 🚨 Before creating PR (IMPORTANT)
+
+This step ensures that if a teammate changed the same file in main while you were working, you fix that "clash" (conflict) on your computer first.
+
+You have two ways to avoid conflicts on main branch: no.1.`git merge` and no.2.`git rebase` _(ℹ️ more info in the article rebase vs merge)_
 
 
-## 🔹 Step 7.a. Before creating PR do `git merge main` (IMPORTANT)
+###  Option 1️⃣. Merge into your branch (`git merge`): Combine the new main code into your current fix branch.
 
 To avoid conflicts and ensure your branch is up-to-date.
+
+It ensures your branch has the **latest updates** from `main` so your code is compatible with the "current reality" of the project.
+Even though you are the only person working on your fix branch, other people are working on `main`.
 
 **Merge says:** "Take the new changes from main and tie them to my branch with a knot (a merge commit)."
 
 A "**Merge-based**" strategy is more transparent and less risky for beginners then rebase—merging because it doesn't rewrite history.
 
 ```bash
-# go back to main branch
-git checkout main
-
-# check for updates
-git fetch origin main
-
-# check the changes
-git status
-```
-
-If there are changes run following commands:
-
-```bash
-git pull main
-git checkout fix/bug_ticket_1235
-git merge origin/main
+# Assumed that you stay on your fixing branch
+git fetch origin main  # Download newest stuff from server
+git status # check for possible changes on the main branch
+git merge origin/main # If there are changes run this command
 ```
 
 ---
 
-## 🔹 7.b. Before creating PR (IMPORTANT)
+### Option 2️⃣. Rebase your branch (`git rebase`): Combine the new main code into your current fix branch.
 
 To avoid conflicts and ensure your branch is up-to-date: (same file changed in both branches).
 
@@ -364,13 +427,11 @@ on your branch, their Git will get very confused.
 
 Rebase and resolve (or skip if safe):
 
-
 ```bash
-git fetch origin
-git rebase origin/main
+git fetch origin main # Download newest stuff from server
+git rebase origin/main # If there are changes run this command
 # Result: Your commits just move to the very tip of the timeline.
 # No extra "Merge" commit.
-git push --force-with-lease
 ```
 
 👉 Always rebase your branch on the latest main before creating a pull request.
@@ -384,12 +445,9 @@ So normal push won’t work → you MUST use:
 
 #### 🎯 Note: Rebase only when needed (before PR or when branch is outdated), not after every commit.
 
-
 ---
 
----
-
-### 8. Create Pull Request (PR)
+## 🔹 Step 8. 🛎️ Create Pull Request (PR)
 
 - Go to GitHub
 - Click "Compare & pull request"
@@ -398,14 +456,14 @@ So normal push won’t work → you MUST use:
 
 ---
 
-### 9. Merge PR
+## 🔹 Step 9. 🧬 Merge PR
 
 - Use "`Squash and merge`" (recommended)
 - Ensures clean commit history
 
 ---
 
-## 🔹 Step 10 — 🗑️ Cleanup (Delete branch)
+## 🔹 Step 10. 🗑️ Cleanup (Delete branch)
 
 ### 1️⃣ 🌿 Delete remote branch (GitHub)
 - Click "Delete branch"
@@ -430,14 +488,24 @@ git pull origin main
 git branch -d fix/bug_ticket_1235
 # or
 git branch -D fix/bug_ticket_1235
-
 ```
+
+### ⚠️ Important Notes
+
+- `git branch -d` → safe delete (only if merged)
+- `git branch -D` → force delete (use carefully)
+
 📝 Note: If `git branch -d fix/bug_ticket_1235` gives you an error, use the capital `-D` to force delete it, since you know the work is safe on GitHub:
 
 ---
 
+## 🔹 Step 11. After the deletion update your local main branch
 
-### 11. Optional: Clean stale branches
+ After you delete the branch on GitHub and locally, your local `main` is still technically "behind" what's on the server.
+ You should run one final` git pull origin main `while on your `main` branch to bring that "Squash and Merge" commit down to your machine.
+
+
+## 🔹 Step 12. Optional: Clean stale branches
 
 ```bash
 git fetch origin --prune
@@ -447,17 +515,6 @@ git fetch origin --prune
 👉 Not required, but good for cleanup
 
 ---
-
-## ⚠️ Important Notes
-
-- `git branch -d` → safe delete (only if merged)
-- `git branch -D` → force delete (use carefully)
-
-- `-u` flag in push:
-```bash
-git push -u origin branch-name
-```
-Links local and remote branch for future pushes
 
 ## 🧠 Troubleshooting - conflict
 A conflict happens when the same file is changed in two branches and Git cannot decide which version to keep when combining them.
@@ -483,7 +540,7 @@ You can encounter a conflict like:
 
 Git saw those changes already existed → skipped them → no conflict
 
-### 🧠 Why it worked
+### 🧠 Why it works
 
 `Your commits (line ending changes) were already in main`
 
@@ -521,25 +578,74 @@ They do NOT mean:
 ### ⚠️ One-line prevention rule
 Always rebase your branch on the latest main before creating a pull request.
 
+---
 
+# 🔒 3. Protect `main` Branch (GitHub)
+
+To ensure stability and prevent accidental changes, the `main` branch should be protected using GitHub branch protection rules.
+
+### ⚙️ Steps
+
+1. Go to your repository on GitHub
+2. Navigate to **Settings**
+3. Click on **Branches**
+4. Add a new rule for:
+
+   ```text
+   main
+   ```
 
 ---
 
+### 📌 Recommended Settings
 
-# 🔒 3. Protect main branch (GitHub)
+Enable the following options:
 
-## Steps:
-1. Go to repository → Settings
-2. Click **Branches**
-3. Add rule for `main`
+* ✅ **Require a pull request before merging**
+  Ensures all changes go through a PR instead of direct commits.
 
-## 📌 Recommended settings:
-- Require pull request before merging
-- Require status checks (CI)
-- Require branches to be up to date
-- Restrict direct pushes
+* ✅ **Require approvals (at least 1)**
+  Enforces code review before merging.
 
-👉 Prevents accidental commits to main
+* ✅ **Dismiss stale pull request approvals**
+  Prevents outdated approvals after new commits are pushed.
+
+* ✅ **Require approval of the most recent push**
+  Ensures the latest changes are reviewed.
+
+* 🟡 **Require status checks (CI)** *(when available)*
+  Blocks merging unless automated tests (e.g., pytest) pass.
+
+* 🟡 **Require branches to be up to date before merging**
+  Forces branches to sync with the latest `main` before merge.
+
+* ✅ **Require conversation resolution before merging**
+  Ensures all review comments are addressed.
+
+* ❌ **Allow force pushes** → Disabled
+
+* ❌ **Allow deletions** → Disabled
+
+* 🔒 **Do not allow bypassing the above settings**
+  Applies rules to all users, including administrators.
+
+---
+
+### 🎯 Outcome
+
+With these protections in place:
+
+* ❌ Direct commits to `main` are blocked
+* ❌ Merging without review is prevented
+* ❌ Outdated or untested code cannot be merged
+* ✅ All changes follow a controlled PR workflow
+
+---
+
+### 🧠 Notes
+
+* Some rules may require a **GitHub Pro/Team plan** or a **public repository** to be fully enforced.
+* Status checks require CI integration (e.g., GitHub Actions).
 
 ---
 
@@ -554,7 +660,263 @@ Always rebase your branch on the latest main before creating a pull request.
 
 ---
 
-# 🧼 4. Clean Commit Strategy
+# 🤖 4. Continuous Integration (CI) with Pytest
+
+To ensure code quality and prevent regressions, this project uses **automated testing with `pytest`** via GitHub Actions.
+
+---
+
+### ⚙️ What CI Does
+
+On every **push** and **pull request**, the pipeline will:
+
+* ✅ Install dependencies
+* ✅ Run the full test suite using `pytest`
+* ✅ Fail if any test fails
+* ✅ Block merging into `main` (if branch protection is enabled)
+
+---
+
+### 📁 GitHub Actions Workflow
+
+Create the following file:
+
+```text
+.github/workflows/tests.yml
+```
+
+---
+
+### 🧾 Example Configuration
+
+```yaml
+name: Run Tests
+
+on:
+  push:
+    branches:
+      - main
+      - "**"
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run pytest
+        run: |
+          pytest -v --maxfail=1 --disable-warnings
+```
+
+---
+
+### 🔒 Integrating with Branch Protection
+
+Once CI is set up:
+
+1. Go to **Settings → Branches → Branch protection rules**
+2. Enable:
+
+   * ✅ **Require status checks to pass before merging**
+3. Select the workflow check (e.g., `test`)
+
+---
+
+### 📊 Optional Enhancements
+
+You can extend CI with:
+
+* 📈 Coverage reporting:
+
+  ```bash
+  pytest --cov=src --cov-report=term-missing
+  ```
+
+* 🧹 Linting (recommended):
+
+  ```bash
+  pip install flake8
+  flake8 .
+  ```
+
+* 🧪 Parallel execution:
+
+  ```bash
+  pip install pytest-xdist
+  pytest -n auto
+  ```
+
+---
+
+### 🧠 Notes
+
+* Ensure `requirements.txt` includes all test dependencies (e.g., `pytest`, `requests`, etc.)
+* Tests should be deterministic and not depend on external unstable services
+* CI failures should always be fixed before merging
+
+---
+
+### 🎯 Outcome
+
+With CI enabled:
+
+* ❌ Broken tests cannot reach `main`
+* ❌ Regressions are caught early
+* ✅ Every PR is automatically validated
+* ✅ Your API test framework remains stable and reliable
+
+---
+
+# 🔐 5. Secrets Management (API Keys for Tests)
+
+Sensitive data such as API keys **must never be stored in the repository**.
+Instead, use GitHub Actions **Secrets** to securely manage credentials.
+
+---
+
+### ⚙️ Why This Matters
+
+* ❌ Prevents exposing credentials in code
+* ✅ Keeps API keys secure
+* ✅ Enables safe CI execution
+* ✅ Follows best security practices
+
+---
+
+### 🔑 Step 1 — Add Secrets in GitHub
+
+1. Go to your repository on GitHub
+2. Navigate to **Settings → Secrets and variables → Actions**
+3. Click **New repository secret**
+4. Add your keys (example):
+
+```text
+WC_API_URL
+WC_CONSUMER_KEY
+WC_CONSUMER_SECRET
+```
+
+---
+
+### 🧾 Step 2 — Use Secrets in GitHub Actions
+
+Update your workflow:
+
+```yaml
+- name: Run pytest
+  env:
+    WC_API_URL: ${{ secrets.WC_API_URL }}
+    WC_CONSUMER_KEY: ${{ secrets.WC_CONSUMER_KEY }}
+    WC_CONSUMER_SECRET: ${{ secrets.WC_CONSUMER_SECRET }}
+  run: |
+    pytest -v --maxfail=1 --disable-warnings
+```
+
+---
+
+### 🐍 Step 3 — Access Secrets in Python
+
+Use environment variables in your code:
+
+```python
+import os
+
+BASE_URL = os.getenv("WC_API_URL")
+CONSUMER_KEY = os.getenv("WC_CONSUMER_KEY")
+CONSUMER_SECRET = os.getenv("WC_CONSUMER_SECRET")
+```
+
+---
+
+### 🧩 Recommended Pattern (for your framework)
+
+Centralize configuration (e.g., `config.py`):
+
+```python
+from dataclasses import dataclass
+import os
+
+@dataclass
+class Settings:
+    base_url: str = os.getenv("WC_API_URL")
+    consumer_key: str = os.getenv("WC_CONSUMER_KEY")
+    consumer_secret: str = os.getenv("WC_CONSUMER_SECRET")
+
+settings = Settings()
+```
+
+---
+
+### 🧪 Local Development
+
+For local testing, use a `.env` file (NOT committed):
+
+```text
+WC_API_URL=https://example.com
+WC_CONSUMER_KEY=ck_xxx
+WC_CONSUMER_SECRET=cs_xxx
+```
+
+Load it using:
+
+```bash
+pip install python-dotenv
+```
+
+```python
+from dotenv import load_dotenv
+load_dotenv()
+```
+
+---
+
+### 🚫 Important Rules
+
+* ❌ Never commit `.env` files
+* ❌ Never hardcode API keys
+* ❌ Never print secrets in logs
+
+---
+
+### 🔒 Add to `.gitignore`
+
+```text
+.env
+.env.*
+```
+
+---
+
+### 🎯 Outcome
+
+* 🔐 Secrets are securely stored
+* 🔄 CI can run safely with real credentials
+* 🧪 Local and CI environments are aligned
+* ✅ Your test framework is production-ready
+
+---
+
+
+
+---
+
+# 🧼 6. Clean Commit Strategy
 
 ## Rules:
 - One logical change = one commit
@@ -586,7 +948,7 @@ test/customers-negative-cases
 
 ---
 
-## 🔍 Check history of commits.
+# 🔍 Check history of commits
 It provides a condensed, visual representation of your repository's recent commit history.
 
 `git log --oneline --graph --decorate --all -10`
@@ -602,6 +964,77 @@ Here is a breakdown of what each part of the command does:
 * `--graph:` Adds a text-based ASCII graph (using symbols like *, |, and /) on the left side of the output to visualize branching and merging.
 * `-10`: Limits the output to only the 10 most recent commits in the history.
 
+
+---
+
+# ⚡ Git Shortcuts logs and prune
+
+## 1. 🗃️ Set shortcut for logs (set, edit, delete):
+
+```
+git config --global alias.lg "log --oneline --graph --decorate --all -10"
+```
+
+📝 _Note: You don't need --no-pager inside the Git alias because Git aliases automatically handle the output correctly,
+but you can add it if you strictly want to bypass the pager._
+
+### 🔥 Now you only run shortcut:
+
+```
+git lg
+```
+
+## ✏️ Edit the shortcut
+
+### 1. Overwrite it via Command Line
+Simply run the `git config `command again with the **new** definition. Git will automatically overwrite the old `lg` alias
+with whatever you type last:
+
+```
+git config --global alias.lg "log --oneline --graph --decorate --all -20"
+```
+_(In this example, I changed -10 to -20 to show more commits)._
+
+### 2. Edit the Git Config File (Recommended)
+If the command is getting long and you want to see exactly what you've saved, it's often easier to edit your global
+config file directly:
+
+```
+git config --global --edit"
+```
+
+Look for the `[alias] `section. It will look like this:
+
+```
+[alias]
+    lg = log --oneline --graph --decorate --all -10
+```
+_Modify the text after the = sign, save the file, and close it. The changes take effect immediately._
+
+
+## 🗑️ How to Delete an Alias
+If you want to start over or remove it entirely:
+
+```
+git config --global --unset alias.lg
+```
+
+## 2. 🗃️ Set shortcut for prune
+
+Run this command to save the shortcut globally:
+
+```
+git config --global alias.fp "fetch origin --prune"
+```
+## 💡 Why this is useful:
+Over time, your local Git history gets cluttered with "ghost" branches that have already been deleted on GitHub. Running git fp will:
+
+* Update your local list of remote branches.
+* Remove any remote-tracking references (like origin/old-feature) that no longer exist on the server.
+* Keep your `git lg `graph much cleaner by hiding branches that are finished.
+
+✨ **Pro Tip:** You can actually tell Git to always prune whenever you fetch or pull by running:
+`git config --global fetch.prune true`. This way, you don't even need a shortcut!
 ---
 
 
@@ -975,62 +1408,6 @@ To see exactly which line endings are currently in your index (i/) and your work
 | **Consistency** | Guaranteed for all team members | Depends on everyone's setup |
 | **Precision** | Target specific extensions | Applies to everything |
 | **Safety** | Prevents binary file corruption | Risk of corrupting binaries |
-
-
----
-
-# ⚡ Git Shortcuts (set, edit, delete)
-
-## 🗃️ Set shortcut:
-
-```
-git config --global alias.lg "log --oneline --graph --decorate --all -10"
-```
-
-📝 _Note: You don't need --no-pager inside the Git alias because Git aliases automatically handle the output correctly,
-but you can add it if you strictly want to bypass the pager._
-
-### 🔥 Now you only run shortcut:
-
-```
-git lg
-```
-
-## ✏️ Edit the shortcut
-
-### 1. Overwrite it via Command Line
-Simply run the `git config `command again with the **new** definition. Git will automatically overwrite the old `lg` alias
-with whatever you type last:
-
-```
-git config --global alias.lg "log --oneline --graph --decorate --all -20"
-```
-_(In this example, I changed -10 to -20 to show more commits)._
-
-### 2. Edit the Git Config File (Recommended)
-If the command is getting long and you want to see exactly what you've saved, it's often easier to edit your global
-config file directly:
-
-```
-git config --global --edit"
-```
-
-Look for the `[alias] `section. It will look like this:
-
-```
-[alias]
-    lg = log --oneline --graph --decorate --all -10
-```
-_Modify the text after the = sign, save the file, and close it. The changes take effect immediately._
-
-
-## 🗑️ How to Delete an Alias
-If you want to start over or remove it entirely:
-
-```
-git config --global --unset alias.lg
-```
-
 
 ---
 
