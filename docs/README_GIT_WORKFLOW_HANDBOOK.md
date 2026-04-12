@@ -507,12 +507,31 @@ git branch -D fix/bug_ticket_1235
 
 ## 🔹 Step 12. Optional: Clean stale branches
 
+`git fetch origin --prune` (or the shorthand git fetch -p) is safe for most standard workflows. It is a common
+housekeeping command used to keep your local environment synchronized with the remote.
+
+### 💡 What it does
+
+* Fetches new data: Like a regular git fetch, it downloads new commits and branches from the remote.
+* Deletes "stale" references: It removes your local remote-tracking branches (e.g., origin/feature-branch) that no longer exist on the remote server.
+
+Not required, but good for cleanup
+
+
+🔥 If you want to see what will happen without actually deleting anything, you can run a "dry run" first:
 ```bash
+git fetch --prune --dry-run
+```
+Then run:
+```
 git fetch origin --prune
 ```
 
-👉 Removes deleted remote branches from local references
-👉 Not required, but good for cleanup
+### 🔎 Why it is safe
+
+* Does not touch local branches: It only deletes references in your refs/remotes/ folder. It will not delete the actual local branches you are working on, even if their corresponding remote branch was deleted.
+* No data loss on remote: This command only affects your local machine; it does not delete anything from the remote server.
+* Easily reversible: If a remote-tracking branch is accidentally pruned but still exists on the remote, you can simply run git fetch again to restore it
 
 ---
 
