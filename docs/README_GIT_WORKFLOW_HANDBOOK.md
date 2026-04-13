@@ -8,12 +8,24 @@ This guide expands the standard Git workflow with:
 * Changing Remotes, Dual GitHub + GitLab setup
 * PyCharm-Only Workflow (No Terminal)
 * Git CLI Workflow Guide (Terminal) Beginner-Friendly
-* PyCharm + CLI workflows
-* Branch protection
+
+* Conflict - Troubleshooting
+
+* Protect main Branch (GitHub)
 * Continuous Integration (CI) with Pytest
-* Commit strategy
-* Merge conflict avoidance
+* Secrets Management
+* Clean Commit Strategy
+* Check history of commits
+* Git Shortcuts logs and prune
+* How to Avoid Merge Conflicts
 * Rebase vs Merge
+* git cherry-pick
+* Switching Branches
+* Upstream Branch (Tracking)
+* Pro Tip (maybe delete or merge)
+* Automatically normalizing line endings
+* Configuration file .pre-commit-config.yaml
+* Git Fetch vs. Git Pull
 
 ---
 
@@ -111,6 +123,59 @@ git push both
 
 A step-by-step guide to safely work with Git using branches, commits, and Pull Requests.
 
+---
+
+### 📊 Visual Flow (Mental Model)
+
+```
+          (origin/main)
+                │
+                ▼
+        ┌──────────────┐
+        │   main       │  ← always updated
+        └──────┬───────┘
+               │
+               ▼
+   git checkout -b fix/xxx
+               │
+               ▼
+        ┌──────────────┐
+        │ fix/xxx      │  ← your work happens here
+        └──────┬───────┘
+               │
+     (commit / stash)
+               │
+               ▼
+     git fetch origin
+               │
+               ▼
+     git rebase origin/main
+               │
+               ▼
+        (resolve conflicts)
+               │
+               ▼
+          git push
+               │
+               ▼
+        Pull Request (PR)
+               │
+               ▼
+        Squash & Merge
+               │
+               ▼
+        ┌──────────────┐
+        │   main       │  ← updated again
+        └──────────────┘
+```
+💡 Think of it like:
+
+* `main` = source of truth
+* `fix/xxx `= your safe workspace
+* **PR** = controlled integration
+
+---
+
 ## 🔹Step 1. ✅ Start from updated `main`
 
 ```bash
@@ -143,7 +208,7 @@ git checkout -b fix/bug_ticket_1235
 
 ## 🔹 Step 3. 👩🏻‍💻 Work on code
 
-Make your changes in the codebase (e.g., PyCharm).
+Make your changes in the codebase/ IDE (e.g., PyCharm).
 
 ---
 
@@ -429,6 +494,114 @@ git fetch origin --prune
 
 ---
 
+## ⚠️ Common Mistakes (and How to Avoid Them)
+
+---
+
+### ❌ 1. “It works on my branch but PR has conflicts”
+
+
+👉 Cause:
+* You didn’t sync with main
+
+✅ Fix:
+
+```
+git fetch origin
+git rebase origin/main
+```
+---
+
+### ❌ 2. “Git says: non-fast-forward push rejected”
+
+👉 Cause:
+* You rebased but tried normal push
+
+✅ Fix:
+
+```
+git push --force-with-lease
+```
+---
+
+### ❌ 3. “I committed broken or unfinished code”
+
+👉 Cause:
+* Using commits as temporary storage
+
+✅ Fix:
+```
+git stash
+```
+---
+
+### ❌ 4. “I lost my changes after switching branches”
+
+👉 Cause:
+* Uncommitted changes overwritten
+
+✅ Fix:
+Always:
+```
+git add .
+# OR
+git stash
+```
+---
+
+### ❌ 5. “Too many messy commits in PR”
+
+👉 Cause:
+* Multiple WIP commits
+
+✅ Fix:
+Use:
+
+```
+Squash & Merge
+OR
+git rebase -i HEAD~n
+```
+
+---
+
+### ❌ 6. “Force push broke my teammate’s work”
+
+👉 Cause:
+* Rewriting shared branch history
+
+✅ Rule:
+👉 NEVER rebase shared branches
+👉 Only rebase your own branch
+
+---
+
+### ❌ 7. “Local branches don’t match remote”
+
+👉 Cause:
+* Deleted branches still exist locally
+
+✅ Fix:
+
+```
+git fetch --prune
+```
+
+---
+
+### ❌ 8. “pre-commit changed files after commit failed”
+
+👉 Cause:
+* Hooks modified files
+
+✅ Fix:
+```
+git add .
+git commit -m "..."
+```
+
+---
+
 ## ⭐ Golden Path (Quick Cheat Sheet)
 
 ```
@@ -448,12 +621,25 @@ git push -u origin fix/xxx
 ```
 ---
 
-### 🧠 Key Concepts
+## 🧠 Key Concepts
 * **Commit** → save work permanently
 * **Stash** → temporary save
 * **Merge** → combine histories (safe)
 * **Rebase** → rewrite history (cleaner, but advanced)
 * **Force push** → required after rebase
+
+---
+
+
+## 🎯 Key Takeaways
+
+- Always start from updated main
+- Use PRs for everything
+- Prefer rebase for clean history
+- Protect main branch
+- Keep commits clean and small
+- Use PyCharm UI for simplicity
+
 
 ---
 
@@ -465,7 +651,20 @@ git push -u origin fix/xxx
 
 ---
 
-# 🔒 3. Protect `main` Branch (GitHub)
+## 📌 Summary
+
+You only delete the branch **after merge**.
+
+Deleting earlier = losing your work.
+
+
+---
+# 💥 4. Conflict Resolution
+
+
+
+---
+# 🔒 5. Protect `main` Branch (GitHub)
 
 To ensure stability and prevent accidental changes, the `main` branch should be protected using GitHub branch protection rules.
 
@@ -1547,7 +1746,7 @@ You only delete the branch **after merge**.
 
 Deleting earlier = losing your work.
 
-
+---
 
 # 🎯 Key Takeaways
 
@@ -1557,6 +1756,3 @@ Deleting earlier = losing your work.
 - Protect main branch
 - Keep commits clean and small
 - Use PyCharm UI for simplicity
-
-
-# blablabla...
