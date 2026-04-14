@@ -1114,6 +1114,104 @@ HEAD detached   → temporary state (danger if committing)
 
 ---
 
+## 🔹 4. Local Main "Ahead" of Remote (Accidental Commits on Main)
+
+### 🧠 Problem Summary
+You merged a PR on GitHub using **Squash and Merge**, but when you switched back to your local `main` and ran `git pull`,
+a **Vim popup** appeared asking for a merge message.
+
+After saving, `git status` shows:
+
+```text
+Your branch is ahead of 'origin/main' by 2 commits.
+```
+
+👉 Your local history now has a messy "merge loop" that doesn't exist on GitHub.
+
+---
+
+### ❗Root Cause
+Two things happened at once:
+
+1. **Accidental Local Commit**: You made a commit (or a typo/save) directly on your local `main` branch.
+2. **History Divergence**: GitHub's "Squash and Merge" created a brand new commit ID.
+
+When you pulled, Git saw your local `main` and the remote `main` had different histories and tried to force them
+together with a `merge commit`.
+
+---
+
+### 🚨 Symptoms
+
+* A **Vim editor** unexpectedly opens during git pull.
+* `git log --oneline` shows a "Merge branch 'main'..." commit.
+* `git status` says you are "ahead of origin/main" even though you just pulled.
+
+---
+
+### 🔍 Example:
+
+```bash
+# On local main
+git commit -m "oops accidental commit"
+git pull origin main
+# ❌ Vim opens -> you save -> history is now messy
+```
+👉 Your local main now has your "oops" commit PLUS a "merge" commit.
+
+---
+
+### 🔧 Solution (Align with Remote)
+### ✅ Hard Reset to Match GitHub
+Since your code is already safely merged into GitHub via the PR, the cleanest fix is to tell your local `main` to
+forget its own history and mirror GitHub exactly.
+
+```bash
+git fetch origin
+git reset --hard origin/main
+```
+👉 Result: Your local main is now identical to GitHub. The accidental commits and the messy merge are gone.
+
+💡 What this does:
+* `fetch`: Grabs the latest info from GitHub.
+* `reset --hard`: Force-moves your local `main` pointer to exactly where `origin/main` is, effectively deleting those
+* two "ahead" commits and making your history a straight line again.
+
+After you run those, `git status` should say "**Your branch is up to date with 'origin/main'**."
+
+
+---
+
+### 🧠 How to Avoid This Problem
+### ❌ Avoid:
+Working or committing directly on the `main` branch.
+
+### ✅ Use instead:
+Always create a feature branch for changes. If you realize you made a mistake on `main`, **reset it** before pulling.
+
+
+```text
+Local Main:   A --- B (oops) --- M (Merge Commit)
+                     /         /
+Remote Main:  A --- S (Squashed PR)
+```
+Resetting moves your local pointer from M back to S.
+
+---
+
+### 🎯 Outcome
+* Local history is clean and linear.
+* `git status` shows "Your branch is up to date".
+* No unnecessary merge commits in your logs.
+
+### 🧠 Key Takeaway
+
+If `git pull` triggers a Vim window on your main branch, it usually means your local history has diverged.
+`Reset --hard` is your best friend to get back in sync.
+
+
+---
+
 ## 🔹 4. Merge Conflicts (Step-by-Step Resolution)
 
 ### 🧠 Problem Summary
