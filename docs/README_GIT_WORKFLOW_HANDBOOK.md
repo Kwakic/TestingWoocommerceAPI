@@ -1696,7 +1696,12 @@ test/customers-negative-cases
 
 ---
 
-# 🔍 9. Check history of commits
+# 🔍 9. Checking history and debugging
+
+---
+
+## I. 📜 Checking history
+
 It provides a condensed, visual representation of your repository's recent commit history.
 
 `git log --oneline --graph --decorate --all -10`
@@ -1712,28 +1717,71 @@ Here is a breakdown of what each part of the command does:
 * `--graph:` Adds a text-based ASCII graph (using symbols like *, |, and /) on the left side of the output to visualize branching and merging.
 * `-10`: Limits the output to only the 10 most recent commits in the history.
 
+---
 
 ### 🔎 See the actual code changes in each commit:
 
 ```
 git log -p
 ```
+---
 
 ### 🔎 To see what was added but NOT yet committed:
 ```
 git status
 ```
 
+---
+
 ### 🔎  See the actual code changes you staged (after running `git add .`):
 ```
 git diff --cached
 ```
 
+---
 
-### 🔎  To see your "Internal" history:
-```
+### 🔎  To see your "Internal" history `git reflog`:
+`git reflog` is your local "undo history" for Git. While git log shows the commit history of a branch, `git reflog `
+`records every time your HEAD moves`—including actions that don't usually appear in your history, like switching
+branches, rebasing, or performing a hard reset.
+
+
+### 🔑 Key Features
+
+* T**he Safety Net**: It allows you to find and recover "lost" commits that are no longer reachable by any branch, such as those deleted during a git reset --hard.
+* **Local Only**: This log is stored strictly on your machine. It is not pushed to remote servers like GitHub, so your teammates cannot see your local "reflog".
+* **Temporary:** By default, Git keeps these records for 90 days before automatically pruning them to save space.
+
+### ⚙️ How to Use It for Recovery
+If you accidentally deleted work with a hard reset, follow these steps to get it back:
+
+1. **Run the command:**
+```bash
 git reflog
 ```
+
+2. **Find the state you want:**
+
+    Look through the list for the last "good" state before your mistake. It will look like `HEAD@{n}` (e.g., `HEAD@{2}`
+    was where you were two moves ago).
+
+
+3. **Restore it**:
+
+    Use a hard reset to jump back to that specific moment:
+
+    `git reset --hard HEAD@{n}`
+
+### ⚖️ Comparison: Reflog vs. Log
+
+| Feature | `git log` | `git reflog` |
+| :--- | :--- | :--- |
+| **Focus** | Public commit history of the branch. | Private, chronological log of all HEAD moves. |
+| **Visible Actions** | Standard commits and merges. | Resets, checkouts, rebases, and amends. |
+| **Visibility** | Shared when you push/pull. | Stays only on your local computer. |
+
+
+---
 
 ### 🔎   To see changes compared to main:
 
@@ -1745,6 +1793,91 @@ git diff main..HEAD
 👉 Shows what you have added that isn't in main yet.
 
 ---
+## II. 🐞 Debugging Git
+
+---
+
+### ♻️ Git reset:
+
+In Git, `reset` is the command used to move the HEAD (your current location) to a specific previous commit.
+The flags `--soft `and `--hard `determine what happens to the work you've done since that commit.
+Think of it as choosing how much of your "undo" you want to keep.
+
+### 1. `git reset --soft `(The "Safety" Undo)
+
+This moves HEAD back to a previous commit but keeps all your changes.
+
+* **What happens:** The commits disappear from the history, but your work stays exactly as it is in your "Staging Area" (ready to be committed again).
+* **When to use it:** You made a commit but realized you forgot to add a file or want to rewrite the commit message.
+* **Result:** Your files don't change; you just get a "do-over" on the commit itself.
+
+### 2. `git reset --hard` (The "Nuclear" Undo)
+
+This moves HEAD back and destroys all changes made after that point.
+
+* **What happens**: Both the commits and your uncommitted file changes are deleted. Your project will look exactly like it did at that specific point in the past.
+* **When to use it:** You’ve made a mess of your code, nothing works, and you want to completely wipe the slate clean and start over from a known good state.
+* **Danger:** You cannot easily undo a --hard reset. Any unsaved work is gone forever.
+
+
+| Flag | Moves HEAD? | Keeps Changes in Files? | Keeps Changes Staged? |
+| :--- | :--- | :--- | :--- |
+| **--soft** | Yes | Yes | Yes |
+| **--mixed** (Default) | Yes | Yes | No (Unstaged) |
+| **--hard** | Yes | No (Deleted) | No (Deleted) |
+
+---
+
+### ✂️ Git bisect:
+
+`git reflog` is for finding your own mistakes, but `git bisect` is for finding **bugs** introduced by others (or yourself) in the past.
+
+It uses a **binary search** algorithm to quickly find the specific commit that broke your code. Instead of checking
+100 commits one by one, `git bisect` can find the "bad" commit in about 7 steps.
+
+
+How to use it
+Think of it like a game of "Higher or Lower":
+
+1. **Start the process**:
+```
+git bisect start
+```
+2. **Mark the current state as broken**:
+```
+git bisect bad
+```
+3. **Find a point in the past where the code worked**:
+`git bisect good <commit-hash> `(e.g., from two weeks ago).
+4. **The Test**: Git will automatically jump to a commit in the middle. You test your code (run your app or a script).
+
+    * If it works: Type `git bisect good`
+    * If it's broken: Type `git bisect bad`
+
+5. **Repeat**: Git keeps splitting the remaining commits in half until it points to the exact "first bad commit."
+6. **Finish**: Once you've found the bug, return to your original branch:
+git bisect reset
+
+### 🤖 Automation:
+If you have a test script (e.g., `npm test` or `python test.py`), you can automate the whole thing:
+```
+git bisect run ./test_script.sh`
+```
+
+Git will run the script at every step and find the bug for you while you grab a coffee.
+
+### ⚖️ Comparison: Bisect vs. Blame
+
+| Feature | `git blame` | `git bisect` |
+| :--- | :--- | :--- |
+| **Goal** | Shows who wrote a specific line. | Finds which commit broke the logic. |
+| **Best For** | Finding the author of a line. | Finding "silent" bugs in complex code. |
+| **Effort** | Instant. | Requires manual or scripted testing. |
+
+
+---
+
+
 
 # ⚡ 10. Git Shortcuts logs and prune
 
