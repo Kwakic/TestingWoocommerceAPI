@@ -1209,6 +1209,78 @@ Resetting moves your local pointer from M back to S.
 If `git pull` triggers a Vim window on your main branch, it usually means your local history has diverged.
 `Reset --hard` is your best friend to get back in sync.
 
+---
+
+## 🔹 5. Warning: Deleting Branch "Not Yet Merged to HEAD"
+
+### 🧠 Problem Summary
+
+After a **Squash and Merge** on GitHub and updating your local `main`, you try to delete your local feature branch:
+
+```bash
+git branch -d feature/my-branch
+```
+You see a warning like:
+
+```text
+warning: deleting branch 'feature/my-branch' that has been merged to
+         'refs/remotes/origin/feature/my-branch', but not yet merged to HEAD
+```
+
+---
+
+### ❗ Root Cause
+Because you used **Squash and Merge**, the commit IDs on your feature branch were replaced by a **single new commit ID**
+on `main`.
+
+Git looks at your local feature branch, compares its unique commit ID to `main`, and says: "H*ey, I don't see this
+specific ID on main yet! Are you sure you want to delete it?*" It doesn't realize the **content** is already there under a different ID.
+
+---
+
+### 🚨 Symptoms
+
+* A warning message during `git branch -d`.
+* `git lg` shows your feature branch hanging off to the side, even though the work is already in `main`.
+
+---
+
+### 🔧 Solution (Clean Up)
+### ✅ Use the Force (Carefully)
+If you are 100% sure your PR was merged on GitHub, you can tell Git to delete the branch regardless of the ID mismatch:
+
+```bash
+git branch -D feature/my-branch
+```
+_(Note the capital -D—this force-deletes the branch)._
+
+
+### ✅ Clean Up Remote Tracking
+To stop seeing `origin/feature/my-branch` in your logs after deleting it on GitHub:
+
+```bash
+git fetch --prune
+```
+---
+
+### 🧩 Mental Model
+
+```text
+Feature Branch:  [f42a92a]  <-- Git thinks this is "unmerged"
+Main Branch:     [380efa8]  <-- This has the same CODE, but a different ID
+
+```
+
+### 🎯 Outcome
+
+* Local branch list stays clean.
+* No "ghost" branches remain in your git log.
+* You understand that "Merged" in Git terms refers to Commit IDs, not just the code content.
+---
+
+### 🧠 Key Takeaway
+
+**Squash and Merge** always changes commit IDs. Expect Git to be confused when you delete the local branch; using `-D `(capital D) is the standard way to handle this.
 
 ---
 
