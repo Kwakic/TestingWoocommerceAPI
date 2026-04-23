@@ -11,7 +11,10 @@ from EcommerceAPI.src.customers.validators.customer_validators import (
 )
 from EcommerceAPI.src.utils.generic_utilities import generate_random_email_and_password
 
-from EcommerceAPI.src.utils.date_timestamp_utils import precise_parse_utc_datetime
+from EcommerceAPI.src.utils.date_timestamp_utils import (
+    precise_parse_utc_datetime,
+    assert_timestamp_matches_system_behavior,
+)
 
 from tests.shared.contracts.error_schema import error_schema
 
@@ -245,21 +248,32 @@ def test_update_customer_invalid_inputs(
 
 @pytest.mark.tcid29
 @pytest.mark.regression
-def test_validate_date_modified_and_date_modified_gmt(customer_helper, customers_dao):
+def test_validate_date_modified_and_date_modified_gmt(
+    customer_helper, customers_dao, create_valid_customer
+):
     """
     Verify that customer modification timestamps are consistent between API and database.
 
     This test validates the following:
 
     1. Updating a customer changes the modification timestamp.
-    2. The API `date_modified` field matches the database `last_update` timestamp.
+    2. The API `date_modified` field matches the database `last_update` timestamp
+       within expected system behavior.
     3. The original `date_created` value remains unchanged after update.
 
     Important notes about timestamps:
 
-    • WordPress stores `user_registered` in site-local time.
+    • WordPress stores timestamps in site-local time (no timezone info).
     • WooCommerce REST API returns timestamps in UTC.
-    • Therefore we allow a timezone tolerance when comparing creation timestamps.
+    • Due to DST (Daylight Saving Time), DB and API may differ by ±1 hour.
+
+    👉 Therefore:
+       We do NOT assert exact equality.
+       We assert that timestamps are aligned within known system offsets.
+
+    Accepted differences:
+        - 0 seconds   → perfect match
+        - 3600 seconds → DST / timezone shift
 
     Test flow:
         1. Fetch a random active customer from DB
@@ -270,43 +284,67 @@ def test_validate_date_modified_and_date_modified_gmt(customer_helper, customers
     """
 
     # -------------------------------------------------------------
-    # Step 1 — Retrieve a random active customer from the database
+    # Step 1 — Create customer (test owns its data)
     # -------------------------------------------------------------
-    logger.info("🛠 Retrieving random active customer from DB.")
-    customer = customers_dao.get_random_customer_from_db(
-        qty=1, filters={"user_status": 0}
+    logger.info("🛠 Creating a test customer via factory fixture.")
+
+    customer = create_valid_customer()
+
+    customer_id = customer["id"]
+    email = customer["email"]
+
+    # -------------------------------------------------------------
+    # Step 2 — Verify API ↔ DB consistency (sanity check)
+    # -------------------------------------------------------------
+    customer_helper.assert_customer_exists_and_matches_db(
+        email=email, dao=customers_dao
     )
 
-    if not customer:
-        pytest.skip("No active customer found in DB")
+    logger.info("🎯 Initial validation complete for customer ID: %r", customer_id)
 
-    existing_customer = customer[0]
+    # -------------------------------------------------------------
+    # Step 3 — Retrieve SAME customer from DB (deterministic)
+    # -------------------------------------------------------------
+    logger.info("🛠 Retrieving CREATED customer from DB (deterministic).")
+
+    existing_customer = customers_dao.get_customer_by_id(customer_id)
+
+    assert (
+        existing_customer is not None
+    ), f"❌ Customer with ID={customer_id} not found in DB"
 
     db_id = existing_customer["ID"]
     db_email = existing_customer["user_email"]
 
-    # WordPress stores this as site-local time (no timezone)
+    # WordPress stores this as site-local time (naive datetime)
     db_created_at = existing_customer["user_registered"].replace(microsecond=0)
 
     # Capture DB modification timestamp BEFORE update
     db_modified_before = customers_dao.get_customers_updated_date(db_id)
 
     # -------------------------------------------------------------
-    # Step 2 — Update customer via API
+    # Step 4 — Update customer via API
     # -------------------------------------------------------------
     rand_email = generate_random_email_and_password()["email"]
 
-    payload = {"email": rand_email, "billing": {"phone": "36555888666"}}
+    payload = {
+        "email": rand_email,
+        "billing": {"phone": "36555888666"},
+    }
+
+    logger.info("🟢 Updating customer %s with new email and billing info", db_id)
 
     response = customer_helper.update_customer(
-        customer_id=db_id, payload=payload, return_http_response=True
+        customer_id=db_id,
+        payload=payload,
+        return_http_response=True,
     )
 
     # Fail fast if update request failed
     assert response.status_code == 200, f"PUT /customers update failed: {response.text}"
 
     # -------------------------------------------------------------
-    # Step 3 — Validate response structure
+    # Step 5 — Validate response structure
     # -------------------------------------------------------------
     updated_customer = response.json
     customer_model = assert_valid_customer_response(updated_customer)
@@ -316,32 +354,31 @@ def test_validate_date_modified_and_date_modified_gmt(customer_helper, customers
     api_modified_at = precise_parse_utc_datetime(customer_model.date_modified)
 
     # -------------------------------------------------------------
-    # Step 4 — Validate identity and business change
+    # Step 6 — Validate identity and business change
     # -------------------------------------------------------------
     assert_customer_identity(customer_model, db_id, customer_model.email)
 
     # Ensure update actually changed the email
-    assert (
-        db_email != customer_model.email
-    ), f"❌ Customer email mismatch: expected change from {db_email} to {customer_model.email}"
-
-    # -------------------------------------------------------------
-    # Step 5 — Validate creation timestamp remains unchanged
-    # -------------------------------------------------------------
-    # DB timestamp is stored in site-local timezone.
-    # API timestamp is returned in UTC.
-    # Therefore we allow a tolerance window (usually 1 hour).
-    db_created_at_utc = db_created_at.replace(tzinfo=timezone.utc)
-
-    delta_seconds = abs((api_created_at - db_created_at_utc).total_seconds())
-
-    assert delta_seconds <= 3600, (
-        f"❌ Customer created_at mismatch beyond timezone tolerance: "
-        f"DB={db_created_at_utc}, API={api_created_at}"
+    assert db_email != customer_model.email, (
+        f"❌ Customer email mismatch: expected change from {db_email} "
+        f"to {customer_model.email}"
     )
 
     # -------------------------------------------------------------
-    # Step 6 — Validate DB modification timestamp changed
+    # Step 7 — Validate creation timestamp remains unchanged
+    # -------------------------------------------------------------
+    # DB timestamp is local (naive), API is UTC.
+    # We align DB timestamp to UTC WITHOUT shifting (best-effort assumption)
+
+    db_created_at_utc = db_created_at.replace(tzinfo=timezone.utc)
+
+    assert_timestamp_matches_system_behavior(
+        api_created_at,
+        db_created_at_utc,
+    )
+
+    # -------------------------------------------------------------
+    # Step 8 — Validate DB modification timestamp changed
     # -------------------------------------------------------------
     db_modified_after = customers_dao.get_customers_updated_date(db_id)
 
@@ -350,8 +387,13 @@ def test_validate_date_modified_and_date_modified_gmt(customer_helper, customers
     ), "❌ DB modified timestamp did not change after update"
 
     # -------------------------------------------------------------
-    # Step 7 — Validate API modification timestamp matches DB
+    # Step 9 — Validate API modification timestamp matches DB
     # -------------------------------------------------------------
-    assert (
-        api_modified_at == db_modified_after
-    ), f"❌ Modified timestamp mismatch: DB={db_modified_after}, API={api_modified_at}"
+    # Accepted deltas:
+    #   0 sec   → exact match
+    #   3600 sec → DST shift
+
+    assert_timestamp_matches_system_behavior(
+        api_modified_at,
+        db_modified_after,
+    )

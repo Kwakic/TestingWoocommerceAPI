@@ -257,3 +257,52 @@ def get_now_utc_floor() -> datetime:
 
 def unix_to_utc_datetime(unix_ts: int) -> datetime:
     return datetime.fromtimestamp(unix_ts, tz=timezone.utc).replace(microsecond=0)
+
+
+def assert_timestamp_matches_system_behavior(
+    api_ts: datetime,
+    db_ts: datetime,
+    allowed_deltas: set[int] | None = None,
+) -> None:
+    """
+    Generic timestamp validator supporting configurable system behavior.
+
+    Args:
+        api_ts (datetime): API timestamp (UTC expected)
+        db_ts (datetime): DB timestamp (may be naive or UTC)
+        allowed_deltas (set[int]): allowed delta values in seconds
+
+    Default behavior:
+        {0, 3600} → WordPress / WooCommerce compatible
+    """
+
+    if not api_ts or not db_ts:
+        raise AssertionError("❌ One or both timestamps are missing")
+
+    # Default = WooCommerce behavior
+    if allowed_deltas is None:
+        allowed_deltas = {0, 3600}
+
+    if api_ts.tzinfo is None:
+        api_ts = api_ts.replace(tzinfo=timezone.utc)
+
+    if db_ts.tzinfo is None:
+        db_ts = db_ts.replace(tzinfo=timezone.utc)
+
+    api_ts = api_ts.astimezone(timezone.utc)
+    db_ts = db_ts.astimezone(timezone.utc)
+
+    delta_seconds = abs((api_ts - db_ts).total_seconds())
+
+    logger.info(
+        f"⏱ Timestamp comparison → API={api_ts}, DB={db_ts}, "
+        f"delta={delta_seconds}s, allowed={allowed_deltas}"
+    )
+
+    assert int(delta_seconds) in allowed_deltas, (
+        f"❌ Timestamp mismatch.\n"
+        f"API: {api_ts}\n"
+        f"DB:  {db_ts}\n"
+        f"Delta: {delta_seconds}s\n"
+        f"Allowed: {allowed_deltas}"
+    )
