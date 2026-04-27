@@ -93,5 +93,10 @@ env.ps1
 *.seed
 *.pid.lock
 
+# ==============================
+# Wordpress
+# ==============================
+wp-data/
+
 # Optional: ignore local scripts
 # scripts/

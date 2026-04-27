@@ -1,20 +1,16 @@
-version: "3.9"
-
-# =============================================================================
-# WordPress + WooCommerce stack for API testing
-# =============================================================================
-
 services:
 
   db:
     image: mysql:8.0
     container_name: wc-db
-    restart: unless-stopped
+    restart: always
+    command: --default-authentication-plugin=mysql_native_password --ssl=0
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: wordpress
       MYSQL_USER: wp
       MYSQL_PASSWORD: wp
+
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 5s
@@ -24,18 +20,40 @@ services:
   wordpress:
     image: wordpress:6.8-php8.2-apache
     container_name: wc-wp
+    restart: always
     depends_on:
       db:
         condition: service_healthy
+
     environment:
       WORDPRESS_DB_HOST: db:3306
       WORDPRESS_DB_USER: wp
       WORDPRESS_DB_PASSWORD: wp
       WORDPRESS_DB_NAME: wordpress
+
     ports:
-      - "8080:80"        # for local debugging ONLY
+      - "8080:80"
+
+    volumes:
+      - ./wp-data:/var/www/html   # ✅ CRITICAL FIX (bind mount)
+
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost"]
-      interval: 5s
+      test: ["CMD-SHELL", "curl -s http://localhost || exit 1"]
+      interval: 10s
       timeout: 5s
-      retries: 20
+      retries: 10
+
+  wpcli:
+    image: wordpress:cli
+    container_name: wc-cli
+    depends_on:
+      - wordpress
+
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: wp
+      WORDPRESS_DB_PASSWORD: wp
+      WORDPRESS_DB_NAME: wordpress
+
+    volumes:
+      - ./wp-data:/var/www/html   # ✅ MUST MATCH wordpress
