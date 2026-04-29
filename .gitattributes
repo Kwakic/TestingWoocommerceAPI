@@ -48,10 +48,10 @@
 Dockerfile text eol=lf
 
 # # Refresh the file to apply the .gitattributes rules
-  #git add --renormalize .gitlab-ci.yml
+  #git add --renormalize .gitlab-dummy_ci.yml
 
   ## Commit
-  #git commit -m "Normalize line endings for .gitlab-ci.yml"
+  #git commit -m "Normalize line endings for .gitlab-dummy_ci.yml"
 
   ## Push
   #git push
@@ -73,7 +73,7 @@ Dockerfile text eol=lf
   ## Push
   #git push
 
-#$ git add . warning: in the working copy of 'docs/README_DOCKER_INSTALL_GUIDE.md',
+#$ git add . warning: in the working copy of 'docs/README_INFRA_DOCKER_INSTALL_GUIDE.md',
 #CRLF will be replaced by LF the next time Git touches it warning: in the working copy of
 #'tests/customers/configs/config_customers.py', CRLF will be replaced by LF the next time Git touches it warning:
 #in the working copy of 'tests/shared/performance/conftest.py', CRLF will be replaced by LF the next time Git touches

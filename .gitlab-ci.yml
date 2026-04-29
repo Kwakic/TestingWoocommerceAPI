@@ -13,7 +13,7 @@
 #
 # FILE RESPONSIBILITY
 # ------------------------------------------------------------
-# .gitlab-ci.yml
+# .gitlab-dummy_ci.yml
 #   - pipeline structure
 #   - governance & approvals
 #   - environment wiring

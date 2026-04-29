@@ -166,6 +166,9 @@ TestEcommerceAPI (project suite/root)
 │     ├── coupons/..                               ← coupons-specific
 │     └── products/..                              ← products-specific
 │
+│─── scripts                                       ← shared
+│     └── setup.sh
+│─── Makefile                                      ← shared (Makefile = orchestrates project execution)
 │─── .dockerignore                                 ← shared
 │─── .env                                          ← shared
 │─── .env.example                                  ← shared
