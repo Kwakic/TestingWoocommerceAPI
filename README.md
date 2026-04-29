@@ -1,95 +1,243 @@
-# Ecommerce
+![Python](https://img.shields.io/badge/python-3.13-blue)
+![Pytest](https://img.shields.io/badge/tests-pytest-green)
+![Docker](https://img.shields.io/badge/docker-ready-blue)
+![CI](https://img.shields.io/badge/CI-GitHub_Actions-orange)
+![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
+# 🧪 TestEcommerceAPI
 
+A fully automated **API testing framework for WooCommerce**, built with Python, pytest, and Docker.
 
-## Getting started
+This project demonstrates **real-world API testing**, including:
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+* 🔌 REST API validation
+* 🗄️ Database verification (DB + API consistency)
+* 🐳 Fully reproducible Docker environment
+* ⚙️ One-command setup (`make run`)
+* 🔁 Idempotent infrastructure (safe to rerun)
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+---
 
-## Add your files
+# 🚀 Quick Start (One Command)
 
-* [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+```bash
+git clone https://github.com/Kwakic/TestingWoocommerceAPI.git
+cd TestingWoocommerceAPI
+make run
+```
+
+👉 That’s it. No manual setup required.
+
+---
+
+# 🧠 What Happens Behind the Scenes
+
+Running:
+
+```bash
+make run
+```
+
+automatically performs:
+
+1. 🐳 Starts Docker containers:
+
+   * MySQL (database)
+   * WordPress
+   * WP-CLI
+
+2. ⚙️ Bootstraps environment:
+
+   * Installs WordPress
+   * Installs WooCommerce
+   * Generates API credentials
+   * Auto-generates `.env`
+
+3. 🧪 Executes test suite:
+
+   * pytest runs API + DB validation tests
+
+---
+
+# 🏗️ Architecture Overview
+
+```mermaid
+flowchart TD
+
+    A[User] -->|make run| B[Makefile]
+    B --> C[Docker Compose]
+
+    C --> D[MySQL DB]
+    C --> E[WordPress + WooCommerce]
+    C --> F[WP-CLI]
+
+    F -->|setup.sh| E
+    F -->|create API keys| D
+
+    G[Pytest Framework] --> H[API Clients]
+    G --> I[Helpers]
+    G --> J[Validators]
+    G --> K[DAO Layer]
+
+    H -->|HTTP| E
+    K -->|SQL| D
+
+    G --> L[Test Suite]
+    L --> M[Allure Reports]
+```
+
+---
+
+# 🧩 How to Understand This (Simple Explanation)
+
+Think in 3 layers:
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/kwakino/ecommerce.git
-git branch -M main
-git push -uf origin main
+1. Infrastructure (Docker)
+   → creates the system (WordPress + DB)
+
+2. Framework (Python)
+   → interacts with API + database
+
+3. Tests (pytest)
+   → validate behavior and data consistency
 ```
 
-## Integrate with your tools
+---
 
-* [Set up project integrations](https://gitlab.com/kwakino/ecommerce/-/settings/integrations)
+# 📂 Project Structure
 
-## Collaborate with your team
+```
+EcommerceAPI/
+  ├── api/
+  ├── helpers/
+  ├── validators/
+  ├── dao/
+  └── utils/
 
-* [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+tests/
+  ├── customers/
+  └── shared/
 
-## Test and Deploy
+scripts/
+  └── setup.sh
 
-Use the built-in continuous integration in GitLab.
+docker-compose.wp.yml
+Makefile
+```
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+---
 
-***
+# 🔐 Authentication
 
-# Editing this README
+* Uses **OAuth1 (WooCommerce API keys)**
+* Credentials are automatically generated during setup
+* `.env` file is created dynamically
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+---
 
-## Suggestions for a good README
+# 🔁 Idempotent Setup
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+You can safely run:
 
-## Name
-Choose a self-explaining name for your project.
+```bash
+make run
+```
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+multiple times.
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+The system will:
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+* skip already installed components
+* avoid duplicate data
+* reuse existing DB
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+---
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+# 🧪 Running Tests Manually
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+```bash
+pytest -v
+```
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+---
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+# 📊 Test Coverage
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+The framework includes:
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+* ✅ Positive API tests
+* ❌ Negative validation tests
+* 🔄 Update & lifecycle tests
+* 🗄️ Database consistency validation
+* ⏱ Timestamp validation (API vs DB)
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+---
 
-## License
-For open source projects, say how it is licensed.
+# 🐳 Requirements
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+* Docker
+* Docker Compose
+* Python 3.13+
+* Make (or Git Bash on Windows)
 
-## Tralalalalalalala
+---
+
+# 💡 Why This Project Matters
+
+It demonstrates:
+
+* real API + DB integration testing
+* clean test architecture
+* reproducible environments
+* CI-ready infrastructure
+* enterprise-style framework design
+
+---
+
+# 🧪 Example Test Flow
+
+1. Create customer via API
+2. Fetch from database
+3. Update via API
+4. Validate:
+
+   * API response
+   * DB consistency
+   * timestamps alignment
+
+---
+
+# 🏁 Output Example
+
+```
+✅ WordPress already installed — skipping
+✅ WooCommerce already installed — skipping
+API keys already exist — skipping
+🎉 Setup complete!
+
+================ test session starts ================
+```
+
+---
+
+# 🛠️ Future Improvements
+
+* GitHub Actions CI pipeline
+* Allure report publishing
+* Multi-environment support
+* Performance testing extensions
+
+---
+
+# 👤 Author
+
+Martin Svach
+
+QA Engineer / Test Automation Engineer
+
+---
+
+# 📜 License
+
+MIT License

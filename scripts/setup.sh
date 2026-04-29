@@ -90,10 +90,19 @@ $wpdb->insert("{$wpdb->prefix}woocommerce_api_keys", [
   "truncated_key" => substr($key, -7)
 ]);
 
+// 👇 WRITE TO .env FILE (AUTO-WIRING)
+file_put_contents(".env",
+"WC_API_URL=http://localhost:8080/wp-json/wc/v3/\n" .
+"WC_CONSUMER_KEY=$key\n" .
+"WC_CONSUMER_SECRET=$secret\n"
+);
+
 echo "=====================================\n";
 echo "CONSUMER KEY: $key\n";
 echo "CONSUMER SECRET: $secret\n";
 echo "=====================================\n";
+echo "✅ .env file generated automatically\n";
+
 ' --allow-root
 
 echo "🎉 Setup complete!"
