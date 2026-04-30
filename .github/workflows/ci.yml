@@ -47,22 +47,22 @@ jobs:
         run: |
           docker compose -f docker-compose.wp.yml up -d
 
-      # --------------------------------------------------
-      # 5. Wait for WordPress
-      # --------------------------------------------------
-      - name: Wait for WordPress
-        run: |
-          until curl -s http://localhost:8080/wp-json > /dev/null; do
-            echo "Waiting for WordPress..."
-            sleep 5
-          done
+#      # --------------------------------------------------
+#      # 5. Wait for WordPress ---> you already have a readiness check inside setup.sh
+#      # --------------------------------------------------
+#      - name: Wait for WordPress
+#        run: |
+#          until curl -s http://localhost:8080/wp-json > /dev/null; do
+#            echo "Waiting for WordPress..."
+#            sleep 5
+#          done
 
       # --------------------------------------------------
       # 6. Bootstrap WooCommerce
       # --------------------------------------------------
       - name: Bootstrap WooCommerce
         run: |
-          docker compose -f docker-compose.wp.yml exec -T wpcli bash /scripts/setup.sh
+          bash scripts/setup.sh
 
       # --------------------------------------------------
       # 7. CI ENV OVERRIDES (THIS IS WHAT YOU ASKED)
