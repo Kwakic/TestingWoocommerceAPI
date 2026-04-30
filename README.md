@@ -57,6 +57,16 @@ automatically performs:
 
    * pytest runs API + DB validation tests
 
+4. 📦 Installs the testing framework (editable mode)
+
+   * Runs:
+
+     ```bash
+     pip install -e "./EcommerceAPI[dev]"
+     ```
+
+   * This makes the framework importable as a proper Python package
+   * Ensures consistency between local runs and CI pipelines
 ---
 
 # 🏗️ Architecture Overview
@@ -156,11 +166,33 @@ The system will:
 
 # 🧪 Running Tests Manually
 
+If you want to run tests without `make run`:
+
+
 ```bash
+pip install -e "./EcommerceAPI[dev]"
 pytest -v
 ```
 
+Don’t silently rely on:
+
+```text
+Python sys.path hack (running from root)
+```
+
+### ⚠️ One thing you should NOT do
+
+### 🔹 CI-style test run (Allure-ready)
+
+```bash
+make test-ci
+```
+
+* Cleans previous Allure results
+* Generates fresh test artifacts
+* Matches CI pipeline behavior
 ---
+
 
 # 📊 Test Coverage
 

@@ -11,8 +11,6 @@ This document explains, in simple steps, how to produce and view Allure test rep
     This clears old results but keeps your environment clean for the current run.
 ```powershell
 pytest -m tcid03 -q -r s --clean-alluredir --alluredir=reports/allure-results
-
-pytest -m tcid03 -q -r s --clean-alluredir --alluredir=reports/customers/test/allure-results
 ```
 
 2. Copy the history (only after the test finishes, after a generating report):
@@ -27,9 +25,6 @@ cp -r reports/allure-report/history reports/allure-results/
    The Allure generator now combines the new results from Step 1 with the history from Step 2.
 ```powershell
 allure generate reports/allure-results -o reports/allure-report --clean
-
-allure generate reports/customers/test/allure-results -o reports/customers/test/allure-report --clean
-
 ```
 
 4. Open Allure UI:

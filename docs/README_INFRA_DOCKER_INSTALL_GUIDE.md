@@ -504,28 +504,208 @@ pytest → runs your framework
 API + DB validated
 ```
 
+---
+## 🧠 Big architectural insight
+
+You now clearly see separation:
 ```
-
-```
-
-
-```
-
-```
-
-
-```
-
-```
-
-```
-
+setup.sh        → infrastructure
+Makefile        → orchestration
+pyproject.toml  → package definition
+pip install     → package activation
+pytest          → execution
 ```
 
 
+---
+
+## 🧠 Big picture (what you’ve built)
+
+You now have:
+```
+Infra layer     → Docker (WordPress + DB)
+Bootstrap       → setup.sh
+Framework       → API + validators + helpers
+Execution       → pytest
+Reporting       → Allure + logs
+CI              → GitHub Actions
 ```
 
+
+👉 This is real SDET-level architecture
+
+---
+
+## 🧠 Final architecture (now correct)
 ```
+User
+ → make run
+    → Docker (infra)
+    → setup.sh (bootstrap)
+    → pip install (framework)
+    → pytest (tests)
+    → Allure (report)
+```
+
+---
+
+# 🐳 Your current architecture (important)
+
+From your README:
+
+* `docker-compose.wp.yml` spins:
+  * MySQL
+  * WordPress
+  * WP-CLI
+
+👉 This is already perfect for CI
+
+---
+
+## ❌ Do you need a Dockerfile?
+### Answer: NO (for now)
+
+You only need a `Dockerfile` if:
+
+* you want to run tests inside a container
+* or build a custom test image
+
+👉 But you are doing:
+```
+GitHub runner (Ubuntu)
+    ↓
+runs docker-compose
+    ↓
+runs pytest locally
+```
+ ✔️This is simpler
+
+ ✔️This is standard
+
+ ✔️This is what you want
+
+---
+
+## ❌ Do you need .dockerignore?
+### Answer: NO (for CI step)
+
+Only needed if:
+
+* you build Docker images (docker build)
+
+👉 You are NOT building images → ignore it.
+
+---
+
+## 🧱 Core Docker concepts (simple but precise)
+### 1. Image
+* blueprint (like a class)
+* e.g.:
+  * mysql:8
+  * wordpress:latest
+---
+### 2. Container
+* running instance of an image (like an object)
+
+---
+
+### 3. Dockerfile
+* how to build your own image
+
+---
+
+### 4. docker-compose
+* orchestrates multiple containers
+
+---
+
+## 🔍 What YOUR docker-compose.wp.yml is doing
+
+Most likely (based on your README):
+```
+services:
+  db:
+    image: mysql:8
+
+  wordpress:
+    image: wordpress:latest
+
+  wpcli:
+    image: wordpress:cli
+```
+👉 That means:
+
+| Component | Source         |
+| --------- | -------------- |
+| MySQL     | prebuilt image |
+| WordPress | prebuilt image |
+| WP-CLI    | prebuilt image |
+
+### ✅ So answer to your question:
+
+> Does it create an image?
+
+👉 ❌ No (in your case)
+
+👉 ✔ It pulls existing images and runs containers
+
+---
+
+## 🧠 When DO you need a Dockerfile?
+
+You need it only if:
+
+### Case 1 — Custom test environment
+
+Example:
+```
+FROM python:3.13
+COPY . /app
+RUN pip install -r requirements.txt
+CMD ["pytest"]
+```
+👉 Then you run:
+
+```
+docker build -t test-runner .
+docker run test-runner
+```
+
+---
+
+## Case 2 — Full isolation (advanced CI)
+
+Everything runs inside containers:
+
+```
+[ test container ]
+        ↓
+[ wordpress container ]
+        ↓
+[ mysql container ]
+```
+
+---
+
+## ⚖️ Best Practice (for YOU)
+
+You are here:
+
+> QA / API testing / WooCommerce
+
+👉 Best practice:
+
+### ✅️ Use docker-compose for SYSTEM
+### ✅ Run pytest on host (CI runner)
+
+---
+
+### 💡 Why this is better
+
+| Approach                  | Pros               | Cons                |
+| ------------------------- | ------------------ | ------------------- |
+| pytest on host (your way) | simple, debuggable | slight env coupling |
+| pytest in container       | reproducible       | harder debugging    |
 
 
 ```

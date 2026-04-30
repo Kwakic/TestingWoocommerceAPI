@@ -1,9 +1,9 @@
 TestEcommerceAPI (project suite/root)
 │
+├──.git/
 ├──.github/
 │       └── workflows/
 │             └── ci.yml
-│
 ├── .venv/...                                        ← shared virtual environment (optional)
 │
 ├── docs/...                                         ← shared
@@ -34,25 +34,29 @@ TestEcommerceAPI (project suite/root)
 │     │     │     ├── oauth2_auth.py.py
 │     │     │     ├── jwt_auth.py
 │     │     │     ├── basic_auth.py
-│     │     │     ├── auth_factory.md
+│     │     │     ├── auth_factory.py
+│     │     │     ├── auth_resolver.py
 │     │     │     └── __init__.py
 │     │     ├── core/
+│     │     │     ├── __init__.py
 │     │     │     ├── http_client.py               ← low level transport
-│     │     │     └── http_response.py
+│     │     │     ├── http_response.py
+│     │     │     └── request_context.py
 │     │     ├── clients/
-│     │     │     ├── api_client.py                ← orchestration layer (used to be requestUtility)
-│     │     │     └── auth_response.py             ← pending to do
+│     │     │     ├── __init__.py
+│     │     │     └── api_client.py                ← orchestration layer (used to be requestUtility)
 │     │     ├── customers/
 │     │     │     ├── dao/
 │     │     │     │      │── customers_dao.py
 │     │     │     │      └── __init__.py
 │     │     │     ├── api/                         ← domain API
-│     │     │     │      └── customers_api.py
+│     │     │     │      │── customers_api.py
+│     │     │     │      └── __init__.py
 │     │     │     ├── validators/
 │     │     │     │      │── customer_db_validators.py
 │     │     │     │      │── customer_validators.py
 │     │     │     │      └── __init__.py
-│     │     │     ├── schemas/                     ← Pydantic validation models (runtime validation)
+│     │     │     ├── models/                      ← Pydantic validation models (runtime validation)
 │     │     │     │      │── customer_model.py
 │     │     │     │      └── _init__.py
 │     │     │     └── helpers/
@@ -88,7 +92,6 @@ TestEcommerceAPI (project suite/root)
 │     │     │     ├── generic_utilities.py
 │     │     │     ├── log_context.py
 │     │     │     ├── pagination_utils.py
-│     │     │     ├── api_client.py
 │     │     │     ├── team_discovery.py
 │     │     │     └── truncate_logging_utils.py
 │     │     └── __init__.py
@@ -138,13 +141,14 @@ TestEcommerceAPI (project suite/root)
 │     │            ├── test_create_customer.py
 │     │            ├── test_customer_deletion.py
 │     │            ├── test_customer_filters.py
-│     │            ├── test_get_all_customers_smoke.py
+│     │            ├── test_e2e_customer_lifecycle.py
+│     │            ├── test_get_all_customers.py
 │     │            ├── test_get_customer.py
 │     │            ├── test_soft_deleted_customer_handling.py
 │     │            ├── test_update_customer.py
-│     │            ├── test_customer_lifecycle.py
 │     │            └── __init__.py
 │     ├── shared/
+│     │     ├── __init__.py
 │     │     ├── contracts/                          ← JSON contract schemas (contract testing)
 │     │     │      └── error_schema.py
 │     │     │      └── __init__.py
@@ -164,10 +168,13 @@ TestEcommerceAPI (project suite/root)
 │     │
 │     ├── orders/..                                ← orders-specific
 │     ├── coupons/..                               ← coupons-specific
-│     └── products/..                              ← products-specific
+│     ├── products/..                              ← products-specific
+│     ├── __init__.py
+│     └── conftest
 │
 │─── scripts                                       ← shared
 │     └── setup.sh
+│─── wp-data/...
 │─── Makefile                                      ← shared (Makefile = orchestrates project execution)
 │─── .dockerignore                                 ← shared
 │─── .env                                          ← shared
@@ -175,8 +182,10 @@ TestEcommerceAPI (project suite/root)
 │─── .gitattributes                                ← shared
 │─── .gitignore                                    ← shared
 │─── .gitlab-ci.yml                                ← shared
+│─── .pre-commit-config.yaml                       ← shared
 │─── CHANGELOG.md                                  ← shared
 │─── conftest.py                                   ← shared
 │─── docker-compose.matrix.yml                     ← shared
 │─── Dockerfile                                    ← shared
+│─── README.md                                     ← shared
 └──  pytest.ini                                    ← shared
