@@ -52,6 +52,7 @@ jobs:
       # --------------------------------------------------
       - name: Bootstrap WooCommerce and capture credentials
         run: |
+          set -e
           echo "Running setup.sh and capturing output..."
 
           OUTPUT=$(bash scripts/setup.sh)
@@ -66,6 +67,18 @@ jobs:
 
           echo "WC_KEY=$WC_KEY" >> $GITHUB_ENV
           echo "WC_SECRET=$WC_SECRET" >> $GITHUB_ENV
+
+      # --------------------------------------------------
+      # 🔥 5.1 Configure DB connection (WITH PREFIX)
+      # --------------------------------------------------
+      - name: Configure DB connection
+        run: |
+          echo "DB_USER=root" >> $GITHUB_ENV
+          echo "DB_PASSWORD=root" >> $GITHUB_ENV
+          echo "DB_HOST=127.0.0.1" >> $GITHUB_ENV
+          echo "DB_PORT=3306" >> $GITHUB_ENV
+          echo "DB_DATABASE=wordpress" >> $GITHUB_ENV
+          echo "DB_TABLE_PREFIX=wp_" >> $GITHUB_ENV
 
       # --------------------------------------------------
       # 6. CI ENV OVERRIDES (THIS IS WHAT YOU ASKED)
