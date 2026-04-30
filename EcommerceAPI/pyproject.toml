@@ -30,35 +30,17 @@ requires-python = ">=3.9"
 # Runtime dependencies
 # =========================
 dependencies = [
+  "pydantic>=2.0",             # Validate and serialize your data schemas
   "requests>=2.32.0",          # HTTP library
   "SQLAlchemy>=2.0.43",        # ORM for database
   "PyMySQL>=1.1.1",            # MySQL connector
   "python-dotenv>=1.1.1",      # Load environment variables
   "Jinja2>=3.1.6",             # Templating engine
   "jsonschema>=4.23.0",        # JSON schema validation
-  "attrs>=25.3.0",             # Decorators for classes
-  "typing_extensions>=4.14.0", # Extra typing helpers
-  "urllib3>=2.5.0",            # HTTP utils (used by requests)
-  "tzdata>=2025.2",            # Timezone database
-  "six>=1.17.0",               # Python 2/3 compatibility (optional but safe)
-  "colorama>=0.4.6",           # Colored output in terminal
-  "MarkupSafe>=3.0.2",         # Needed by Jinja2
-  "packaging>=24.2",           # Version parsing and utils
-  "idna>=3.10",                 # URL encoding support
-  "charset-normalizer>=3.4.1", # HTTP charset handling
-  "certifi>=2025.1.31",        # SSL certificates
-  "oauthlib>=3.2.2",            # OAuth support
   "requests-oauthlib>=2.0.0",  # OAuth wrapper for requests
+  "oauthlib>=3.2.2",           # OAuth support
   "WooCommerce>=3.0.0",        # WooCommerce API client
-  "rich>=14.0.0",              # Pretty terminal output
-  "greenlet>=3.2.4",           # Required by SQLAlchemy async
-  "rpds-py>=0.25.0",           # Immutable data structures
-  "referencing>=0.36.2",       # JSON schema references
-  "antiorm>=1.2.1",            # Optional small ORM helper
-  "db>=0.1.1",                 # Lightweight DB utility
-  "markdown-it-py>=3.0.0",     # Markdown parser
-  "mdurl>=0.1.2",              # URL support for Markdown
-  "Pygments>=2.19.1"           # Syntax highlighting
+  "rich>=14.0.0"               # Pretty terminal output
 ]
 
 # =========================
@@ -83,6 +65,7 @@ dev = [
   "pytest>=8.3.5",             # Core testing framework
   "allure-pytest",             # Allure pytest adapter (replaces pytest-html)
   "pytest-metadata>=3.1.1",    # Metadata for pytest reports
+  "pytest-xdist",              # Running tests in parallel across multiple CPUs or even remote machines
   "Faker>=37.4.0",             # Generate fake data
   "freezegun>=1.5.3",          # Freeze time in tests
 # Remove explicit pytest transitive deps like pluggy/iniconfig unless you need pinned versions.
