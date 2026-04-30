@@ -30,7 +30,7 @@ requires-python = ">=3.9"
 # Runtime dependencies
 # =========================
 dependencies = [
-  "pydantic>=2.0",             # Validate and serialize your data schemas
+  "pydantic[email]>=2.0",             # Validate and serialize your data schemas
   "requests>=2.32.0",          # HTTP library
   "SQLAlchemy>=2.0.43",        # ORM for database
   "PyMySQL>=1.1.1",            # MySQL connector

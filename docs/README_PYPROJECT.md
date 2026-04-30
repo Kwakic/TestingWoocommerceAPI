@@ -131,3 +131,77 @@ Where to merge vs keep separate (decision guide)
 - Merge into a single `pyproject.toml` only if:
   - This repo is a single-package project and you prefer one-file config.
   - You’re comfortable moving packaging metadata to repo root and adjusting paths.
+
+---
+
+## 🧱 Step 1 — Identify ALL runtime dependencies for pyproject.toml
+
+### ✅ Method 1 (fastest and accurate)
+
+Run locally:
+
+
+```Bash
+#  list all currently installed packages and their exact versions
+pip freeze
+```
+
+👉 Then filter mentally:
+
+Keep only things your framework **actually imports**, e.g.:
+
+* pydantic
+* requests
+* python-dotenv
+* mysql connector (if used)
+* etc.
+
+---
+
+## 🧱 Step 2 — Split dependencies correctly
+
+### ✅ Runtime dependencies
+
+These are required to RUN your framework:
+
+
+```TOML
+[project]
+dependencies = [
+  "pydantic>=2.0",
+  "requests",
+  "python-dotenv",
+]
+
+```
+
+---
+
+### ✅ Dev dependencies
+
+These are for testing / tooling:
+
+
+```TOML
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "allure-pytest",
+]
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
