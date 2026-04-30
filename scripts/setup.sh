@@ -3,7 +3,9 @@
 set -e
 
 echo "⏳ Waiting for WordPress container..."
-sleep 10
+until curl -s http://localhost:8080/wp-json > /dev/null; do
+  sleep 5
+done
 
 # ------------------------------------------------------------------
 # FIX — Permissions (light, no ownership fight)
