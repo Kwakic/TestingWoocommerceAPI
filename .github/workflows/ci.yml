@@ -65,6 +65,25 @@ jobs:
           bash scripts/setup.sh
 
       # --------------------------------------------------
+      # 🔥 6.1 Copy .env from container to host
+      # --------------------------------------------------
+      - name: Copy .env from container to host
+        run: |
+          echo "Copying .env from container..."
+          docker cp wc-wp:/var/www/html/.env .env
+          echo "---- .env content ----"
+          cat .env
+
+      # --------------------------------------------------
+      # 🔥 6.2 Map credentials to framework variables
+      # --------------------------------------------------
+      - name: Export credentials for tests
+        run: |
+          source .env
+          echo "WC_KEY=$WC_CONSUMER_KEY" >> $GITHUB_ENV
+          echo "WC_SECRET=$WC_CONSUMER_SECRET" >> $GITHUB_ENV
+
+      # --------------------------------------------------
       # 7. CI ENV OVERRIDES (THIS IS WHAT YOU ASKED)
       # --------------------------------------------------
       - name: Configure environment (CI overrides)
@@ -94,13 +113,6 @@ jobs:
   # ==================================================
   # 📊 JOB 2 — REPORT GENERATION + DEPLOY
   # ==================================================
-  # Now your report will include:
-  # Trends tab
-  #   - pass/fail over time
-  # Flaky detection
-  #   - unstable tests visible
-  # Historical context
-  #   - “is this failure new or recurring?”
 
   report:
     needs: test
