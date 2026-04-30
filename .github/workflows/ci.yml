@@ -47,44 +47,28 @@ jobs:
         run: |
           docker compose -f docker-compose.wp.yml up -d
 
-#      # --------------------------------------------------
-#      # 5. Wait for WordPress ---> you already have a readiness check inside setup.sh
-#      # --------------------------------------------------
-#      - name: Wait for WordPress
-#        run: |
-#          until curl -s http://localhost:8080/wp-json > /dev/null; do
-#            echo "Waiting for WordPress..."
-#            sleep 5
-#          done
-
       # --------------------------------------------------
-      # 6. Bootstrap WooCommerce
+      # 5. Bootstrap WooCommerce + capture credentials
       # --------------------------------------------------
-      - name: Bootstrap WooCommerce
+      - name: Bootstrap WooCommerce and capture credentials
         run: |
-          bash scripts/setup.sh
+          echo "Running setup.sh and capturing output..."
+
+          OUTPUT=$(bash scripts/setup.sh)
+
+          echo "$OUTPUT"
+
+          WC_KEY=$(echo "$OUTPUT" | grep "CONSUMER KEY" | awk '{print $3}')
+          WC_SECRET=$(echo "$OUTPUT" | grep "CONSUMER SECRET" | awk '{print $3}')
+
+          echo "Extracted WC_KEY=$WC_KEY"
+          echo "Extracted WC_SECRET=$WC_SECRET"
+
+          echo "WC_KEY=$WC_KEY" >> $GITHUB_ENV
+          echo "WC_SECRET=$WC_SECRET" >> $GITHUB_ENV
 
       # --------------------------------------------------
-      # 🔥 6.1 Copy .env from container to host
-      # --------------------------------------------------
-      - name: Copy .env from container to host
-        run: |
-          echo "Copying .env from container..."
-          docker cp wc-wp:/var/www/html/.env .env
-          echo "---- .env content ----"
-          cat .env
-
-      # --------------------------------------------------
-      # 🔥 6.2 Map credentials to framework variables
-      # --------------------------------------------------
-      - name: Export credentials for tests
-        run: |
-          source .env
-          echo "WC_KEY=$WC_CONSUMER_KEY" >> $GITHUB_ENV
-          echo "WC_SECRET=$WC_CONSUMER_SECRET" >> $GITHUB_ENV
-
-      # --------------------------------------------------
-      # 7. CI ENV OVERRIDES (THIS IS WHAT YOU ASKED)
+      # 6. CI ENV OVERRIDES (THIS IS WHAT YOU ASKED)
       # --------------------------------------------------
       - name: Configure environment (CI overrides)
         run: |
@@ -95,20 +79,21 @@ jobs:
           echo "SESSION_ID=${{ github.run_id }}" >> $GITHUB_ENV
 
       # --------------------------------------------------
-      # 8. Run tests
+      # 7. Run tests
       # --------------------------------------------------
       - name: Run pytest
         run: |
           pytest --clean-alluredir --alluredir=reports/allure-results
 
       # --------------------------------------------------
-      # 9. Upload Allure results (RAW)
+      # 8. Upload Allure results (RAW)
       # --------------------------------------------------
       - name: Upload Allure results
         uses: actions/upload-artifact@v4
         with:
           name: allure-results
           path: reports/allure-results
+
 
   # ==================================================
   # 📊 JOB 2 — REPORT GENERATION + DEPLOY
