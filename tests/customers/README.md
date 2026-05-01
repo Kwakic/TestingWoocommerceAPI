@@ -249,9 +249,9 @@ ENABLE_STRUCTURED_LOGS=true LOG_PAYLOADS=false pytest tests/customers --auto-htm
 
 ## 12. ℹ️ Notes
 
-✔ Matrix-compliant, future-proof
-✔ Defensive & thorough coverage
-✔ CI-ready, HTML/log artifact support
-✔ Standardized with all microservices
-✔ Actively maintained, test utilities provided
-✔ Rate limiting/auth isolation: test-ready for future endpoint features
+* ✔ Matrix-compliant, future-proof
+* ✔ Defensive & thorough coverage
+* ✔ CI-ready, HTML/log artifact support
+* ✔ Standardized with all microservices
+* ✔ Actively maintained, test utilities provided
+* ✔ Rate limiting/auth isolation: test-ready for future endpoint features

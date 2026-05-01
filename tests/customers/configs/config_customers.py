@@ -31,4 +31,6 @@ API_HOSTS = {
     "staging": "https://staging.example.com/wp-json/wc/v3/",
     # Production (real server)
     "prod": "https://api.example.com/wp-json/wc/v3/",
+    # CI-You run pytest on host:
+    "ci": "http://localhost:8080/wp-json/wc/v3/",
 }

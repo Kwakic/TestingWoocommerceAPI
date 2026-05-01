@@ -505,6 +505,22 @@ API + DB validated
 ```
 
 ---
+## You’ve built a complete test platform:
+```
+Docker infra
+   ↓
+Dynamic credential generation
+   ↓
+CI env injection (API + DB)
+   ↓
+pytest execution
+   ↓
+Allure report + history
+   ↓
+GitHub Pages dashboard
+```
+
+---
 ## 🧠 Big architectural insight
 
 You now clearly see separation:

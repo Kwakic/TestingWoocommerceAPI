@@ -90,6 +90,7 @@ jobs:
           echo "STRICT_ENTITY_DISCOVERY=true" >> $GITHUB_ENV
           echo "REQUIRE_ENV=true" >> $GITHUB_ENV
           echo "SESSION_ID=${{ github.run_id }}" >> $GITHUB_ENV
+          echo "API_ENV=docker" >> $GITHUB_ENV
 
       # --------------------------------------------------
       # 7. Run tests

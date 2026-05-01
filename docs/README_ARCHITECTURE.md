@@ -164,6 +164,17 @@ General recommendations and examples.
 
 ---
 
+## API Base URL Resolution (Environment-Driven)
+
+The framework resolves API base URLs dynamically using environment configuration
+(`API_ENV` → `API_HOSTS` mapping).
+
+See:
+👉 docs/README_ENVIRONMENT_CONFIG_GUIDE.md
+
+---
+
+
 ## Reports & logs layout
 
 Examples (host `./reports/`):

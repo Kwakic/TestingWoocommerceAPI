@@ -141,7 +141,178 @@ The `configs/` folder may contain:
 
 ---
 
-## 7️⃣ `.env` Best Practices
+## 7️⃣ 🌐 API Base URL Resolution (Environment-Driven)
+
+The framework does **not hardcode API URLs**.
+Instead, it dynamically resolves them at runtime based on environment configuration.
+
+This is a **critical design decision** to support multiple execution contexts:
+- local development
+- Docker environments
+- CI pipelines
+
+---
+
+## 🔍 How the Base URL is Built
+
+The base URL is resolved through a **pytest fixture**:
+
+From `conftest.py`:
+
+```python
+env = os.getenv("API_ENV") or os.getenv("ENV", "test")
+...
+return module.API_HOSTS[env]
+```
+
+### Resolution Flow
+
+```
+pytest
+   ↓
+api_base_url fixture
+   ↓
+API_ENV (or ENV fallback)
+   ↓
+config_<service>.py
+   ↓
+API_HOSTS[env]
+   ↓
+Final base URL
+```
+
+---
+
+## 🧩 Environment → URL Mapping
+
+Each service defines its own environment mapping.
+
+Example (`config_customers.py`):
+
+```python
+API_HOSTS = {
+    "test": "http://localhost:8888/kwakiweb/wp-json/wc/v3/",
+    "docker": "http://wordpress/wp-json/wc/v3/",
+    "local": "http://localhost:8888/kwakiweb/wp-json/wc/v3/",
+    "dev": "http://host.docker.internal:8888/kwakiweb/wp-json/wc/v3/",
+    "staging": "https://staging.example.com/wp-json/wc/v3/",
+    "prod": "https://api.example.com/wp-json/wc/v3/",
+    "ci": "http://localhost:8080/wp-json/wc/v3/",
+}
+```
+
+---
+
+## ⚠️ Important: Environment ≠ Infrastructure
+
+A key concept:
+
+> **Environment variables do not define infrastructure — they select a network topology.**
+
+Different environments require different host resolution:
+
+| Environment | Where tests run | How WordPress is reached |
+|------------|----------------|--------------------------|
+| `test`     | Host machine   | `localhost:8888`         |
+| `docker`   | Inside Docker  | `wordpress` (Docker DNS) |
+| `ci`       | Host (CI runner) + Docker containers | `localhost:8080` |
+
+---
+
+## 💥 Common Pitfall (CI Failure)
+
+If CI runs with:
+
+```bash
+ENV=test
+```
+
+Then the framework resolves:
+
+```
+http://localhost:8888/kwakiweb/wp-json/wc/v3/
+```
+
+❌ This fails in CI because:
+- CI is not running your local WordPress on port 8888
+
+---
+
+## ✅ Correct CI Configuration
+
+You must explicitly select the correct environment:
+
+```bash
+API_ENV=ci
+```
+
+Example (GitHub Actions):
+
+```yaml
+- name: Configure environment (CI overrides)
+  run: |
+    echo "API_ENV=ci" >> $GITHUB_ENV
+```
+
+---
+
+## 🧠 Why Not Use `docker` in CI?
+
+```
+docker → http://wordpress/
+```
+
+✔ Works only if:
+- tests run **inside Docker network**
+
+❌ In your setup:
+- pytest runs on **host**
+- containers run separately
+
+➡️ `wordpress` hostname is **not resolvable**
+
+---
+
+## 🎯 Final Design (Correct and Clean)
+
+You now have **three distinct execution modes**:
+
+| Mode    | API_ENV | URL |
+|--------|--------|-----|
+| Local dev | `test` | localhost:8888 |
+| Docker-native | `docker` | wordpress |
+| CI pipeline | `ci` | localhost:8080 |
+
+✔ No hacks
+✔ No hardcoded overrides
+✔ Fully configurable
+✔ Matches real infrastructure
+
+---
+
+## 🧠 Design Principles Applied
+
+- **Configuration-driven behavior**
+- **Environment abstraction**
+- **Separation of concerns**
+- **Infrastructure-aware design**
+
+---
+
+## 🚀 Key Takeaway
+
+> The framework does not “know” where the API is.
+> It **resolves it dynamically based on execution context**.
+
+This makes the system:
+- portable
+- CI-friendly
+- Docker-compatible
+- production-ready
+
+---
+
+## 8️⃣ `.env` Best Practices
 
 - ✅ Use `.env.example` (tracked)
 - ✅ Never commit real secrets
