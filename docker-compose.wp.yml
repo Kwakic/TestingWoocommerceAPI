@@ -5,11 +5,15 @@ services:
     container_name: wc-db
     restart: always
     command: --default-authentication-plugin=mysql_native_password --ssl=0
+
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: wordpress
       MYSQL_USER: wp
       MYSQL_PASSWORD: wp
+
+    ports:
+      - "3306:3306"   # 🔥 REQUIRED for CI (host → container DB)
 
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
@@ -17,10 +21,12 @@ services:
       timeout: 5s
       retries: 10
 
+
   wordpress:
     image: wordpress:6.8-php8.2-apache
     container_name: wc-wp
     restart: always
+
     depends_on:
       db:
         condition: service_healthy
@@ -32,10 +38,10 @@ services:
       WORDPRESS_DB_NAME: wordpress
 
     ports:
-      - "8080:80"
+      - "8080:80"   # 🔥 API exposed to CI
 
     volumes:
-      - ./wp-data:/var/www/html   # ✅ CRITICAL FIX (bind mount)
+      - ./wp-data:/var/www/html   # ✅ CRITICAL (persistent WP state)
 
     healthcheck:
       test: ["CMD-SHELL", "curl -s http://localhost || exit 1"]
@@ -43,9 +49,11 @@ services:
       timeout: 5s
       retries: 10
 
+
   wpcli:
     image: wordpress:cli
     container_name: wc-cli
+
     depends_on:
       - wordpress
 
@@ -56,4 +64,4 @@ services:
       WORDPRESS_DB_NAME: wordpress
 
     volumes:
-      - ./wp-data:/var/www/html   # ✅ MUST MATCH wordpress
+      - ./wp-data:/var/www/html   # ✅ MUST match wordpress

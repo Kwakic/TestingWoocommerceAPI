@@ -6,10 +6,11 @@ on:
   pull_request:
   workflow_dispatch:
 
+# 🔥 Node.js 24 future-proofing
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
-  # ==================================================
-  # 🧪 JOB 1 — TEST EXECUTION
-  # ==================================================
 
   test:
     runs-on: ubuntu-latest
@@ -33,7 +34,7 @@ jobs:
           python-version: "3.13"
 
       # --------------------------------------------------
-      # 3. Install dependencies (FIXED PATH)
+      # 3. Install dependencies
       # --------------------------------------------------
       - name: Install project
         run: |
@@ -41,11 +42,21 @@ jobs:
           pip install -e "./EcommerceAPI[dev]"
 
       # --------------------------------------------------
-      # 4. Start Docker (instead of make run)
+      # 4. Start Docker
       # --------------------------------------------------
       - name: Start Docker stack
         run: |
           docker compose -f docker-compose.wp.yml up -d
+
+      # --------------------------------------------------
+      # 🔥 Wait for MySQL (prevents race condition)
+      # --------------------------------------------------
+      - name: Wait for MySQL
+        run: |
+          until nc -z 127.0.0.1 3306; do
+            echo "Waiting for MySQL..."
+            sleep 3
+          done
 
       # --------------------------------------------------
       # 5. Bootstrap WooCommerce + capture credentials
@@ -53,8 +64,6 @@ jobs:
       - name: Bootstrap WooCommerce and capture credentials
         run: |
           set -e
-          echo "Running setup.sh and capturing output..."
-
           OUTPUT=$(bash scripts/setup.sh)
 
           echo "$OUTPUT"
@@ -62,26 +71,23 @@ jobs:
           WC_KEY=$(echo "$OUTPUT" | grep "CONSUMER KEY" | awk '{print $3}')
           WC_SECRET=$(echo "$OUTPUT" | grep "CONSUMER SECRET" | awk '{print $3}')
 
-          echo "Extracted WC_KEY=$WC_KEY"
-          echo "Extracted WC_SECRET=$WC_SECRET"
-
           echo "WC_KEY=$WC_KEY" >> $GITHUB_ENV
           echo "WC_SECRET=$WC_SECRET" >> $GITHUB_ENV
 
       # --------------------------------------------------
-      # 🔥 5.1 Configure DB connection (WITH PREFIX)
+      # 🔥 FIXED DB CONFIG (matches docker-compose)
       # --------------------------------------------------
       - name: Configure DB connection
         run: |
-          echo "DB_USER=root" >> $GITHUB_ENV
-          echo "DB_PASSWORD=root" >> $GITHUB_ENV
+          echo "DB_USER=wp" >> $GITHUB_ENV
+          echo "DB_PASSWORD=wp" >> $GITHUB_ENV
           echo "DB_HOST=127.0.0.1" >> $GITHUB_ENV
           echo "DB_PORT=3306" >> $GITHUB_ENV
           echo "DB_DATABASE=wordpress" >> $GITHUB_ENV
           echo "DB_TABLE_PREFIX=wp_" >> $GITHUB_ENV
 
       # --------------------------------------------------
-      # 6. CI ENV OVERRIDES (THIS IS WHAT YOU ASKED)
+      # 6. CI ENV OVERRIDES
       # --------------------------------------------------
       - name: Configure environment (CI overrides)
         run: |
@@ -100,7 +106,7 @@ jobs:
           pytest --clean-alluredir --alluredir=reports/allure-results
 
       # --------------------------------------------------
-      # 8. Upload Allure results (RAW)
+      # 8. Upload Allure results
       # --------------------------------------------------
       - name: Upload Allure results
         uses: actions/upload-artifact@v4
@@ -108,10 +114,6 @@ jobs:
           name: allure-results
           path: reports/allure-results
 
-
-  # ==================================================
-  # 📊 JOB 2 — REPORT GENERATION + DEPLOY
-  # ==================================================
 
   report:
     needs: test
@@ -121,24 +123,15 @@ jobs:
       contents: write
 
     steps:
-      # --------------------------------------------------
-      # 1. Checkout repo (main branch)
-      # --------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # --------------------------------------------------
-      # 2. Download Allure results
-      # --------------------------------------------------
       - name: Download Allure results
         uses: actions/download-artifact@v4
         with:
           name: allure-results
           path: reports/allure-results
 
-      # --------------------------------------------------
-      # 3. Checkout gh-pages (history source)
-      # --------------------------------------------------
       - name: Checkout gh-pages branch
         uses: actions/checkout@v4
         with:
@@ -146,56 +139,35 @@ jobs:
           path: gh-pages
         continue-on-error: true
 
-      # --------------------------------------------------
-      # 4. Restore history (if exists)
-      # --------------------------------------------------
       - name: Restore Allure history
         run: |
           if [ -d "gh-pages/history" ]; then
-            echo "Restoring history..."
             mkdir -p reports/allure-results/history
             cp -r gh-pages/history/* reports/allure-results/history/
-          else
-            echo "No previous history found"
           fi
 
-      # --------------------------------------------------
-      # 5. Setup Java
-      # --------------------------------------------------
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
 
-      # --------------------------------------------------
-      # 6. Install Allure CLI
-      # --------------------------------------------------
       - name: Install Allure
         run: |
           curl -L -o allure.zip https://github.com/allure-framework/allure2/releases/download/2.29.0/allure-2.29.0.zip
           unzip -q allure.zip
           echo "$PWD/allure-2.29.0/bin" >> $GITHUB_PATH
 
-      # --------------------------------------------------
-      # 7. Generate report (WITH history)
-      # --------------------------------------------------
       - name: Generate Allure report
         run: |
           allure generate reports/allure-results -o reports/allure-report --clean
 
-      # --------------------------------------------------
-      # 8. Upload artifact (optional)
-      # --------------------------------------------------
       - name: Upload Allure Report Artifact
         uses: actions/upload-artifact@v4
         with:
           name: allure-report
           path: reports/allure-report
 
-      # --------------------------------------------------
-      # 9. Deploy to GitHub Pages
-      # --------------------------------------------------
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
