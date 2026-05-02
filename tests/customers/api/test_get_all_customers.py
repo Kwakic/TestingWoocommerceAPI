@@ -19,10 +19,12 @@ pytestmark = [pytest.mark.integration]
 
 
 @pytest.mark.tcid09
-@pytest.mark.smoke
 @pytest.mark.contract
+@pytest.mark.smoke
 def test_get_all_customers_list_not_empty_and_valid_schema(
-    customer_helper, customers_dao
+    customer_helper,
+    customers_dao,
+    create_valid_customer,
 ):
     """
     Smoke test for GET /customers endpoint.
@@ -32,11 +34,21 @@ def test_get_all_customers_list_not_empty_and_valid_schema(
         - Each returned customers has a valid structure (Pydantic validation)
 
     Test flow:
-        1. Call GET /customers
-        2. Ensure response contains customers
-        3. Validate structure of each customers
+        1. Create customer for test
+        2. Call GET /customers
+        3. Ensure response contains customers
+        4. Validate structure of each customers
     """
 
+    # --------------------------------------------------
+    # Ensure deterministic data
+    # --------------------------------------------------
+    logger.info("🛠 Creating at least one customer to ensure non-empty dataset.")
+    create_valid_customer()
+
+    # --------------------------------------------------
+    # Act
+    # --------------------------------------------------
     logger.info("🟢 Calling GET all customers without filters.")
     customers = customer_helper.list_customers_paginated()
 
@@ -63,7 +75,9 @@ def test_get_all_customers_list_not_empty_and_valid_schema(
 @pytest.mark.tcid10
 @pytest.mark.regression
 @pytest.mark.contract
-def test_get_all_customers_pagination_boundary(customer_helper, customers_dao):
+def test_get_all_customers_pagination_boundary(
+    customer_helper, customers_dao, create_valid_customer
+):
     """
     Verify pagination behavior for GET /customers.
 
@@ -73,37 +87,58 @@ def test_get_all_customers_pagination_boundary(customer_helper, customers_dao):
         - All returned customers have valid structure
 
     Test flow:
-        1. Retrieve customers with small page size
-        2. Collect results across multiple pages
-        3. Ensure no duplicate IDs
-        4. Validate structure of each customers
+        1. Creates controlled dataset
+        2. Retrieve customers with small page size
+        3. Collect results across multiple pages
+        4. Ensure no duplicate IDs
+        5. Validate structure of each customers
+        6. Stops correctly (no infinite loop)
     """
     # You can write a parameterized test to test multiple per_page boundary values (1, 2, 10, etc.)
     per_page = 5
-    max_pages = 20  # Safeguard: increase if dataset is large
+    max_pages = 5  # Safeguard: increase if dataset is large
+    qty = 12  # Enough to span multiple pages
+
+    logger.info(
+        f"🛠 Creating {qty} customers to test pagination boundary (per_page={per_page})"
+    )
+
+    for _ in range(qty):
+        create_valid_customer()
 
     logger.info(
         f"🟢 Testing pagination boundary with per_page={per_page}, max_pages={max_pages}"
     )
 
     params = {"per_page": per_page}
+
+    # --------------------------------------------------
+    # Act
+    # --------------------------------------------------
     all_customers = customer_helper.list_customers_paginated(
         params=params, max_pages=max_pages
     )
 
+    # --------------------------------------------------
+    # Assert — basic checks
+    # --------------------------------------------------
     assert all_customers, "❌ No customers returned from paginated GET /customers"
     assert isinstance(
         all_customers, list
     ), f"Expected list of customers, got: {type(all_customers)}"
 
-    # 	Added truncation warning if page cap is reached
-    if len(all_customers) >= per_page * max_pages:
-        logger.warning(
-            f"⚠️ Retrieved exactly {len(all_customers)} customers, "
-            f"which matches per_page * max_pages. Results may be truncated."
-        )
+    logger.info(f"✅ Retrieved {len(all_customers)} customers.")
 
-    # Ensure pagination did not return duplicate customers
+    # --------------------------------------------------
+    # 🔥 Assert — pagination actually happened
+    # --------------------------------------------------
+    assert (
+        len(all_customers) > per_page
+    ), "❌ Pagination did not occur — all data returned in single page"
+
+    # --------------------------------------------------
+    # Assert — no duplicates
+    # --------------------------------------------------
     ids = [c["id"] for c in all_customers]
     assert len(ids) == len(
         set(ids)
@@ -111,7 +146,9 @@ def test_get_all_customers_pagination_boundary(customer_helper, customers_dao):
 
     logger.info(f"✅ Retrieved {len(all_customers)} unique customers across pages.")
 
-    # Validate structure of each customers
+    # --------------------------------------------------
+    # Assert — schema validation
+    # --------------------------------------------------
     for cust in all_customers:
         try:
             assert_valid_customer_response(cust)

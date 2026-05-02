@@ -17,7 +17,6 @@ pytestmark = [pytest.mark.integration]
 
 
 @pytest.mark.tcid07
-@pytest.mark.contract
 @pytest.mark.regression
 @pytest.mark.parametrize("minute_offset", [1, 5])
 def test_list_customers_created_within_time_range_with_db_check(

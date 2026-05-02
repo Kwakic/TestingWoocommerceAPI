@@ -22,7 +22,8 @@ Tests should be:
 
 ✔ readable\
 ✔ stable\
-✔ focused on business behavior
+✔ focused on business behavior\
+✔ create data explicitly per test
 
 Tests should **NOT**:
 
@@ -79,22 +80,41 @@ The framework already provides helpers and validators to handle this.
 
 ## 2. Execution Tier
 
-  Marker       Meaning
-  ------------ -------------------------
-  smoke        critical API health
-  sanity       quick functional checks
-  regression   full coverage
 
+| Marker | Meaning |
+| :--- | :--- |
+| smoke | critical API health |
+| sanity | quick functional checks |
+| regression | full coverage |
+
+
+### 🔥 Correct rule:
+### **Smoke** tests MUST be:
+
+✔ fast\
+✔ deterministic\
+✔ isolated
+
+
+
+While smoke tests must be broad, shallow, and fast to ensure the build is stable enough for any testing.
+
+### **Sanity** tests MUST be:
+* Narrow: Focus only on the specific modules or features that were recently changed or fixed.
+* Deep: Verify the logic and functional "rationality" of those specific changes in more detail than a surface-level smoke check.
+* Targeted: Run only after a build has already passed its initial smoke tests and is considered stable.
 ------------------------------------------------------------------------
 
 ## 3. Test Type
 
-  Marker        Meaning
-  ------------- ---------------------
-  integration   API + DB validation
-  contract      schema validation
-  negative      invalid input tests
-  e2e           multi-step workflow
+
+| Marker | Meaning |
+| :--- | :--- |
+| integration | API + DB validation |
+| contract | schema validation |
+| negative | invalid input tests |
+| e2e | multi-step workflow |
+
 
 ------------------------------------------------------------------------
 

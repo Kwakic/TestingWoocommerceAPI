@@ -13,6 +13,7 @@ pytestmark = [pytest.mark.integration]
 
 @pytest.mark.tcid06
 @pytest.mark.regression
+@pytest.mark.behavior  # Because this is documenting WooCommerce behavior.
 def test_soft_deleted_customer_is_still_returned_by_api(
     customer_helper, customers_dao, all_resources, create_valid_customer
 ):
