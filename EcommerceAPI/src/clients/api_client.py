@@ -380,7 +380,8 @@ class APIClient:
                     - Investigating headers / encoding
                     - Inspecting .request object
 
-                    Or Something is unclear or broken like ("When HttpResponse is not enough to understand what’s happening"):
+                    Or Something is unclear or broken like ("When HttpResponse is not enough to understand what’s
+                    happening"):
                     - API returns weird error
                     - JSON parsing fails
                     - headers look wrong

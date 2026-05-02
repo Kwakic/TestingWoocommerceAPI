@@ -64,6 +64,29 @@ else
 fi
 
 # ------------------------------------------------------------------
+# STEP 2.5 — 🔥 CRITICAL FIX: Permalinks (REST API routing)
+# ------------------------------------------------------------------
+echo "🔧 Configuring permalinks..."
+
+docker compose -f docker-compose.wp.yml run --rm wpcli \
+  wp rewrite structure '/%postname%/' --allow-root
+
+docker compose -f docker-compose.wp.yml run --rm wpcli \
+  wp rewrite flush --allow-root
+
+# ------------------------------------------------------------------
+# STEP 2.6 — 🔥 Wait for WooCommerce REST API
+# ------------------------------------------------------------------
+echo "⏳ Waiting for WooCommerce REST API..."
+
+until curl -s http://localhost:8080/wp-json/wc/v3 > /dev/null; do
+  echo "Waiting for WooCommerce API..."
+  sleep 3
+done
+
+echo "✅ WooCommerce REST API is ready"
+
+# ------------------------------------------------------------------
 # STEP 3 — Create API keys (idempotent-safe)
 # ------------------------------------------------------------------
 echo "🔑 Creating API keys..."
