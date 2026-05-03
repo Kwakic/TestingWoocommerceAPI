@@ -3,6 +3,7 @@ import logging
 from unittest.mock import patch
 from datetime import timedelta
 
+from EcommerceAPI.src.utils.generic_utilities import generate_random_string
 from EcommerceAPI.src.customers.validators.customer_validators import (
     assert_valid_customer_response,
 )
@@ -79,7 +80,7 @@ def test_get_all_customers_pagination_boundary(
     customer_helper, customers_dao, create_valid_customer
 ):
     """
-    Verify pagination behavior for GET /customers.
+    Verify pagination behavior for GET /customers using its own dataset (No dependency on global DB).
 
     Validates that:
         - Pagination retrieves multiple pages correctly
@@ -99,18 +100,24 @@ def test_get_all_customers_pagination_boundary(
     max_pages = 5  # Safeguard: increase if dataset is large
     qty = 12  # Enough to span multiple pages
 
+    # ------------------------------------------
+    # 🔥 Controlled dataset (KEY FIX)
+    # ------------------------------------------
+    test_run_id = generate_random_string()
+
     logger.info(
-        f"🛠 Creating {qty} customers to test pagination boundary (per_page={per_page})"
+        f"🛠 Creating {qty} customers for pagination test (run_id={test_run_id})"
     )
 
-    for _ in range(qty):
-        create_valid_customer()
+    for i in range(qty):
+        create_valid_customer(email=f"test_{test_run_id}_{i}@supersqa.com")
 
     logger.info(
         f"🟢 Testing pagination boundary with per_page={per_page}, max_pages={max_pages}"
     )
 
-    params = {"per_page": per_page}
+    # 🔥 IMPORTANT: filter ONLY our test data
+    params = {"per_page": per_page, "search": test_run_id}
 
     # --------------------------------------------------
     # Act
@@ -123,11 +130,16 @@ def test_get_all_customers_pagination_boundary(
     # Assert — basic checks
     # --------------------------------------------------
     assert all_customers, "❌ No customers returned from paginated GET /customers"
-    assert isinstance(
-        all_customers, list
-    ), f"Expected list of customers, got: {type(all_customers)}"
+    assert isinstance(all_customers, list), f"Expected list, got: {type(all_customers)}"
 
     logger.info(f"✅ Retrieved {len(all_customers)} customers.")
+
+    # --------------------------------------------------
+    # Assert — deterministic size
+    # --------------------------------------------------
+    assert (
+        len(all_customers) == qty
+    ), f"❌ Expected {qty} customers, got {len(all_customers)}"
 
     # --------------------------------------------------
     # 🔥 Assert — pagination actually happened

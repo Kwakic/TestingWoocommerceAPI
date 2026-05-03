@@ -21,9 +21,10 @@ This guide combines: ✔ original framework philosophy\
 Tests should be:
 
 ✔ readable\
-✔ stable\
+✔ stable (be stable in CI)\
 ✔ focused on business behavior\
-✔ create data explicitly per test
+✔ create data explicitly per test (create their own data)\
+✔ Query only that data (via after, search, etc.)
 
 Tests should **NOT**:
 
