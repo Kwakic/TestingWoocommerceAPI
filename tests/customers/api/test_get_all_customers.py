@@ -116,14 +116,13 @@ def test_get_all_customers_pagination_boundary(
         f"🟢 Testing pagination boundary with per_page={per_page}, max_pages={max_pages}"
     )
 
-    # 🔥 IMPORTANT: filter ONLY our test data
-    params = {"per_page": per_page, "search": test_run_id}
-
     # --------------------------------------------------
     # Act
     # --------------------------------------------------
-    all_customers = customer_helper.list_customers_paginated(
-        params=params, max_pages=max_pages
+    all_customers = customer_helper.list_customers_for_test(
+        test_run_id=test_run_id,
+        per_page=per_page,
+        max_pages=max_pages,
     )
 
     # --------------------------------------------------

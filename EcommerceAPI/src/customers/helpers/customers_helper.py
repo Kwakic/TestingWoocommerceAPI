@@ -479,6 +479,61 @@ class CustomersHelper(object):
         # ✅ Return all valid customers that passed date filter
         return filtered_customers
 
+    def list_customers_for_test(
+        self,
+        test_run_id: str,
+        per_page: int = 10,
+        max_pages: int = 100,
+        extra_params: Optional[Dict[str, Any]] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Test-focused helper for fetching ONLY customers created within a test run.
+
+        WHY:
+        ----
+        - Avoids global DB dependency
+        - Guarantees deterministic dataset
+        - Reusable across all list tests
+        - Keeps tests clean (no manual params building)
+
+        Args:
+            test_run_id (str):
+                Unique identifier used in test data (email pattern)
+
+            per_page (int):
+                Pagination size
+
+            max_pages (int):
+                Safety cap to avoid infinite loops
+
+            extra_params (dict):
+                Optional additional filters (future-proof)
+
+        Returns:
+            List[dict]: Filtered customers belonging ONLY to this test run
+        """
+
+        logger.debug(
+            "🧪 Fetching test customers (run_id=%s, per_page=%s, max_pages=%s)",
+            test_run_id,
+            per_page,
+            max_pages,
+        )
+
+        params = {
+            "per_page": per_page,
+            "search": test_run_id,
+        }
+
+        # Allow optional extension (future-proof for filters)
+        if extra_params:
+            params.update(extra_params)
+
+        return self.list_customers_paginated(
+            params=params,
+            max_pages=max_pages,
+        )
+
     def assert_customer_exists_and_matches_db(self, email: str, dao) -> None:
         """
         High-level helper that validates that a customers exists
