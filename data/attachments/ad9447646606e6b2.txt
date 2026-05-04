@@ -1,0 +1,30 @@
+INFO     tests.customers.api.test_update_customer:test_update_customer.py:180 🛠 Creating a baseline customers for update test
+DEBUG    root:generic_utilities.py:30 📝 Generating random email and password.
+DEBUG    root:generic_utilities.py:47 📝 Generated credentials email and password=***'email': 'testuser_lrqevyhems@supersqa.com', 'password': "***"}
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:179 ⚙️ Creating customers with payload keys: ['email', 'password']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.162s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=41, email=testuser_lrqevyhems@supersqa.com
+DEBUG    EcommerceAPI.plugins.api_fixtures:api_fixtures.py:209 ℹ️ Registered customers with ID: 41 for cleanup.
+DEBUG    root:generic_utilities.py:30 📝 Generating random email and password.
+DEBUG    root:generic_utilities.py:47 📝 Generated credentials email and password=***'email': 'testuser_tmczdsoasq@supersqa.com', 'password': '***'}
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:179 ⚙️ Creating customers with payload keys: ['email', 'password']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.167s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=42, email=testuser_tmczdsoasq@supersqa.com
+DEBUG    EcommerceAPI.plugins.api_fixtures:api_fixtures.py:209 ℹ️ Registered customers with ID: 42 for cleanup.
+INFO     tests.customers.api.test_update_customer:test_update_customer.py:198 🔁 Using duplicate email: testuser_tmczdsoasq@supersqa.com
+INFO     tests.customers.api.test_update_customer:test_update_customer.py:200 🚫 Attempting invalid update for customer_id=41 payload={'email': 'testuser_tmczdsoasq@supersqa.com'}
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:249 🟢 Updating customers 41 with payload keys: ['email', 'expected_status_code']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:158 📡 PUT /customers/41 payload_keys=['email', 'expected_status_code']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ PUT /wp-json/wc/v3/customers/41 → Status code: 400 (completed in 0.058s)
+DEBUG    EcommerceAPI.src.clients.api_client:api_client.py:580 {
+                                                                 "code": "woocommerce_rest_customer_invalid_email",
+                                                                 "message": "Email address is invalid.",
+                                                                 "data": {
+                                                                   "status": 400
+                                                                 }
+                                                               }
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:409 ✅ Valid error response received (code=woocommerce_rest_customer_invalid_email status=400)
+DEBUG    EcommerceAPI.src.customers.dao.customers_dao:customers_dao.py:66 ℹ️ Found customers for email 'testuser_lrqevyhems@supersqa.com': {'ID': 41, 'user_login': 'testuser_lrqevyhems', 'user_pass': '***', 'user_nicename': 'testuser_lrqevyhems', 'user_email': 'testuser_lrqevyhems@supersqa.com', 'user_url': '', 'user_registered': datetime.datetime(2026, 5, 4, 15, 53, 12), 'user_activation_key': '1777909992:$generic$JuT2u4PwatNAgejrJmaF4pr6w_ygGdoxdBTXdC_O', 'user_status': 0, 'display_name': 'testuser_lrqevyhems'}
+INFO     tests.customers.api.test_update_customer:test_update_customer.py:243 ✅ Database record remains unchanged after rejected update (customer_id=41)
