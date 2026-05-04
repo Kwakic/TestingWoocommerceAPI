@@ -80,7 +80,7 @@ def test_get_all_customers_pagination_boundary(
     customer_helper, customers_dao, create_valid_customer
 ):
     """
-    Verify pagination behavior for GET /customers using its own dataset (No dependency on global DB).
+    Verify pagination behavior for GET /customers using an isolated test dataset (no dependency on global DB state)..
 
     Validates that:
         - Pagination retrieves multiple pages correctly

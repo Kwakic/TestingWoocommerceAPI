@@ -66,10 +66,13 @@ def paginate_all_results(
 
                 # Safety: ensure response is an iterable list. Stop pagination if no response or empty list is returned
                 if not response:
-                    logger.info(
-                        f"⛔ No more results at page {i}. Ending pagination for '{endpoint}'"
-                    )
-                    return all_items  # ✅ STOP EVERYTHING
+                    total_pages = i - 1
+                    logger.info(f"⛔ Stop pagination (no more results at page {i})")
+                    logger.info(f"📊 Total pages fetched: {total_pages}")
+                    return all_items
+
+                items_count = len(response)
+                logger.info(f"➡️ Page {i} → {items_count} items")
 
                 if not isinstance(response, list):
                     raise TypeError(
@@ -93,6 +96,7 @@ def paginate_all_results(
         if success and response:
             all_items.extend(response)
 
+    logger.info(f"📊 Total items fetched: {len(all_items)}")
     logger.debug(
         f"✅ Completed paginated fetch for '{endpoint}' — Total items: {len(all_items)}"
     )
