@@ -1,17 +1,25 @@
 name: CI — Docker + Pytest + Allure
 
+# --------------------------------------------------
+# 🔁 Triggers
+# --------------------------------------------------
 on:
+  # Run on every push to main branch
   push:
     branches: [ main ]
+
+  # Run on pull requests (any branch)
   pull_request:
+
+  # Allow manual execution from GitHub UI
   workflow_dispatch:
 
-# 🔥 Node.js 24 future-proofing
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
 
+  # ==================================================
+  # 🧪 JOB 1 — RUN TESTS + GENERATE ALLURE RESULTS
+  # ==================================================
   test:
     runs-on: ubuntu-latest
 
@@ -20,7 +28,7 @@ jobs:
 
     steps:
       # --------------------------------------------------
-      # 1. Checkout repo
+      # 1. Checkout repository
       # --------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -34,7 +42,7 @@ jobs:
           python-version: "3.13"
 
       # --------------------------------------------------
-      # 3. Install dependencies
+      # 3. Install project dependencies
       # --------------------------------------------------
       - name: Install project
         run: |
@@ -42,7 +50,7 @@ jobs:
           pip install -e "./EcommerceAPI[dev]"
 
       # --------------------------------------------------
-      # 4. Start Docker
+      # 4. Start Docker environment (WordPress + DB)
       # --------------------------------------------------
       - name: Start Docker stack
         run: |
@@ -59,7 +67,7 @@ jobs:
           done
 
       # --------------------------------------------------
-      # 5. Bootstrap WooCommerce + capture credentials
+      # 5. Bootstrap WooCommerce + capture API credentials
       # --------------------------------------------------
       - name: Bootstrap WooCommerce and capture credentials
         run: |
@@ -75,7 +83,7 @@ jobs:
           echo "WC_SECRET=$WC_SECRET" >> $GITHUB_ENV
 
       # --------------------------------------------------
-      # 🔥 FIXED DB CONFIG (matches docker-compose)
+      # 🔥 Configure DB connection (matches docker-compose)
       # --------------------------------------------------
       - name: Configure DB connection
         run: |
@@ -87,7 +95,7 @@ jobs:
           echo "DB_TABLE_PREFIX=wp_" >> $GITHUB_ENV
 
       # --------------------------------------------------
-      # 6. CI ENV OVERRIDES
+      # 6. CI environment overrides
       # --------------------------------------------------
       - name: Configure environment (CI overrides)
         run: |
@@ -99,14 +107,14 @@ jobs:
           echo "API_ENV=ci" >> $GITHUB_ENV
 
       # --------------------------------------------------
-      # 7. Run tests
+      # 7. Run pytest (generate Allure raw results)
       # --------------------------------------------------
       - name: Run pytest
         run: |
           pytest --clean-alluredir --alluredir=reports/allure-results
 
       # --------------------------------------------------
-      # 8. Upload Allure results
+      # 8. Upload Allure raw results (artifact)
       # --------------------------------------------------
       - name: Upload Allure results
         uses: actions/upload-artifact@v4
@@ -115,6 +123,9 @@ jobs:
           path: reports/allure-results
 
 
+  # ==================================================
+  # 📊 JOB 2 — GENERATE + PUBLISH ALLURE REPORT
+  # ==================================================
   report:
     needs: test
     runs-on: ubuntu-latest
@@ -123,22 +134,33 @@ jobs:
       contents: write
 
     steps:
+      # --------------------------------------------------
+      # 1. Checkout repository (main branch)
+      # --------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # --------------------------------------------------
+      # 2. Download Allure raw results from previous job
+      # --------------------------------------------------
       - name: Download Allure results
         uses: actions/download-artifact@v4
         with:
           name: allure-results
           path: reports/allure-results
 
+      # --------------------------------------------------
+      # 3. Checkout gh-pages branch (for history support)
+      # --------------------------------------------------
       - name: Checkout gh-pages branch
         uses: actions/checkout@v4
         with:
           ref: gh-pages
           path: gh-pages
-        continue-on-error: true
 
+      # --------------------------------------------------
+      # 4. Restore Allure history (trend charts)
+      # --------------------------------------------------
       - name: Restore Allure history
         run: |
           if [ -d "gh-pages/history" ]; then
@@ -146,30 +168,56 @@ jobs:
             cp -r gh-pages/history/* reports/allure-results/history/
           fi
 
+      # --------------------------------------------------
+      # 5. Setup Java (required for Allure CLI)
+      # --------------------------------------------------
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
 
+      # --------------------------------------------------
+      # 6. Install Allure CLI
+      # --------------------------------------------------
       - name: Install Allure
         run: |
           curl -L -o allure.zip https://github.com/allure-framework/allure2/releases/download/2.29.0/allure-2.29.0.zip
           unzip -q allure.zip
           echo "$PWD/allure-2.29.0/bin" >> $GITHUB_PATH
 
+      # --------------------------------------------------
+      # 7. Generate Allure HTML report
+      # --------------------------------------------------
       - name: Generate Allure report
         run: |
           allure generate reports/allure-results -o reports/allure-report --clean
 
+      # --------------------------------------------------
+      # 8. Upload HTML report (artifact)
+      # --------------------------------------------------
       - name: Upload Allure Report Artifact
         uses: actions/upload-artifact@v4
         with:
           name: allure-report
           path: reports/allure-report
 
+      # --------------------------------------------------
+      # 9. Deploy report to GitHub Pages
+      # --------------------------------------------------
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: reports/allure-report
+          publish_branch: gh-pages   # ✅ explicit and safe
+
+      # --------------------------------------------------
+      # 10. Print report URL (clickable in logs)
+      # --------------------------------------------------
+      - name: Print Allure URL
+        run: |
+          echo "====================================="
+          echo "Allure Report:"
+          echo "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+          echo "====================================="

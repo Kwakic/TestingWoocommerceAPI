@@ -49,6 +49,6 @@ repos:
     hooks:
       - id: pytest-preflight
         name: pytest preflight tests
-        entry: pytest -m preflight -q
+        entry: python -m pytest -m preflight -q
         language: system
         pass_filenames: false
