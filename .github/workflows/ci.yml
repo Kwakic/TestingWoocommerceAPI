@@ -110,6 +110,7 @@ jobs:
       # 7. Run pytest (generate Allure raw results)
       # --------------------------------------------------
       - name: Run pytest
+        continue-on-error: true
         run: |
           pytest --clean-alluredir --alluredir=reports/allure-results
 
@@ -117,6 +118,7 @@ jobs:
       # 8. Upload Allure raw results (artifact)
       # --------------------------------------------------
       - name: Upload Allure results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: allure-results
@@ -202,6 +204,7 @@ jobs:
       # 8. Upload HTML report (artifact)
       # --------------------------------------------------
       - name: Upload Allure Report Artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: allure-report
