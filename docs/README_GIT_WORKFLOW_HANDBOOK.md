@@ -1953,11 +1953,53 @@ git reflog
 
 ---
 
+### 🔎 Show commits on the feature branch:
+
+```Bash
+git log feature/GitHub_CI --oneline
+```
+
+---
+
+### 🔎 Show only commits DIFFERENT from main (most useful):
+This is usually what you actually want:
+```Bash
+git log main..feature/GitHub_CI --oneline
+```
+👉 Meaning:
+>“Show commits that are in feature/GitHub_CI but NOT in main”
+
+---
+
+### ⚖️ Compare both branches directly
+What feature branch has that main doesn’t:
+```
+git log main..feature/GitHub_CI --oneline
+```
+
+What main has that feature branch doesn’t:
+```
+git log feature/GitHub_CI..main --oneline
+```
+---
+
+### 📊 See actual code differences too
+
+```
+git diff main..feature/GitHub_CI
+```
+
+Or just filenames:
+```
+git diff --name-only main..feature/GitHub_CI
+```
+---
+
 ### 🔎   To see changes compared to main:
 
 Since you just did a git fetch, you might want to see how your feature branch differs from the server's main:
 
-```
+```Bash
 git diff main..HEAD
 ```
 👉 Shows what you have added that isn't in main yet.

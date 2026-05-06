@@ -10,6 +10,11 @@
 #6. Block commit if anything fails ❌
 
 
+# When you change hooks, always do:
+  # git add .pre-commit-config.yaml
+  # pre-commit run -a
+  # git commit -m "chore: update hooks"
+
 repos:
   # 🔹 Basic formatting & whitespace (fix your current warnings)
   - repo: https://github.com/pre-commit/pre-commit-hooks

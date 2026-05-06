@@ -1,7 +1,11 @@
 ![Python](https://img.shields.io/badge/python-3.13-blue)
 ![Pytest](https://img.shields.io/badge/tests-pytest-green)
 ![Docker](https://img.shields.io/badge/docker-ready-blue)
-![CI](https://img.shields.io/badge/CI-GitHub_Actions-orange)
+
+[![CI](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/ci.yml)
+
+[![Allure](https://img.shields.io/badge/Allure-Results-success)](https://kwakic.github.io/TestingWoocommerceAPI)
+
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
 # 🧪 TestEcommerceAPI

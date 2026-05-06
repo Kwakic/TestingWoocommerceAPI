@@ -41,7 +41,7 @@ pytest tests/customers --alluredir=./reports/customers/allure-results
     ```
   - Linux (manual):
     ```bash
-    ALLURE_VER=2.27.0
+    ALLURE_VER=2.29.0
     curl -fsSL "https://github.com/allure-framework/allure2/releases/download/${ALLURE_VER}/allure-${ALLURE_VER}.tgz" \
       | tar -xz -C /opt
     sudo ln -s /opt/allure-${ALLURE_VER}/bin/allure /usr/local/bin/allure
@@ -101,7 +101,7 @@ Recommended CI habits:
 1. Use a matrix of jobs (one per microservice) to get fast, isolated feedback.
 2. Install Allure CLI in the job runtime (per-job installation) — do not bake it into the runtime Docker image.
 3. Use `--alluredir` to write results to a predictable location (per-service folder for matrix jobs).
-4. Generate HTML only if results exist.
+4. Generate and publish reports even on failed test runs to preserve trend consistency.
 
 ### GitHub Actions — workflow_dispatch example
 Add `workflow_dispatch` with an optional `SERVICE` input so you can run one service manually from the Actions UI:
@@ -126,7 +126,7 @@ Example steps (insert into your job):
 - name: Install Allure CLI
   if: env.AUTO_ALLURE_REPORT == 'true'
   run: |
-    ALLURE_VER="2.27.0"
+    ALLURE_VER="2.29.0"
     curl -fsSL "https://github.com/allure-framework/allure2/releases/download/${ALLURE_VER}/allure-${ALLURE_VER}.tgz" | tar -xz
     sudo mv "allure-${ALLURE_VER}" /opt/allure-${ALLURE_VER}
     sudo ln -sf /opt/allure-${ALLURE_VER}/bin/allure /usr/bin/allure
@@ -181,6 +181,87 @@ pytest ...
 # CI (recommended)
 export REQUIRE_ENV=true
 ```
+
+
+---
+
+## Persistent Allure History (GitHub Pages)
+
+This project publishes Allure reports to GitHub Pages with persistent history/trend support.
+
+The CI pipeline performs the following flow:
+
+1. Restore previous Allure `history/`
+2. Generate a fresh report
+3. Publish report to `gh-pages`
+4. Preserve trend data across executions
+
+This enables:
+
+- 📈 Pass/fail trends
+- ⏱ Duration evolution
+- 🔁 Retry history
+- ⚠️ Flaky test visibility
+- 📊 Historical execution analytics
+
+Live report:
+
+```text
+https://kwakic.github.io/TestingWoocommerceAPI/
+```
+
+The report job is configured with:
+
+```yaml
+if: always()
+```
+
+This ensures reports are still generated and deployed even when tests fail, preserving historical trend accuracy.
+
+### GitHub Pages history preservation
+
+The deployment step uses:
+
+```yaml
+keep_files: true
+```
+
+This prevents previous Allure history/trend files from being deleted during deployment.
+
+### Restore previous Allure history
+
+Before generating a new report, CI restores:
+
+```text
+gh-pages/history
+```
+
+into:
+
+```text
+reports/allure-results/history
+```
+
+This is required for Allure trend graphs and historical charts to function correctly across multiple executions.
+
+### Recommended enterprise reporting flow
+
+```text
+pytest
+  ↓
+generate allure-results
+  ↓
+restore previous history
+  ↓
+generate new report
+  ↓
+deploy to gh-pages
+  ↓
+preserve trends for next execution
+```
+
+Generate and publish reports even on failed test runs to preserve trend consistency and historical analytics.
+
 
 ---
 
