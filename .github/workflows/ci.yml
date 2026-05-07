@@ -128,8 +128,6 @@ jobs:
       # 7. Run pytest (generate Allure raw results)
       # --------------------------------------------------
       - name: Run pytest
-        id: pytest_step
-        continue-on-error: true
         run: |
           pytest \
             -m "preflight or smoke or sanity or contract" \
