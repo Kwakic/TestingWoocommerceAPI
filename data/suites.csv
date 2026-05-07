@@ -1,208 +1,5 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Wed May 06 20:39:01 UTC 2026","Wed May 06 20:39:01 UTC 2026","116","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[missing-at]","
-Negative test for invalid email values during customers creation.
-
-This test bypasses the factory fixture because invalid payloads
-should return HTTP 400 responses.
-
-Test flow:
-    1. Send POST /customers with invalid email
-    2. Validate HTTP 400 response
-    3. Validate error response structure
-
-Args:
-    customers_dao: Fixture providing customers DAO.
-    customer_helper: Fixture providing customers API helper.
-    customer_api_raw(Callable): .Fixture providing low-level access t tests that need to inspect raw
-    responses.
-    payload (dict): Test input payload with malformed or missing email/password fields.
-    expected_status_code (int): Expected HTTP response code.
-"
-"passed","Wed May 06 20:38:58 UTC 2026","Wed May 06 20:38:59 UTC 2026","1019","tests.customers.api","test_create_customer","","","","test_bulk_create_customers[3]","
-Test bulk creation of customers.
-
-Creates multiple customers using the factory fixture and verifies that
-each created customers exists in both API and database.
-
-What the fixture `create_valid_customer` already does:
-    - Sends POST /customers
-    - Validates HTTP status code (201)
-    - Validates response structure using Pydantic
-    - Registers created customers for cleanup
-
-Test flow:
-    1. Create N customers using bulk utility
-    2. Verify each customers exists via API
-    3. Verify API data matches database record
-
-NOTE:
-    This test is marked as CONTRACT because schema validation
-    is performed implicitly via the create_valid_customer fixture
-    (Pydantic validation layer).
-"
-"skipped","Wed May 06 20:39:01 UTC 2026","Wed May 06 20:39:01 UTC 2026","0","tests.customers.api","test_create_customer","","","","test_create_customer_with_varied_addresses[billing1-shipping1]","
-Create customers with different billing and shipping addresses.
-
-Validates that address variations are accepted and stored correctly.
-
-Test flow:
-    1. Create customers with parameterized addresses
-    2. Verify customers exists via API
-    3. Verify API data matches database record
-"
-"passed","Wed May 06 20:39:01 UTC 2026","Wed May 06 20:39:01 UTC 2026","96","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[missing-email-field]","
-Negative test for invalid email values during customers creation.
-
-This test bypasses the factory fixture because invalid payloads
-should return HTTP 400 responses.
-
-Test flow:
-    1. Send POST /customers with invalid email
-    2. Validate HTTP 400 response
-    3. Validate error response structure
-
-Args:
-    customers_dao: Fixture providing customers DAO.
-    customer_helper: Fixture providing customers API helper.
-    customer_api_raw(Callable): .Fixture providing low-level access t tests that need to inspect raw
-    responses.
-    payload (dict): Test input payload with malformed or missing email/password fields.
-    expected_status_code (int): Expected HTTP response code.
-"
-"passed","Wed May 06 20:39:01 UTC 2026","Wed May 06 20:39:01 UTC 2026","103","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[name-included]","
-Negative test for invalid email values during customers creation.
-
-This test bypasses the factory fixture because invalid payloads
-should return HTTP 400 responses.
-
-Test flow:
-    1. Send POST /customers with invalid email
-    2. Validate HTTP 400 response
-    3. Validate error response structure
-
-Args:
-    customers_dao: Fixture providing customers DAO.
-    customer_helper: Fixture providing customers API helper.
-    customer_api_raw(Callable): .Fixture providing low-level access t tests that need to inspect raw
-    responses.
-    payload (dict): Test input payload with malformed or missing email/password fields.
-    expected_status_code (int): Expected HTTP response code.
-"
-"passed","Wed May 06 20:38:59 UTC 2026","Wed May 06 20:39:00 UTC 2026","1820","tests.customers.api","test_create_customer","","","","test_bulk_create_customers[5]","
-Test bulk creation of customers.
-
-Creates multiple customers using the factory fixture and verifies that
-each created customers exists in both API and database.
-
-What the fixture `create_valid_customer` already does:
-    - Sends POST /customers
-    - Validates HTTP status code (201)
-    - Validates response structure using Pydantic
-    - Registers created customers for cleanup
-
-Test flow:
-    1. Create N customers using bulk utility
-    2. Verify each customers exists via API
-    3. Verify API data matches database record
-
-NOTE:
-    This test is marked as CONTRACT because schema validation
-    is performed implicitly via the create_valid_customer fixture
-    (Pydantic validation layer).
-"
-"skipped","Wed May 06 20:39:00 UTC 2026","Wed May 06 20:39:00 UTC 2026","0","tests.customers.api","test_create_customer","","","","test_bulk_create_customers_edge_cases[0]","
-Edge case test for bulk creation.
-
-Runs the bulk utility with extreme quantities (0 and 101)
-to ensure the framework handles boundary conditions correctly.
-
-Fixture responsibilities:
-    - POST validation
-    - response structure validation
-    - automatic cleanup registration
-"
-"passed","Wed May 06 20:38:57 UTC 2026","Wed May 06 20:38:58 UTC 2026","427","tests.customers.api","test_create_customer","","","","test_bulk_create_customers[1]","
-Test bulk creation of customers.
-
-Creates multiple customers using the factory fixture and verifies that
-each created customers exists in both API and database.
-
-What the fixture `create_valid_customer` already does:
-    - Sends POST /customers
-    - Validates HTTP status code (201)
-    - Validates response structure using Pydantic
-    - Registers created customers for cleanup
-
-Test flow:
-    1. Create N customers using bulk utility
-    2. Verify each customers exists via API
-    3. Verify API data matches database record
-
-NOTE:
-    This test is marked as CONTRACT because schema validation
-    is performed implicitly via the create_valid_customer fixture
-    (Pydantic validation layer).
-"
-"passed","Wed May 06 20:39:01 UTC 2026","Wed May 06 20:39:01 UTC 2026","96","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[missing-local-part]","
-Negative test for invalid email values during customers creation.
-
-This test bypasses the factory fixture because invalid payloads
-should return HTTP 400 responses.
-
-Test flow:
-    1. Send POST /customers with invalid email
-    2. Validate HTTP 400 response
-    3. Validate error response structure
-
-Args:
-    customers_dao: Fixture providing customers DAO.
-    customer_helper: Fixture providing customers API helper.
-    customer_api_raw(Callable): .Fixture providing low-level access t tests that need to inspect raw
-    responses.
-    payload (dict): Test input payload with malformed or missing email/password fields.
-    expected_status_code (int): Expected HTTP response code.
-"
-"skipped","Wed May 06 20:39:00 UTC 2026","Wed May 06 20:39:00 UTC 2026","0","tests.customers.api","test_create_customer","","","","test_bulk_create_customers_edge_cases[101]","
-Edge case test for bulk creation.
-
-Runs the bulk utility with extreme quantities (0 and 101)
-to ensure the framework handles boundary conditions correctly.
-
-Fixture responsibilities:
-    - POST validation
-    - response structure validation
-    - automatic cleanup registration
-"
-"passed","Wed May 06 20:39:01 UTC 2026","Wed May 06 20:39:01 UTC 2026","95","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[missing-Top-Level Domain]","
-Negative test for invalid email values during customers creation.
-
-This test bypasses the factory fixture because invalid payloads
-should return HTTP 400 responses.
-
-Test flow:
-    1. Send POST /customers with invalid email
-    2. Validate HTTP 400 response
-    3. Validate error response structure
-
-Args:
-    customers_dao: Fixture providing customers DAO.
-    customer_helper: Fixture providing customers API helper.
-    customer_api_raw(Callable): .Fixture providing low-level access t tests that need to inspect raw
-    responses.
-    payload (dict): Test input payload with malformed or missing email/password fields.
-    expected_status_code (int): Expected HTTP response code.
-"
-"skipped","Wed May 06 20:39:01 UTC 2026","Wed May 06 20:39:01 UTC 2026","0","tests.customers.api","test_create_customer","","","","test_create_customer_with_varied_addresses[billing0-shipping0]","
-Create customers with different billing and shipping addresses.
-
-Validates that address variations are accepted and stored correctly.
-
-Test flow:
-    1. Create customers with parameterized addresses
-    2. Verify customers exists via API
-    3. Verify API data matches database record
-"
-"passed","Wed May 06 20:39:00 UTC 2026","Wed May 06 20:39:01 UTC 2026","388","tests.customers.api","test_create_customer","","","","test_create_single_customer_with_email_and_password_only","
+"passed","Thu May 07 09:38:11 UTC 2026","Thu May 07 09:38:11 UTC 2026","328","tests.customers.api","test_create_customer","","","","test_create_single_customer_with_email_and_password_only","
 Create a customers using the minimum valid payload.
 
 The fixture `create_valid_customer` already performs:
@@ -216,22 +13,7 @@ Test flow:
     2. Fetch customers via API
     3. Verify API data matches database record
 "
-"failed","Wed May 06 20:39:02 UTC 2026","Wed May 06 20:39:02 UTC 2026","308","tests.customers.api","test_create_customer","","","","test_create_customer_fail_for_existing_email","
-Negative test: creating a customers with an already existing email.
-
-Test flow:
-    1. Create a valid customers
-    2. Attempt to create another customers with the same email
-    3. Expect HTTP 400 with duplicate email error
-    4. Verify the original customers still exists
-
-Args:
-    create_valid_customer (Callable): Factory fixture to create valid WooCommerce customers
-    customer_api_raw (Raw APIClient): Fixture for low-level API calls used for negative testing
-    customer_helper: Provides customers's helper
-    customers_dao: Provides customers's DAOs
-"
-"passed","Wed May 06 20:39:01 UTC 2026","Wed May 06 20:39:01 UTC 2026","85","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[no-at-symbol]","
+"passed","Thu May 07 09:38:11 UTC 2026","Thu May 07 09:38:11 UTC 2026","86","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[missing-local-part]","
 Negative test for invalid email values during customers creation.
 
 This test bypasses the factory fixture because invalid payloads
@@ -249,4 +31,222 @@ Args:
     responses.
     payload (dict): Test input payload with malformed or missing email/password fields.
     expected_status_code (int): Expected HTTP response code.
+"
+"skipped","Thu May 07 09:38:11 UTC 2026","Thu May 07 09:38:11 UTC 2026","0","tests.customers.api","test_create_customer","","","","test_create_customer_with_varied_addresses[billing1-shipping1]","
+Create customers with different billing and shipping addresses.
+
+Validates that address variations are accepted and stored correctly.
+
+Test flow:
+    1. Create customers with parameterized addresses
+    2. Verify customers exists via API
+    3. Verify API data matches database record
+"
+"passed","Thu May 07 09:38:08 UTC 2026","Thu May 07 09:38:08 UTC 2026","423","tests.customers.api","test_create_customer","","","","test_bulk_create_customers[1]","
+Test bulk creation of customers.
+
+Creates multiple customers using the factory fixture and verifies that
+each created customers exists in both API and database.
+
+What the fixture `create_valid_customer` already does:
+    - Sends POST /customers
+    - Validates HTTP status code (201)
+    - Validates response structure using Pydantic
+    - Registers created customers for cleanup
+
+Test flow:
+    1. Create N customers using bulk utility
+    2. Verify each customers exists via API
+    3. Verify API data matches database record
+
+NOTE:
+    This test is marked as CONTRACT because schema validation
+    is performed implicitly via the create_valid_customer fixture
+    (Pydantic validation layer).
+"
+"passed","Thu May 07 09:38:08 UTC 2026","Thu May 07 09:38:09 UTC 2026","1049","tests.customers.api","test_create_customer","","","","test_bulk_create_customers[3]","
+Test bulk creation of customers.
+
+Creates multiple customers using the factory fixture and verifies that
+each created customers exists in both API and database.
+
+What the fixture `create_valid_customer` already does:
+    - Sends POST /customers
+    - Validates HTTP status code (201)
+    - Validates response structure using Pydantic
+    - Registers created customers for cleanup
+
+Test flow:
+    1. Create N customers using bulk utility
+    2. Verify each customers exists via API
+    3. Verify API data matches database record
+
+NOTE:
+    This test is marked as CONTRACT because schema validation
+    is performed implicitly via the create_valid_customer fixture
+    (Pydantic validation layer).
+"
+"passed","Thu May 07 09:38:09 UTC 2026","Thu May 07 09:38:11 UTC 2026","1765","tests.customers.api","test_create_customer","","","","test_bulk_create_customers[5]","
+Test bulk creation of customers.
+
+Creates multiple customers using the factory fixture and verifies that
+each created customers exists in both API and database.
+
+What the fixture `create_valid_customer` already does:
+    - Sends POST /customers
+    - Validates HTTP status code (201)
+    - Validates response structure using Pydantic
+    - Registers created customers for cleanup
+
+Test flow:
+    1. Create N customers using bulk utility
+    2. Verify each customers exists via API
+    3. Verify API data matches database record
+
+NOTE:
+    This test is marked as CONTRACT because schema validation
+    is performed implicitly via the create_valid_customer fixture
+    (Pydantic validation layer).
+"
+"skipped","Thu May 07 09:38:11 UTC 2026","Thu May 07 09:38:11 UTC 2026","0","tests.customers.api","test_create_customer","","","","test_bulk_create_customers_edge_cases[101]","
+Edge case test for bulk creation.
+
+Runs the bulk utility with extreme quantities (0 and 101)
+to ensure the framework handles boundary conditions correctly.
+
+Fixture responsibilities:
+    - POST validation
+    - response structure validation
+    - automatic cleanup registration
+"
+"passed","Thu May 07 09:38:11 UTC 2026","Thu May 07 09:38:11 UTC 2026","85","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[missing-at]","
+Negative test for invalid email values during customers creation.
+
+This test bypasses the factory fixture because invalid payloads
+should return HTTP 400 responses.
+
+Test flow:
+    1. Send POST /customers with invalid email
+    2. Validate HTTP 400 response
+    3. Validate error response structure
+
+Args:
+    customers_dao: Fixture providing customers DAO.
+    customer_helper: Fixture providing customers API helper.
+    customer_api_raw(Callable): .Fixture providing low-level access t tests that need to inspect raw
+    responses.
+    payload (dict): Test input payload with malformed or missing email/password fields.
+    expected_status_code (int): Expected HTTP response code.
+"
+"passed","Thu May 07 09:38:12 UTC 2026","Thu May 07 09:38:12 UTC 2026","77","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[missing-email-field]","
+Negative test for invalid email values during customers creation.
+
+This test bypasses the factory fixture because invalid payloads
+should return HTTP 400 responses.
+
+Test flow:
+    1. Send POST /customers with invalid email
+    2. Validate HTTP 400 response
+    3. Validate error response structure
+
+Args:
+    customers_dao: Fixture providing customers DAO.
+    customer_helper: Fixture providing customers API helper.
+    customer_api_raw(Callable): .Fixture providing low-level access t tests that need to inspect raw
+    responses.
+    payload (dict): Test input payload with malformed or missing email/password fields.
+    expected_status_code (int): Expected HTTP response code.
+"
+"skipped","Thu May 07 09:38:11 UTC 2026","Thu May 07 09:38:11 UTC 2026","0","tests.customers.api","test_create_customer","","","","test_bulk_create_customers_edge_cases[0]","
+Edge case test for bulk creation.
+
+Runs the bulk utility with extreme quantities (0 and 101)
+to ensure the framework handles boundary conditions correctly.
+
+Fixture responsibilities:
+    - POST validation
+    - response structure validation
+    - automatic cleanup registration
+"
+"skipped","Thu May 07 09:38:11 UTC 2026","Thu May 07 09:38:11 UTC 2026","0","tests.customers.api","test_create_customer","","","","test_create_customer_with_varied_addresses[billing0-shipping0]","
+Create customers with different billing and shipping addresses.
+
+Validates that address variations are accepted and stored correctly.
+
+Test flow:
+    1. Create customers with parameterized addresses
+    2. Verify customers exists via API
+    3. Verify API data matches database record
+"
+"passed","Thu May 07 09:38:11 UTC 2026","Thu May 07 09:38:12 UTC 2026","72","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[missing-Top-Level Domain]","
+Negative test for invalid email values during customers creation.
+
+This test bypasses the factory fixture because invalid payloads
+should return HTTP 400 responses.
+
+Test flow:
+    1. Send POST /customers with invalid email
+    2. Validate HTTP 400 response
+    3. Validate error response structure
+
+Args:
+    customers_dao: Fixture providing customers DAO.
+    customer_helper: Fixture providing customers API helper.
+    customer_api_raw(Callable): .Fixture providing low-level access t tests that need to inspect raw
+    responses.
+    payload (dict): Test input payload with malformed or missing email/password fields.
+    expected_status_code (int): Expected HTTP response code.
+"
+"passed","Thu May 07 09:38:11 UTC 2026","Thu May 07 09:38:11 UTC 2026","78","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[no-at-symbol]","
+Negative test for invalid email values during customers creation.
+
+This test bypasses the factory fixture because invalid payloads
+should return HTTP 400 responses.
+
+Test flow:
+    1. Send POST /customers with invalid email
+    2. Validate HTTP 400 response
+    3. Validate error response structure
+
+Args:
+    customers_dao: Fixture providing customers DAO.
+    customer_helper: Fixture providing customers API helper.
+    customer_api_raw(Callable): .Fixture providing low-level access t tests that need to inspect raw
+    responses.
+    payload (dict): Test input payload with malformed or missing email/password fields.
+    expected_status_code (int): Expected HTTP response code.
+"
+"passed","Thu May 07 09:38:11 UTC 2026","Thu May 07 09:38:11 UTC 2026","79","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[name-included]","
+Negative test for invalid email values during customers creation.
+
+This test bypasses the factory fixture because invalid payloads
+should return HTTP 400 responses.
+
+Test flow:
+    1. Send POST /customers with invalid email
+    2. Validate HTTP 400 response
+    3. Validate error response structure
+
+Args:
+    customers_dao: Fixture providing customers DAO.
+    customer_helper: Fixture providing customers API helper.
+    customer_api_raw(Callable): .Fixture providing low-level access t tests that need to inspect raw
+    responses.
+    payload (dict): Test input payload with malformed or missing email/password fields.
+    expected_status_code (int): Expected HTTP response code.
+"
+"failed","Thu May 07 09:38:12 UTC 2026","Thu May 07 09:38:12 UTC 2026","251","tests.customers.api","test_create_customer","","","","test_create_customer_fail_for_existing_email","
+Negative test: creating a customers with an already existing email.
+
+Test flow:
+    1. Create a valid customers
+    2. Attempt to create another customers with the same email
+    3. Expect HTTP 400 with duplicate email error
+    4. Verify the original customers still exists
+
+Args:
+    create_valid_customer (Callable): Factory fixture to create valid WooCommerce customers
+    customer_api_raw (Raw APIClient): Fixture for low-level API calls used for negative testing
+    customer_helper: Provides customers's helper
+    customers_dao: Provides customers's DAOs
 "
