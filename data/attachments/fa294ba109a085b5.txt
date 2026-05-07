@@ -1,0 +1,146 @@
+INFO     tests.customers.api.test_get_all_customers:test_get_all_customers.py:108 🛠 Creating 12 customers for pagination test (run_id=HMzMerVrWX)
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:179 ⚙️ Creating customers with payload keys: ['email', 'password']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.176s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=16, email=test_HMzMerVrWX_0@supersqa.com
+DEBUG    EcommerceAPI.plugins.api_fixtures:api_fixtures.py:209 ℹ️ Registered customers with ID: 16 for cleanup.
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:179 ⚙️ Creating customers with payload keys: ['email', 'password']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.175s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=17, email=test_HMzMerVrWX_1@supersqa.com
+DEBUG    EcommerceAPI.plugins.api_fixtures:api_fixtures.py:209 ℹ️ Registered customers with ID: 17 for cleanup.
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:179 ⚙️ Creating customers with payload keys: ['email', 'password']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.178s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=18, email=test_HMzMerVrWX_2@supersqa.com
+DEBUG    EcommerceAPI.plugins.api_fixtures:api_fixtures.py:209 ℹ️ Registered customers with ID: 18 for cleanup.
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:179 ⚙️ Creating customers with payload keys: ['email', 'password']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.173s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=19, email=test_HMzMerVrWX_3@supersqa.com
+DEBUG    EcommerceAPI.plugins.api_fixtures:api_fixtures.py:209 ℹ️ Registered customers with ID: 19 for cleanup.
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:179 ⚙️ Creating customers with payload keys: ['email', 'password']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.172s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=20, email=test_HMzMerVrWX_4@supersqa.com
+DEBUG    EcommerceAPI.plugins.api_fixtures:api_fixtures.py:209 ℹ️ Registered customers with ID: 20 for cleanup.
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:179 ⚙️ Creating customers with payload keys: ['email', 'password']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.177s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=21, email=test_HMzMerVrWX_5@supersqa.com
+DEBUG    EcommerceAPI.plugins.api_fixtures:api_fixtures.py:209 ℹ️ Registered customers with ID: 21 for cleanup.
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:179 ⚙️ Creating customers with payload keys: ['email', 'password']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.177s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=22, email=test_HMzMerVrWX_6@supersqa.com
+DEBUG    EcommerceAPI.plugins.api_fixtures:api_fixtures.py:209 ℹ️ Registered customers with ID: 22 for cleanup.
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:179 ⚙️ Creating customers with payload keys: ['email', 'password']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.177s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=23, email=test_HMzMerVrWX_7@supersqa.com
+DEBUG    EcommerceAPI.plugins.api_fixtures:api_fixtures.py:209 ℹ️ Registered customers with ID: 23 for cleanup.
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:179 ⚙️ Creating customers with payload keys: ['email', 'password']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.174s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=24, email=test_HMzMerVrWX_8@supersqa.com
+DEBUG    EcommerceAPI.plugins.api_fixtures:api_fixtures.py:209 ℹ️ Registered customers with ID: 24 for cleanup.
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:179 ⚙️ Creating customers with payload keys: ['email', 'password']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.177s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=25, email=test_HMzMerVrWX_9@supersqa.com
+DEBUG    EcommerceAPI.plugins.api_fixtures:api_fixtures.py:209 ℹ️ Registered customers with ID: 25 for cleanup.
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:179 ⚙️ Creating customers with payload keys: ['email', 'password']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.175s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=26, email=test_HMzMerVrWX_10@supersqa.com
+DEBUG    EcommerceAPI.plugins.api_fixtures:api_fixtures.py:209 ℹ️ Registered customers with ID: 26 for cleanup.
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:179 ⚙️ Creating customers with payload keys: ['email', 'password']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.175s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=27, email=test_HMzMerVrWX_11@supersqa.com
+DEBUG    EcommerceAPI.plugins.api_fixtures:api_fixtures.py:209 ℹ️ Registered customers with ID: 27 for cleanup.
+INFO     tests.customers.api.test_get_all_customers:test_get_all_customers.py:115 🟢 Testing pagination boundary with per_page=5, max_pages=5
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:516 🧪 Fetching test customers (run_id=HMzMerVrWX, per_page=5, max_pages=5)
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:401 ⚙️ Calling 'List All Customers' via pagination utility
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:36 🧰 Starting paginated fetch for '/customers'
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:49 📦 Fetching /customers page 1 (attempt 1/3)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/customers?per_page=5&search=HMzMerVrWX&page=1 → Status code: 200 (completed in 0.071s)
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:60 📄 Pagination request OK: endpoint=/customers page=1 status=200
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:77 ➡️ Page 1 → 5 items
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:49 📦 Fetching /customers page 2 (attempt 1/3)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/customers?per_page=5&search=HMzMerVrWX&page=2 → Status code: 200 (completed in 0.071s)
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:60 📄 Pagination request OK: endpoint=/customers page=2 status=200
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:77 ➡️ Page 2 → 5 items
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:49 📦 Fetching /customers page 3 (attempt 1/3)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/customers?per_page=5&search=HMzMerVrWX&page=3 → Status code: 200 (completed in 0.064s)
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:60 📄 Pagination request OK: endpoint=/customers page=3 status=200
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:77 ➡️ Page 3 → 2 items
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:49 📦 Fetching /customers page 4 (attempt 1/3)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/customers?per_page=5&search=HMzMerVrWX&page=4 → Status code: 200 (completed in 0.059s)
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:60 📄 Pagination request OK: endpoint=/customers page=4 status=200
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:72 ⛔ Stop pagination (no more results at page 4)
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:73 📊 Total pages fetched: 3
+INFO     tests.customers.api.test_get_all_customers:test_get_all_customers.py:134 ✅ Retrieved 12 customers.
+INFO     tests.customers.api.test_get_all_customers:test_get_all_customers.py:158 ✅ Retrieved 12 unique customers across pages.
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=16, email=test_HMzMerVrWX_0@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=17, email=test_HMzMerVrWX_1@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=26, email=test_HMzMerVrWX_10@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=27, email=test_HMzMerVrWX_11@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=18, email=test_HMzMerVrWX_2@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=19, email=test_HMzMerVrWX_3@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=20, email=test_HMzMerVrWX_4@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=21, email=test_HMzMerVrWX_5@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=22, email=test_HMzMerVrWX_6@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=23, email=test_HMzMerVrWX_7@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=24, email=test_HMzMerVrWX_8@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=25, email=test_HMzMerVrWX_9@supersqa.com
+INFO     tests.customers.api.test_get_all_customers:test_get_all_customers.py:173 ✅ All paginated customers conform to schema.
+INFO     EcommerceAPI.plugins.entities:entities.py:615 🔧 Starting teardown of created test resources...
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up customer(s)... (13 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 15
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ DELETE /wp-json/wc/v3/customers/15?force=True → Status code: 200 (completed in 0.094s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 15
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 16
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ DELETE /wp-json/wc/v3/customers/16?force=True → Status code: 200 (completed in 0.083s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 16
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 17
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ DELETE /wp-json/wc/v3/customers/17?force=True → Status code: 200 (completed in 0.083s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 17
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 18
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ DELETE /wp-json/wc/v3/customers/18?force=True → Status code: 200 (completed in 0.085s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 18
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 19
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ DELETE /wp-json/wc/v3/customers/19?force=True → Status code: 200 (completed in 0.085s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 19
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 20
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ DELETE /wp-json/wc/v3/customers/20?force=True → Status code: 200 (completed in 0.082s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 20
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 21
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ DELETE /wp-json/wc/v3/customers/21?force=True → Status code: 200 (completed in 0.083s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 21
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 22
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ DELETE /wp-json/wc/v3/customers/22?force=True → Status code: 200 (completed in 0.086s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 22
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 23
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ DELETE /wp-json/wc/v3/customers/23?force=True → Status code: 200 (completed in 0.083s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 23
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 24
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ DELETE /wp-json/wc/v3/customers/24?force=True → Status code: 200 (completed in 0.085s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 24
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 25
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ DELETE /wp-json/wc/v3/customers/25?force=True → Status code: 200 (completed in 0.085s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 25
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 26
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ DELETE /wp-json/wc/v3/customers/26?force=True → Status code: 200 (completed in 0.085s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 26
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 27
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ DELETE /wp-json/wc/v3/customers/27?force=True → Status code: 200 (completed in 0.082s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 27
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for customer(s).
+INFO     EcommerceAPI.plugins.entities:entities.py:646 
+
+🧹 ====================================== CLEANUP SUMMARY ======================================
+INFO     EcommerceAPI.plugins.entities:entities.py:649 📊 Created during test run: {'customers': 13}
+INFO     EcommerceAPI.plugins.entities:entities.py:650 🧾 Cleanup total summary:
+INFO     EcommerceAPI.plugins.entities:entities.py:652    • customer: 13 deleted (13 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:653 ✅ All test data cleanup completed.

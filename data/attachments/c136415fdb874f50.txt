@@ -1,0 +1,9 @@
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ POST /wp-json/wc/v3/coupons → Status code: 401 (completed in 0.055s)
+DEBUG    EcommerceAPI.src.clients.api_client:api_client.py:580 {
+                                                                 "code": "woocommerce_rest_authentication_error",
+                                                                 "message": "Consumer key is invalid.",
+                                                                 "data": {
+                                                                   "status": 401
+                                                                 }
+                                                               }
+INFO     tests.shared.security.test_authentication_matrix:test_authentication_matrix.py:224 POST coupons → invalid key=ck_invalid_key_123

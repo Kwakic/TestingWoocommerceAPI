@@ -1,1 +1,1 @@
-{"total":2,"items":[{"uid":"ebe95be9611623f03032afd381012dd4","name":"Server Errors (5xx)","statistic":{"failed":1,"broken":0,"skipped":0,"passed":0,"unknown":0,"total":1}},{"uid":"4dc70491b229a76a394be5dcb87ba7f2","name":"API Contract Failures","statistic":{"failed":1,"broken":0,"skipped":0,"passed":0,"unknown":0,"total":1}}]}
+{"total":1,"items":[{"uid":"4dc70491b229a76a394be5dcb87ba7f2","name":"API Contract Failures","statistic":{"failed":1,"broken":0,"skipped":0,"passed":0,"unknown":0,"total":1}}]}
