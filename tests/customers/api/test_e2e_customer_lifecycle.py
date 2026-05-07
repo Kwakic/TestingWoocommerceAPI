@@ -3,7 +3,7 @@ import pytest
 pytestmark = [pytest.mark.integration]
 
 
-@pytest.mark.tcid34
+@pytest.mark.tcid("TCID-011")
 @pytest.mark.e2e
 @pytest.mark.regression
 def test_customer_full_lifecycle(

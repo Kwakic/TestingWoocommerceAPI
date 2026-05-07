@@ -56,7 +56,7 @@ INVALID_EMAIL_PAYLOADS = [
 # ---------------------------
 # 🚀 Test: Bulk Create Customers
 # ---------------------------
-@pytest.mark.tcid01
+@pytest.mark.tcid("TCID-001")
 @pytest.mark.bulk
 @pytest.mark.contract
 @pytest.mark.regression  # Bulk is heavy → NOT sanity/smoke
@@ -156,7 +156,7 @@ def test_bulk_create_customers(
 # ---------------------------
 # ⚠️ Test: Edge Cases for Bulk Create
 # ---------------------------
-@pytest.mark.tcid02
+@pytest.mark.tcid("TCID-002")
 @pytest.mark.bulk
 @pytest.mark.negative
 @pytest.mark.regression  # Bulk is heavy → NOT sanity/smoke
@@ -229,7 +229,7 @@ def test_bulk_create_customers_edge_cases(
 # ---------------------------
 # 🧪 Test: Minimal Customer Creation
 # ---------------------------
-@pytest.mark.tcid03
+@pytest.mark.tcid("TCID-003")
 @pytest.mark.sanity
 @pytest.mark.smoke  # smoke ✔ (VERY important endpoint)
 @pytest.mark.contract
@@ -315,7 +315,7 @@ def generate_address_pairs():
     ]
 
 
-@pytest.mark.tcid04
+@pytest.mark.tcid("TCID-004")
 @pytest.mark.regression
 @pytest.mark.contract
 @pytest.mark.skip(
@@ -364,7 +364,7 @@ def test_create_customer_with_varied_addresses(
     logger.info("🎯 Full validation complete for customers ID: %r", customer_id)
 
 
-@pytest.mark.tcid15
+@pytest.mark.tcid("TCID-005")
 @pytest.mark.negative
 @pytest.mark.contract  # validates error_schema → contract ✔
 @pytest.mark.regression  # not quick → regression
@@ -419,7 +419,7 @@ def test_create_customer_email_field_validation(
     )
 
 
-@pytest.mark.tcid16
+@pytest.mark.tcid("TCID-006")
 @pytest.mark.negative
 @pytest.mark.contract
 @pytest.mark.regression

@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 pytestmark = [pytest.mark.integration]
 
 
-@pytest.mark.tcid09
+@pytest.mark.tcid("TCID-012")
 @pytest.mark.contract
 @pytest.mark.smoke
 def test_get_all_customers_list_not_empty_and_valid_schema(
@@ -73,7 +73,7 @@ def test_get_all_customers_list_not_empty_and_valid_schema(
     logger.info("✅ All returned customers conform to schema.")
 
 
-@pytest.mark.tcid10
+@pytest.mark.tcid("TCID-013")
 @pytest.mark.regression
 @pytest.mark.contract
 def test_get_all_customers_pagination_boundary(
@@ -173,7 +173,7 @@ def test_get_all_customers_pagination_boundary(
     logger.info("✅ All paginated customers conform to schema.")
 
 
-@pytest.mark.tcid11
+@pytest.mark.tcid("TCID-014")
 @pytest.mark.regression
 def test_get_all_customers_empty_list_with_mock(customer_helper, customers_dao):
     """
@@ -204,7 +204,7 @@ def test_get_all_customers_empty_list_with_mock(customer_helper, customers_dao):
         logger.info("✅ Successfully mocked empty customers list")
 
 
-@pytest.mark.tcid19
+@pytest.mark.tcid("TCID-015")
 @pytest.mark.negative
 @pytest.mark.regression
 def test_list_customers_created_in_the_future_returns_empty(

@@ -5,9 +5,11 @@ Provides a generic utility function to paginate through WooCommerce API results.
 Intended for use in test helpers like customers_helper, orders_helper, coupons_helper, etc.
 """
 
-import logging as logger
+import logging
 import time
 from copy import deepcopy
+
+logger = logging.getLogger(__name__)
 
 
 def paginate_all_results(

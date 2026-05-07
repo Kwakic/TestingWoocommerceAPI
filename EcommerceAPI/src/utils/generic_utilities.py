@@ -1,7 +1,7 @@
 # generic_utilities.py
 # Helper utils to generate random emails, passwords, strings, and coupon codes.
 
-import logging as logger
+import logging
 import random
 import string
 
@@ -11,6 +11,8 @@ from typing import (
     Optional,
     Dict,
 )  # This line is included because of type hints in the function signatures:
+
+logger = logging.getLogger(__name__)
 
 
 def generate_random_email_and_password(

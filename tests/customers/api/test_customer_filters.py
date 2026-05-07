@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 pytestmark = [pytest.mark.integration]
 
 
-@pytest.mark.tcid07
+@pytest.mark.tcid("TCID-009")
 @pytest.mark.regression
 @pytest.mark.parametrize("minute_offset", [1, 5])
 def test_list_customers_created_within_time_range_with_db_check(
@@ -100,7 +100,7 @@ def test_list_customers_created_within_time_range_with_db_check(
     logger.info("🎯 Full validation complete for customers ID: %r", customer_id)
 
 
-@pytest.mark.tcid08
+@pytest.mark.tcid("TCID-010")
 @pytest.mark.negative
 @pytest.mark.regression
 def test_customer_should_not_returned_when_filtered_outside_creation_time(

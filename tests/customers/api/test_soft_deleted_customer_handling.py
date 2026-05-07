@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 pytestmark = [pytest.mark.integration]
 
 
-@pytest.mark.tcid06
+@pytest.mark.tcid("TCID-019")
 @pytest.mark.regression
 @pytest.mark.behavior  # Because this is documenting WooCommerce behavior.
 def test_soft_deleted_customer_is_still_returned_by_api(
@@ -72,7 +72,7 @@ def test_soft_deleted_customer_is_still_returned_by_api(
     logger.info(f"API returned customers(s): {customers}")
 
 
-@pytest.mark.tcid30
+@pytest.mark.tcid("TCID-020")
 @pytest.mark.regression
 def test_soft_deleted_customers_are_excluded_by_custom_filter(
     customer_helper, customers_dao, create_valid_customer

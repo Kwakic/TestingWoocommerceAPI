@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 pytestmark = [pytest.mark.integration]
 
 
-@pytest.mark.tcid05
+@pytest.mark.tcid("TCID-007")
 @pytest.mark.e2e  # lightweight E2E
 @pytest.mark.regression
 def test_customer_deletion_removes_resource(
@@ -102,7 +102,7 @@ def test_customer_deletion_removes_resource(
     )
 
 
-@pytest.mark.tcid18
+@pytest.mark.tcid("TCID-008")
 @pytest.mark.negative
 @pytest.mark.contract
 @pytest.mark.regression

@@ -22,6 +22,7 @@ from EcommerceAPI.src.configs.runtime_config import (
     get_config,
 )
 
+logger = logging.getLogger()
 
 # ============================================================================
 # 🧪 Pytest fixtures

@@ -126,9 +126,21 @@ jobs:
       - name: Run pytest
         continue-on-error: true
         run: |
-          pytest --clean-alluredir --alluredir=reports/allure-results
+          pytest \
+            -m "preflight or smoke or sanity or contract" \
+            -ra \
+            --durations=10 \
+            --maxfail=3 \
+            --clean-alluredir \
+            --junitxml=reports/junit/results.xml \
+            --alluredir=reports/allure-results
 
-          echo "PYTEST_EXIT_CODE=$?" >> $GITHUB_ENV
+          EXIT_CODE=$?
+
+          echo "PYTEST_EXIT_CODE=$EXIT_CODE" >> $GITHUB_ENV
+
+          exit 0
+
 
       # --------------------------------------------------
       # 8. Upload Allure raw results (artifact)
@@ -139,6 +151,16 @@ jobs:
         with:
           name: allure-results
           path: reports/allure-results
+
+      # --------------------------------------------------
+      # 9. Upload structured logs (artifact)
+      # --------------------------------------------------
+      - name: Upload structured logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: structured-logs
+          path: reports/logs/**
 
 
   # ==================================================

@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 pytestmark = [pytest.mark.integration]
 
 
-@pytest.mark.tcid13
+@pytest.mark.tcid("TCID-016")
 @pytest.mark.smoke  # Critical → smoke
 @pytest.mark.sanity  # Fast → sanity
 def test_get_customer_by_email(customer_helper, customers_dao, create_valid_customer):
@@ -106,7 +106,7 @@ def test_get_customer_by_email(customer_helper, customers_dao, create_valid_cust
     logger.info("🎯 Full validation complete for customers ID: %r", customer_id)
 
 
-@pytest.mark.tcid14
+@pytest.mark.tcid("TCID-017")
 @pytest.mark.smoke  # critical endpoint → smoke
 @pytest.mark.contract  # includes response validation → contract
 def test_get_customer_by_id(customer_helper, customers_dao, create_valid_customer):
@@ -176,7 +176,7 @@ def test_get_customer_by_id(customer_helper, customers_dao, create_valid_custome
     logger.info("🎯 Full validation complete for customers ID: %r", customer_id)
 
 
-@pytest.mark.tcid17
+@pytest.mark.tcid("TCID-018")
 @pytest.mark.negative
 @pytest.mark.contract
 @pytest.mark.regression  # not fast / edge → regression

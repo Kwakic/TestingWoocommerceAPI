@@ -59,7 +59,7 @@ INVALID_UPDATE_PAYLOADS = [
 ]
 
 
-@pytest.mark.tcid12
+@pytest.mark.tcid("TCID-021")
 @pytest.mark.smoke
 @pytest.mark.contract
 def test_update_customer_first_name(
@@ -137,7 +137,7 @@ def test_update_customer_first_name(
     )
 
 
-@pytest.mark.tcid21
+@pytest.mark.tcid("TCID-022")
 @pytest.mark.negative
 @pytest.mark.contract
 @pytest.mark.regression
@@ -246,7 +246,7 @@ def test_update_customer_invalid_inputs(
     )
 
 
-@pytest.mark.tcid29
+@pytest.mark.tcid("TCID-023")
 @pytest.mark.regression
 def test_validate_date_modified_and_date_modified_gmt(
     customer_helper, customers_dao, create_valid_customer
