@@ -37,9 +37,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    outputs:
-      pytest_exit_code: ${{ steps.pytest_step.outputs.exit_code }}
-
     permissions:
       contents: write
 
@@ -248,11 +245,12 @@ jobs:
       # 9. Deploy report to GitHub Pages
       # --------------------------------------------------
       - name: Deploy to GitHub Pages
+        if: always()
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: reports/allure-report
-          publish_branch: gh-pages   # ✅ explicit and safe
+          publish_branch: gh-pages
           keep_files: true
 
       # --------------------------------------------------
