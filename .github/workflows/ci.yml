@@ -122,7 +122,7 @@ jobs:
           echo "REQUIRE_ENV=true" >> $GITHUB_ENV
           echo "SESSION_ID=${{ github.run_id }}" >> $GITHUB_ENV
           echo "API_ENV=ci" >> $GITHUB_ENV
-          echo "DISABLE_LOG_EMOJIS=true" >> $GITHUB_ENV
+#          echo "DISABLE_LOG_EMOJIS=true" >> $GITHUB_ENV
 
       # --------------------------------------------------
       # 7. Run pytest (generate Allure raw results)
@@ -131,6 +131,8 @@ jobs:
         id: pytest_step
         continue-on-error: true
         run: |
+          set +e
+
           pytest \
             -m "preflight or smoke or sanity or contract" \
             -ra \
