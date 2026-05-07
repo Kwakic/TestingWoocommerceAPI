@@ -1,0 +1,60 @@
+INFO     tests.customers.api.test_create_customer:test_create_customer.py:448 🛠 Creating a negative test when it is expected to fail for existing email.
+DEBUG    EcommerceAPI.src.utils.generic_utilities:generic_utilities.py:32 📝 Generating random email and password.
+DEBUG    EcommerceAPI.src.utils.generic_utilities:generic_utilities.py:49 📝 Generated credentials email and password=***'email': 'testuser_tsjsvwetiu@supersqa.com', 'password': '***'}
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:179 ⚙️ Creating customers with payload keys: ['email', 'password']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.312s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=12, email=testuser_tsjsvwetiu@supersqa.com
+DEBUG    EcommerceAPI.plugins.api_fixtures:api_fixtures.py:209 ℹ️ Registered customers with ID: 12 for cleanup.
+INFO     tests.customers.api.test_create_customer:test_create_customer.py:461 ⚠️ Attempt to re-create the customers using existing email: testuser_tsjsvwetiu@supersqa.com
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ POST /wp-json/wc/v3/customers → Status code: 400 (completed in 0.088s)
+DEBUG    EcommerceAPI.src.clients.api_client:api_client.py:580 {
+                                                                 "code": "registration-error-email-exists",
+                                                                 "message": "An account is already registered with testuser_tsjsvwetiu@supersqa.com. Please log in or use a different email address.",
+                                                                 "data": {
+                                                                   "status": 400
+                                                                 }
+                                                               }
+INFO     EcommerceAPI.plugins.entities:entities.py:615 🔧 Starting teardown of created test resources...
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up customer(s)... (11 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 2
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ DELETE /wp-json/wc/v3/customers/2?force=True → Status code: 200 (completed in 0.742s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 2
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 3
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ DELETE /wp-json/wc/v3/customers/3?force=True → Status code: 200 (completed in 0.124s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 3
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 4
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ DELETE /wp-json/wc/v3/customers/4?force=True → Status code: 200 (completed in 0.122s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 4
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 5
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ DELETE /wp-json/wc/v3/customers/5?force=True → Status code: 200 (completed in 0.105s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 5
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 6
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ DELETE /wp-json/wc/v3/customers/6?force=True → Status code: 200 (completed in 1.202s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 6
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 7
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ DELETE /wp-json/wc/v3/customers/7?force=True → Status code: 200 (completed in 0.371s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 7
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 8
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ DELETE /wp-json/wc/v3/customers/8?force=True → Status code: 200 (completed in 0.426s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 8
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 9
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ DELETE /wp-json/wc/v3/customers/9?force=True → Status code: 200 (completed in 0.634s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 9
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 10
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ DELETE /wp-json/wc/v3/customers/10?force=True → Status code: 200 (completed in 0.386s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 10
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 11
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ DELETE /wp-json/wc/v3/customers/11?force=True → Status code: 200 (completed in 0.257s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 11
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 12
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ DELETE /wp-json/wc/v3/customers/12?force=True → Status code: 200 (completed in 0.084s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 12
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for customer(s).
+INFO     EcommerceAPI.plugins.entities:entities.py:646 
+
+🧹 ====================================== CLEANUP SUMMARY ======================================
+INFO     EcommerceAPI.plugins.entities:entities.py:649 📊 Created during test run: {'customers': 11}
+INFO     EcommerceAPI.plugins.entities:entities.py:650 🧾 Cleanup total summary:
+INFO     EcommerceAPI.plugins.entities:entities.py:652    • customer: 11 deleted (11 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:653 ✅ All test data cleanup completed.
