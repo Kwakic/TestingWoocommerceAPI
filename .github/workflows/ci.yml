@@ -1,3 +1,17 @@
+
+# The flow for failed test is:
+
+# tests fail
+#↓
+#collect diagnostics
+#↓
+#generate reports
+#↓
+#publish reports
+#↓
+#mark pipeline failed at END
+# --------------------------------------------------
+
 name: CI — Docker + Pytest + Allure
 
 # --------------------------------------------------
@@ -113,6 +127,8 @@ jobs:
         continue-on-error: true
         run: |
           pytest --clean-alluredir --alluredir=reports/allure-results
+
+          echo "PYTEST_EXIT_CODE=$?" >> $GITHUB_ENV
 
       # --------------------------------------------------
       # 8. Upload Allure raw results (artifact)
@@ -230,3 +246,12 @@ jobs:
           echo "Allure Report:"
           echo "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
           echo "====================================="
+
+      # --------------------------------------------------
+      # 11. Mark workflow failed if pytest failed
+      # --------------------------------------------------
+      - name: Fail workflow if tests failed
+        if: env.PYTEST_EXIT_CODE != '0'
+        run: |
+          echo "❌ Tests failed"
+          exit 1
