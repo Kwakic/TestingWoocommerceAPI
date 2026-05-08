@@ -38,21 +38,37 @@ jobs:
             sleep 3
           done
 
-      - name: Bootstrap WooCommerce
-        run: bash scripts/setup.sh
+      - name: Bootstrap WooCommerce and capture credentials
+        run: |
+          set -e
+
+          OUTPUT=$(bash scripts/setup.sh)
+
+          echo "$OUTPUT"
+
+          WC_KEY=$(echo "$OUTPUT" | grep "CONSUMER KEY" | awk '{print $3}')
+          WC_SECRET=$(echo "$OUTPUT" | grep "CONSUMER SECRET" | awk '{print $3}')
+
+          echo "WC_KEY=$WC_KEY" >> $GITHUB_ENV
+          echo "WC_SECRET=$WC_SECRET" >> $GITHUB_ENV
 
       - name: Configure DB connection
         run: |
-          echo "DB_USER=wp" >> $GITHUB_ENV
-          echo "DB_PASSWORD=wp" >> $GITHUB_ENV
-          echo "DB_HOST=127.0.0.1" >> $GITHUB_ENV
-          echo "DB_PORT=3306" >> $GITHUB_ENV
-          echo "DB_DATABASE=wordpress" >> $GITHUB_ENV
+          echo "AUTO_ALLURE_REPORT=false" >> $GITHUB_ENV
+          echo "ENABLE_STRUCTURED_LOGS=true" >> $GITHUB_ENV
+          echo "STRICT_ENTITY_DISCOVERY=true" >> $GITHUB_ENV
+          echo "REQUIRE_ENV=true" >> $GITHUB_ENV
+          echo "SESSION_ID=${{ github.run_id }}" >> $GITHUB_ENV
+          echo "API_ENV=ci" >> $GITHUB_ENV
+#          echo "DISABLE_LOG_EMOJIS=true" >> $GITHUB_ENV
 
       - name: Configure CI environment
         run: |
           echo "ENABLE_STRUCTURED_LOGS=true" >> $GITHUB_ENV
           echo "API_ENV=ci" >> $GITHUB_ENV
+          echo "STRICT_ENTITY_DISCOVERY=true" >> $GITHUB_ENV
+          echo "REQUIRE_ENV=true" >> $GITHUB_ENV
+          echo "SESSION_ID=${{ github.run_id }}" >> $GITHUB_ENV
 
       - name: Run contract tests
         run: |

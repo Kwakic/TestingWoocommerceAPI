@@ -129,7 +129,7 @@ jobs:
             -ra \
             --durations=10 \
             --maxfail=3 \
-            --clean-alluredir \  # ← Clean previous results
+            --clean-alluredir \
             --junitxml=reports/junit/results.xml \
             --alluredir=reports/allure-results
 
