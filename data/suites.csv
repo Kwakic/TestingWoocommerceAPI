@@ -1,5 +1,5 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Thu May 07 19:51:02 UTC 2026","Thu May 07 19:51:02 UTC 2026","77","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-2e77790f65d0269dab53113cabd67b2a1630d6ca-Consumer key is invalid.-post-False-True-products]","
+"passed","Fri May 08 16:32:01 UTC 2026","Fri May 08 16:32:01 UTC 2026","65","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-bd6761cd1e68fc623a5ef7a45a1439cbc11825d3-Consumer key is invalid.-put-True-True-coupons]","
 Ensure invalid OAuth credentials are rejected by all API endpoints.
 
 Design principle
@@ -15,7 +15,7 @@ Validation layers
 2. Schema validation    → error response structure
 3. Business validation  → error code + message
 "
-"passed","Thu May 07 19:51:02 UTC 2026","Thu May 07 19:51:02 UTC 2026","62","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-2e77790f65d0269dab53113cabd67b2a1630d6ca-Consumer key is invalid.-put-True-True-orders]","
+"passed","Fri May 08 16:32:00 UTC 2026","Fri May 08 16:32:00 UTC 2026","61","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-post-False-True-products]","
 Ensure invalid OAuth credentials are rejected by all API endpoints.
 
 Design principle
@@ -31,7 +31,22 @@ Validation layers
 2. Schema validation    → error response structure
 3. Business validation  → error code + message
 "
-"passed","Thu May 07 19:51:00 UTC 2026","Thu May 07 19:51:00 UTC 2026","59","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-get-False-False-orders]","
+"passed","Fri May 08 16:31:58 UTC 2026","Fri May 08 16:31:58 UTC 2026","449","tests.customers.api","test_update_customer","","","","test_update_customer_invalid_inputs[duplicate-email]","
+Verify that invalid customers updates are rejected by the API.
+
+This test ensures that:
+
+• Invalid update payloads return the correct error response
+• Error responses follow the expected schema
+• The original customers record in the database remains unchanged
+
+Test flow:
+    1. Create a valid customers
+    2. Attempt to update the customers with an invalid payload
+    3. Validate the returned error structure
+    4. Confirm the database record was not modified
+"
+"passed","Fri May 08 16:32:02 UTC 2026","Fri May 08 16:32:02 UTC 2026","61","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[96e6c86f7e1e9ce4071ed19f01c9dfda3cc17a13-cs_invalid_secret_456-Invalid signature - provided signature does not match.-put-True-True-orders]","
 Ensure invalid OAuth credentials are rejected by all API endpoints.
 
 Design principle
@@ -47,7 +62,8 @@ Validation layers
 2. Schema validation    → error response structure
 3. Business validation  → error code + message
 "
-"passed","Thu May 07 19:51:03 UTC 2026","Thu May 07 19:51:03 UTC 2026","60","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[91ef92867fe6e5f99cff251173288268c70447ee-cs_invalid_secret_456-Invalid signature - provided signature does not match.-delete-True-False-products]","
+"passed","Fri May 08 16:31:59 UTC 2026","Fri May 08 16:31:59 UTC 2026","0","tests.shared.preflight","test_logging_globals","","","","test_attach_global_metadata_contains_expected_keys",""
+"passed","Fri May 08 16:32:00 UTC 2026","Fri May 08 16:32:00 UTC 2026","61","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-delete-True-False-products]","
 Ensure invalid OAuth credentials are rejected by all API endpoints.
 
 Design principle
@@ -63,7 +79,93 @@ Validation layers
 2. Schema validation    → error response structure
 3. Business validation  → error code + message
 "
-"passed","Thu May 07 19:50:51 UTC 2026","Thu May 07 19:50:51 UTC 2026","67","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[missing-Top-Level Domain]","
+"passed","Fri May 08 16:31:46 UTC 2026","Fri May 08 16:31:47 UTC 2026","1036","tests.customers.api","test_create_customer","","","","test_bulk_create_customers[3]","
+Test bulk creation of customers.
+
+Creates multiple customers using the factory fixture and verifies that
+each created customers exists in both API and database.
+
+What the fixture `create_valid_customer` already does:
+    - Sends POST /customers
+    - Validates HTTP status code (201)
+    - Validates response structure using Pydantic
+    - Registers created customers for cleanup
+
+Test flow:
+    1. Create N customers using bulk utility
+    2. Verify each customers exists via API
+    3. Verify API data matches database record
+
+NOTE:
+    This test is marked as CONTRACT because schema validation
+    is performed implicitly via the create_valid_customer fixture
+    (Pydantic validation layer).
+"
+"passed","Fri May 08 16:32:01 UTC 2026","Fri May 08 16:32:01 UTC 2026","65","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-bd6761cd1e68fc623a5ef7a45a1439cbc11825d3-Consumer key is invalid.-post-False-True-orders]","
+Ensure invalid OAuth credentials are rejected by all API endpoints.
+
+Design principle
+----------------
+We create an isolated APIClient with invalid credentials instead of
+mutating the shared pytest api_client fixture.
+
+This prevents authentication state leaking across tests.
+
+Validation layers
+-----------------
+1. Transport validation → HTTP 401
+2. Schema validation    → error response structure
+3. Business validation  → error code + message
+"
+"passed","Fri May 08 16:32:00 UTC 2026","Fri May 08 16:32:00 UTC 2026","61","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-get-False-False-orders]","
+Ensure invalid OAuth credentials are rejected by all API endpoints.
+
+Design principle
+----------------
+We create an isolated APIClient with invalid credentials instead of
+mutating the shared pytest api_client fixture.
+
+This prevents authentication state leaking across tests.
+
+Validation layers
+-----------------
+1. Transport validation → HTTP 401
+2. Schema validation    → error response structure
+3. Business validation  → error code + message
+"
+"passed","Fri May 08 16:32:02 UTC 2026","Fri May 08 16:32:02 UTC 2026","61","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[96e6c86f7e1e9ce4071ed19f01c9dfda3cc17a13-cs_invalid_secret_456-Invalid signature - provided signature does not match.-get-False-False-products]","
+Ensure invalid OAuth credentials are rejected by all API endpoints.
+
+Design principle
+----------------
+We create an isolated APIClient with invalid credentials instead of
+mutating the shared pytest api_client fixture.
+
+This prevents authentication state leaking across tests.
+
+Validation layers
+-----------------
+1. Transport validation → HTTP 401
+2. Schema validation    → error response structure
+3. Business validation  → error code + message
+"
+"passed","Fri May 08 16:32:00 UTC 2026","Fri May 08 16:32:00 UTC 2026","60","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-post-False-True-orders]","
+Ensure invalid OAuth credentials are rejected by all API endpoints.
+
+Design principle
+----------------
+We create an isolated APIClient with invalid credentials instead of
+mutating the shared pytest api_client fixture.
+
+This prevents authentication state leaking across tests.
+
+Validation layers
+-----------------
+1. Transport validation → HTTP 401
+2. Schema validation    → error response structure
+3. Business validation  → error code + message
+"
+"passed","Fri May 08 16:31:49 UTC 2026","Fri May 08 16:31:49 UTC 2026","80","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[missing-local-part]","
 Negative test for invalid email values during customers creation.
 
 This test bypasses the factory fixture because invalid payloads
@@ -82,7 +184,7 @@ Args:
     payload (dict): Test input payload with malformed or missing email/password fields.
     expected_status_code (int): Expected HTTP response code.
 "
-"passed","Thu May 07 19:51:02 UTC 2026","Thu May 07 19:51:02 UTC 2026","59","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-2e77790f65d0269dab53113cabd67b2a1630d6ca-Consumer key is invalid.-put-True-True-products]","
+"passed","Fri May 08 16:32:00 UTC 2026","Fri May 08 16:32:00 UTC 2026","61","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-put-True-True-coupons]","
 Ensure invalid OAuth credentials are rejected by all API endpoints.
 
 Design principle
@@ -98,7 +200,7 @@ Validation layers
 2. Schema validation    → error response structure
 3. Business validation  → error code + message
 "
-"passed","Thu May 07 19:51:01 UTC 2026","Thu May 07 19:51:01 UTC 2026","59","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-2e77790f65d0269dab53113cabd67b2a1630d6ca-Consumer key is invalid.-get-False-False-products]","
+"passed","Fri May 08 16:32:02 UTC 2026","Fri May 08 16:32:02 UTC 2026","62","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[96e6c86f7e1e9ce4071ed19f01c9dfda3cc17a13-cs_invalid_secret_456-Invalid signature - provided signature does not match.-get-False-False-coupons]","
 Ensure invalid OAuth credentials are rejected by all API endpoints.
 
 Design principle
@@ -114,7 +216,19 @@ Validation layers
 2. Schema validation    → error response structure
 3. Business validation  → error code + message
 "
-"passed","Thu May 07 19:51:03 UTC 2026","Thu May 07 19:51:03 UTC 2026","60","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[91ef92867fe6e5f99cff251173288268c70447ee-cs_invalid_secret_456-Invalid signature - provided signature does not match.-delete-True-False-coupons]","
+"passed","Fri May 08 16:31:59 UTC 2026","Fri May 08 16:31:59 UTC 2026","64","tests.shared.preflight","test_response_format","","","","test_api_returns_json[products]","
+API response format guard.
+
+Ensures endpoints return JSON responses and
+correct content-type headers.
+
+Detects:
+    - PHP errors returning HTML
+    - proxy misconfiguration
+    - incorrect content types
+    - broken JSON serialization
+"
+"passed","Fri May 08 16:32:00 UTC 2026","Fri May 08 16:32:00 UTC 2026","60","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-delete-True-False-customers]","
 Ensure invalid OAuth credentials are rejected by all API endpoints.
 
 Design principle
@@ -130,7 +244,23 @@ Validation layers
 2. Schema validation    → error response structure
 3. Business validation  → error code + message
 "
-"passed","Thu May 07 19:51:01 UTC 2026","Thu May 07 19:51:01 UTC 2026","59","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-put-True-True-coupons]","
+"passed","Fri May 08 16:31:57 UTC 2026","Fri May 08 16:31:58 UTC 2026","278","tests.customers.api","test_update_customer","","","","test_update_customer_invalid_inputs[invalid-email-missing-domain]","
+Verify that invalid customers updates are rejected by the API.
+
+This test ensures that:
+
+• Invalid update payloads return the correct error response
+• Error responses follow the expected schema
+• The original customers record in the database remains unchanged
+
+Test flow:
+    1. Create a valid customers
+    2. Attempt to update the customers with an invalid payload
+    3. Validate the returned error structure
+    4. Confirm the database record was not modified
+"
+"passed","Fri May 08 16:31:59 UTC 2026","Fri May 08 16:31:59 UTC 2026","0","tests.shared.preflight","test_logging_globals","","","","test_last_structured_log_set_when_enabled",""
+"passed","Fri May 08 16:32:00 UTC 2026","Fri May 08 16:32:01 UTC 2026","62","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-delete-True-False-orders]","
 Ensure invalid OAuth credentials are rejected by all API endpoints.
 
 Design principle
@@ -146,8 +276,146 @@ Validation layers
 2. Schema validation    → error response structure
 3. Business validation  → error code + message
 "
-"passed","Thu May 07 19:51:00 UTC 2026","Thu May 07 19:51:00 UTC 2026","0","tests.shared.preflight","test_logging_globals","","","","test_last_structured_log_set_when_enabled",""
-"passed","Thu May 07 19:51:03 UTC 2026","Thu May 07 19:51:03 UTC 2026","60","tests.shared.security","test_authentication_success","","","","test_authenticated_requests_are_allowed[orders]","
+"passed","Fri May 08 16:31:58 UTC 2026","Fri May 08 16:31:58 UTC 2026","256","tests.customers.api","test_update_customer","","","","test_update_customer_invalid_inputs[invalid-email-missing-local]","
+Verify that invalid customers updates are rejected by the API.
+
+This test ensures that:
+
+• Invalid update payloads return the correct error response
+• Error responses follow the expected schema
+• The original customers record in the database remains unchanged
+
+Test flow:
+    1. Create a valid customers
+    2. Attempt to update the customers with an invalid payload
+    3. Validate the returned error structure
+    4. Confirm the database record was not modified
+"
+"passed","Fri May 08 16:32:00 UTC 2026","Fri May 08 16:32:00 UTC 2026","63","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-get-False-False-coupons]","
+Ensure invalid OAuth credentials are rejected by all API endpoints.
+
+Design principle
+----------------
+We create an isolated APIClient with invalid credentials instead of
+mutating the shared pytest api_client fixture.
+
+This prevents authentication state leaking across tests.
+
+Validation layers
+-----------------
+1. Transport validation → HTTP 401
+2. Schema validation    → error response structure
+3. Business validation  → error code + message
+"
+"passed","Fri May 08 16:32:00 UTC 2026","Fri May 08 16:32:00 UTC 2026","64","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-post-False-True-customers]","
+Ensure invalid OAuth credentials are rejected by all API endpoints.
+
+Design principle
+----------------
+We create an isolated APIClient with invalid credentials instead of
+mutating the shared pytest api_client fixture.
+
+This prevents authentication state leaking across tests.
+
+Validation layers
+-----------------
+1. Transport validation → HTTP 401
+2. Schema validation    → error response structure
+3. Business validation  → error code + message
+"
+"passed","Fri May 08 16:31:59 UTC 2026","Fri May 08 16:31:59 UTC 2026","65","tests.shared.preflight","test_response_format","","","","test_api_returns_json[customers]","
+API response format guard.
+
+Ensures endpoints return JSON responses and
+correct content-type headers.
+
+Detects:
+    - PHP errors returning HTML
+    - proxy misconfiguration
+    - incorrect content types
+    - broken JSON serialization
+"
+"passed","Fri May 08 16:31:49 UTC 2026","Fri May 08 16:31:49 UTC 2026","326","tests.customers.api","test_create_customer","","","","test_create_single_customer_with_email_and_password_only","
+Create a customers using the minimum valid payload.
+
+The fixture `create_valid_customer` already performs:
+    - POST /customers
+    - status code validation (201)
+    - response structure validation (Pydantic)
+    - cleanup registration
+
+Test flow:
+    1. Create a customers
+    2. Fetch customers via API
+    3. Verify API data matches database record
+"
+"passed","Fri May 08 16:31:49 UTC 2026","Fri May 08 16:31:49 UTC 2026","68","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[no-at-symbol]","
+Negative test for invalid email values during customers creation.
+
+This test bypasses the factory fixture because invalid payloads
+should return HTTP 400 responses.
+
+Test flow:
+    1. Send POST /customers with invalid email
+    2. Validate HTTP 400 response
+    3. Validate error response structure
+
+Args:
+    customers_dao: Fixture providing customers DAO.
+    customer_helper: Fixture providing customers API helper.
+    customer_api_raw(Callable): .Fixture providing low-level access t tests that need to inspect raw
+    responses.
+    payload (dict): Test input payload with malformed or missing email/password fields.
+    expected_status_code (int): Expected HTTP response code.
+"
+"passed","Fri May 08 16:31:59 UTC 2026","Fri May 08 16:31:59 UTC 2026","66","tests.shared.preflight","test_response_format","","","","test_api_returns_json[orders]","
+API response format guard.
+
+Ensures endpoints return JSON responses and
+correct content-type headers.
+
+Detects:
+    - PHP errors returning HTML
+    - proxy misconfiguration
+    - incorrect content types
+    - broken JSON serialization
+"
+"passed","Fri May 08 16:32:02 UTC 2026","Fri May 08 16:32:02 UTC 2026","65","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[96e6c86f7e1e9ce4071ed19f01c9dfda3cc17a13-cs_invalid_secret_456-Invalid signature - provided signature does not match.-post-False-True-products]","
+Ensure invalid OAuth credentials are rejected by all API endpoints.
+
+Design principle
+----------------
+We create an isolated APIClient with invalid credentials instead of
+mutating the shared pytest api_client fixture.
+
+This prevents authentication state leaking across tests.
+
+Validation layers
+-----------------
+1. Transport validation → HTTP 401
+2. Schema validation    → error response structure
+3. Business validation  → error code + message
+"
+"passed","Fri May 08 16:31:49 UTC 2026","Fri May 08 16:31:49 UTC 2026","80","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[name-included]","
+Negative test for invalid email values during customers creation.
+
+This test bypasses the factory fixture because invalid payloads
+should return HTTP 400 responses.
+
+Test flow:
+    1. Send POST /customers with invalid email
+    2. Validate HTTP 400 response
+    3. Validate error response structure
+
+Args:
+    customers_dao: Fixture providing customers DAO.
+    customer_helper: Fixture providing customers API helper.
+    customer_api_raw(Callable): .Fixture providing low-level access t tests that need to inspect raw
+    responses.
+    payload (dict): Test input payload with malformed or missing email/password fields.
+    expected_status_code (int): Expected HTTP response code.
+"
+"passed","Fri May 08 16:32:03 UTC 2026","Fri May 08 16:32:03 UTC 2026","67","tests.shared.security","test_authentication_success","","","","test_authenticated_requests_are_allowed[customers]","
 Authentication success guard.
 
 Ensures valid OAuth credentials allow access
@@ -156,22 +424,16 @@ to WooCommerce API endpoints.
 This complements the negative authentication matrix
 which verifies invalid credentials are rejected.
 "
-"passed","Thu May 07 19:50:59 UTC 2026","Thu May 07 19:50:59 UTC 2026","426","tests.customers.api","test_update_customer","","","","test_update_customer_invalid_inputs[duplicate-email]","
-Verify that invalid customers updates are rejected by the API.
+"passed","Fri May 08 16:32:03 UTC 2026","Fri May 08 16:32:03 UTC 2026","63","tests.shared.security","test_authentication_success","","","","test_authenticated_requests_are_allowed[orders]","
+Authentication success guard.
 
-This test ensures that:
+Ensures valid OAuth credentials allow access
+to WooCommerce API endpoints.
 
-• Invalid update payloads return the correct error response
-• Error responses follow the expected schema
-• The original customers record in the database remains unchanged
-
-Test flow:
-    1. Create a valid customers
-    2. Attempt to update the customers with an invalid payload
-    3. Validate the returned error structure
-    4. Confirm the database record was not modified
+This complements the negative authentication matrix
+which verifies invalid credentials are rejected.
 "
-"passed","Thu May 07 19:51:02 UTC 2026","Thu May 07 19:51:03 UTC 2026","60","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[91ef92867fe6e5f99cff251173288268c70447ee-cs_invalid_secret_456-Invalid signature - provided signature does not match.-post-False-True-customers]","
+"passed","Fri May 08 16:32:02 UTC 2026","Fri May 08 16:32:02 UTC 2026","65","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[96e6c86f7e1e9ce4071ed19f01c9dfda3cc17a13-cs_invalid_secret_456-Invalid signature - provided signature does not match.-put-True-True-products]","
 Ensure invalid OAuth credentials are rejected by all API endpoints.
 
 Design principle
@@ -187,7 +449,7 @@ Validation layers
 2. Schema validation    → error response structure
 3. Business validation  → error code + message
 "
-"passed","Thu May 07 19:51:02 UTC 2026","Thu May 07 19:51:02 UTC 2026","58","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-2e77790f65d0269dab53113cabd67b2a1630d6ca-Consumer key is invalid.-delete-True-False-coupons]","
+"passed","Fri May 08 16:32:01 UTC 2026","Fri May 08 16:32:02 UTC 2026","66","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-bd6761cd1e68fc623a5ef7a45a1439cbc11825d3-Consumer key is invalid.-delete-True-False-customers]","
 Ensure invalid OAuth credentials are rejected by all API endpoints.
 
 Design principle
@@ -203,94 +465,7 @@ Validation layers
 2. Schema validation    → error response structure
 3. Business validation  → error code + message
 "
-"passed","Thu May 07 19:50:58 UTC 2026","Thu May 07 19:50:58 UTC 2026","251","tests.customers.api","test_update_customer","","","","test_update_customer_invalid_inputs[invalid-email-missing-domain]","
-Verify that invalid customers updates are rejected by the API.
-
-This test ensures that:
-
-• Invalid update payloads return the correct error response
-• Error responses follow the expected schema
-• The original customers record in the database remains unchanged
-
-Test flow:
-    1. Create a valid customers
-    2. Attempt to update the customers with an invalid payload
-    3. Validate the returned error structure
-    4. Confirm the database record was not modified
-"
-"passed","Thu May 07 19:51:02 UTC 2026","Thu May 07 19:51:02 UTC 2026","60","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-2e77790f65d0269dab53113cabd67b2a1630d6ca-Consumer key is invalid.-post-False-True-coupons]","
-Ensure invalid OAuth credentials are rejected by all API endpoints.
-
-Design principle
-----------------
-We create an isolated APIClient with invalid credentials instead of
-mutating the shared pytest api_client fixture.
-
-This prevents authentication state leaking across tests.
-
-Validation layers
------------------
-1. Transport validation → HTTP 401
-2. Schema validation    → error response structure
-3. Business validation  → error code + message
-"
-"passed","Thu May 07 19:51:02 UTC 2026","Thu May 07 19:51:02 UTC 2026","63","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-2e77790f65d0269dab53113cabd67b2a1630d6ca-Consumer key is invalid.-put-True-True-coupons]","
-Ensure invalid OAuth credentials are rejected by all API endpoints.
-
-Design principle
-----------------
-We create an isolated APIClient with invalid credentials instead of
-mutating the shared pytest api_client fixture.
-
-This prevents authentication state leaking across tests.
-
-Validation layers
------------------
-1. Transport validation → HTTP 401
-2. Schema validation    → error response structure
-3. Business validation  → error code + message
-"
-"skipped","Thu May 07 19:50:50 UTC 2026","Thu May 07 19:50:50 UTC 2026","0","tests.customers.api","test_create_customer","","","","test_create_customer_with_varied_addresses[billing0-shipping0]","
-Create customers with different billing and shipping addresses.
-
-Validates that address variations are accepted and stored correctly.
-
-Test flow:
-    1. Create customers with parameterized addresses
-    2. Verify customers exists via API
-    3. Verify API data matches database record
-"
-"passed","Thu May 07 19:51:03 UTC 2026","Thu May 07 19:51:03 UTC 2026","63","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[91ef92867fe6e5f99cff251173288268c70447ee-cs_invalid_secret_456-Invalid signature - provided signature does not match.-put-True-True-coupons]","
-Ensure invalid OAuth credentials are rejected by all API endpoints.
-
-Design principle
-----------------
-We create an isolated APIClient with invalid credentials instead of
-mutating the shared pytest api_client fixture.
-
-This prevents authentication state leaking across tests.
-
-Validation layers
------------------
-1. Transport validation → HTTP 401
-2. Schema validation    → error response structure
-3. Business validation  → error code + message
-"
-"passed","Thu May 07 19:50:58 UTC 2026","Thu May 07 19:50:58 UTC 2026","257","tests.customers.api","test_update_customer","","","","test_update_customer_first_name","
-Verify that a customers can be updated successfully.
-
-Validates that:
-    - PUT /customers/{id} returns a successful response
-    - Updated fields are reflected in the API response
-    - Returned customers structure is valid (Pydantic validation)
-
-Test flow:
-    1. Create customers via fixture
-    2. Update first_name and email
-    3. Validate response structure
-    4. Verify updated values
-"
-"failed","Thu May 07 19:50:51 UTC 2026","Thu May 07 19:50:51 UTC 2026","245","tests.customers.api","test_create_customer","","","","test_create_customer_fail_for_existing_email","
+"failed","Fri May 08 16:31:50 UTC 2026","Fri May 08 16:31:50 UTC 2026","248","tests.customers.api","test_create_customer","","","","test_create_customer_fail_for_existing_email","
 Negative test: creating a customers with an already existing email.
 
 Test flow:
@@ -305,7 +480,7 @@ Args:
     customer_helper: Provides customers's helper
     customers_dao: Provides customers's DAOs
 "
-"passed","Thu May 07 19:51:02 UTC 2026","Thu May 07 19:51:02 UTC 2026","60","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-2e77790f65d0269dab53113cabd67b2a1630d6ca-Consumer key is invalid.-delete-True-False-products]","
+"passed","Fri May 08 16:32:01 UTC 2026","Fri May 08 16:32:01 UTC 2026","64","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-bd6761cd1e68fc623a5ef7a45a1439cbc11825d3-Consumer key is invalid.-put-True-True-orders]","
 Ensure invalid OAuth credentials are rejected by all API endpoints.
 
 Design principle
@@ -321,199 +496,7 @@ Validation layers
 2. Schema validation    → error response structure
 3. Business validation  → error code + message
 "
-"passed","Thu May 07 19:51:01 UTC 2026","Thu May 07 19:51:02 UTC 2026","63","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-2e77790f65d0269dab53113cabd67b2a1630d6ca-Consumer key is invalid.-post-False-True-customers]","
-Ensure invalid OAuth credentials are rejected by all API endpoints.
-
-Design principle
-----------------
-We create an isolated APIClient with invalid credentials instead of
-mutating the shared pytest api_client fixture.
-
-This prevents authentication state leaking across tests.
-
-Validation layers
------------------
-1. Transport validation → HTTP 401
-2. Schema validation    → error response structure
-3. Business validation  → error code + message
-"
-"passed","Thu May 07 19:51:03 UTC 2026","Thu May 07 19:51:03 UTC 2026","61","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[91ef92867fe6e5f99cff251173288268c70447ee-cs_invalid_secret_456-Invalid signature - provided signature does not match.-post-False-True-products]","
-Ensure invalid OAuth credentials are rejected by all API endpoints.
-
-Design principle
-----------------
-We create an isolated APIClient with invalid credentials instead of
-mutating the shared pytest api_client fixture.
-
-This prevents authentication state leaking across tests.
-
-Validation layers
------------------
-1. Transport validation → HTTP 401
-2. Schema validation    → error response structure
-3. Business validation  → error code + message
-"
-"passed","Thu May 07 19:51:01 UTC 2026","Thu May 07 19:51:01 UTC 2026","60","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-delete-True-False-products]","
-Ensure invalid OAuth credentials are rejected by all API endpoints.
-
-Design principle
-----------------
-We create an isolated APIClient with invalid credentials instead of
-mutating the shared pytest api_client fixture.
-
-This prevents authentication state leaking across tests.
-
-Validation layers
------------------
-1. Transport validation → HTTP 401
-2. Schema validation    → error response structure
-3. Business validation  → error code + message
-"
-"passed","Thu May 07 19:51:03 UTC 2026","Thu May 07 19:51:03 UTC 2026","59","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[91ef92867fe6e5f99cff251173288268c70447ee-cs_invalid_secret_456-Invalid signature - provided signature does not match.-delete-True-False-orders]","
-Ensure invalid OAuth credentials are rejected by all API endpoints.
-
-Design principle
-----------------
-We create an isolated APIClient with invalid credentials instead of
-mutating the shared pytest api_client fixture.
-
-This prevents authentication state leaking across tests.
-
-Validation layers
------------------
-1. Transport validation → HTTP 401
-2. Schema validation    → error response structure
-3. Business validation  → error code + message
-"
-"passed","Thu May 07 19:50:58 UTC 2026","Thu May 07 19:50:58 UTC 2026","247","tests.customers.api","test_update_customer","","","","test_update_customer_invalid_inputs[invalid-email-no-at]","
-Verify that invalid customers updates are rejected by the API.
-
-This test ensures that:
-
-• Invalid update payloads return the correct error response
-• Error responses follow the expected schema
-• The original customers record in the database remains unchanged
-
-Test flow:
-    1. Create a valid customers
-    2. Attempt to update the customers with an invalid payload
-    3. Validate the returned error structure
-    4. Confirm the database record was not modified
-"
-"passed","Thu May 07 19:50:50 UTC 2026","Thu May 07 19:50:51 UTC 2026","75","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[name-included]","
-Negative test for invalid email values during customers creation.
-
-This test bypasses the factory fixture because invalid payloads
-should return HTTP 400 responses.
-
-Test flow:
-    1. Send POST /customers with invalid email
-    2. Validate HTTP 400 response
-    3. Validate error response structure
-
-Args:
-    customers_dao: Fixture providing customers DAO.
-    customer_helper: Fixture providing customers API helper.
-    customer_api_raw(Callable): .Fixture providing low-level access t tests that need to inspect raw
-    responses.
-    payload (dict): Test input payload with malformed or missing email/password fields.
-    expected_status_code (int): Expected HTTP response code.
-"
-"passed","Thu May 07 19:51:00 UTC 2026","Thu May 07 19:51:00 UTC 2026","60","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-get-False-False-customers]","
-Ensure invalid OAuth credentials are rejected by all API endpoints.
-
-Design principle
-----------------
-We create an isolated APIClient with invalid credentials instead of
-mutating the shared pytest api_client fixture.
-
-This prevents authentication state leaking across tests.
-
-Validation layers
------------------
-1. Transport validation → HTTP 401
-2. Schema validation    → error response structure
-3. Business validation  → error code + message
-"
-"passed","Thu May 07 19:51:00 UTC 2026","Thu May 07 19:51:01 UTC 2026","59","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-post-False-True-products]","
-Ensure invalid OAuth credentials are rejected by all API endpoints.
-
-Design principle
-----------------
-We create an isolated APIClient with invalid credentials instead of
-mutating the shared pytest api_client fixture.
-
-This prevents authentication state leaking across tests.
-
-Validation layers
------------------
-1. Transport validation → HTTP 401
-2. Schema validation    → error response structure
-3. Business validation  → error code + message
-"
-"passed","Thu May 07 19:51:00 UTC 2026","Thu May 07 19:51:00 UTC 2026","59","tests.shared.preflight","test_api_connectivity","","","","test_api_endpoint_available[customers]","
-Preflight API availability check.
-
-Fail fast if API is broken
-
-Ensures core API endpoints respond correctly before
-running the full test suite.
-"
-"passed","Thu May 07 19:51:03 UTC 2026","Thu May 07 19:51:03 UTC 2026","59","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[91ef92867fe6e5f99cff251173288268c70447ee-cs_invalid_secret_456-Invalid signature - provided signature does not match.-put-True-True-products]","
-Ensure invalid OAuth credentials are rejected by all API endpoints.
-
-Design principle
-----------------
-We create an isolated APIClient with invalid credentials instead of
-mutating the shared pytest api_client fixture.
-
-This prevents authentication state leaking across tests.
-
-Validation layers
------------------
-1. Transport validation → HTTP 401
-2. Schema validation    → error response structure
-3. Business validation  → error code + message
-"
-"skipped","Thu May 07 19:50:50 UTC 2026","Thu May 07 19:50:50 UTC 2026","0","tests.customers.api","test_create_customer","","","","test_create_customer_with_varied_addresses[billing1-shipping1]","
-Create customers with different billing and shipping addresses.
-
-Validates that address variations are accepted and stored correctly.
-
-Test flow:
-    1. Create customers with parameterized addresses
-    2. Verify customers exists via API
-    3. Verify API data matches database record
-"
-"passed","Thu May 07 19:51:00 UTC 2026","Thu May 07 19:51:00 UTC 2026","62","tests.shared.preflight","test_response_format","","","","test_api_returns_json[orders]","
-API response format guard.
-
-Ensures endpoints return JSON responses and
-correct content-type headers.
-
-Detects:
-    - PHP errors returning HTML
-    - proxy misconfiguration
-    - incorrect content types
-    - broken JSON serialization
-"
-"passed","Thu May 07 19:51:01 UTC 2026","Thu May 07 19:51:01 UTC 2026","74","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-delete-True-False-customers]","
-Ensure invalid OAuth credentials are rejected by all API endpoints.
-
-Design principle
-----------------
-We create an isolated APIClient with invalid credentials instead of
-mutating the shared pytest api_client fixture.
-
-This prevents authentication state leaking across tests.
-
-Validation layers
------------------
-1. Transport validation → HTTP 401
-2. Schema validation    → error response structure
-3. Business validation  → error code + message
-"
-"passed","Thu May 07 19:50:47 UTC 2026","Thu May 07 19:50:48 UTC 2026","973","tests.customers.api","test_create_customer","","","","test_bulk_create_customers[3]","
+"passed","Fri May 08 16:31:46 UTC 2026","Fri May 08 16:31:46 UTC 2026","428","tests.customers.api","test_create_customer","","","","test_bulk_create_customers[1]","
 Test bulk creation of customers.
 
 Creates multiple customers using the factory fixture and verifies that
@@ -535,29 +518,7 @@ NOTE:
     is performed implicitly via the create_valid_customer fixture
     (Pydantic validation layer).
 "
-"passed","Thu May 07 19:50:48 UTC 2026","Thu May 07 19:50:50 UTC 2026","1646","tests.customers.api","test_create_customer","","","","test_bulk_create_customers[5]","
-Test bulk creation of customers.
-
-Creates multiple customers using the factory fixture and verifies that
-each created customers exists in both API and database.
-
-What the fixture `create_valid_customer` already does:
-    - Sends POST /customers
-    - Validates HTTP status code (201)
-    - Validates response structure using Pydantic
-    - Registers created customers for cleanup
-
-Test flow:
-    1. Create N customers using bulk utility
-    2. Verify each customers exists via API
-    3. Verify API data matches database record
-
-NOTE:
-    This test is marked as CONTRACT because schema validation
-    is performed implicitly via the create_valid_customer fixture
-    (Pydantic validation layer).
-"
-"passed","Thu May 07 19:51:02 UTC 2026","Thu May 07 19:51:02 UTC 2026","59","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[91ef92867fe6e5f99cff251173288268c70447ee-cs_invalid_secret_456-Invalid signature - provided signature does not match.-get-False-False-customers]","
+"passed","Fri May 08 16:32:00 UTC 2026","Fri May 08 16:32:00 UTC 2026","62","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-post-False-True-coupons]","
 Ensure invalid OAuth credentials are rejected by all API endpoints.
 
 Design principle
@@ -573,23 +534,7 @@ Validation layers
 2. Schema validation    → error response structure
 3. Business validation  → error code + message
 "
-"passed","Thu May 07 19:50:53 UTC 2026","Thu May 07 19:50:56 UTC 2026","2400","tests.customers.api","test_get_all_customers","","","","test_get_all_customers_pagination_boundary","
-Verify pagination behavior for GET /customers using an isolated test dataset (no dependency on global DB state)..
-
-Validates that:
-    - Pagination retrieves multiple pages correctly
-    - No duplicate customers appear across pages
-    - All returned customers have valid structure
-
-Test flow:
-    1. Creates controlled dataset
-    2. Retrieve customers with small page size
-    3. Collect results across multiple pages
-    4. Ensure no duplicate IDs
-    5. Validate structure of each customers
-    6. Stops correctly (no infinite loop)
-"
-"passed","Thu May 07 19:51:01 UTC 2026","Thu May 07 19:51:01 UTC 2026","63","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-delete-True-False-orders]","
+"passed","Fri May 08 16:32:03 UTC 2026","Fri May 08 16:32:03 UTC 2026","62","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[96e6c86f7e1e9ce4071ed19f01c9dfda3cc17a13-cs_invalid_secret_456-Invalid signature - provided signature does not match.-delete-True-False-orders]","
 Ensure invalid OAuth credentials are rejected by all API endpoints.
 
 Design principle
@@ -605,20 +550,7 @@ Validation layers
 2. Schema validation    → error response structure
 3. Business validation  → error code + message
 "
-"passed","Thu May 07 19:50:53 UTC 2026","Thu May 07 19:50:53 UTC 2026","304","tests.customers.api","test_get_all_customers","","","","test_get_all_customers_list_not_empty_and_valid_schema","
-Smoke test for GET /customers endpoint.
-
-Validates that:
-    - API returns a non-empty list of customers
-    - Each returned customers has a valid structure (Pydantic validation)
-
-Test flow:
-    1. Create customer for test
-    2. Call GET /customers
-    3. Ensure response contains customers
-    4. Validate structure of each customers
-"
-"passed","Thu May 07 19:51:02 UTC 2026","Thu May 07 19:51:02 UTC 2026","59","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-2e77790f65d0269dab53113cabd67b2a1630d6ca-Consumer key is invalid.-delete-True-False-customers]","
+"passed","Fri May 08 16:32:00 UTC 2026","Fri May 08 16:32:00 UTC 2026","63","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-put-True-True-products]","
 Ensure invalid OAuth credentials are rejected by all API endpoints.
 
 Design principle
@@ -634,7 +566,55 @@ Validation layers
 2. Schema validation    → error response structure
 3. Business validation  → error code + message
 "
-"passed","Thu May 07 19:50:50 UTC 2026","Thu May 07 19:50:50 UTC 2026","63","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[no-at-symbol]","
+"passed","Fri May 08 16:32:02 UTC 2026","Fri May 08 16:32:02 UTC 2026","74","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[96e6c86f7e1e9ce4071ed19f01c9dfda3cc17a13-cs_invalid_secret_456-Invalid signature - provided signature does not match.-post-False-True-customers]","
+Ensure invalid OAuth credentials are rejected by all API endpoints.
+
+Design principle
+----------------
+We create an isolated APIClient with invalid credentials instead of
+mutating the shared pytest api_client fixture.
+
+This prevents authentication state leaking across tests.
+
+Validation layers
+-----------------
+1. Transport validation → HTTP 401
+2. Schema validation    → error response structure
+3. Business validation  → error code + message
+"
+"passed","Fri May 08 16:32:01 UTC 2026","Fri May 08 16:32:01 UTC 2026","67","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-bd6761cd1e68fc623a5ef7a45a1439cbc11825d3-Consumer key is invalid.-put-True-True-customers]","
+Ensure invalid OAuth credentials are rejected by all API endpoints.
+
+Design principle
+----------------
+We create an isolated APIClient with invalid credentials instead of
+mutating the shared pytest api_client fixture.
+
+This prevents authentication state leaking across tests.
+
+Validation layers
+-----------------
+1. Transport validation → HTTP 401
+2. Schema validation    → error response structure
+3. Business validation  → error code + message
+"
+"passed","Fri May 08 16:32:02 UTC 2026","Fri May 08 16:32:02 UTC 2026","68","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[96e6c86f7e1e9ce4071ed19f01c9dfda3cc17a13-cs_invalid_secret_456-Invalid signature - provided signature does not match.-post-False-True-coupons]","
+Ensure invalid OAuth credentials are rejected by all API endpoints.
+
+Design principle
+----------------
+We create an isolated APIClient with invalid credentials instead of
+mutating the shared pytest api_client fixture.
+
+This prevents authentication state leaking across tests.
+
+Validation layers
+-----------------
+1. Transport validation → HTTP 401
+2. Schema validation    → error response structure
+3. Business validation  → error code + message
+"
+"passed","Fri May 08 16:31:49 UTC 2026","Fri May 08 16:31:50 UTC 2026","74","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[missing-at]","
 Negative test for invalid email values during customers creation.
 
 This test bypasses the factory fixture because invalid payloads
@@ -653,29 +633,7 @@ Args:
     payload (dict): Test input payload with malformed or missing email/password fields.
     expected_status_code (int): Expected HTTP response code.
 "
-"passed","Thu May 07 19:50:50 UTC 2026","Thu May 07 19:50:50 UTC 2026","308","tests.customers.api","test_create_customer","","","","test_create_single_customer_with_email_and_password_only","
-Create a customers using the minimum valid payload.
-
-The fixture `create_valid_customer` already performs:
-    - POST /customers
-    - status code validation (201)
-    - response structure validation (Pydantic)
-    - cleanup registration
-
-Test flow:
-    1. Create a customers
-    2. Fetch customers via API
-    3. Verify API data matches database record
-"
-"passed","Thu May 07 19:51:00 UTC 2026","Thu May 07 19:51:00 UTC 2026","59","tests.shared.preflight","test_api_connectivity","","","","test_api_endpoint_available[orders]","
-Preflight API availability check.
-
-Fail fast if API is broken
-
-Ensures core API endpoints respond correctly before
-running the full test suite.
-"
-"passed","Thu May 07 19:51:01 UTC 2026","Thu May 07 19:51:01 UTC 2026","62","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-2e77790f65d0269dab53113cabd67b2a1630d6ca-Consumer key is invalid.-get-False-False-customers]","
+"passed","Fri May 08 16:32:01 UTC 2026","Fri May 08 16:32:01 UTC 2026","61","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-bd6761cd1e68fc623a5ef7a45a1439cbc11825d3-Consumer key is invalid.-get-False-False-orders]","
 Ensure invalid OAuth credentials are rejected by all API endpoints.
 
 Design principle
@@ -691,7 +649,47 @@ Validation layers
 2. Schema validation    → error response structure
 3. Business validation  → error code + message
 "
-"passed","Thu May 07 19:50:52 UTC 2026","Thu May 07 19:50:53 UTC 2026","340","tests.customers.api","test_customer_deletion","","","","test_deleted_customer_not_in_created_after_filter[2]","
+"passed","Fri May 08 16:32:03 UTC 2026","Fri May 08 16:32:03 UTC 2026","62","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[96e6c86f7e1e9ce4071ed19f01c9dfda3cc17a13-cs_invalid_secret_456-Invalid signature - provided signature does not match.-delete-True-False-customers]","
+Ensure invalid OAuth credentials are rejected by all API endpoints.
+
+Design principle
+----------------
+We create an isolated APIClient with invalid credentials instead of
+mutating the shared pytest api_client fixture.
+
+This prevents authentication state leaking across tests.
+
+Validation layers
+-----------------
+1. Transport validation → HTTP 401
+2. Schema validation    → error response structure
+3. Business validation  → error code + message
+"
+"passed","Fri May 08 16:32:01 UTC 2026","Fri May 08 16:32:01 UTC 2026","67","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-bd6761cd1e68fc623a5ef7a45a1439cbc11825d3-Consumer key is invalid.-put-True-True-products]","
+Ensure invalid OAuth credentials are rejected by all API endpoints.
+
+Design principle
+----------------
+We create an isolated APIClient with invalid credentials instead of
+mutating the shared pytest api_client fixture.
+
+This prevents authentication state leaking across tests.
+
+Validation layers
+-----------------
+1. Transport validation → HTTP 401
+2. Schema validation    → error response structure
+3. Business validation  → error code + message
+"
+"passed","Fri May 08 16:31:59 UTC 2026","Fri May 08 16:31:59 UTC 2026","66","tests.shared.preflight","test_api_connectivity","","","","test_api_endpoint_available[customers]","
+Preflight API availability check.
+
+Fail fast if API is broken
+
+Ensures core API endpoints respond correctly before
+running the full test suite.
+"
+"passed","Fri May 08 16:31:52 UTC 2026","Fri May 08 16:31:52 UTC 2026","354","tests.customers.api","test_customer_deletion","","","","test_deleted_customer_not_in_created_after_filter[2]","
 Verify that a deleted customers does not appear in filtered
 GET /customers results.
 
@@ -713,7 +711,7 @@ Parameterized with different minute offsets to test consistency across varied fi
             ↑
        customers created
 "
-"passed","Thu May 07 19:51:00 UTC 2026","Thu May 07 19:51:00 UTC 2026","59","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-get-False-False-products]","
+"passed","Fri May 08 16:32:02 UTC 2026","Fri May 08 16:32:02 UTC 2026","64","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[96e6c86f7e1e9ce4071ed19f01c9dfda3cc17a13-cs_invalid_secret_456-Invalid signature - provided signature does not match.-post-False-True-orders]","
 Ensure invalid OAuth credentials are rejected by all API endpoints.
 
 Design principle
@@ -729,61 +727,40 @@ Validation layers
 2. Schema validation    → error response structure
 3. Business validation  → error code + message
 "
-"passed","Thu May 07 19:51:03 UTC 2026","Thu May 07 19:51:03 UTC 2026","66","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[91ef92867fe6e5f99cff251173288268c70447ee-cs_invalid_secret_456-Invalid signature - provided signature does not match.-delete-True-False-customers]","
-Ensure invalid OAuth credentials are rejected by all API endpoints.
+"passed","Fri May 08 16:31:51 UTC 2026","Fri May 08 16:31:52 UTC 2026","352","tests.customers.api","test_customer_deletion","","","","test_deleted_customer_not_in_created_after_filter[1]","
+Verify that a deleted customers does not appear in filtered
+GET /customers results.
 
-Design principle
-----------------
-We create an isolated APIClient with invalid credentials instead of
-mutating the shared pytest api_client fixture.
-
-This prevents authentication state leaking across tests.
-
-Validation layers
------------------
-1. Transport validation → HTTP 401
-2. Schema validation    → error response structure
-3. Business validation  → error code + message
-"
-"passed","Thu May 07 19:50:47 UTC 2026","Thu May 07 19:50:47 UTC 2026","409","tests.customers.api","test_create_customer","","","","test_bulk_create_customers[1]","
-Test bulk creation of customers.
-
-Creates multiple customers using the factory fixture and verifies that
-each created customers exists in both API and database.
-
-What the fixture `create_valid_customer` already does:
-    - Sends POST /customers
-    - Validates HTTP status code (201)
-    - Validates response structure using Pydantic
-    - Registers created customers for cleanup
+Endpoint tested:
+    GET /customers?created_after=&created_before=
 
 Test flow:
-    1. Create N customers using bulk utility
-    2. Verify each customers exists via API
-    3. Verify API data matches database record
+    1. Create a customers
+    2. Delete the customers
+    3. Query customers using a time window that includes the creation time
+    4. Ensure the deleted customers is NOT returned
 
-NOTE:
-    This test is marked as CONTRACT because schema validation
-    is performed implicitly via the create_valid_customer fixture
-    (Pydantic validation layer).
+Parameterized with different minute offsets to test consistency across varied filtering windows.
+
+        TIME WINDOW
+    ┌─────────────────┐
+    │                 │
+   09:59   10:00   10:02
+            ↑
+       customers created
 "
-"passed","Thu May 07 19:51:00 UTC 2026","Thu May 07 19:51:00 UTC 2026","61","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-post-False-True-customers]","
-Ensure invalid OAuth credentials are rejected by all API endpoints.
+"passed","Fri May 08 16:31:57 UTC 2026","Fri May 08 16:31:57 UTC 2026","68","tests.customers.api","test_get_customer","","","","test_get_customer_not_found","
+Negative test for retrieving a non-existing customers.
 
-Design principle
-----------------
-We create an isolated APIClient with invalid credentials instead of
-mutating the shared pytest api_client fixture.
+Endpoint tested:
+    GET /customers/{id}
 
-This prevents authentication state leaking across tests.
-
-Validation layers
------------------
-1. Transport validation → HTTP 401
-2. Schema validation    → error response structure
-3. Business validation  → error code + message
+Test flow:
+    1. Request non-existing customers ID
+    2. Validate API returns correct error response
+    3. Validate error schema
 "
-"passed","Thu May 07 19:51:00 UTC 2026","Thu May 07 19:51:00 UTC 2026","60","tests.shared.preflight","test_response_format","","","","test_api_returns_json[coupons]","
+"passed","Fri May 08 16:31:59 UTC 2026","Fri May 08 16:32:00 UTC 2026","64","tests.shared.preflight","test_response_format","","","","test_api_returns_json[coupons]","
 API response format guard.
 
 Ensures endpoints return JSON responses and
@@ -795,152 +772,7 @@ Detects:
     - incorrect content types
     - broken JSON serialization
 "
-"passed","Thu May 07 19:51:01 UTC 2026","Thu May 07 19:51:01 UTC 2026","59","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-put-True-True-customers]","
-Ensure invalid OAuth credentials are rejected by all API endpoints.
-
-Design principle
-----------------
-We create an isolated APIClient with invalid credentials instead of
-mutating the shared pytest api_client fixture.
-
-This prevents authentication state leaking across tests.
-
-Validation layers
------------------
-1. Transport validation → HTTP 401
-2. Schema validation    → error response structure
-3. Business validation  → error code + message
-"
-"passed","Thu May 07 19:51:00 UTC 2026","Thu May 07 19:51:00 UTC 2026","61","tests.shared.preflight","test_response_format","","","","test_api_returns_json[customers]","
-API response format guard.
-
-Ensures endpoints return JSON responses and
-correct content-type headers.
-
-Detects:
-    - PHP errors returning HTML
-    - proxy misconfiguration
-    - incorrect content types
-    - broken JSON serialization
-"
-"passed","Thu May 07 19:51:03 UTC 2026","Thu May 07 19:51:03 UTC 2026","62","tests.shared.security","test_authentication_success","","","","test_authenticated_requests_are_allowed[customers]","
-Authentication success guard.
-
-Ensures valid OAuth credentials allow access
-to WooCommerce API endpoints.
-
-This complements the negative authentication matrix
-which verifies invalid credentials are rejected.
-"
-"passed","Thu May 07 19:51:00 UTC 2026","Thu May 07 19:51:00 UTC 2026","60","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-get-False-False-coupons]","
-Ensure invalid OAuth credentials are rejected by all API endpoints.
-
-Design principle
-----------------
-We create an isolated APIClient with invalid credentials instead of
-mutating the shared pytest api_client fixture.
-
-This prevents authentication state leaking across tests.
-
-Validation layers
------------------
-1. Transport validation → HTTP 401
-2. Schema validation    → error response structure
-3. Business validation  → error code + message
-"
-"passed","Thu May 07 19:51:00 UTC 2026","Thu May 07 19:51:00 UTC 2026","59","tests.shared.preflight","test_response_format","","","","test_api_returns_json[products]","
-API response format guard.
-
-Ensures endpoints return JSON responses and
-correct content-type headers.
-
-Detects:
-    - PHP errors returning HTML
-    - proxy misconfiguration
-    - incorrect content types
-    - broken JSON serialization
-"
-"passed","Thu May 07 19:51:03 UTC 2026","Thu May 07 19:51:03 UTC 2026","61","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[91ef92867fe6e5f99cff251173288268c70447ee-cs_invalid_secret_456-Invalid signature - provided signature does not match.-put-True-True-orders]","
-Ensure invalid OAuth credentials are rejected by all API endpoints.
-
-Design principle
-----------------
-We create an isolated APIClient with invalid credentials instead of
-mutating the shared pytest api_client fixture.
-
-This prevents authentication state leaking across tests.
-
-Validation layers
------------------
-1. Transport validation → HTTP 401
-2. Schema validation    → error response structure
-3. Business validation  → error code + message
-"
-"passed","Thu May 07 19:51:01 UTC 2026","Thu May 07 19:51:01 UTC 2026","61","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-post-False-True-coupons]","
-Ensure invalid OAuth credentials are rejected by all API endpoints.
-
-Design principle
-----------------
-We create an isolated APIClient with invalid credentials instead of
-mutating the shared pytest api_client fixture.
-
-This prevents authentication state leaking across tests.
-
-Validation layers
------------------
-1. Transport validation → HTTP 401
-2. Schema validation    → error response structure
-3. Business validation  → error code + message
-"
-"passed","Thu May 07 19:51:02 UTC 2026","Thu May 07 19:51:02 UTC 2026","59","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[91ef92867fe6e5f99cff251173288268c70447ee-cs_invalid_secret_456-Invalid signature - provided signature does not match.-get-False-False-products]","
-Ensure invalid OAuth credentials are rejected by all API endpoints.
-
-Design principle
-----------------
-We create an isolated APIClient with invalid credentials instead of
-mutating the shared pytest api_client fixture.
-
-This prevents authentication state leaking across tests.
-
-Validation layers
------------------
-1. Transport validation → HTTP 401
-2. Schema validation    → error response structure
-3. Business validation  → error code + message
-"
-"passed","Thu May 07 19:51:02 UTC 2026","Thu May 07 19:51:02 UTC 2026","62","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-2e77790f65d0269dab53113cabd67b2a1630d6ca-Consumer key is invalid.-post-False-True-orders]","
-Ensure invalid OAuth credentials are rejected by all API endpoints.
-
-Design principle
-----------------
-We create an isolated APIClient with invalid credentials instead of
-mutating the shared pytest api_client fixture.
-
-This prevents authentication state leaking across tests.
-
-Validation layers
------------------
-1. Transport validation → HTTP 401
-2. Schema validation    → error response structure
-3. Business validation  → error code + message
-"
-"passed","Thu May 07 19:51:03 UTC 2026","Thu May 07 19:51:03 UTC 2026","63","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[91ef92867fe6e5f99cff251173288268c70447ee-cs_invalid_secret_456-Invalid signature - provided signature does not match.-post-False-True-orders]","
-Ensure invalid OAuth credentials are rejected by all API endpoints.
-
-Design principle
-----------------
-We create an isolated APIClient with invalid credentials instead of
-mutating the shared pytest api_client fixture.
-
-This prevents authentication state leaking across tests.
-
-Validation layers
------------------
-1. Transport validation → HTTP 401
-2. Schema validation    → error response structure
-3. Business validation  → error code + message
-"
-"passed","Thu May 07 19:50:50 UTC 2026","Thu May 07 19:50:50 UTC 2026","78","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[missing-local-part]","
+"passed","Fri May 08 16:31:50 UTC 2026","Fri May 08 16:31:50 UTC 2026","69","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[missing-Top-Level Domain]","
 Negative test for invalid email values during customers creation.
 
 This test bypasses the factory fixture because invalid payloads
@@ -959,7 +791,36 @@ Args:
     payload (dict): Test input payload with malformed or missing email/password fields.
     expected_status_code (int): Expected HTTP response code.
 "
-"passed","Thu May 07 19:51:01 UTC 2026","Thu May 07 19:51:01 UTC 2026","74","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-delete-True-False-coupons]","
+"passed","Fri May 08 16:32:03 UTC 2026","Fri May 08 16:32:03 UTC 2026","67","tests.shared.security","test_authentication_success","","","","test_authenticated_requests_are_allowed[products]","
+Authentication success guard.
+
+Ensures valid OAuth credentials allow access
+to WooCommerce API endpoints.
+
+This complements the negative authentication matrix
+which verifies invalid credentials are rejected.
+"
+"skipped","Fri May 08 16:31:49 UTC 2026","Fri May 08 16:31:49 UTC 2026","0","tests.customers.api","test_create_customer","","","","test_create_customer_with_varied_addresses[billing0-shipping0]","
+Create customers with different billing and shipping addresses.
+
+Validates that address variations are accepted and stored correctly.
+
+Test flow:
+    1. Create customers with parameterized addresses
+    2. Verify customers exists via API
+    3. Verify API data matches database record
+"
+"skipped","Fri May 08 16:31:49 UTC 2026","Fri May 08 16:31:49 UTC 2026","0","tests.customers.api","test_create_customer","","","","test_create_customer_with_varied_addresses[billing1-shipping1]","
+Create customers with different billing and shipping addresses.
+
+Validates that address variations are accepted and stored correctly.
+
+Test flow:
+    1. Create customers with parameterized addresses
+    2. Verify customers exists via API
+    3. Verify API data matches database record
+"
+"passed","Fri May 08 16:32:02 UTC 2026","Fri May 08 16:32:02 UTC 2026","62","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[96e6c86f7e1e9ce4071ed19f01c9dfda3cc17a13-cs_invalid_secret_456-Invalid signature - provided signature does not match.-get-False-False-orders]","
 Ensure invalid OAuth credentials are rejected by all API endpoints.
 
 Design principle
@@ -975,7 +836,101 @@ Validation layers
 2. Schema validation    → error response structure
 3. Business validation  → error code + message
 "
-"passed","Thu May 07 19:50:57 UTC 2026","Thu May 07 19:50:57 UTC 2026","374","tests.customers.api","test_get_customer","","","","test_get_customer_by_id","
+"passed","Fri May 08 16:31:59 UTC 2026","Fri May 08 16:31:59 UTC 2026","61","tests.shared.preflight","test_api_connectivity","","","","test_api_endpoint_available[orders]","
+Preflight API availability check.
+
+Fail fast if API is broken
+
+Ensures core API endpoints respond correctly before
+running the full test suite.
+"
+"passed","Fri May 08 16:32:01 UTC 2026","Fri May 08 16:32:01 UTC 2026","61","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-bd6761cd1e68fc623a5ef7a45a1439cbc11825d3-Consumer key is invalid.-post-False-True-coupons]","
+Ensure invalid OAuth credentials are rejected by all API endpoints.
+
+Design principle
+----------------
+We create an isolated APIClient with invalid credentials instead of
+mutating the shared pytest api_client fixture.
+
+This prevents authentication state leaking across tests.
+
+Validation layers
+-----------------
+1. Transport validation → HTTP 401
+2. Schema validation    → error response structure
+3. Business validation  → error code + message
+"
+"passed","Fri May 08 16:31:59 UTC 2026","Fri May 08 16:31:59 UTC 2026","61","tests.shared.preflight","test_api_connectivity","","","","test_api_endpoint_available[products]","
+Preflight API availability check.
+
+Fail fast if API is broken
+
+Ensures core API endpoints respond correctly before
+running the full test suite.
+"
+"passed","Fri May 08 16:32:02 UTC 2026","Fri May 08 16:32:02 UTC 2026","64","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-bd6761cd1e68fc623a5ef7a45a1439cbc11825d3-Consumer key is invalid.-delete-True-False-coupons]","
+Ensure invalid OAuth credentials are rejected by all API endpoints.
+
+Design principle
+----------------
+We create an isolated APIClient with invalid credentials instead of
+mutating the shared pytest api_client fixture.
+
+This prevents authentication state leaking across tests.
+
+Validation layers
+-----------------
+1. Transport validation → HTTP 401
+2. Schema validation    → error response structure
+3. Business validation  → error code + message
+"
+"passed","Fri May 08 16:31:57 UTC 2026","Fri May 08 16:31:57 UTC 2026","267","tests.customers.api","test_update_customer","","","","test_update_customer_first_name","
+Verify that a customers can be updated successfully.
+
+Validates that:
+    - PUT /customers/{id} returns a successful response
+    - Updated fields are reflected in the API response
+    - Returned customers structure is valid (Pydantic validation)
+
+Test flow:
+    1. Create customers via fixture
+    2. Update first_name and email
+    3. Validate response structure
+    4. Verify updated values
+"
+"passed","Fri May 08 16:32:00 UTC 2026","Fri May 08 16:32:00 UTC 2026","64","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-get-False-False-products]","
+Ensure invalid OAuth credentials are rejected by all API endpoints.
+
+Design principle
+----------------
+We create an isolated APIClient with invalid credentials instead of
+mutating the shared pytest api_client fixture.
+
+This prevents authentication state leaking across tests.
+
+Validation layers
+-----------------
+1. Transport validation → HTTP 401
+2. Schema validation    → error response structure
+3. Business validation  → error code + message
+"
+"passed","Fri May 08 16:32:01 UTC 2026","Fri May 08 16:32:01 UTC 2026","70","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-bd6761cd1e68fc623a5ef7a45a1439cbc11825d3-Consumer key is invalid.-get-False-False-customers]","
+Ensure invalid OAuth credentials are rejected by all API endpoints.
+
+Design principle
+----------------
+We create an isolated APIClient with invalid credentials instead of
+mutating the shared pytest api_client fixture.
+
+This prevents authentication state leaking across tests.
+
+Validation layers
+-----------------
+1. Transport validation → HTTP 401
+2. Schema validation    → error response structure
+3. Business validation  → error code + message
+"
+"passed","Fri May 08 16:31:56 UTC 2026","Fri May 08 16:31:57 UTC 2026","392","tests.customers.api","test_get_customer","","","","test_get_customer_by_id","
 Verify that a customers can be retrieved by ID.
 
 Endpoint tested:
@@ -993,35 +948,7 @@ Test flow:
     4. Verify returned customers identity
     5. Verify API data matches database
 "
-"passed","Thu May 07 19:50:51 UTC 2026","Thu May 07 19:50:51 UTC 2026","68","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[missing-email-field]","
-Negative test for invalid email values during customers creation.
-
-This test bypasses the factory fixture because invalid payloads
-should return HTTP 400 responses.
-
-Test flow:
-    1. Send POST /customers with invalid email
-    2. Validate HTTP 400 response
-    3. Validate error response structure
-
-Args:
-    customers_dao: Fixture providing customers DAO.
-    customer_helper: Fixture providing customers API helper.
-    customer_api_raw(Callable): .Fixture providing low-level access t tests that need to inspect raw
-    responses.
-    payload (dict): Test input payload with malformed or missing email/password fields.
-    expected_status_code (int): Expected HTTP response code.
-"
-"passed","Thu May 07 19:51:03 UTC 2026","Thu May 07 19:51:04 UTC 2026","60","tests.shared.security","test_authentication_success","","","","test_authenticated_requests_are_allowed[coupons]","
-Authentication success guard.
-
-Ensures valid OAuth credentials allow access
-to WooCommerce API endpoints.
-
-This complements the negative authentication matrix
-which verifies invalid credentials are rejected.
-"
-"passed","Thu May 07 19:51:00 UTC 2026","Thu May 07 19:51:00 UTC 2026","64","tests.shared.preflight","test_api_connectivity","","","","test_api_endpoint_available[coupons]","
+"passed","Fri May 08 16:31:59 UTC 2026","Fri May 08 16:31:59 UTC 2026","62","tests.shared.preflight","test_api_connectivity","","","","test_api_endpoint_available[coupons]","
 Preflight API availability check.
 
 Fail fast if API is broken
@@ -1029,7 +956,20 @@ Fail fast if API is broken
 Ensures core API endpoints respond correctly before
 running the full test suite.
 "
-"passed","Thu May 07 19:51:03 UTC 2026","Thu May 07 19:51:03 UTC 2026","59","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[91ef92867fe6e5f99cff251173288268c70447ee-cs_invalid_secret_456-Invalid signature - provided signature does not match.-post-False-True-coupons]","
+"passed","Fri May 08 16:31:52 UTC 2026","Fri May 08 16:31:52 UTC 2026","318","tests.customers.api","test_get_all_customers","","","","test_get_all_customers_list_not_empty_and_valid_schema","
+Smoke test for GET /customers endpoint.
+
+Validates that:
+    - API returns a non-empty list of customers
+    - Each returned customers has a valid structure (Pydantic validation)
+
+Test flow:
+    1. Create customer for test
+    2. Call GET /customers
+    3. Ensure response contains customers
+    4. Validate structure of each customers
+"
+"passed","Fri May 08 16:32:02 UTC 2026","Fri May 08 16:32:02 UTC 2026","61","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-bd6761cd1e68fc623a5ef7a45a1439cbc11825d3-Consumer key is invalid.-delete-True-False-orders]","
 Ensure invalid OAuth credentials are rejected by all API endpoints.
 
 Design principle
@@ -1045,7 +985,16 @@ Validation layers
 2. Schema validation    → error response structure
 3. Business validation  → error code + message
 "
-"passed","Thu May 07 19:51:02 UTC 2026","Thu May 07 19:51:02 UTC 2026","61","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[91ef92867fe6e5f99cff251173288268c70447ee-cs_invalid_secret_456-Invalid signature - provided signature does not match.-get-False-False-orders]","
+"passed","Fri May 08 16:32:03 UTC 2026","Fri May 08 16:32:03 UTC 2026","62","tests.shared.security","test_authentication_success","","","","test_authenticated_requests_are_allowed[coupons]","
+Authentication success guard.
+
+Ensures valid OAuth credentials allow access
+to WooCommerce API endpoints.
+
+This complements the negative authentication matrix
+which verifies invalid credentials are rejected.
+"
+"passed","Fri May 08 16:32:03 UTC 2026","Fri May 08 16:32:03 UTC 2026","64","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[96e6c86f7e1e9ce4071ed19f01c9dfda3cc17a13-cs_invalid_secret_456-Invalid signature - provided signature does not match.-delete-True-False-products]","
 Ensure invalid OAuth credentials are rejected by all API endpoints.
 
 Design principle
@@ -1061,7 +1010,119 @@ Validation layers
 2. Schema validation    → error response structure
 3. Business validation  → error code + message
 "
-"passed","Thu May 07 19:50:51 UTC 2026","Thu May 07 19:50:51 UTC 2026","78","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[missing-at]","
+"passed","Fri May 08 16:32:00 UTC 2026","Fri May 08 16:32:00 UTC 2026","61","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-put-True-True-orders]","
+Ensure invalid OAuth credentials are rejected by all API endpoints.
+
+Design principle
+----------------
+We create an isolated APIClient with invalid credentials instead of
+mutating the shared pytest api_client fixture.
+
+This prevents authentication state leaking across tests.
+
+Validation layers
+-----------------
+1. Transport validation → HTTP 401
+2. Schema validation    → error response structure
+3. Business validation  → error code + message
+"
+"passed","Fri May 08 16:32:00 UTC 2026","Fri May 08 16:32:00 UTC 2026","63","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-get-False-False-customers]","
+Ensure invalid OAuth credentials are rejected by all API endpoints.
+
+Design principle
+----------------
+We create an isolated APIClient with invalid credentials instead of
+mutating the shared pytest api_client fixture.
+
+This prevents authentication state leaking across tests.
+
+Validation layers
+-----------------
+1. Transport validation → HTTP 401
+2. Schema validation    → error response structure
+3. Business validation  → error code + message
+"
+"passed","Fri May 08 16:32:02 UTC 2026","Fri May 08 16:32:02 UTC 2026","60","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[96e6c86f7e1e9ce4071ed19f01c9dfda3cc17a13-cs_invalid_secret_456-Invalid signature - provided signature does not match.-put-True-True-customers]","
+Ensure invalid OAuth credentials are rejected by all API endpoints.
+
+Design principle
+----------------
+We create an isolated APIClient with invalid credentials instead of
+mutating the shared pytest api_client fixture.
+
+This prevents authentication state leaking across tests.
+
+Validation layers
+-----------------
+1. Transport validation → HTTP 401
+2. Schema validation    → error response structure
+3. Business validation  → error code + message
+"
+"passed","Fri May 08 16:32:01 UTC 2026","Fri May 08 16:32:01 UTC 2026","60","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-bd6761cd1e68fc623a5ef7a45a1439cbc11825d3-Consumer key is invalid.-post-False-True-customers]","
+Ensure invalid OAuth credentials are rejected by all API endpoints.
+
+Design principle
+----------------
+We create an isolated APIClient with invalid credentials instead of
+mutating the shared pytest api_client fixture.
+
+This prevents authentication state leaking across tests.
+
+Validation layers
+-----------------
+1. Transport validation → HTTP 401
+2. Schema validation    → error response structure
+3. Business validation  → error code + message
+"
+"passed","Fri May 08 16:32:03 UTC 2026","Fri May 08 16:32:03 UTC 2026","67","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[96e6c86f7e1e9ce4071ed19f01c9dfda3cc17a13-cs_invalid_secret_456-Invalid signature - provided signature does not match.-delete-True-False-coupons]","
+Ensure invalid OAuth credentials are rejected by all API endpoints.
+
+Design principle
+----------------
+We create an isolated APIClient with invalid credentials instead of
+mutating the shared pytest api_client fixture.
+
+This prevents authentication state leaking across tests.
+
+Validation layers
+-----------------
+1. Transport validation → HTTP 401
+2. Schema validation    → error response structure
+3. Business validation  → error code + message
+"
+"passed","Fri May 08 16:31:52 UTC 2026","Fri May 08 16:31:55 UTC 2026","2494","tests.customers.api","test_get_all_customers","","","","test_get_all_customers_pagination_boundary","
+Verify pagination behavior for GET /customers using an isolated test dataset (no dependency on global DB state)..
+
+Validates that:
+    - Pagination retrieves multiple pages correctly
+    - No duplicate customers appear across pages
+    - All returned customers have valid structure
+
+Test flow:
+    1. Creates controlled dataset
+    2. Retrieve customers with small page size
+    3. Collect results across multiple pages
+    4. Ensure no duplicate IDs
+    5. Validate structure of each customers
+    6. Stops correctly (no infinite loop)
+"
+"passed","Fri May 08 16:32:01 UTC 2026","Fri May 08 16:32:01 UTC 2026","73","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-delete-True-False-coupons]","
+Ensure invalid OAuth credentials are rejected by all API endpoints.
+
+Design principle
+----------------
+We create an isolated APIClient with invalid credentials instead of
+mutating the shared pytest api_client fixture.
+
+This prevents authentication state leaking across tests.
+
+Validation layers
+-----------------
+1. Transport validation → HTTP 401
+2. Schema validation    → error response structure
+3. Business validation  → error code + message
+"
+"passed","Fri May 08 16:31:50 UTC 2026","Fri May 08 16:31:50 UTC 2026","74","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[missing-email-field]","
 Negative test for invalid email values during customers creation.
 
 This test bypasses the factory fixture because invalid payloads
@@ -1080,16 +1141,29 @@ Args:
     payload (dict): Test input payload with malformed or missing email/password fields.
     expected_status_code (int): Expected HTTP response code.
 "
-"passed","Thu May 07 19:51:03 UTC 2026","Thu May 07 19:51:03 UTC 2026","60","tests.shared.security","test_authentication_success","","","","test_authenticated_requests_are_allowed[products]","
-Authentication success guard.
+"passed","Fri May 08 16:31:47 UTC 2026","Fri May 08 16:31:49 UTC 2026","1720","tests.customers.api","test_create_customer","","","","test_bulk_create_customers[5]","
+Test bulk creation of customers.
 
-Ensures valid OAuth credentials allow access
-to WooCommerce API endpoints.
+Creates multiple customers using the factory fixture and verifies that
+each created customers exists in both API and database.
 
-This complements the negative authentication matrix
-which verifies invalid credentials are rejected.
+What the fixture `create_valid_customer` already does:
+    - Sends POST /customers
+    - Validates HTTP status code (201)
+    - Validates response structure using Pydantic
+    - Registers created customers for cleanup
+
+Test flow:
+    1. Create N customers using bulk utility
+    2. Verify each customers exists via API
+    3. Verify API data matches database record
+
+NOTE:
+    This test is marked as CONTRACT because schema validation
+    is performed implicitly via the create_valid_customer fixture
+    (Pydantic validation layer).
 "
-"passed","Thu May 07 19:51:02 UTC 2026","Thu May 07 19:51:02 UTC 2026","59","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-2e77790f65d0269dab53113cabd67b2a1630d6ca-Consumer key is invalid.-put-True-True-customers]","
+"passed","Fri May 08 16:32:02 UTC 2026","Fri May 08 16:32:03 UTC 2026","62","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[96e6c86f7e1e9ce4071ed19f01c9dfda3cc17a13-cs_invalid_secret_456-Invalid signature - provided signature does not match.-put-True-True-coupons]","
 Ensure invalid OAuth credentials are rejected by all API endpoints.
 
 Design principle
@@ -1105,18 +1179,86 @@ Validation layers
 2. Schema validation    → error response structure
 3. Business validation  → error code + message
 "
-"passed","Thu May 07 19:50:57 UTC 2026","Thu May 07 19:50:57 UTC 2026","67","tests.customers.api","test_get_customer","","","","test_get_customer_not_found","
-Negative test for retrieving a non-existing customers.
+"passed","Fri May 08 16:32:02 UTC 2026","Fri May 08 16:32:02 UTC 2026","62","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[96e6c86f7e1e9ce4071ed19f01c9dfda3cc17a13-cs_invalid_secret_456-Invalid signature - provided signature does not match.-get-False-False-customers]","
+Ensure invalid OAuth credentials are rejected by all API endpoints.
 
-Endpoint tested:
-    GET /customers/{id}
+Design principle
+----------------
+We create an isolated APIClient with invalid credentials instead of
+mutating the shared pytest api_client fixture.
+
+This prevents authentication state leaking across tests.
+
+Validation layers
+-----------------
+1. Transport validation → HTTP 401
+2. Schema validation    → error response structure
+3. Business validation  → error code + message
+"
+"passed","Fri May 08 16:31:57 UTC 2026","Fri May 08 16:31:57 UTC 2026","257","tests.customers.api","test_update_customer","","","","test_update_customer_invalid_inputs[invalid-email-no-at]","
+Verify that invalid customers updates are rejected by the API.
+
+This test ensures that:
+
+• Invalid update payloads return the correct error response
+• Error responses follow the expected schema
+• The original customers record in the database remains unchanged
 
 Test flow:
-    1. Request non-existing customers ID
-    2. Validate API returns correct error response
-    3. Validate error schema
+    1. Create a valid customers
+    2. Attempt to update the customers with an invalid payload
+    3. Validate the returned error structure
+    4. Confirm the database record was not modified
 "
-"passed","Thu May 07 19:50:57 UTC 2026","Thu May 07 19:50:57 UTC 2026","374","tests.customers.api","test_get_customer","","","","test_get_customer_by_email","
+"passed","Fri May 08 16:32:01 UTC 2026","Fri May 08 16:32:01 UTC 2026","78","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-bd6761cd1e68fc623a5ef7a45a1439cbc11825d3-Consumer key is invalid.-post-False-True-products]","
+Ensure invalid OAuth credentials are rejected by all API endpoints.
+
+Design principle
+----------------
+We create an isolated APIClient with invalid credentials instead of
+mutating the shared pytest api_client fixture.
+
+This prevents authentication state leaking across tests.
+
+Validation layers
+-----------------
+1. Transport validation → HTTP 401
+2. Schema validation    → error response structure
+3. Business validation  → error code + message
+"
+"passed","Fri May 08 16:32:01 UTC 2026","Fri May 08 16:32:01 UTC 2026","66","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-bd6761cd1e68fc623a5ef7a45a1439cbc11825d3-Consumer key is invalid.-get-False-False-products]","
+Ensure invalid OAuth credentials are rejected by all API endpoints.
+
+Design principle
+----------------
+We create an isolated APIClient with invalid credentials instead of
+mutating the shared pytest api_client fixture.
+
+This prevents authentication state leaking across tests.
+
+Validation layers
+-----------------
+1. Transport validation → HTTP 401
+2. Schema validation    → error response structure
+3. Business validation  → error code + message
+"
+"passed","Fri May 08 16:32:01 UTC 2026","Fri May 08 16:32:01 UTC 2026","61","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-bd6761cd1e68fc623a5ef7a45a1439cbc11825d3-Consumer key is invalid.-get-False-False-coupons]","
+Ensure invalid OAuth credentials are rejected by all API endpoints.
+
+Design principle
+----------------
+We create an isolated APIClient with invalid credentials instead of
+mutating the shared pytest api_client fixture.
+
+This prevents authentication state leaking across tests.
+
+Validation layers
+-----------------
+1. Transport validation → HTTP 401
+2. Schema validation    → error response structure
+3. Business validation  → error code + message
+"
+"passed","Fri May 08 16:31:56 UTC 2026","Fri May 08 16:31:56 UTC 2026","397","tests.customers.api","test_get_customer","","","","test_get_customer_by_email","
 Verify that a customers can be retrieved using the email filter.
 
 Endpoint tested:
@@ -1134,7 +1276,7 @@ Test flow:
     4. Verify returned customers identity
     5. Verify API data matches database
 "
-"passed","Thu May 07 19:51:02 UTC 2026","Thu May 07 19:51:02 UTC 2026","59","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-2e77790f65d0269dab53113cabd67b2a1630d6ca-Consumer key is invalid.-delete-True-False-orders]","
+"passed","Fri May 08 16:32:00 UTC 2026","Fri May 08 16:32:00 UTC 2026","65","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-put-True-True-customers]","
 Ensure invalid OAuth credentials are rejected by all API endpoints.
 
 Design principle
@@ -1150,149 +1292,7 @@ Validation layers
 2. Schema validation    → error response structure
 3. Business validation  → error code + message
 "
-"passed","Thu May 07 19:51:02 UTC 2026","Thu May 07 19:51:02 UTC 2026","59","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[91ef92867fe6e5f99cff251173288268c70447ee-cs_invalid_secret_456-Invalid signature - provided signature does not match.-get-False-False-coupons]","
-Ensure invalid OAuth credentials are rejected by all API endpoints.
-
-Design principle
-----------------
-We create an isolated APIClient with invalid credentials instead of
-mutating the shared pytest api_client fixture.
-
-This prevents authentication state leaking across tests.
-
-Validation layers
------------------
-1. Transport validation → HTTP 401
-2. Schema validation    → error response structure
-3. Business validation  → error code + message
-"
-"passed","Thu May 07 19:51:01 UTC 2026","Thu May 07 19:51:01 UTC 2026","63","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-put-True-True-orders]","
-Ensure invalid OAuth credentials are rejected by all API endpoints.
-
-Design principle
-----------------
-We create an isolated APIClient with invalid credentials instead of
-mutating the shared pytest api_client fixture.
-
-This prevents authentication state leaking across tests.
-
-Validation layers
------------------
-1. Transport validation → HTTP 401
-2. Schema validation    → error response structure
-3. Business validation  → error code + message
-"
-"passed","Thu May 07 19:50:52 UTC 2026","Thu May 07 19:50:52 UTC 2026","325","tests.customers.api","test_customer_deletion","","","","test_deleted_customer_not_in_created_after_filter[1]","
-Verify that a deleted customers does not appear in filtered
-GET /customers results.
-
-Endpoint tested:
-    GET /customers?created_after=&created_before=
-
-Test flow:
-    1. Create a customers
-    2. Delete the customers
-    3. Query customers using a time window that includes the creation time
-    4. Ensure the deleted customers is NOT returned
-
-Parameterized with different minute offsets to test consistency across varied filtering windows.
-
-        TIME WINDOW
-    ┌─────────────────┐
-    │                 │
-   09:59   10:00   10:02
-            ↑
-       customers created
-"
-"passed","Thu May 07 19:51:01 UTC 2026","Thu May 07 19:51:01 UTC 2026","60","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-put-True-True-products]","
-Ensure invalid OAuth credentials are rejected by all API endpoints.
-
-Design principle
-----------------
-We create an isolated APIClient with invalid credentials instead of
-mutating the shared pytest api_client fixture.
-
-This prevents authentication state leaking across tests.
-
-Validation layers
------------------
-1. Transport validation → HTTP 401
-2. Schema validation    → error response structure
-3. Business validation  → error code + message
-"
-"passed","Thu May 07 19:51:00 UTC 2026","Thu May 07 19:51:00 UTC 2026","63","tests.shared.preflight","test_api_connectivity","","","","test_api_endpoint_available[products]","
-Preflight API availability check.
-
-Fail fast if API is broken
-
-Ensures core API endpoints respond correctly before
-running the full test suite.
-"
-"passed","Thu May 07 19:51:00 UTC 2026","Thu May 07 19:51:00 UTC 2026","0","tests.shared.preflight","test_logging_globals","","","","test_attach_global_metadata_contains_expected_keys",""
-"passed","Thu May 07 19:51:03 UTC 2026","Thu May 07 19:51:03 UTC 2026","63","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[91ef92867fe6e5f99cff251173288268c70447ee-cs_invalid_secret_456-Invalid signature - provided signature does not match.-put-True-True-customers]","
-Ensure invalid OAuth credentials are rejected by all API endpoints.
-
-Design principle
-----------------
-We create an isolated APIClient with invalid credentials instead of
-mutating the shared pytest api_client fixture.
-
-This prevents authentication state leaking across tests.
-
-Validation layers
------------------
-1. Transport validation → HTTP 401
-2. Schema validation    → error response structure
-3. Business validation  → error code + message
-"
-"passed","Thu May 07 19:51:01 UTC 2026","Thu May 07 19:51:01 UTC 2026","59","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-cs_fake_secret_xyz-Consumer key is invalid.-post-False-True-orders]","
-Ensure invalid OAuth credentials are rejected by all API endpoints.
-
-Design principle
-----------------
-We create an isolated APIClient with invalid credentials instead of
-mutating the shared pytest api_client fixture.
-
-This prevents authentication state leaking across tests.
-
-Validation layers
------------------
-1. Transport validation → HTTP 401
-2. Schema validation    → error response structure
-3. Business validation  → error code + message
-"
-"passed","Thu May 07 19:51:01 UTC 2026","Thu May 07 19:51:01 UTC 2026","62","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-2e77790f65d0269dab53113cabd67b2a1630d6ca-Consumer key is invalid.-get-False-False-orders]","
-Ensure invalid OAuth credentials are rejected by all API endpoints.
-
-Design principle
-----------------
-We create an isolated APIClient with invalid credentials instead of
-mutating the shared pytest api_client fixture.
-
-This prevents authentication state leaking across tests.
-
-Validation layers
------------------
-1. Transport validation → HTTP 401
-2. Schema validation    → error response structure
-3. Business validation  → error code + message
-"
-"passed","Thu May 07 19:50:58 UTC 2026","Thu May 07 19:50:59 UTC 2026","263","tests.customers.api","test_update_customer","","","","test_update_customer_invalid_inputs[invalid-email-missing-local]","
-Verify that invalid customers updates are rejected by the API.
-
-This test ensures that:
-
-• Invalid update payloads return the correct error response
-• Error responses follow the expected schema
-• The original customers record in the database remains unchanged
-
-Test flow:
-    1. Create a valid customers
-    2. Attempt to update the customers with an invalid payload
-    3. Validate the returned error structure
-    4. Confirm the database record was not modified
-"
-"passed","Thu May 07 19:51:01 UTC 2026","Thu May 07 19:51:01 UTC 2026","62","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-2e77790f65d0269dab53113cabd67b2a1630d6ca-Consumer key is invalid.-get-False-False-coupons]","
+"passed","Fri May 08 16:32:02 UTC 2026","Fri May 08 16:32:02 UTC 2026","60","tests.shared.security","test_authentication_matrix","","","","test_authentication_rejects_invalid_credentials[ck_invalid_key_123-bd6761cd1e68fc623a5ef7a45a1439cbc11825d3-Consumer key is invalid.-delete-True-False-products]","
 Ensure invalid OAuth credentials are rejected by all API endpoints.
 
 Design principle

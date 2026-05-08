@@ -1,0 +1,9 @@
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ PUT /wp-json/wc/v3/products/999999 → Status code: 401 (completed in 0.060s)
+DEBUG    EcommerceAPI.src.clients.api_client:api_client.py:580 {
+                                                                 "code": "woocommerce_rest_authentication_error",
+                                                                 "message": "Invalid signature - provided signature does not match.",
+                                                                 "data": {
+                                                                   "status": 401
+                                                                 }
+                                                               }
+INFO     tests.shared.security.test_authentication_matrix:test_authentication_matrix.py:224 PUT products/999999 → invalid key=96e6c86f7e1e9ce4071ed19f01c9dfda3cc17a13
