@@ -1,0 +1,155 @@
+name: Performance Tests ⏱️
+
+on:
+  schedule:
+    - cron: "0 4 * * 0"  # Sunday 4 AM
+
+  workflow_dispatch:
+
+jobs:
+  performance:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install project
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e "./EcommerceAPI[dev]"
+
+      - name: Start Docker stack
+        run: |
+          docker compose -f docker-compose.wp.yml up -d
+
+      - name: Wait for MySQL
+        run: |
+          until nc -z 127.0.0.1 3306; do
+            echo "Waiting for MySQL..."
+            sleep 3
+          done
+
+      - name: Bootstrap WooCommerce
+        run: bash scripts/setup.sh
+
+      - name: Configure DB connection
+        run: |
+          echo "DB_USER=wp" >> $GITHUB_ENV
+          echo "DB_PASSWORD=wp" >> $GITHUB_ENV
+          echo "DB_HOST=127.0.0.1" >> $GITHUB_ENV
+          echo "DB_PORT=3306" >> $GITHUB_ENV
+          echo "DB_DATABASE=wordpress" >> $GITHUB_ENV
+
+      - name: Configure CI environment
+        run: |
+          echo "AUTO_ALLURE_REPORT=false" >> $GITHUB_ENV
+          echo "ENABLE_STRUCTURED_LOGS=true" >> $GITHUB_ENV
+          echo "SESSION_ID=${{ github.run_id }}" >> $GITHUB_ENV
+          echo "API_ENV=ci" >> $GITHUB_ENV
+          echo "PERF_ITERATIONS=5" >> $GITHUB_ENV
+
+      - name: Run performance tests
+        run: |
+          pytest \
+            -m "performance" \
+            -ra \
+            --durations=20 \
+            --clean-alluredir \
+            --alluredir=reports/allure-results
+
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results
+          path: reports/allure-results
+
+      - name: Upload structured logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: structured-logs
+          path: reports/logs/**
+
+  report:
+    if: always()
+    needs: performance
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Allure results
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-results
+          path: reports/allure-results
+
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages
+          fetch-depth: 0
+
+      - name: Restore Allure history
+        run: |
+          mkdir -p reports/allure-results/history
+          if [ -d "gh-pages/history" ]; then
+            cp -r gh-pages/history/. reports/allure-results/history/
+            echo "✅ Allure history restored"
+          else
+            echo "ℹ️ No previous Allure history found"
+          fi
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install Allure
+        run: |
+          curl -L -o allure.zip https://github.com/allure-framework/allure2/releases/download/2.29.0/allure-2.29.0.zip
+          unzip -q allure.zip
+          echo "$PWD/allure-2.29.0/bin" >> $GITHUB_PATH
+
+      - name: Generate Allure report
+        run: |
+          allure generate reports/allure-results -o reports/allure-report --clean
+
+      - name: Upload Allure Report Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: reports/allure-report
+
+      - name: Deploy to GitHub Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: reports/allure-report
+          publish_branch: gh-pages
+          keep_files: true
+          destination_dir: performance
+
+      - name: Print Allure URL
+        run: |
+          echo "====================================="
+          echo "📊 Performance Allure Report:"
+          echo "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/performance"
+          echo "====================================="

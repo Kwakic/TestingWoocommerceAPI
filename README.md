@@ -33,6 +33,47 @@ make run
 👉 That’s it. No manual setup required.
 
 ---
+## 🔄 CI/CD Workflow Architecture
+
+Your project is evolving toward **segmented pipelines**. Currently:
+
+### Current State (Monolithic)
+- ✅ Single `ci.yml` runs preflight + smoke + contract
+- ⚠️ All results in one Allure report
+
+### Recommended Evolution (Segmented)
+
+| Workflow | Trigger | Runtime | Allure | Purpose |
+|----------|---------|---------|--------|---------|
+| **preflight.yml** | PR | 1–3 min | ❌ | Framework health check |
+| **smoke.yml** | push | 3–10 min | ✅ | Business flow validation |
+| **regression.yml** | nightly | long | ✅ | Full coverage + trends |
+| **performance.yml** | nightly | long | ✅ | Latency tracking |
+| **security.yml** | nightly | medium | ⚠️ | Auth/permission validation |
+
+👉 See [CI/CD Architecture Guide](./docs/README_CI_ALLURE_GUIDE.md) for detailed rationale.
+
+---
+
+## 📊 CI/CD & Reporting
+
+The project uses:
+- **GitHub Actions** for automated testing
+- **Allure Reports** for test dashboards
+- **GitHub Pages** for report hosting
+
+View live Allure reports: [kwakic.github.io/TestingWoocommerceAPI](https://kwakic.github.io/TestingWoocommerceAPI)
+
+### Workflows
+
+| Workflow | Purpose | Trigger |
+|----------|---------|---------|
+| `ci.yml` | Run full test suite + generate Allure | Push to main |
+
+
+📚 **Deep Dive:** See [CI/CD & Allure Reporting Guide](./docs/README_CI_ALLURE_GUIDE.md)
+for enterprise architecture decisions, workflow configuration, and troubleshooting.
+---
 
 # 🧠 What Happens Behind the Scenes
 
@@ -257,20 +298,45 @@ API keys already exist — skipping
 
 ---
 
-# 🛠️ Future Improvements
+## 🗂️ Test Suite Organization
 
-* GitHub Actions CI pipeline
-* Allure report publishing
-* Multi-environment support
-* Performance testing extensions
+- **Microservice-aligned:** Each service (customers, orders, etc.) has its own test folder
+- [Customers Test Suite](./tests/customers/README.md) — detailed architecture & checklist
 
 ---
 
-# 👤 Author
+# ✅ Current Capabilities
+- ✔️ GitHub Actions CI pipeline (see ci.yml)
+- ✔️ Allure report publishing (https://kwakic.github.io/TestingWoocommerceAPI)
+- ✔️ Docker-based test execution
+- ✔️ API + Database validation
 
-Martin Svach
+---
 
-QA Engineer / Test Automation Engineer
+# 🛠️ Future Enhancements
+- Multi-environment support (staging/prod)
+- Performance baselines & trend analysis
+- Load testing extensions
+
+---
+## 🔗 Quick Links
+
+| Resource | Link |
+|----------|------|
+| 📋 Allure Reports | [Live Dashboard](https://kwakic.github.io/TestingWoocommerceAPI) |
+| 🔧 CI Workflows | [GitHub Actions](https://github.com/Kwakic/TestingWoocommerceAPI/actions) |
+| 📖 API Docs | [Customers Tests](./tests/customers/README.md) |
+| ⚙️ Config Guide | [Environment Setup](./docs/ENVIRONMENT_CONFIG_GUIDE.md) |
+| 🚀 CI Architecture | [Enterprise Decisions](./docs/README_CI_ALLURE_GUIDE.md) |
+
+---
+
+## 👤 Author
+
+**Martin Svach** — QA/Test Automation Engineer
+GitHub: [@Kwakic](https://github.com/Kwakic)
+
+Questions? Open an [issue](https://github.com/Kwakic/TestingWoocommerceAPI/issues)
 
 ---
 

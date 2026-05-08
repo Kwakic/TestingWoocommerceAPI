@@ -1,0 +1,35 @@
+name: Preflight Checks ⚡
+
+on:
+  # Run on pull requests (any branch)
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install project
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e "./EcommerceAPI[dev]"
+
+      - name: Run preflight suite
+        run: |
+          pytest \
+            -m "preflight" \
+            -ra \
+            --maxfail=1 \
+            -v

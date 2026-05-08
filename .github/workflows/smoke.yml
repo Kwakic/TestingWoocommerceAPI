@@ -12,7 +12,7 @@
 #mark pipeline failed at END
 # --------------------------------------------------
 
-name: CI — Docker + Pytest + Allure
+name: Smoke Tests — Docker + Pytest + Allure
 
 # --------------------------------------------------
 # 🔁 Triggers
@@ -21,9 +21,6 @@ on:
   # Run on every push to main branch
   push:
     branches: [ main ]
-
-  # Run on pull requests (any branch)
-  pull_request:
 
   # Allow manual execution from GitHub UI
   workflow_dispatch:
@@ -54,6 +51,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.13"
+          cache: pip
 
       # --------------------------------------------------
       # 3. Install project dependencies
@@ -127,11 +125,11 @@ jobs:
       - name: Run pytest
         run: |
           pytest \
-            -m "preflight or smoke or sanity or contract" \
+            -m "smoke" \
             -ra \
             --durations=10 \
             --maxfail=3 \
-            --clean-alluredir \
+            --clean-alluredir \  # ← Clean previous results
             --junitxml=reports/junit/results.xml \
             --alluredir=reports/allure-results
 
@@ -198,9 +196,9 @@ jobs:
       # --------------------------------------------------
       - name: Restore Allure history
         run: |
+          mkdir -p reports/allure-results/history
           if [ -d "gh-pages/history" ]; then
-            mkdir -p reports/allure-results/history
-            cp -r gh-pages/history/. reports/allure-results/history/
+            cp -r gh-pages/history/* reports/allure-results/history/
             echo "✅ Allure history restored"
           else
             echo "ℹ️ No previous Allure history found"

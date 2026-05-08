@@ -10,7 +10,6 @@ Artifacts:
 - allure-results ✅
 - allure-report  ✅
 ```
-👉 You’re just missing the last mile
 
 ---
 
