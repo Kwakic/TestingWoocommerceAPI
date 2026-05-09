@@ -1,10 +1,13 @@
-![Python](https://img.shields.io/badge/python-3.13-blue)
-![Pytest](https://img.shields.io/badge/tests-pytest-green)
-![Docker](https://img.shields.io/badge/docker-ready-blue)
 
-[![CI](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/python-3.13-blue?logo=python)
+![Pytest](https://img.shields.io/badge/tested%20with-pytest-0A9EDC?logo=pytest)
+![Docker](https://img.shields.io/badge/docker-ready-2496ED?logo=docker)
 
-[![Allure](https://img.shields.io/badge/Allure-Results-success)](https://kwakic.github.io/TestingWoocommerceAPI)
+[![Smoke Tests](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/smoke.yml/badge.svg)](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/smoke.yml)
+
+[![Contract Tests](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/contract.yml/badge.svg)](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/contract.yml)
+
+[![Allure Report](https://img.shields.io/badge/Allure-Report-blue)](https://kwakic.github.io/TestingWoocommerceAPI)
 
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
