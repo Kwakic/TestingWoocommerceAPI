@@ -38,8 +38,18 @@ jobs:
             sleep 3
           done
 
-      - name: Bootstrap WooCommerce
-        run: bash scripts/setup.sh
+      - name: Bootstrap WooCommerce and capture credentials
+        run: |
+          set -e
+          OUTPUT=$(bash scripts/setup.sh)
+
+          echo "$OUTPUT"
+
+          WC_KEY=$(echo "$OUTPUT" | grep "CONSUMER KEY" | awk '{print $3}')
+          WC_SECRET=$(echo "$OUTPUT" | grep "CONSUMER SECRET" | awk '{print $3}')
+
+          echo "WC_KEY=$WC_KEY" >> $GITHUB_ENV
+          echo "WC_SECRET=$WC_SECRET" >> $GITHUB_ENV
 
       - name: Configure DB connection
         run: |
@@ -48,6 +58,7 @@ jobs:
           echo "DB_HOST=127.0.0.1" >> $GITHUB_ENV
           echo "DB_PORT=3306" >> $GITHUB_ENV
           echo "DB_DATABASE=wordpress" >> $GITHUB_ENV
+          echo "DB_TABLE_PREFIX=wp_" >> $GITHUB_ENV
 
       - name: Configure CI environment
         run: |
@@ -60,7 +71,14 @@ jobs:
           pytest \
             -m "security" \
             -ra \
+            --durations=10 \
+            --clean-alluredir \
+            --junitxml=reports/junit/results.xml \
             --alluredir=reports/allure-results
+
+      # --------------------------------------------------
+      # Upload Allure raw results
+      # --------------------------------------------------
 
       - name: Upload Allure results (private artifact)
         if: always()
@@ -69,9 +87,23 @@ jobs:
           name: security-allure-results
           path: reports/allure-results
 
+      # --------------------------------------------------
+      # Upload structured logs
+      # --------------------------------------------------
       - name: Upload structured logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: security-logs
+          name: security-structured-logs
           path: reports/logs/**
+
+      # --------------------------------------------------
+      # Upload JUnit XML results
+      # --------------------------------------------------
+      - name: Upload JUnit XML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-junit-results
+          path: reports/junit/results.xml
+          if-no-files-found: warn

@@ -74,10 +74,16 @@ jobs:
       - name: Run contract tests
         run: |
           pytest \
-            -m "contract" \
-            -ra \
-            --alluredir=reports/allure-results
+          -m "contract" \
+          -ra \
+          --durations=10 \
+          --clean-alluredir \
+          --junitxml=reports/junit/results.xml \
+          --alluredir=reports/allure-results
 
+      # --------------------------------------------------
+      # Upload Allure raw results
+      # --------------------------------------------------
       - name: Upload Allure results
         if: always()
         uses: actions/upload-artifact@v4
@@ -85,9 +91,23 @@ jobs:
           name: contract-allure-results
           path: reports/allure-results
 
+      # --------------------------------------------------
+      # Upload structured logs
+      # --------------------------------------------------
       - name: Upload structured logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: contract-logs
+          name: contract-structured-logs
           path: reports/logs/**
+
+      # --------------------------------------------------
+      # Upload JUnit XML results
+      # --------------------------------------------------
+      - name: Upload JUnit XML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: contract-junit-results
+          path: reports/junit/results.xml
+          if-no-files-found: warn

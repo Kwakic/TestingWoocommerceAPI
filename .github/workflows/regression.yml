@@ -1,5 +1,5 @@
 
-name: Regression Tests
+name: Regression Tests 🔬
 
 on:
   schedule:
@@ -123,7 +123,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: allure-results
+          name: regression-allure-results
           path: reports/allure-results
           if-no-files-found: warn
 
@@ -142,7 +142,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: structured-logs
+          name: regression-structured-logs
           path: reports/logs/**
           if-no-files-found: warn
 
@@ -241,12 +241,23 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: allure-report
+          name: regression-allure-report
           path: reports/allure-report
           if-no-files-found: warn
 
       # --------------------------------------------------
-      # 9. Deploy to GitHub Pages
+      # 9. Upload JUnit XML results
+      # --------------------------------------------------
+      - name: Upload JUnit XML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-junit-results
+          path: reports/junit/results.xml
+          if-no-files-found: warn
+
+      # --------------------------------------------------
+      # 10. Deploy to GitHub Pages
       # --------------------------------------------------
       - name: Deploy to GitHub Pages
         if: always()
@@ -259,7 +270,7 @@ jobs:
           destination_dir: regression
 
       # --------------------------------------------------
-      # 10. Print Allure URL
+      # 11. Print Allure URL
       # --------------------------------------------------
       - name: Print Allure URL
         run: |

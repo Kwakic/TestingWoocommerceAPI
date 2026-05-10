@@ -5,11 +5,29 @@
 
 [![Smoke Tests](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/smoke.yml/badge.svg)](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/smoke.yml)
 
+[![Regression Tests](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/regression.yml/badge.svg)](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/regression.yml)
+
+[![Performance Tests](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/performance.yml/badge.svg)](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/performance.yml)
+
 [![Contract Tests](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/contract.yml/badge.svg)](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/contract.yml)
 
-[![Allure Report](https://img.shields.io/badge/Allure-Report-blue)](https://kwakic.github.io/TestingWoocommerceAPI)
+[![Security Tests](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/security.yml/badge.svg)](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/security.yml)
+
+[![Preflight Checks](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/preflight.yml/badge.svg)](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/preflight.yml)
 
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
+
+---
+
+## 📊 Live Allure Dashboards
+
+| Dashboard | URL |
+|---|---|
+| 🔥 Smoke Report | https://kwakic.github.io/TestingWoocommerceAPI |
+| 🔬 Regression Report | https://kwakic.github.io/TestingWoocommerceAPI/regression |
+| ⏱️ Performance Report | https://kwakic.github.io/TestingWoocommerceAPI/performance |
+
+> Contract, Security, and Preflight workflows generate private CI artifacts only (not public dashboards).
 
 # 🧪 TestEcommerceAPI
 

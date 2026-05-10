@@ -1,18 +1,5 @@
 
-# The flow for failed test is:
-
-# tests fail
-#↓
-#collect diagnostics
-#↓
-#generate reports
-#↓
-#publish reports
-#↓
-#mark pipeline failed at END
-# --------------------------------------------------
-
-name: Smoke Tests — Docker + Pytest + Allure
+name: Smoke Tests — Docker + Pytest + Allure 🔥
 
 # --------------------------------------------------
 # 🔁 Triggers
@@ -140,7 +127,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: allure-results
+          name: smoke-allure-results
           path: reports/allure-results
 
       # --------------------------------------------------
@@ -150,7 +137,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: structured-logs
+          name: smoke-structured-logs
           path: reports/logs/**
 
 
@@ -236,11 +223,22 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: allure-report
+          name: smoke-allure-report
           path: reports/allure-report
 
       # --------------------------------------------------
-      # 9. Deploy report to GitHub Pages
+      # 9. Upload JUnit XML results
+      # --------------------------------------------------
+      - name: Upload JUnit XML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-junit-results
+          path: reports/junit/results.xml
+          if-no-files-found: warn
+
+      # --------------------------------------------------
+      # 10. Deploy report to GitHub Pages
       # --------------------------------------------------
       - name: Deploy to GitHub Pages
         if: always()
@@ -252,7 +250,7 @@ jobs:
           keep_files: true
 
       # --------------------------------------------------
-      # 10. Print report URL (clickable in logs)
+      # 11. Print report URL (clickable in logs)
       # --------------------------------------------------
       - name: Print Allure URL
         run: |

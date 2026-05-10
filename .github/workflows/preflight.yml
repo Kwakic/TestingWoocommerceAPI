@@ -2,8 +2,8 @@ name: Preflight Checks ⚡
 
 on:
   # Run on pull requests (any branch)
-  pull_request:
-  workflow_dispatch:
+  pull_request:  # Every PR
+  workflow_dispatch:  # Allow manual execution from GitHub UI
 
 jobs:
   preflight:
@@ -31,5 +31,42 @@ jobs:
           pytest \
             -m "preflight" \
             -ra \
+            -v \
             --maxfail=1 \
-            -v
+            --durations=5 \
+            --clean-alluredir \
+            --junitxml=reports/junit/results.xml \
+            --alluredir=reports/allure-results
+
+      # --------------------------------------------------
+      # Upload Allure raw results
+      # --------------------------------------------------
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: preflight-allure-results
+          path: reports/allure-results
+          if-no-files-found: warn
+
+      # --------------------------------------------------
+      # Upload JUnit XML
+      # --------------------------------------------------
+      - name: Upload JUnit XML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: preflight-junit-results
+          path: reports/junit/results.xml
+          if-no-files-found: warn
+
+      # --------------------------------------------------
+      # Upload structured logs
+      # --------------------------------------------------
+      - name: Upload structured logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: preflight-structured-logs
+          path: reports/logs/**
+          if-no-files-found: warn

@@ -31,7 +31,7 @@ Your pipelines should answer **one specific question each**:
 
 ### Why Segmentation Matters
 
-Enterprise companies split pipelines by intent because:
+Splitting pipelines by intent because:
 
 - **⚡ Faster feedback** — Developers get PR results in 1–3 min, not 20+ min
 - **📊 Cleaner dashboards** — Each workflow has its own Allure + GitHub Pages view
@@ -43,6 +43,8 @@ Enterprise companies split pipelines by intent because:
 ---
 
 # 2. Recommended Workflow Architecture
+
+---
 
 ## 2.1 preflight.yml ⚡
 
@@ -60,7 +62,15 @@ Ultra-fast validation before expensive infrastructure tests.
 
 ### Pytest Command
 ```bash
-pytest -m "preflight" -ra --maxfail=1
+ pytest \
+   -m "preflight" \
+   -ra \
+   -v \
+   --maxfail=1 \
+   --durations=5 \
+   --clean-alluredir \
+   --junitxml=reports/junit/results.xml \
+   --alluredir=reports/allure-results
 ```
 
 ### Triggers
@@ -76,11 +86,21 @@ on:
 ### GitHub Pages?
 ❌ **NO** — Skip report generation entirely
 
+### Artifacts produced during runtime?
+✅ **YES**
+* `preflight-allure-results/` — Diagnostic raw data
+* `preflight-structured-logs/` — Structured logs for troubleshooting
+* `preflight-junit-results/` — A structured text file (XML) listing all tests and their results
+
 ### Key CI Variables
 ```yaml
 # Minimal setup — no Docker needed
 cache: pip  # Critical for speed
 ```
+
+### Report Structure
+- **Dashboard location:** `https://username.github.io/repo/`
+- **Badge:** Shows last smoke run status
 
 ### Why This Configuration?
 - **PR-only trigger** ensures developers get instant feedback
@@ -112,6 +132,7 @@ pytest \
   --durations=10 \
   --maxfail=3 \
   --clean-alluredir \
+  --junitxml=reports/junit/results.xml \
   --alluredir=reports/allure-results
 ```
 
@@ -128,6 +149,14 @@ on:
 
 ### GitHub Pages?
 ✅ **YES** — Powers `README.md` badge
+
+### Artifacts produced during runtime?
+✅ **YES**
+* `smoke-allure-reports/` — Interactive HTML dashboard
+* `smoke-allure-results/` — Diagnostic raw data
+* `smoke-structured-logs/` — Structured logs for troubleshooting
+* `smoke-junit-results/` — A structured text file (XML) listing all tests and their results
+
 
 ### Key CI Variables
 ```yaml
@@ -168,9 +197,12 @@ Validate API contracts and response schemas before regression runs.
 ### Pytest Command
 ```bash
 pytest \
-  -m "contract" \
-  -ra \
-  --alluredir=reports/allure-results
+ -m "contract" \
+ -ra \
+ --durations=10 \
+ --clean-alluredir \
+ --junitxml=reports/junit/results.xml \
+ --alluredir=reports/allure-results
 ```
 
 ### Triggers
@@ -187,6 +219,12 @@ on:
 ### GitHub Pages?
 ❌ **NO** — Not for public dashboard
 
+### Artifacts produced during runtime?
+✅ **YES**
+* `contract-allure-results/` — Diagnostic raw data
+* `contract-structured-logs/` — Structured logs for troubleshooting
+* `contract-junit-results/` — A structured text file (XML) listing all tests and their results
+
 ### Key CI Variables
 ```yaml
 ENABLE_STRUCTURED_LOGS=true
@@ -194,9 +232,9 @@ API_ENV=ci
 SESSION_ID=${{ github.run_id }}
 ```
 
-### Artifact Uploads
-- `contract-allure-results/` — Diagnostic data
-- `contract-logs/` — Structured logs for troubleshooting
+### Report Structure
+- **Dashboard location:** `https://username.github.io/repo/`
+- **Badge:** Shows last smoke run status
 
 ### Why This Configuration?
 - **Push trigger** catches schema changes early
@@ -231,6 +269,7 @@ pytest \
   -ra \
   --durations=20 \
   --clean-alluredir \
+  --junitxml=reports/junit/results.xml \
   --alluredir=reports/allure-results
 ```
 
@@ -248,6 +287,14 @@ on:
 ### GitHub Pages?
 ✅ **YES** — Separate from smoke at `/regression`
 
+### Artifacts produced during runtime?
+✅ **YES**
+* `regression-allure-reports/` — Interactive HTML dashboard
+* `regression-allure-results/` — Diagnostic raw data
+* `regression-structured-logs/` — Structured logs for troubleshooting
+* `regression-junit-results/` — A structured text file (XML) listing all tests and their results
+
+
 ### Key CI Variables
 ```yaml
 ENABLE_STRUCTURED_LOGS=true
@@ -259,6 +306,8 @@ API_ENV=ci
 - **Dashboard location:** `https://username.github.io/repo/regression`
 - **History:** Full trend analysis enabled
 - **Separate from smoke** to maintain distinct trend graphs
+- **Badge:** Shows last smoke run status
+
 
 ### Why This Configuration?
 - **Nightly schedule** keeps costs low while maintaining coverage
@@ -289,6 +338,7 @@ pytest \
   -ra \
   --durations=20 \
   --clean-alluredir \
+  --junitxml=reports/junit/results.xml \
   --alluredir=reports/allure-results
 ```
 
@@ -314,10 +364,19 @@ on:
 ### GitHub Pages?
 ✅ **YES** — Separate dashboard at `/performance`
 
+### Artifacts produced during runtime?
+✅ **YES**
+* `performance-allure-reports/` — Interactive HTML dashboard
+* `performance-allure-results/` — Diagnostic raw data
+* `performance-structured-logs/` — Structured logs for troubleshooting
+* `performance-junit-results/` — A structured text file (XML) listing all tests and their results
+
+
 ### Report Structure
 - **Dashboard location:** `https://username.github.io/repo/performance`
 - **Metrics tracked:** Response times, durations, outliers
 - **History enabled** for SLA trending
+- **Badge:** Shows last smoke run status
 
 ### Why This Configuration?
 - **Weekly schedule** (Sunday) reduces costs while catching degradation
@@ -347,6 +406,9 @@ Validate authorization & authentication boundaries. Internal audit only (no publ
 pytest \
   -m "security" \
   -ra \
+  --durations=10 \
+  --clean-alluredir \
+  --junitxml=reports/junit/results.xml \
   --alluredir=reports/allure-results
 ```
 
@@ -364,16 +426,24 @@ on:
 ### GitHub Pages?
 ❌ **NO** — Security data stays internal
 
+### Artifacts produced during runtime?
+✅ **YES**
+* `regression-allure-reports/` — Interactive HTML dashboard
+* `regression-allure-results/` — Diagnostic raw data
+* `regression-structured-logs/` — Structured logs for troubleshooting
+* `regression-junit-results/` — A structured text file (XML) listing all tests and their results
+
+
 ### Key CI Variables
 ```yaml
 ENABLE_STRUCTURED_LOGS=true
 SESSION_ID=${{ github.run_id }}
 API_ENV=ci
 ```
-
-### Artifact Uploads
-- `security-allure-results/` — Private diagnostic data
-- `security-logs/` — Request/response logs (internal audit trail)
+### Report Structure
+- **Dashboard location:** `https://username.github.io/repo/`
+- **History:** Tracks run-to-run pass/fail trends
+- **Badge:** Shows last smoke run status
 
 ### Why This Configuration?
 - **No public dashboard** prevents exposure of security test details
@@ -942,5 +1012,5 @@ Your framework is implementing enterprise-grade concepts:
 
 ---
 
-**Last updated:** 2026-05-08  
+**Last updated:** 2026-05-08
 **Guide version:** 1.2 (Enterprise-grade CI/CD & Allure best practices)
