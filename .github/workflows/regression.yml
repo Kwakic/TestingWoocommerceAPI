@@ -4,6 +4,8 @@ name: Regression Tests 🔬
 on:
   schedule:
     - cron: "0 2 * * *"  # 2 AM daily
+  push:
+    branches: [ main ]
 
   workflow_dispatch:
 
@@ -143,7 +145,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: regression-structured-logs
-          path: reports/logs/**
+          path: reports/logs
           if-no-files-found: warn
 
   # ==================================================
@@ -172,7 +174,7 @@ jobs:
         continue-on-error: true
         uses: actions/download-artifact@v4
         with:
-          name: allure-results
+          name: regression-allure-results
           path: reports/allure-results
 
       # --------------------------------------------------
@@ -237,7 +239,7 @@ jobs:
       # --------------------------------------------------
       # 8. Upload HTML report artifact
       # --------------------------------------------------
-      - name: Upload Allure Report Artifact
+      - name: Upload HTML Report Artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:

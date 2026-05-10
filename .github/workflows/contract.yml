@@ -99,7 +99,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: contract-structured-logs
-          path: reports/logs/**
+          path: reports/logs
 
       # --------------------------------------------------
       # Upload JUnit XML results

@@ -19,7 +19,7 @@
 
 ---
 
-## 📊 Live Allure Dashboards
+## 📊 Live HTML Allure Dashboards
 
 | Dashboard | URL |
 |---|---|
@@ -27,7 +27,9 @@
 | 🔬 Regression Report | https://kwakic.github.io/TestingWoocommerceAPI/regression |
 | ⏱️ Performance Report | https://kwakic.github.io/TestingWoocommerceAPI/performance |
 
-> Contract, Security, and Preflight workflows generate private CI artifacts only (not public dashboards).
+> **Contract**, **Security**, and **Preflight** workflows generate private CI artifacts only (not public dashboards).
+
+---
 
 # 🧪 TestEcommerceAPI
 
