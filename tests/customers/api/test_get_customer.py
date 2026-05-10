@@ -22,6 +22,7 @@ pytestmark = [pytest.mark.integration]
 @pytest.mark.tcid("TCID-016")
 @pytest.mark.smoke  # Critical → smoke
 @pytest.mark.sanity  # Fast → sanity
+@pytest.mark.integration
 def test_get_customer_by_email(customer_helper, customers_dao, create_valid_customer):
     """
     Verify that a customers can be retrieved using the email filter.

@@ -1,5 +1,5 @@
 """
-Smoke tests for structured logging metadata and LAST_STRUCTURED_LOG exposure.
+Tests for structured logging metadata and LAST_STRUCTURED_LOG exposure.
 
 preflight: verify environment/test framework before suite runs
 

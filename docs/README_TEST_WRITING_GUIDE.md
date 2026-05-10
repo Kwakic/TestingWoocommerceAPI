@@ -344,20 +344,64 @@ Already included:
        performance/
        contracts/
 
-### Preflight
+### Preflight ⚡
 
--   API connectivity\
--   response format
+Framework-level validation only:
 
-### Security
+- logging configuration
+- structured logging wiring
+- pytest marker sanity
+- configuration parsing
+- framework bootstrap validation
+
+Preflight must NOT:
+- call live APIs
+- require Docker
+- require OAuth credentials
+- require databases
+- require WooCommerce
+
+---
+
+### Contract 📋
+
+API contract and transport validation:
+
+- API connectivity
+- response format validation
+- content-type validation
+- schema validation
+- serialization checks
+- lightweight endpoint verification
+
+---
+
+### Security 🔒
 
 -   authentication matrix
 
-### Performance
+---
+
+### Performance ⏱️
 
 -   response time checks
 
 ------------------------------------------------------------------------
+
+## ✨ Test Architecture
+
+| Suite       | Responsibility                      |
+| ----------- | ----------------------------------- |
+| preflight   | framework sanity                    |
+| contract    | API contract + transport guarantees |
+| smoke       | critical business flow              |
+| regression  | broad coverage                      |
+| security    | auth/security behavior              |
+| performance | latency/perf                        |
+| integration | API + DB consistency                |
+
+
+---
 
 # 🚫 What NOT to do
 

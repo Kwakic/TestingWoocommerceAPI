@@ -39,7 +39,7 @@ import logging
 
 log = logging.getLogger(__name__)
 
-pytestmark = [pytest.mark.preflight, pytest.mark.shared]
+pytestmark = [pytest.mark.contract, pytest.mark.shared, pytest.mark.integration]
 
 
 # =====================================================================
@@ -56,6 +56,19 @@ def test_api_endpoint_available(api_client, endpoint):
 
     Ensures core API endpoints respond correctly before
     running the full test suite.
+
+    This requires:
+        - live API
+        - auth
+        - environment
+        - infrastructure
+        - WooCommerce bootstrapping
+
+    It is:
+
+        - environment validation
+        - API availability
+        - lightweight contract/integration validation
     """
 
     response = api_client.get(endpoint)

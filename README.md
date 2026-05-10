@@ -7,6 +7,8 @@
 
 [![Regression Tests](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/regression.yml/badge.svg)](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/regression.yml)
 
+[![Integration Tests](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/integration.yml/badge.svg)](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/integration.yml)
+
 [![Performance Tests](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/performance.yml/badge.svg)](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/performance.yml)
 
 [![Contract Tests](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/contract.yml/badge.svg)](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/contract.yml)
@@ -58,23 +60,36 @@ make run
 ---
 ## 🔄 CI/CD Workflow Architecture
 
-Your project is evolving toward **segmented pipelines**. Currently:
+The project now uses a **fully segmented CI/CD architecture**.
 
-### Current State (Monolithic)
-- ✅ Single `ci.yml` runs preflight + smoke + contract
-- ⚠️ All results in one Allure report
+Each workflow has a dedicated responsibility, isolated runtime,
+separate artifacts, and independent reporting strategy.
 
-### Recommended Evolution (Segmented)
+| Workflow            | Trigger          | Runtime     | Public Allure | Purpose                                   |
+| ------------------- | ---------------- | ----------- | ------------- | ----------------------------------------- |
+| **preflight.yml**   | PR + push        | very fast   | ❌             | Framework sanity & import validation      |
+| **contract.yml**    | push/manual      | fast        | ❌             | API schema & response contract validation |
+| **smoke.yml**       | push             | medium      | ✅             | Critical business flow validation         |
+| **integration.yml** | push/manual      | medium-long | ✅             | API + DB integration validation           |
+| **security.yml**    | scheduled/manual | medium      | ❌             | Authentication & authorization validation |
+| **performance.yml** | scheduled/manual | long        | ✅             | Latency & performance trend analysis      |
+| **regression.yml**  | scheduled/manual | long        | ✅             | Full regression coverage                  |
 
-| Workflow | Trigger | Runtime | Allure | Purpose |
-|----------|---------|---------|--------|---------|
-| **preflight.yml** | PR | 1–3 min | ❌ | Framework health check |
-| **smoke.yml** | push | 3–10 min | ✅ | Business flow validation |
-| **regression.yml** | nightly | long | ✅ | Full coverage + trends |
-| **performance.yml** | nightly | long | ✅ | Latency tracking |
-| **security.yml** | nightly | medium | ⚠️ | Auth/permission validation |
+### Public HTML Dashboards
 
-👉 See [CI/CD Architecture Guide](./docs/README_CI_ALLURE_GUIDE.md) for detailed rationale.
+| Dashboard             | URL                                                        |
+| --------------------- | ---------------------------------------------------------- |
+| 🔥 Smoke Report       | https://kwakic.github.io/TestingWoocommerceAPI             |
+| 🔗 Integration Report | https://kwakic.github.io/TestingWoocommerceAPI/integration |
+| 🔬 Regression Report  | https://kwakic.github.io/TestingWoocommerceAPI/regression  |
+| ⏱️ Performance Report | https://kwakic.github.io/TestingWoocommerceAPI/performance |
+
+> Contract, Security, and Preflight workflows generate private CI artifacts only.
+
+👉 See [CI/CD Architecture Guide](./docs/README_CI_ALLURE_GUIDE.md)
+for enterprise workflow rationale, artifact strategy,
+Allure history management, and reporting architecture.
+
 
 ---
 

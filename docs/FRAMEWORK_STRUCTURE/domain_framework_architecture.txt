@@ -150,7 +150,9 @@ TestEcommerceAPI (project suite/root)
 │     ├── shared/
 │     │     ├── __init__.py
 │     │     ├── contracts/                          ← JSON contract schemas (contract testing)
-│     │     │      └── error_schema.py
+│     │     │      ├──error_schema.py
+│     │     │      ├── test_response_format.py
+│     │     │      ├── test_api_connectivity.py
 │     │     │      └── __init__.py
 │     │     ├── performance/
 │     │     │      ├── test_basic_response_times.py
@@ -160,9 +162,7 @@ TestEcommerceAPI (project suite/root)
 │     │     │      ├── test_authentication_success.py
 │     │     │      └── __init__.py
 │     │     └── preflight/
-│     │            ├── test_api_connectivity.py
 │     │            ├── test_logging_globals.py
-│     │            ├── test_response_format.py
 │     │            ├── __init__.py
 │     │            └── README_PREFLIGHT.md
 │     │

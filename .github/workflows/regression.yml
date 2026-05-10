@@ -1,6 +1,10 @@
 
 name: Regression Tests 🔬
 
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: false
+
 on:
   schedule:
     - cron: "0 2 * * *"  # 2 AM daily
@@ -110,6 +114,7 @@ jobs:
             -ra \
             --durations=20 \
             --clean-alluredir \
+            --junitxml=reports/junit/results.xml \
             --alluredir=reports/allure-results
 
       # --------------------------------------------------

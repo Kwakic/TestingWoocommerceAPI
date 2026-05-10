@@ -1,26 +1,32 @@
-
-name: Performance Tests ⏱️
+name: Integration Tests 🔗
 
 concurrency:
   group: pages-deploy
   cancel-in-progress: false
 
+# --------------------------------------------------
+# 🔁 Triggers
+# --------------------------------------------------
 on:
-  schedule:
-    - cron: "0 4 * * 0"  # Sunday 4 AM
   push:
     branches: [ main ]
 
   workflow_dispatch:
 
+
 jobs:
-  performance:
+
+  # ==================================================
+  # 🧪 JOB 1 — RUN INTEGRATION TESTS
+  # ==================================================
+  integration:
     runs-on: ubuntu-latest
 
     permissions:
       contents: write
 
     steps:
+
       # --------------------------------------------------
       # 1. Checkout repository
       # --------------------------------------------------
@@ -93,7 +99,7 @@ jobs:
       # --------------------------------------------------
       # 8. Configure CI environment
       # --------------------------------------------------
-      - name: Configure CI environment
+      - name: Configure environment (CI overrides)
         run: |
           echo "AUTO_ALLURE_REPORT=false" >> $GITHUB_ENV
           echo "ENABLE_STRUCTURED_LOGS=true" >> $GITHUB_ENV
@@ -102,59 +108,52 @@ jobs:
           echo "SESSION_ID=${{ github.run_id }}" >> $GITHUB_ENV
           echo "API_ENV=ci" >> $GITHUB_ENV
           echo "PERF_ITERATIONS=5" >> $GITHUB_ENV
-#          echo "DISABLE_LOG_EMOJIS=true" >> $GITHUB_ENV
 
       # --------------------------------------------------
-      # 9. Run performance tests
+      # 9. Run integration tests
       # --------------------------------------------------
-      - name: Run performance tests
+      - name: Run integration tests
         run: |
           pytest \
-            -m "performance" \
+            -m "integration" \
             -ra \
+            -v \
             --durations=20 \
+            --maxfail=5 \
             --clean-alluredir \
             --junitxml=reports/junit/results.xml \
             --alluredir=reports/allure-results
 
       # --------------------------------------------------
-      # 10. Ensure Allure results directory exists
-      # --------------------------------------------------
-      - name: Ensure Allure results directory exists
-        if: always()
-        run: |
-          mkdir -p reports/allure-results
-
-      # --------------------------------------------------
-      # 11. Upload Allure results
+      # 10. Upload Allure results
       # --------------------------------------------------
       - name: Upload Allure results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: performance-allure-results
+          name: integration-allure-results
           path: reports/allure-results
           if-no-files-found: warn
 
       # --------------------------------------------------
-      # 12. Upload structured logs
+      # 11. Upload structured logs
       # --------------------------------------------------
       - name: Upload structured logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: performance-structured-logs
+          name: integration-structured-logs
           path: reports/logs
           if-no-files-found: warn
 
       # --------------------------------------------------
-      # 13. Upload JUnit XML results
+      # 12. Upload JUnit XML
       # --------------------------------------------------
       - name: Upload JUnit XML
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: performance-junit-results
+          name: integration-junit-results
           path: reports/junit/results.xml
           if-no-files-found: warn
 
@@ -164,13 +163,14 @@ jobs:
   # ==================================================
   report:
     if: always()
-    needs: performance
+    needs: integration
     runs-on: ubuntu-latest
 
     permissions:
       contents: write
 
     steps:
+
       # --------------------------------------------------
       # 1. Checkout repository
       # --------------------------------------------------
@@ -181,15 +181,13 @@ jobs:
       # 2. Download Allure results
       # --------------------------------------------------
       - name: Download Allure results
-        id: download_allure
-        continue-on-error: true
         uses: actions/download-artifact@v4
         with:
-          name: performance-allure-results
+          name: integration-allure-results
           path: reports/allure-results
 
       # --------------------------------------------------
-      # 3. Checkout gh-pages branch
+      # 3. Checkout gh-pages
       # --------------------------------------------------
       - name: Checkout gh-pages branch
         uses: actions/checkout@v4
@@ -205,8 +203,8 @@ jobs:
         run: |
           mkdir -p reports/allure-results/history
 
-          if [ -d "gh-pages/performance/history" ]; then
-            cp -r gh-pages/performance/history/. reports/allure-results/history/
+          if [ -d "gh-pages/integration/history" ]; then
+            cp -r gh-pages/integration/history/. reports/allure-results/history/
             echo "✅ Allure history restored"
           else
             echo "ℹ️ No previous Allure history found"
@@ -254,7 +252,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: performance-allure-report
+          name: integration-allure-report
           path: reports/allure-report
           if-no-files-found: warn
 
@@ -269,14 +267,14 @@ jobs:
           publish_dir: reports/allure-report
           publish_branch: gh-pages
           keep_files: true
-          destination_dir: performance
+          destination_dir: integration
 
       # --------------------------------------------------
-      # 10. Print Allure URL
+      # 10. Print report URL
       # --------------------------------------------------
       - name: Print Allure URL
         run: |
           echo "====================================="
-          echo "📊 Performance Allure Report:"
-          echo "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/performance"
+          echo "🔗 Integration Allure Report:"
+          echo "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/integration"
           echo "====================================="

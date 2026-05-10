@@ -25,6 +25,7 @@ Your pipelines should answer **one specific question each**:
 | **preflight.yml** | Can the framework start safely? | Ultra-fast validation; fast feedback |
 | **smoke.yml** | Are critical business flows healthy? | Deployment gate; powers badge |
 | **contract.yml** | Did the API contract/schema change? | Schema validation; diagnostics |
+| **integration.yml** | Does API state match DB state? | End-to-end integration validation |
 | **regression.yml** | Did we break anything? | Full coverage; trends & history |
 | **performance.yml** | Is the system getting slower? | Latency tracking; SLA validation |
 | **security.yml** | Are auth/permission rules still safe? | Auth boundaries; internal audit |
@@ -180,7 +181,96 @@ API_ENV=ci
 
 ---
 
-## 2.3 contract.yml 📋
+## 2.3 integration.yml 🔗
+
+### Purpose
+
+Validate full API + database integration behavior across services.
+
+This suite verifies that:
+
+* API operations correctly persist data
+* Database state matches API responses
+* Cross-layer consistency is maintained
+* End-to-end business flows work correctly
+
+### What It Tests
+
+* API + DB consistency validation
+* DAO layer verification
+* Timestamp synchronization
+* CRUD lifecycle validation
+* End-to-end entity workflows
+* State persistence correctness
+
+### Typical Runtime
+
+**5–20 minutes**
+
+### Pytest Command
+
+```bash
+pytest \
+  -m "integration" \
+  -ra \
+  --durations=15 \
+  --clean-alluredir \
+  --junitxml=reports/junit/results.xml \
+  --alluredir=reports/allure-results
+```
+
+### Triggers
+
+```yaml
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+```
+
+### Allure Report?
+
+✅ **YES** — Published to GitHub Pages
+
+### GitHub Pages?
+
+✅ **YES** — Separate dashboard at `/integration`
+
+### Artifacts produced during runtime?
+
+✅ **YES**
+
+* `integration-allure-report/` — Interactive HTML dashboard
+* `integration-allure-results/` — Raw Allure diagnostics
+* `integration-structured-logs/` — Structured framework logs
+* `integration-junit-results/` — JUnit XML results
+
+### Key CI Variables
+
+```yaml
+AUTO_ALLURE_REPORT=false
+ENABLE_STRUCTURED_LOGS=true
+STRICT_ENTITY_DISCOVERY=true
+SESSION_ID=${{ github.run_id }}
+API_ENV=ci
+```
+
+### Report Structure
+
+* **Dashboard location:** `https://username.github.io/repo/integration`
+* **History enabled** for trend analysis
+* **Separate from smoke/regression** to avoid trend contamination
+
+### Why This Configuration?
+
+* Integration tests are heavier than smoke tests
+* DB verification benefits strongly from Allure diagnostics
+* Separate trends help isolate integration instability
+* Structured logs provide API + DB correlation visibility
+
+
+---
+## 2.4 contract.yml 📋
 
 ### Purpose
 Validate API contracts and response schemas before regression runs.
@@ -244,7 +334,7 @@ SESSION_ID=${{ github.run_id }}
 
 ---
 
-## 2.4 regression.yml 🔬
+## 2.5 regression.yml 🔬
 
 ### Purpose
 Full comprehensive testing. Powers historical trend analysis & nightly validation.
@@ -317,7 +407,7 @@ API_ENV=ci
 
 ---
 
-## 2.5 performance.yml ⏱️
+## 2.6 performance.yml ⏱️
 
 ### Purpose
 Track API latency & response times over time. Detect performance regressions early.
@@ -386,7 +476,7 @@ on:
 
 ---
 
-## 2.6 security.yml 🔒
+## 2.7 security.yml 🔒
 
 ### Purpose
 Validate authorization & authentication boundaries. Internal audit only (no public dashboard).
@@ -845,6 +935,7 @@ gh-pages:     Generated reports (indexed by destination_dir)
 ├── smoke.yml            # Business path (3–10 min)
 ├── contract.yml         # Schema validation (5–15 min)
 ├── regression.yml       # Full suite (nightly, long)
+├── integration.yml      # API+DB validation
 ├── performance.yml      # Latency tracking (weekly)
 └── security.yml         # Auth validation (weekly)
 
@@ -924,6 +1015,10 @@ on:
 
 Your framework is implementing enterprise-grade concepts:
 
+✅ Full API + DB integration dashboards\
+✅ Multi-dashboard GitHub Pages publishing\
+✅ Segmented workflow ownership
+
 ✅ **Architecture**
 - Layered test structure (API, DAO, validators)
 - Segmented CI pipelines (intent-based)
@@ -951,28 +1046,6 @@ Your framework is implementing enterprise-grade concepts:
 
 ---
 
-# 20. Next Steps
-
-1. **Deploy workflows in order:**
-   - [ ] `preflight.yml` (low risk, fast feedback)
-   - [ ] `smoke.yml` (establishes Allure + Pages)
-   - [ ] `regression.yml` (nightly, heavy testing)
-   - [ ] `contract.yml`, `performance.yml`, `security.yml` (specialized suites)
-
-2. **Verify pytest markers exist:**
-   - [ ] `@pytest.mark.preflight` in `tests/`
-   - [ ] `@pytest.mark.smoke`
-   - [ ] `@pytest.mark.regression`
-   - [ ] `@pytest.mark.contract`
-   - [ ] `@pytest.mark.performance`
-   - [ ] `@pytest.mark.security`
-
-3. **Test locally before pushing:**
-   ```bash
-   make run
-   pytest -m "smoke" -ra
-   pytest -m "preflight" -ra
-   ```
 
 4. **Monitor first runs:**
    - Check workflow execution times
@@ -982,7 +1055,7 @@ Your framework is implementing enterprise-grade concepts:
 
 ---
 
-# 21. Troubleshooting Guide
+# 20. Troubleshooting Guide
 
 ### Workflows not triggering?
 - ❌ Check YAML syntax (use GitHub Actions linter)

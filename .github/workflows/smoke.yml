@@ -1,6 +1,10 @@
 
 name: Smoke Tests — Docker + Pytest + Allure 🔥
 
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: false
+
 # --------------------------------------------------
 # 🔁 Triggers
 # --------------------------------------------------
