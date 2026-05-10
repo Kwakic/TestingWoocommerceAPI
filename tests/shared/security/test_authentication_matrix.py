@@ -45,7 +45,6 @@ import pytest
 import logging
 from typing import Any, Dict
 from jsonschema import validate
-from typing import List, Tuple
 
 from EcommerceAPI.src.utils.credentials_utility import get_wc_api_keys
 from EcommerceAPI.src.clients.api_client import APIClient
@@ -65,8 +64,6 @@ pytestmark = [
 # ------------------------------------------------------------------
 # Test authentication strategy
 # ------------------------------------------------------------------
-
-
 class InvalidOAuthStrategy(AuthStrategy):
     """
     Test-only authentication strategy used to simulate invalid OAuth credentials.
@@ -110,42 +107,17 @@ METHOD_MATRIX = [
 
 
 # ------------------------------------------------------------------
-# Invalid credential combinations
-# ------------------------------------------------------------------
-
-
-def invalid_auth_cases() -> List[Tuple[str, str, str]]:
-    """
-    Generate invalid OAuth credential scenarios.
-
-    Returns
-    -------
-    list[tuple]
-        (consumer_key, consumer_secret, expected_error_message)
-    """
-    creds = get_wc_api_keys()
-
-    return [
-        ("ck_invalid_key_123", "cs_fake_secret_xyz", "Consumer key is invalid."),
-        ("ck_invalid_key_123", creds["wc_secret"], "Consumer key is invalid."),
-        (
-            creds["wc_key"],
-            "cs_invalid_secret_456",
-            "Invalid signature - provided signature does not match.",
-        ),
-    ]
-
-
-# ------------------------------------------------------------------
 # Authentication security test
 # ------------------------------------------------------------------
-
-
 @pytest.mark.parametrize("entity", ENTITIES)
 @pytest.mark.parametrize("method, needs_id, needs_payload", METHOD_MATRIX)
 @pytest.mark.parametrize(
-    "invalid_key, invalid_secret, expected_message",
-    invalid_auth_cases(),
+    "auth_variant",
+    [
+        "invalid_key_and_secret",
+        "invalid_key",
+        "invalid_secret",
+    ],
 )
 def test_authentication_rejects_invalid_credentials(
     api_client,
@@ -153,9 +125,7 @@ def test_authentication_rejects_invalid_credentials(
     method,
     needs_id,
     needs_payload,
-    invalid_key,
-    invalid_secret,
-    expected_message,
+    auth_variant,
 ):
     """
     Ensure invalid OAuth credentials are rejected by all API endpoints.
@@ -179,6 +149,27 @@ def test_authentication_rejects_invalid_credentials(
     # --------------------------------------------------------------
     if os.getenv("ENV") == "prod" and method in ("post", "put", "delete"):
         pytest.skip("Skipping destructive auth tests in production")
+
+    # --------------------------------------------------------------
+    # Build invalid credential scenario
+    # --------------------------------------------------------------
+
+    creds = get_wc_api_keys()
+
+    if auth_variant == "invalid_key_and_secret":
+        invalid_key = "ck_invalid_key_123"
+        invalid_secret = "cs_fake_secret_xyz"
+        expected_message = "Consumer key is invalid."
+
+    elif auth_variant == "invalid_key":
+        invalid_key = "ck_invalid_key_123"
+        invalid_secret = creds["wc_secret"]
+        expected_message = "Consumer key is invalid."
+
+    else:
+        invalid_key = creds["wc_key"]
+        invalid_secret = "cs_invalid_secret_456"
+        expected_message = "Invalid signature - provided signature does not match."
 
     # --------------------------------------------------------------
     # Create isolated API client with invalid credentials

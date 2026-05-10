@@ -89,7 +89,7 @@ jobs:
       # --------------------------------------------------
       # 8. Configure CI environment
       # --------------------------------------------------
-      - name: Configure CI environment
+      - name: Configure environment (CI overrides)
         run: |
           echo "AUTO_ALLURE_REPORT=false" >> $GITHUB_ENV
           echo "ENABLE_STRUCTURED_LOGS=true" >> $GITHUB_ENV
@@ -97,6 +97,8 @@ jobs:
           echo "REQUIRE_ENV=true" >> $GITHUB_ENV
           echo "SESSION_ID=${{ github.run_id }}" >> $GITHUB_ENV
           echo "API_ENV=ci" >> $GITHUB_ENV
+          echo "PERF_ITERATIONS=5" >> $GITHUB_ENV
+#          echo "DISABLE_LOG_EMOJIS=true" >> $GITHUB_ENV
 
       # --------------------------------------------------
       # 9. Run regression suite
@@ -146,6 +148,17 @@ jobs:
         with:
           name: regression-structured-logs
           path: reports/logs
+          if-no-files-found: warn
+
+      # --------------------------------------------------
+      # 14. Upload JUnit XML results
+      # --------------------------------------------------
+      - name: Upload JUnit XML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-junit-results
+          path: reports/junit/results.xml
           if-no-files-found: warn
 
   # ==================================================
@@ -248,18 +261,7 @@ jobs:
           if-no-files-found: warn
 
       # --------------------------------------------------
-      # 9. Upload JUnit XML results
-      # --------------------------------------------------
-      - name: Upload JUnit XML
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: regression-junit-results
-          path: reports/junit/results.xml
-          if-no-files-found: warn
-
-      # --------------------------------------------------
-      # 10. Deploy to GitHub Pages
+      # 9. Deploy to GitHub Pages
       # --------------------------------------------------
       - name: Deploy to GitHub Pages
         if: always()
@@ -272,7 +274,7 @@ jobs:
           destination_dir: regression
 
       # --------------------------------------------------
-      # 11. Print Allure URL
+      # 10. Print Allure URL
       # --------------------------------------------------
       - name: Print Allure URL
         run: |

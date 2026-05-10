@@ -29,6 +29,23 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e "./EcommerceAPI[dev]"
 
+      # --------------------------------------------------
+      # CI environment overrides
+      # --------------------------------------------------
+      - name: Configure environment (CI overrides)
+        run: |
+          echo "AUTO_ALLURE_REPORT=false" >> $GITHUB_ENV
+          echo "ENABLE_STRUCTURED_LOGS=true" >> $GITHUB_ENV
+          echo "STRICT_ENTITY_DISCOVERY=true" >> $GITHUB_ENV
+          echo "REQUIRE_ENV=true" >> $GITHUB_ENV
+          echo "SESSION_ID=${{ github.run_id }}" >> $GITHUB_ENV
+          echo "API_ENV=ci" >> $GITHUB_ENV
+          echo "PERF_ITERATIONS=5" >> $GITHUB_ENV
+#          echo "DISABLE_LOG_EMOJIS=true" >> $GITHUB_ENV
+
+      # --------------------------------------------------
+      # Run pytest (generate Allure raw results)
+      # --------------------------------------------------
       - name: Run preflight suite
         run: |
           pytest \

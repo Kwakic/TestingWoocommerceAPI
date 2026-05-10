@@ -98,6 +98,7 @@ jobs:
           echo "SESSION_ID=${{ github.run_id }}" >> $GITHUB_ENV
           echo "API_ENV=ci" >> $GITHUB_ENV
           echo "PERF_ITERATIONS=5" >> $GITHUB_ENV
+#          echo "DISABLE_LOG_EMOJIS=true" >> $GITHUB_ENV
 
       # --------------------------------------------------
       # 9. Run performance tests
@@ -109,6 +110,7 @@ jobs:
             -ra \
             --durations=20 \
             --clean-alluredir \
+            --junitxml=reports/junit/results.xml \
             --alluredir=reports/allure-results
 
       # --------------------------------------------------
@@ -137,9 +139,21 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: perfromance-structured-logs
+          name: performance-structured-logs
           path: reports/logs
           if-no-files-found: warn
+
+      # --------------------------------------------------
+      # 13. Upload JUnit XML results
+      # --------------------------------------------------
+      - name: Upload JUnit XML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-junit-results
+          path: reports/junit/results.xml
+          if-no-files-found: warn
+
 
   # ==================================================
   # 📊 JOB 2 — GENERATE + PUBLISH ALLURE REPORT
@@ -167,7 +181,7 @@ jobs:
         continue-on-error: true
         uses: actions/download-artifact@v4
         with:
-          name: allure-results
+          name: performance-allure-results
           path: reports/allure-results
 
       # --------------------------------------------------
@@ -241,18 +255,7 @@ jobs:
           if-no-files-found: warn
 
       # --------------------------------------------------
-      # 9. Upload JUnit XML results
-      # --------------------------------------------------
-      - name: Upload JUnit XML
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: performance-junit-results
-          path: reports/junit/results.xml
-          if-no-files-found: warn
-
-      # --------------------------------------------------
-      # 10. Deploy to GitHub Pages
+      # 9. Deploy to GitHub Pages
       # --------------------------------------------------
       - name: Deploy to GitHub Pages
         if: always()
@@ -265,7 +268,7 @@ jobs:
           destination_dir: performance
 
       # --------------------------------------------------
-      # 11. Print Allure URL
+      # 10. Print Allure URL
       # --------------------------------------------------
       - name: Print Allure URL
         run: |

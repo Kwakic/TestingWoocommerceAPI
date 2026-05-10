@@ -104,6 +104,7 @@ jobs:
           echo "REQUIRE_ENV=true" >> $GITHUB_ENV
           echo "SESSION_ID=${{ github.run_id }}" >> $GITHUB_ENV
           echo "API_ENV=ci" >> $GITHUB_ENV
+          echo "PERF_ITERATIONS=5" >> $GITHUB_ENV
 #          echo "DISABLE_LOG_EMOJIS=true" >> $GITHUB_ENV
 
       # --------------------------------------------------
@@ -141,6 +142,18 @@ jobs:
           name: smoke-structured-logs
           path: reports/logs
           if-no-files-found: warn
+
+      # --------------------------------------------------
+      # 10. Upload JUnit XML results
+      # --------------------------------------------------
+      - name: Upload JUnit XML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-junit-results
+          path: reports/junit/results.xml
+          if-no-files-found: warn
+
 
   # ==================================================
   # 📊 JOB 2 — GENERATE + PUBLISH ALLURE REPORT
@@ -229,18 +242,7 @@ jobs:
           if-no-files-found: warn
 
       # --------------------------------------------------
-      # 9. Upload JUnit XML results
-      # --------------------------------------------------
-      - name: Upload JUnit XML
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: smoke-junit-results
-          path: reports/junit/results.xml
-          if-no-files-found: warn
-
-      # --------------------------------------------------
-      # 10. Deploy report to GitHub Pages
+      # 9. Deploy report to GitHub Pages
       # --------------------------------------------------
       - name: Deploy to GitHub Pages
         if: always()
@@ -252,7 +254,7 @@ jobs:
           keep_files: true
 
       # --------------------------------------------------
-      # 11. Print report URL (clickable in logs)
+      # 10. Print report URL (clickable in logs)
       # --------------------------------------------------
       - name: Print Allure URL
         run: |
