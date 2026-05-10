@@ -3,14 +3,13 @@ name: Security Tests 🔒
 on:
   schedule:
     - cron: "0 3 * * 0"  # Sunday 3 AM
-  push:
-    branches: [ main ]
 
   workflow_dispatch:
 
 jobs:
   security:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
 

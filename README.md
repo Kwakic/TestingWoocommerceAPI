@@ -21,11 +21,12 @@
 
 ---
 
-## 📊 Live HTML Allure Dashboards
+### 📊 Public HTML Dashboards
 
 | Dashboard | URL |
 |---|---|
 | 🔥 Smoke Report | https://kwakic.github.io/TestingWoocommerceAPI |
+| 🔗 Integration Report | https://kwakic.github.io/TestingWoocommerceAPI/integration |
 | 🔬 Regression Report | https://kwakic.github.io/TestingWoocommerceAPI/regression |
 | ⏱️ Performance Report | https://kwakic.github.io/TestingWoocommerceAPI/performance |
 
@@ -75,16 +76,6 @@ separate artifacts, and independent reporting strategy.
 | **performance.yml** | scheduled/manual | long        | ✅             | Latency & performance trend analysis      |
 | **regression.yml**  | scheduled/manual | long        | ✅             | Full regression coverage                  |
 
-### Public HTML Dashboards
-
-| Dashboard             | URL                                                        |
-| --------------------- | ---------------------------------------------------------- |
-| 🔥 Smoke Report       | https://kwakic.github.io/TestingWoocommerceAPI             |
-| 🔗 Integration Report | https://kwakic.github.io/TestingWoocommerceAPI/integration |
-| 🔬 Regression Report  | https://kwakic.github.io/TestingWoocommerceAPI/regression  |
-| ⏱️ Performance Report | https://kwakic.github.io/TestingWoocommerceAPI/performance |
-
-> Contract, Security, and Preflight workflows generate private CI artifacts only.
 
 👉 See [CI/CD Architecture Guide](./docs/README_CI_ALLURE_GUIDE.md)
 for enterprise workflow rationale, artifact strategy,

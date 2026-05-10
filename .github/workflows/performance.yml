@@ -8,15 +8,13 @@ concurrency:
 on:
   schedule:
     - cron: "0 4 * * 0"  # Sunday 4 AM
-  push:
-    branches: [ main ]
 
   workflow_dispatch:
 
 jobs:
   performance:
     runs-on: ubuntu-latest
-
+    timeout-minutes: 45
     permissions:
       contents: write
 
@@ -166,7 +164,7 @@ jobs:
     if: always()
     needs: performance
     runs-on: ubuntu-latest
-
+    timeout-minutes: 10
     permissions:
       contents: write
 

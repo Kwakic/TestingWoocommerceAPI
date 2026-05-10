@@ -3,14 +3,13 @@ name: Preflight Checks ⚡
 on:
   # Run on pull requests (any branch)
   pull_request:  # Every PR
-  push:
-    branches: [ main ]
 
   workflow_dispatch:  # Allow manual execution from GitHub UI
 
 jobs:
   preflight:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       contents: read
 
