@@ -1,0 +1,17 @@
+{
+  "ENV": "test",
+  "AUTH_TYPE": "oauth1",
+  "STRICT_ENTITY_DISCOVERY": true,
+  "ENABLE_STRUCTURED_LOGS": true,
+  "ENABLE_JSON_PRETTY": false,
+  "LOG_PAYLOADS": false,
+  "REDACT_SENSITIVE_FIELDS": true,
+  "DISABLE_LOG_EMOJIS": false,
+  "KEEP_STRUCTURED_LOGS": 3,
+  "LOG_DIR": "/home/runner/work/TestingWoocommerceAPI/TestingWoocommerceAPI/reports/logs",
+  "FAIL_ON_EMPTY_LIST": false,
+  "PERF_ITERATIONS": 5,
+  "AUTO_ALLURE_REPORT": false,
+  "REQUIRE_ENV": true,
+  "SESSION_ID": "25711062843"
+}
