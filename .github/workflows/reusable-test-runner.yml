@@ -46,9 +46,6 @@ jobs:
 
     timeout-minutes: ${{ inputs.timeout_minutes }}
 
-    permissions:
-      contents: write
-
     steps:
 
       # --------------------------------------------------
