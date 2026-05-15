@@ -1,0 +1,154 @@
+name: Reusable Allure Report
+
+# ==================================================
+# 🔁 Reusable workflow entrypoint
+# ==================================================
+on:
+  workflow_call:
+
+    # --------------------------------------------------
+    # 🔧 Inputs configurable by caller workflows
+    # --------------------------------------------------
+    inputs:
+
+      suite_name:
+        required: true
+        type: string
+
+      report_timeout_minutes:
+        required: false
+        type: number
+        default: 10
+
+
+jobs:
+
+  # ==================================================
+  # 📊 JOB — GENERATE + PUBLISH ALLURE REPORT
+  # ==================================================
+  report:
+
+    # --------------------------------------------------
+    # Always run even if previous jobs failed
+    # --------------------------------------------------
+    if: always()
+
+    runs-on: ubuntu-latest
+
+    timeout-minutes: ${{ inputs.report_timeout_minutes }}
+
+    # --------------------------------------------------
+    # Required for GitHub Pages deployment
+    # --------------------------------------------------
+    permissions:
+      contents: write
+
+    steps:
+
+      # --------------------------------------------------
+      # 1. Checkout repository
+      # --------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # --------------------------------------------------
+      # 2. Download Allure raw results
+      # --------------------------------------------------
+      - name: Download Allure results
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.suite_name }}-allure-results
+          path: reports/allure-results
+
+      # --------------------------------------------------
+      # 3. Checkout gh-pages branch
+      #
+      # Used for Allure history/trend preservation
+      # --------------------------------------------------
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages
+          fetch-depth: 0
+
+      # --------------------------------------------------
+      # 4. Restore Allure history
+      #
+      # Enables historical trend charts
+      # across CI runs.
+      # --------------------------------------------------
+      - name: Restore Allure history
+        run: |
+          mkdir -p reports/allure-results/history
+
+          if [ -d "gh-pages/history" ]; then
+            cp -r gh-pages/history/* reports/allure-results/history/
+            echo "✅ Allure history restored"
+          else
+            echo "ℹ️ No previous Allure history found"
+          fi
+
+      # --------------------------------------------------
+      # 5. Setup Java
+      #
+      # Required for Allure CLI
+      # --------------------------------------------------
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      # --------------------------------------------------
+      # 6. Install Allure CLI
+      # --------------------------------------------------
+      - name: Install Allure
+        run: |
+          curl -L -o allure.zip https://github.com/allure-framework/allure2/releases/download/2.29.0/allure-2.29.0.zip
+
+          unzip -q allure.zip
+
+          echo "$PWD/allure-2.29.0/bin" >> $GITHUB_PATH
+
+      # --------------------------------------------------
+      # 7. Generate Allure HTML report
+      # --------------------------------------------------
+      - name: Generate Allure report
+        run: |
+          allure generate reports/allure-results \
+            -o reports/allure-report \
+            --clean
+
+      # --------------------------------------------------
+      # 8. Upload generated HTML report
+      # --------------------------------------------------
+      - name: Upload HTML Report Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.suite_name }}-allure-report
+          path: reports/allure-report
+          if-no-files-found: warn
+
+      # --------------------------------------------------
+      # 9. Deploy report to GitHub Pages
+      # --------------------------------------------------
+      - name: Deploy to GitHub Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: reports/allure-report
+          publish_branch: gh-pages
+          keep_files: true
+
+      # --------------------------------------------------
+      # 10. Print clickable Allure URL
+      # --------------------------------------------------
+      - name: Print Allure URL
+        run: |
+          echo "====================================="
+          echo "Allure Report:"
+          echo "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+          echo "====================================="
