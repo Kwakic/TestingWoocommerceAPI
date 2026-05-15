@@ -7,9 +7,13 @@ concurrency:
 # --------------------------------------------------
 # 🔁 Triggers
 # --------------------------------------------------
+#on:
+#  push:
+#    branches: [ main ]
+
 on:
-  push:
-    branches: [ main ]
+  schedule:
+    - cron: "0 2 * * *"  # 2 AM daily
 
   workflow_dispatch:
 

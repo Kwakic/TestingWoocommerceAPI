@@ -1,4 +1,10 @@
 name: Smoke Tests — Docker + Pytest + Allure 🔥
+# Controls:
+# orchestration
+# dependencies
+# permissions
+# triggers
+# concurrency
 
 # ==================================================
 # 🔒 Prevent concurrent GitHub Pages deployments
@@ -74,6 +80,10 @@ jobs:
   report:
 
     needs: test
+
+    permissions:
+      contents: write
+
 
     uses: ./.github/workflows/reusable-allure-report.yml
 

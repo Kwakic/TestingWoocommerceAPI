@@ -1,4 +1,6 @@
+
 name: Reusable Allure Report
+# Controls: CI execution logic ONLY
 
 # ==================================================
 # 🔁 Reusable workflow entrypoint
