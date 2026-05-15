@@ -1,115 +1,53 @@
 name: Security Tests 🔒
+# Controls:
+# orchestration
+# dependencies
+# permissions
+# triggers
+# concurrency
 
+# ==================================================
+# 🔒 Prevent concurrent GitHub Pages deployments
+# ==================================================
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: false
+
+# ==================================================
+# 🔁 Triggers
+# ==================================================
 on:
   schedule:
     - cron: "0 3 * * 0"  # Sunday 3 AM
 
   workflow_dispatch:
 
+
 jobs:
-  security:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    permissions:
-      contents: read
+ # ==================================================
+  # 🧪 JOB 1 — EXECUTE SECURITY TESTS
+  #
+  # Delegates all shared CI logic to the reusable
+  # enterprise test runner workflow.
+  #
+  # Shared responsibilities extracted:
+  # - checkout
+  # - python setup
+  # - dependency install
+  # - docker startup
+  # - MySQL readiness
+  # - WooCommerce bootstrap
+  # - env configuration
+  # - pytest execution
+  # - artifact uploads
+  # - docker cleanup
+  # ==================================================
+  test:
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    uses: ./.github/workflows/reusable-test-runner.yml
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-          cache: pip
-
-      - name: Install project
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e "./EcommerceAPI[dev]"
-
-      - name: Start Docker stack
-        run: |
-          docker compose -f docker-compose.wp.yml up -d
-
-      - name: Wait for MySQL
-        run: |
-          until nc -z 127.0.0.1 3306; do
-            echo "Waiting for MySQL..."
-            sleep 3
-          done
-
-      - name: Bootstrap WooCommerce and capture credentials
-        run: |
-          set -e
-          OUTPUT=$(bash scripts/setup.sh)
-
-          echo "$OUTPUT"
-
-          WC_KEY=$(echo "$OUTPUT" | grep "CONSUMER KEY" | awk '{print $3}')
-          WC_SECRET=$(echo "$OUTPUT" | grep "CONSUMER SECRET" | awk '{print $3}')
-
-          echo "WC_KEY=$WC_KEY" >> $GITHUB_ENV
-          echo "WC_SECRET=$WC_SECRET" >> $GITHUB_ENV
-
-      - name: Configure DB connection
-        run: |
-          echo "DB_USER=wp" >> $GITHUB_ENV
-          echo "DB_PASSWORD=wp" >> $GITHUB_ENV
-          echo "DB_HOST=127.0.0.1" >> $GITHUB_ENV
-          echo "DB_PORT=3306" >> $GITHUB_ENV
-          echo "DB_DATABASE=wordpress" >> $GITHUB_ENV
-          echo "DB_TABLE_PREFIX=wp_" >> $GITHUB_ENV
-
-      - name: Configure environment (CI overrides)
-        run: |
-          echo "AUTO_ALLURE_REPORT=false" >> $GITHUB_ENV
-          echo "ENABLE_STRUCTURED_LOGS=true" >> $GITHUB_ENV
-          echo "STRICT_ENTITY_DISCOVERY=true" >> $GITHUB_ENV
-          echo "REQUIRE_ENV=true" >> $GITHUB_ENV
-          echo "SESSION_ID=${{ github.run_id }}" >> $GITHUB_ENV
-          echo "API_ENV=ci" >> $GITHUB_ENV
-          echo "PERF_ITERATIONS=5" >> $GITHUB_ENV
-#          echo "DISABLE_LOG_EMOJIS=true" >> $GITHUB_ENV
-
-      - name: Run security tests
-        run: |
-          pytest \
-            -m "security" \
-            -ra \
-            --durations=10 \
-            --clean-alluredir \
-            --junitxml=reports/junit/results.xml \
-            --alluredir=reports/allure-results
-
-      # --------------------------------------------------
-      # Upload Allure raw results
-      # --------------------------------------------------
-
-      - name: Upload Allure results (private artifact)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: security-allure-results
-          path: reports/allure-results
-
-      # --------------------------------------------------
-      # Upload structured logs
-      # --------------------------------------------------
-      - name: Upload structured logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: security-structured-logs
-          path: reports/logs
-
-      # --------------------------------------------------
-      # Upload JUnit XML results
-      # --------------------------------------------------
-      - name: Upload JUnit XML
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: security-junit-results
-          path: reports/junit/results.xml
-          if-no-files-found: warn
+    with:
+      suite_name: security
+      pytest_markers: security
+      timeout_minutes: 15
+      pytest_durations: 10

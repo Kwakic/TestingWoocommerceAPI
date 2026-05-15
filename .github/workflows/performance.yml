@@ -1,280 +1,88 @@
 
 name: Performance Tests ⏱️
+# Controls:
+# orchestration
+# dependencies
+# permissions
+# triggers
+# concurrency
 
+# ==================================================
+# 🔒 Prevent concurrent GitHub Pages deployments
+# ==================================================
 concurrency:
   group: pages-deploy
   cancel-in-progress: false
 
+
+# ==================================================
+# 🔁 Triggers
+# ==================================================
 on:
   schedule:
     - cron: "0 4 * * 0"  # Sunday 4 AM
 
+  # --------------------------------------------------
+  # Allow manual execution from GitHub UI
+  # --------------------------------------------------
   workflow_dispatch:
 
+
 jobs:
-  performance:
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    permissions:
-      contents: write
 
-    steps:
-      # --------------------------------------------------
-      # 1. Checkout repository
-      # --------------------------------------------------
-      - name: Checkout repository
-        uses: actions/checkout@v4
+  # ==================================================
+  # 🧪 JOB 1 — EXECUTE PERFORMANCE TESTS
+  #
+  # Delegates all shared CI logic to the reusable
+  # enterprise test runner workflow.
+  #
+  # Shared responsibilities extracted:
+  # - checkout
+  # - python setup
+  # - dependency install
+  # - docker startup
+  # - MySQL readiness
+  # - WooCommerce bootstrap
+  # - env configuration
+  # - pytest execution
+  # - artifact uploads
+  # - docker cleanup
+  # ==================================================
+  test:
 
-      # --------------------------------------------------
-      # 2. Setup Python
-      # --------------------------------------------------
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-          cache: pip
+    uses: ./.github/workflows/reusable-test-runner.yml
 
-      # --------------------------------------------------
-      # 3. Install project
-      # --------------------------------------------------
-      - name: Install project
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e "./EcommerceAPI[dev]"
-
-      # --------------------------------------------------
-      # 4. Start Docker stack
-      # --------------------------------------------------
-      - name: Start Docker stack
-        run: |
-          docker compose -f docker-compose.wp.yml up -d
-
-      # --------------------------------------------------
-      # 5. Wait for MySQL
-      # --------------------------------------------------
-      - name: Wait for MySQL
-        run: |
-          until nc -z 127.0.0.1 3306; do
-            echo "Waiting for MySQL..."
-            sleep 3
-          done
-
-      # --------------------------------------------------
-      # 6. Bootstrap WooCommerce + capture credentials
-      # --------------------------------------------------
-      - name: Bootstrap WooCommerce and capture credentials
-        run: |
-          set -e
-
-          OUTPUT=$(bash scripts/setup.sh)
-
-          echo "$OUTPUT"
-
-          WC_KEY=$(echo "$OUTPUT" | grep "CONSUMER KEY" | awk '{print $3}')
-          WC_SECRET=$(echo "$OUTPUT" | grep "CONSUMER SECRET" | awk '{print $3}')
-
-          echo "WC_KEY=$WC_KEY" >> $GITHUB_ENV
-          echo "WC_SECRET=$WC_SECRET" >> $GITHUB_ENV
-
-      # --------------------------------------------------
-      # 7. Configure DB connection
-      # --------------------------------------------------
-      - name: Configure DB connection
-        run: |
-          echo "DB_USER=wp" >> $GITHUB_ENV
-          echo "DB_PASSWORD=wp" >> $GITHUB_ENV
-          echo "DB_HOST=127.0.0.1" >> $GITHUB_ENV
-          echo "DB_PORT=3306" >> $GITHUB_ENV
-          echo "DB_DATABASE=wordpress" >> $GITHUB_ENV
-          echo "DB_TABLE_PREFIX=wp_" >> $GITHUB_ENV
-
-      # --------------------------------------------------
-      # 8. Configure CI environment
-      # --------------------------------------------------
-      - name: Configure CI environment
-        run: |
-          echo "AUTO_ALLURE_REPORT=false" >> $GITHUB_ENV
-          echo "ENABLE_STRUCTURED_LOGS=true" >> $GITHUB_ENV
-          echo "STRICT_ENTITY_DISCOVERY=true" >> $GITHUB_ENV
-          echo "REQUIRE_ENV=true" >> $GITHUB_ENV
-          echo "SESSION_ID=${{ github.run_id }}" >> $GITHUB_ENV
-          echo "API_ENV=ci" >> $GITHUB_ENV
-          echo "PERF_ITERATIONS=5" >> $GITHUB_ENV
-#          echo "DISABLE_LOG_EMOJIS=true" >> $GITHUB_ENV
-
-      # --------------------------------------------------
-      # 9. Run performance tests
-      # --------------------------------------------------
-      - name: Run performance tests
-        run: |
-          pytest \
-            -m "performance" \
-            -ra \
-            --durations=20 \
-            --clean-alluredir \
-            --junitxml=reports/junit/results.xml \
-            --alluredir=reports/allure-results
-
-      # --------------------------------------------------
-      # 10. Ensure Allure results directory exists
-      # --------------------------------------------------
-      - name: Ensure Allure results directory exists
-        if: always()
-        run: |
-          mkdir -p reports/allure-results
-
-      # --------------------------------------------------
-      # 11. Upload Allure results
-      # --------------------------------------------------
-      - name: Upload Allure results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: performance-allure-results
-          path: reports/allure-results
-          if-no-files-found: warn
-
-      # --------------------------------------------------
-      # 12. Upload structured logs
-      # --------------------------------------------------
-      - name: Upload structured logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: performance-structured-logs
-          path: reports/logs
-          if-no-files-found: warn
-
-      # --------------------------------------------------
-      # 13. Upload JUnit XML results
-      # --------------------------------------------------
-      - name: Upload JUnit XML
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: performance-junit-results
-          path: reports/junit/results.xml
-          if-no-files-found: warn
-
+    with:
+      suite_name: performance
+      pytest_markers: performance
+      timeout_minutes: 45
+      pytest_durations: 20
 
   # ==================================================
   # 📊 JOB 2 — GENERATE + PUBLISH ALLURE REPORT
+  #
+  # NOTE:
+  # This job intentionally remains local for now.
+  #
+  # Why?
+  # ----
+  # GitHub Pages deployment and Allure history
+  # restoration are more sensitive infrastructure
+  # concerns and should be extracted separately
+  # after the reusable test runner stabilizes.
+  #
+  # This is the safest enterprise migration strategy.
   # ==================================================
   report:
-    if: always()
-    needs: performance
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+
+    needs: test
+
     permissions:
       contents: write
 
-    steps:
-      # --------------------------------------------------
-      # 1. Checkout repository
-      # --------------------------------------------------
-      - name: Checkout repository
-        uses: actions/checkout@v4
 
-      # --------------------------------------------------
-      # 2. Download Allure results
-      # --------------------------------------------------
-      - name: Download Allure results
-        id: download_allure
-        continue-on-error: true
-        uses: actions/download-artifact@v4
-        with:
-          name: performance-allure-results
-          path: reports/allure-results
+    uses: ./.github/workflows/reusable-allure-report.yml
 
-      # --------------------------------------------------
-      # 3. Checkout gh-pages branch
-      # --------------------------------------------------
-      - name: Checkout gh-pages branch
-        uses: actions/checkout@v4
-        with:
-          ref: gh-pages
-          path: gh-pages
-          fetch-depth: 0
-
-      # --------------------------------------------------
-      # 4. Restore Allure history
-      # --------------------------------------------------
-      - name: Restore Allure history
-        run: |
-          mkdir -p reports/allure-results/history
-
-          if [ -d "gh-pages/performance/history" ]; then
-            cp -r gh-pages/performance/history/. reports/allure-results/history/
-            echo "✅ Allure history restored"
-          else
-            echo "ℹ️ No previous Allure history found"
-          fi
-
-      # --------------------------------------------------
-      # 5. Setup Java
-      # --------------------------------------------------
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-
-      # --------------------------------------------------
-      # 6. Install Allure CLI
-      # --------------------------------------------------
-      - name: Install Allure
-        run: |
-          curl -L -o allure.zip \
-            https://github.com/allure-framework/allure2/releases/download/2.29.0/allure-2.29.0.zip
-
-          unzip -q allure.zip
-
-          echo "$PWD/allure-2.29.0/bin" >> $GITHUB_PATH
-
-      # --------------------------------------------------
-      # 7. Generate Allure report
-      # --------------------------------------------------
-      - name: Generate Allure report
-        run: |
-          if [ -z "$(ls -A reports/allure-results 2>/dev/null)" ]; then
-            echo "⚠️ No Allure results found"
-            exit 0
-          fi
-
-          allure generate reports/allure-results \
-            -o reports/allure-report \
-            --clean
-
-      # --------------------------------------------------
-      # 8. Upload HTML report artifact
-      # --------------------------------------------------
-      - name: Upload HTML Report Artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: performance-allure-report
-          path: reports/allure-report
-          if-no-files-found: warn
-
-      # --------------------------------------------------
-      # 9. Deploy to GitHub Pages
-      # --------------------------------------------------
-      - name: Deploy to GitHub Pages
-        if: always()
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: reports/allure-report
-          publish_branch: gh-pages
-          keep_files: true
-          destination_dir: performance
-
-      # --------------------------------------------------
-      # 10. Print Allure URL
-      # --------------------------------------------------
-      - name: Print Allure URL
-        run: |
-          echo "====================================="
-          echo "📊 Performance Allure Report:"
-          echo "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/performance"
-          echo "====================================="
+    with:
+      suite_name: performance
+      report_timeout_minutes: 10

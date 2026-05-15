@@ -31,8 +31,13 @@ on:
 
       pytest_maxfail:
         required: false
-        type: number
-        default: 3
+        type: string # If not optional we set output to: number
+        default: ""  # optional
+
+      pytest_extra_args:
+        required: false
+        type: string
+        default: ""
 
 
 jobs:
@@ -146,8 +151,9 @@ jobs:
           pytest \
             -m "${{ inputs.pytest_markers }}" \
             -ra \
+            ${{ inputs.pytest_extra_args }} \
             --durations=${{ inputs.pytest_durations }} \
-            --maxfail=${{ inputs.pytest_maxfail }} \
+            ${{ inputs.pytest_maxfail && format('--maxfail={0}', inputs.pytest_maxfail) || '' }} \
             --clean-alluredir \
             --junitxml=reports/junit/results.xml \
             --alluredir=reports/allure-results
