@@ -1,0 +1,77 @@
+INFO     EcommerceAPI.plugins.allure_autogen:allure_autogen.py:520 📎 Framework configuration attached to Allure
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:161 🔁 Iterations per endpoint: 5
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:164 ⏱️ Testing endpoint: customers (customers)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/customers?per_page=100 → Status code: 200 (completed in 0.098s)
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:89 📡 GET customers?per_page=100 → completed in 0.099s
+DEBUG    tests.shared.performance.test_basic_response_times:test_basic_response_times.py:182    • Run 01: 0.099s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/customers?per_page=100 → Status code: 200 (completed in 0.066s)
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:89 📡 GET customers?per_page=100 → completed in 0.067s
+DEBUG    tests.shared.performance.test_basic_response_times:test_basic_response_times.py:182    • Run 02: 0.067s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/customers?per_page=100 → Status code: 200 (completed in 0.065s)
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:89 📡 GET customers?per_page=100 → completed in 0.066s
+DEBUG    tests.shared.performance.test_basic_response_times:test_basic_response_times.py:182    • Run 03: 0.066s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/customers?per_page=100 → Status code: 200 (completed in 0.065s)
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:89 📡 GET customers?per_page=100 → completed in 0.065s
+DEBUG    tests.shared.performance.test_basic_response_times:test_basic_response_times.py:182    • Run 04: 0.065s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/customers?per_page=100 → Status code: 200 (completed in 0.066s)
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:89 📡 GET customers?per_page=100 → completed in 0.066s
+DEBUG    tests.shared.performance.test_basic_response_times:test_basic_response_times.py:182    • Run 05: 0.066s
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:216 ✅ CUSTOMERS → avg: 0.072s | p95: 0.121s | min: 0.065s | max: 0.099s
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:164 ⏱️ Testing endpoint: products (products)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.064s)
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:89 📡 GET products?per_page=100 → completed in 0.065s
+DEBUG    tests.shared.performance.test_basic_response_times:test_basic_response_times.py:182    • Run 01: 0.065s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.062s)
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:89 📡 GET products?per_page=100 → completed in 0.063s
+DEBUG    tests.shared.performance.test_basic_response_times:test_basic_response_times.py:182    • Run 02: 0.063s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.064s)
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:89 📡 GET products?per_page=100 → completed in 0.065s
+DEBUG    tests.shared.performance.test_basic_response_times:test_basic_response_times.py:182    • Run 03: 0.065s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.064s)
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:89 📡 GET products?per_page=100 → completed in 0.064s
+DEBUG    tests.shared.performance.test_basic_response_times:test_basic_response_times.py:182    • Run 04: 0.064s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.063s)
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:89 📡 GET products?per_page=100 → completed in 0.063s
+DEBUG    tests.shared.performance.test_basic_response_times:test_basic_response_times.py:182    • Run 05: 0.063s
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:216 ✅ PRODUCTS → avg: 0.064s | p95: 0.065s | min: 0.063s | max: 0.065s
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:164 ⏱️ Testing endpoint: orders (orders)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/orders?per_page=100 → Status code: 200 (completed in 0.064s)
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:89 📡 GET orders?per_page=100 → completed in 0.065s
+DEBUG    tests.shared.performance.test_basic_response_times:test_basic_response_times.py:182    • Run 01: 0.065s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/orders?per_page=100 → Status code: 200 (completed in 0.063s)
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:89 📡 GET orders?per_page=100 → completed in 0.064s
+DEBUG    tests.shared.performance.test_basic_response_times:test_basic_response_times.py:182    • Run 02: 0.064s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/orders?per_page=100 → Status code: 200 (completed in 0.086s)
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:89 📡 GET orders?per_page=100 → completed in 0.087s
+DEBUG    tests.shared.performance.test_basic_response_times:test_basic_response_times.py:182    • Run 03: 0.087s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/orders?per_page=100 → Status code: 200 (completed in 0.062s)
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:89 📡 GET orders?per_page=100 → completed in 0.062s
+DEBUG    tests.shared.performance.test_basic_response_times:test_basic_response_times.py:182    • Run 04: 0.062s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/orders?per_page=100 → Status code: 200 (completed in 0.062s)
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:89 📡 GET orders?per_page=100 → completed in 0.062s
+DEBUG    tests.shared.performance.test_basic_response_times:test_basic_response_times.py:182    • Run 05: 0.062s
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:216 ✅ ORDERS → avg: 0.068s | p95: 0.102s | min: 0.062s | max: 0.087s
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:164 ⏱️ Testing endpoint: coupons (coupons)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/coupons?per_page=100 → Status code: 200 (completed in 0.063s)
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:89 📡 GET coupons?per_page=100 → completed in 0.063s
+DEBUG    tests.shared.performance.test_basic_response_times:test_basic_response_times.py:182    • Run 01: 0.063s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/coupons?per_page=100 → Status code: 200 (completed in 0.064s)
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:89 📡 GET coupons?per_page=100 → completed in 0.065s
+DEBUG    tests.shared.performance.test_basic_response_times:test_basic_response_times.py:182    • Run 02: 0.065s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/coupons?per_page=100 → Status code: 200 (completed in 0.066s)
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:89 📡 GET coupons?per_page=100 → completed in 0.066s
+DEBUG    tests.shared.performance.test_basic_response_times:test_basic_response_times.py:182    • Run 03: 0.066s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/coupons?per_page=100 → Status code: 200 (completed in 0.063s)
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:89 📡 GET coupons?per_page=100 → completed in 0.064s
+DEBUG    tests.shared.performance.test_basic_response_times:test_basic_response_times.py:182    • Run 04: 0.064s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/coupons?per_page=100 → Status code: 200 (completed in 0.063s)
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:89 📡 GET coupons?per_page=100 → completed in 0.064s
+DEBUG    tests.shared.performance.test_basic_response_times:test_basic_response_times.py:182    • Run 05: 0.064s
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:216 ✅ COUPONS → avg: 0.064s | p95: 0.068s | min: 0.063s | max: 0.066s
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:229 📊 PERFORMANCE TEST SUMMARY — ENV: TEST
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:231 🏗️ CI Provider: github_actions | Job ID: 25982147945
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:237 🔖 Git Commit: e131b2c (main)
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:245 ✅ customers: avg=0.072s, p95=0.121s, min=0.065s, max=0.099s
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:245 ✅ products: avg=0.064s, p95=0.065s, min=0.063s, max=0.065s
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:245 ✅ orders: avg=0.068s, p95=0.102s, min=0.062s, max=0.087s
+INFO     tests.shared.performance.test_basic_response_times:test_basic_response_times.py:245 ✅ coupons: avg=0.064s, p95=0.068s, min=0.063s, max=0.066s
