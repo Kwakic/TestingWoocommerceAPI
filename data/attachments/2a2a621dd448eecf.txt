@@ -1,0 +1,35 @@
+DEBUG    EcommerceAPI.plugins.entities:entities.py:440 ✅ [customers] Loaded API client: CustomersApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:449 ✅ [customers] Instantiated helper with API client
+INFO     EcommerceAPI.plugins.entities:entities.py:513 🔍 ENTITY DISCOVERY SUMMARY
+INFO     EcommerceAPI.plugins.entities:entities.py:515    coupons      | ⏭️ SKIPPED (missing API module)
+INFO     EcommerceAPI.plugins.entities:entities.py:515    customers    | ✅  READY
+INFO     EcommerceAPI.plugins.entities:entities.py:515    orders       | ⏭️ SKIPPED (missing API module)
+INFO     EcommerceAPI.plugins.entities:entities.py:515    products     | ⏭️ SKIPPED (missing API module)
+INFO     tests.customers.api.test_update_customer:test_update_customer.py:84 🛠 Creating a test customers for updating name and email.
+DEBUG    EcommerceAPI.src.utils.generic_utilities:generic_utilities.py:32 📝 Generating random email and password.
+DEBUG    EcommerceAPI.src.utils.generic_utilities:generic_utilities.py:49 📝 Generated credentials email and password=***'email': 'testuser_lsjkhzsojb@supersqa.com', 'password': "***"}
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:179 ⚙️ Creating customers with payload keys: ['email', 'password']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.161s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=6, email=testuser_lsjkhzsojb@supersqa.com
+DEBUG    EcommerceAPI.plugins.api_fixtures:api_fixtures.py:209 ℹ️ Registered customers with ID: 6 for cleanup.
+INFO     tests.customers.api.test_update_customer:test_update_customer.py:97 🔁 Updating customers ID=6 with first_name='QAUpdated' and email='mart_hanz@golp.com'
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:249 🟢 Updating customers 6 with payload keys: ['first_name', 'email']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:158 📡 PUT /customers/6 payload_keys=['first_name', 'email']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ PUT /wp-json/wc/v3/customers/6 → Status code: 200 (completed in 0.067s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=6, email=mart_hanz@golp.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:349 ✅ Customer identity verified (id=6, email=mart_hanz@golp.com)
+INFO     tests.customers.api.test_update_customer:test_update_customer.py:132 ✅ Customer update verified: ID=6 first_name=QAUpdated email=mart_hanz@golp.com
+INFO     EcommerceAPI.plugins.entities:entities.py:615 🔧 Starting teardown of created test resources...
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up customer(s)... (1 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 6
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ DELETE /wp-json/wc/v3/customers/6?force=True → Status code: 200 (completed in 0.080s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 6
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for customer(s).
+INFO     EcommerceAPI.plugins.entities:entities.py:646 
+
+🧹 ====================================== CLEANUP SUMMARY ======================================
+INFO     EcommerceAPI.plugins.entities:entities.py:649 📊 Created during test run: {'customers': 1}
+INFO     EcommerceAPI.plugins.entities:entities.py:650 🧾 Cleanup total summary:
+INFO     EcommerceAPI.plugins.entities:entities.py:652    • customer: 1 deleted (1 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:653 ✅ All test data cleanup completed.
