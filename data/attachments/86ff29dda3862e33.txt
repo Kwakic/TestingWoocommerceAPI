@@ -1,0 +1,21 @@
+DEBUG    EcommerceAPI.plugins.entities:entities.py:440 ✅ [customers] Loaded API client: CustomersApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:449 ✅ [customers] Instantiated helper with API client
+INFO     EcommerceAPI.plugins.entities:entities.py:513 🔍 ENTITY DISCOVERY SUMMARY
+INFO     EcommerceAPI.plugins.entities:entities.py:515    coupons      | ⏭️ SKIPPED (missing API module)
+INFO     EcommerceAPI.plugins.entities:entities.py:515    customers    | ✅  READY
+INFO     EcommerceAPI.plugins.entities:entities.py:515    orders       | ⏭️ SKIPPED (missing API module)
+INFO     EcommerceAPI.plugins.entities:entities.py:515    products     | ⏭️ SKIPPED (missing API module)
+INFO     tests.customers.api.test_get_customer:test_get_customer.py:199 🚫 Retrieving non-existent customers ID: 99999999
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:294 🟢 Calling 'Get Customer' for ID 99999999.
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:88 📡 GET /customers/99999999
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/customers/99999999 → Status code: 404 (completed in 0.061s)
+DEBUG    EcommerceAPI.src.clients.api_client:api_client.py:580 {
+                                                                 "code": "wc_user_invalid_id",
+                                                                 "message": "Invalid user ID.",
+                                                                 "data": {
+                                                                   "status": 404
+                                                                 }
+                                                               }
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:409 ✅ Valid error response received (code=wc_user_invalid_id status=404)
+INFO     tests.customers.api.test_get_customer:test_get_customer.py:211 ✅ Error response schema validated for non-existent customers fetch
+DEBUG    EcommerceAPI.plugins.entities:entities.py:656 🧹 No test data created — skipping teardown.

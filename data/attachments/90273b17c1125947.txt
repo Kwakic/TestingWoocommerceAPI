@@ -1,0 +1,13 @@
+INFO     tests.customers.api.test_create_customer:test_create_customer.py:400 🧪 Testing customers creation with invalid email: 'None'
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ POST /wp-json/wc/v3/customers → Status code: 400 (completed in 0.058s)
+DEBUG    EcommerceAPI.src.clients.api_client:api_client.py:580 {
+                                                                 "code": "rest_missing_callback_param",
+                                                                 "message": "Missing parameter(s): email",
+                                                                 "data": {
+                                                                   "status": 400,
+                                                                   "params": [
+                                                                     "email"
+                                                                   ]
+                                                                 }
+                                                               }
+INFO     tests.customers.api.test_create_customer:test_create_customer.py:417 ✅ Proper error returned for payload: {} → rest_missing_callback_param: Missing parameter(s): email
