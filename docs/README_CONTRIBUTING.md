@@ -27,9 +27,17 @@ Quick workflow
 Testing & CI specifics
 - The repo uses a repo-level pytest config at `pyproject.toml`. Run pytest from repo root so config and paths are consistent.
 - Install the framework editor-style before running tests:
-  ```bash
-  pip install -e './EcommerceAPI[dev]'
-  ```
+    ```bash
+    # From repo root (recommended)
+    # Activate local virtual environment
+    source .venv/Scripts/activate
+
+    # Upgrade packaging tooling
+    python -m pip install --upgrade pip setuptools wheel
+
+    # Install framework + dev dependencies
+    python -m pip install -e "./EcommerceAPI[dev]"
+    ```
 - Use `pytest --collect-only -q` if you suspect tests aren’t being discovered.
 
 Style & PR checklist

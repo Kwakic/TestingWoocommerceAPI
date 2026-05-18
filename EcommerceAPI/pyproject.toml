@@ -68,6 +68,8 @@ dev = [
   "pytest-xdist",              # Running tests in parallel across multiple CPUs or even remote machines
   "Faker>=37.4.0",             # Generate fake data
   "freezegun>=1.5.3",          # Freeze time in tests
+  "pre-commit>=4.0.0",         # Manages and runs "Git hooks".It automatically checks your code for formatting errors,
+  #style violations, and bugs before you are allowed to finalize a git commit
 # Remove explicit pytest transitive deps like pluggy/iniconfig unless you need pinned versions.
 #  "iniconfig>=2.0.0",          # Configuration parser (pytest dependency)
 #  "pluggy>=1.5.0"              # Plugin system for pytest

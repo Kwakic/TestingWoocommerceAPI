@@ -1,0 +1,61 @@
+name: Setup Python Project
+
+description: >
+  Sets up Python, enables pip caching,
+  upgrades pip, and installs the project
+  in editable mode with development dependencies.
+
+runs:
+  using: composite
+
+  steps:
+
+    # --------------------------------------------------
+    # 1. Setup Python
+    # --------------------------------------------------
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.13"
+        cache: pip
+
+    # --------------------------------------------------
+    # 2. Install project dependencies
+    # --------------------------------------------------
+    - name: Install project
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip setuptools wheel
+        python -m pip install -e "./EcommerceAPI[dev]"
+
+      # For deterministic CI
+#        python -m pip install \
+#          "pip>=25.0" \
+#          "setuptools>=75.0" \
+#          "wheel>=0.45"
+
+    # --------------------------------------------------
+    # 3. Print environment diagnostics
+    #
+    # Extremely useful for CI debugging.
+    # Enterprise pipelines commonly expose:
+    # - Python version
+    # - pytest version
+    # - pip version
+    # --------------------------------------------------
+    - name: Print environment diagnostics
+      shell: bash
+      run: |
+        echo "====================================="
+        echo "Python version:"
+        python --version
+
+        echo "====================================="
+        echo "Pip version:"
+        pip --version
+
+        echo "====================================="
+        echo "Pytest version:"
+        python -m pytest --version
+
+        echo "====================================="

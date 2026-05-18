@@ -59,22 +59,35 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # --------------------------------------------------
-      # 2. Setup Python
-      # --------------------------------------------------
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-          cache: pip
+#      # --------------------------------------------------
+#      # 2. Setup Python
+#      # --------------------------------------------------
+#      - name: Set up Python
+#        uses: actions/setup-python@v5
+#        with:
+#          python-version: "3.13"
+#          cache: pip
+#
+#      # --------------------------------------------------
+#      # 3. Install project dependencies
+#      # --------------------------------------------------
+#      - name: Install project
+#        run: |
+#          python -m pip install --upgrade pip
+#          pip install -e "./EcommerceAPI[dev]"
+
 
       # --------------------------------------------------
-      # 3. Install project dependencies
+      # 2. Setup Python project
+      #
+      # Shared composite action:
+      # - setup-python
+      # - pip caching
+      # - editable install
+      # - environment diagnostics
       # --------------------------------------------------
-      - name: Install project
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e "./EcommerceAPI[dev]"
+      - name: Setup Python project
+        uses: ./.github/actions/setup-python-project
 
       # --------------------------------------------------
       # 4. Start Docker environment

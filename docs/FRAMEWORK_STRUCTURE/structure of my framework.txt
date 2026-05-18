@@ -1,7 +1,7 @@
 TestEcommerceAPI (project suite)
 ├──.github
 │       └── workflows/
-│             └── ci.yaml
+│             └── contracts.yaml
 ├── .gitlab/
 │       └──  ci.yaml
 ├──.venv/...

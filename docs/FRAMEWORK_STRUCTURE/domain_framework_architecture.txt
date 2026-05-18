@@ -2,9 +2,20 @@ TestEcommerceAPI (project suite/root)
 │
 ├──.git/
 ├──.github/
-│       └── workflows/
-│             └── ci.yml
-├── .venv/...                                        ← shared virtual environment (optional)
+│     ├── workflows/
+│     │     ├── contract.yml
+│     │     ├── integration.yml
+│     │     ├── performance.yml
+│     │     ├── preflight.yml
+│     │     ├── regression.yml
+│     │     ├── security.yml
+│     │     ├── smoke.yml
+│     │     ├── reusable-allure-report.yml
+│     │     └── reusable-test-runner.yml
+│     └── actions/
+│           └── setup-python-project
+│                 └── actions.yml
+├── .venv/...                                       ← shared virtual environment (optional)
 │
 ├── docs/...                                         ← shared
 │

@@ -135,9 +135,17 @@ automatically performs:
 
    * Runs:
 
-     ```bash
-     pip install -e "./EcommerceAPI[dev]"
-     ```
+    ```bash
+    # From repo root (recommended)
+    # Activate local virtual environment
+    source .venv/Scripts/activate
+
+    # Upgrade packaging tooling
+    python -m pip install --upgrade pip setuptools wheel
+
+    # Install framework + dev dependencies
+    python -m pip install -e "./EcommerceAPI[dev]"
+    ```
 
    * This makes the framework importable as a proper Python package
    * Ensures consistency between local runs and CI pipelines

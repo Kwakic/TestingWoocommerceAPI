@@ -61,7 +61,14 @@ pip install --upgrade pip setuptools wheel
 4) Install the shared framework (editable) with dev extras
 ```bash
 # From repo root (recommended)
-pip install -e './EcommerceAPI[dev]'
+# Activate local virtual environment
+source .venv/Scripts/activate
+
+# Upgrade packaging tooling
+python -m pip install --upgrade pip setuptools wheel
+
+# Install framework + dev dependencies
+python -m pip install -e "./EcommerceAPI[dev]"
 ```
 - This makes `import EcommerceAPI` resolve to your live source.
 - Use the same install (`.[dev]`) in CI and Docker to avoid surprises.
