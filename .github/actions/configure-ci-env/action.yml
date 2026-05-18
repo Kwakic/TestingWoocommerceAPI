@@ -1,0 +1,98 @@
+name: Configure CI Environment
+
+description: >
+  Configures standardized CI environment variables
+  used across the ecommerce API test framework,
+  including logging behavior, Allure integration,
+  runtime metadata, and test execution settings.
+
+runs:
+  using: composite
+
+  steps:
+
+    # --------------------------------------------------
+    # Configure shared CI environment variables
+    #
+    # These variables centralize runtime behavior
+    # across:
+    # - pytest
+    # - logging
+    # - Allure
+    # - helpers
+    # - validators
+    # - performance tests
+    # --------------------------------------------------
+    - name: Configure environment variables
+      shell: bash
+      run: |
+
+        # ----------------------------------------------
+        # Disable automatic local Allure generation
+        #
+        # CI generates reports separately using
+        # reusable-allure-report.yml
+        # ----------------------------------------------
+        echo "AUTO_ALLURE_REPORT=false" >> $GITHUB_ENV
+
+        # ----------------------------------------------
+        # Enable structured logging
+        #
+        # Used by:
+        # - JSON loggers
+        # - correlation IDs
+        # - CI diagnostics
+        # ----------------------------------------------
+        echo "ENABLE_STRUCTURED_LOGS=true" >> $GITHUB_ENV
+
+        # ----------------------------------------------
+        # Enforce strict entity discovery
+        #
+        # Prevents accidental entity misconfiguration
+        # across environments.
+        # ----------------------------------------------
+        echo "STRICT_ENTITY_DISCOVERY=true" >> $GITHUB_ENV
+
+        # ----------------------------------------------
+        # Require environment validation
+        # ----------------------------------------------
+        echo "REQUIRE_ENV=true" >> $GITHUB_ENV
+
+        # ----------------------------------------------
+        # Unique CI session identifier
+        #
+        # Useful for:
+        # - correlation IDs
+        # - observability
+        # - debugging
+        # - distributed logging
+        # ----------------------------------------------
+        echo "SESSION_ID=${{ github.run_id }}" >> $GITHUB_ENV
+
+        # ----------------------------------------------
+        # CI environment indicator
+        # ----------------------------------------------
+        echo "API_ENV=ci" >> $GITHUB_ENV
+
+        # ----------------------------------------------
+        # Default performance iterations
+        #
+        # Used primarily by performance suites.
+        # Can still be overridden later if needed.
+        # ----------------------------------------------
+        echo "PERF_ITERATIONS=5" >> $GITHUB_ENV
+
+        # ----------------------------------------------
+        # Optional:
+        # disable emojis in CI logs
+        #
+        # Uncomment if CI log readability becomes
+        # problematic.
+        # ----------------------------------------------
+        # echo "DISABLE_LOG_EMOJIS=true" >> $GITHUB_ENV
+
+        echo "====================================="
+        echo "✅ CI environment configured"
+        echo "SESSION_ID=${{ github.run_id }}"
+        echo "API_ENV=ci"
+        echo "====================================="

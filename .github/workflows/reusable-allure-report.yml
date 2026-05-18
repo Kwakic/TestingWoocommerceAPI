@@ -119,7 +119,7 @@ jobs:
       - name: Generate Allure report
         run: |
           allure generate reports/allure-results \
-            -o reports/allure-report \
+            -o reports/allure-report/${{ inputs.suite_name }} \
             --clean
 
       # --------------------------------------------------
@@ -141,7 +141,7 @@ jobs:
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: reports/allure-report
+          publish_dir: reports/allure-report/${{ inputs.suite_name }}
           publish_branch: gh-pages
           keep_files: true
 

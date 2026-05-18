@@ -4,14 +4,7 @@ name: Contract Tests 📋
 # dependencies
 # permissions
 # triggers
-# concurrency
 
-# ==================================================
-# 🔒 Prevent concurrent GitHub Pages deployments
-# ==================================================
-concurrency:
-  group: pages-deploy
-  cancel-in-progress: false
 
 # ==================================================
 # 🔁 Triggers

@@ -6,14 +6,6 @@ name: Integration Tests 🔗
 # triggers
 # concurrency
 
-# ==================================================
-# 🔒 Prevent concurrent GitHub Pages deployments
-# ==================================================
-concurrency:
-  group: pages-deploy
-  cancel-in-progress: false
-
-
 # --------------------------------------------------
 # 🔁 Triggers
 # --------------------------------------------------
@@ -81,11 +73,22 @@ jobs:
   # ==================================================
   report:
 
+    # --------------------------------------------------
+    # 🔒 Prevent concurrent GitHub Pages deployments
+    #
+    # Only report jobs should serialize because
+    # they deploy to the shared gh-pages branch.
+    #
+    # Test jobs can safely run in parallel.
+    # --------------------------------------------------
+    concurrency:
+      group: pages-deploy
+      cancel-in-progress: false
+
     needs: test
 
     permissions:
       contents: write
-
 
     uses: ./.github/workflows/reusable-allure-report.yml
 

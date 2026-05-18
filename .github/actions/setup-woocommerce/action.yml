@@ -1,0 +1,113 @@
+name: Setup WooCommerce Environment
+
+description: >
+  Starts the Docker-based WooCommerce stack,
+  waits for MySQL readiness, bootstraps WooCommerce,
+  captures dynamic API credentials, and configures
+  database environment variables for CI execution.
+
+runs:
+  using: composite
+
+  steps:
+
+    # --------------------------------------------------
+    # 1. Start Docker environment
+    #
+    # Launches:
+    # - WordPress
+    # - MySQL
+    # - WooCommerce stack
+    # --------------------------------------------------
+    - name: Start Docker stack
+      shell: bash
+      run: |
+        docker compose -f docker-compose.wp.yml up -d
+
+    # --------------------------------------------------
+    # 2. Wait for MySQL readiness
+    #
+    # Prevents race conditions during bootstrap.
+    # CI runners can be inconsistent in startup timing,
+    # so we explicitly wait until MySQL accepts
+    # TCP connections.
+    # --------------------------------------------------
+    - name: Wait for MySQL
+      shell: bash
+      run: |
+        until nc -z 127.0.0.1 3306; do
+          echo "Waiting for MySQL..."
+          sleep 3
+        done
+
+        echo "✅ MySQL is ready"
+
+    # --------------------------------------------------
+    # 3. Bootstrap WooCommerce
+    #
+    # Executes custom setup script which:
+    # - installs/configures WooCommerce
+    # - creates API credentials
+    # - prepares test environment
+    #
+    # Captures:
+    # - WC_KEY
+    # - WC_SECRET
+    # --------------------------------------------------
+    - name: Bootstrap WooCommerce and capture credentials
+      shell: bash
+      run: |
+        set -e
+
+        OUTPUT=$(bash scripts/setup.sh)
+
+        echo "$OUTPUT"
+
+        WC_KEY=$(echo "$OUTPUT" | grep "CONSUMER KEY" | awk '{print $3}')
+        WC_SECRET=$(echo "$OUTPUT" | grep "CONSUMER SECRET" | awk '{print $3}')
+
+        echo "WC_KEY=$WC_KEY" >> $GITHUB_ENV
+        echo "WC_SECRET=$WC_SECRET" >> $GITHUB_ENV
+
+        echo "✅ WooCommerce credentials captured"
+
+    # --------------------------------------------------
+    # 4. Configure database connection
+    #
+    # Must match docker-compose configuration.
+    #
+    # These variables are consumed by:
+    # - DAOs
+    # - SQLAlchemy
+    # - DB validators
+    # - integration helpers
+    # --------------------------------------------------
+    - name: Configure DB connection
+      shell: bash
+      run: |
+        echo "DB_USER=wp" >> $GITHUB_ENV
+        echo "DB_PASSWORD=wp" >> $GITHUB_ENV
+        echo "DB_HOST=127.0.0.1" >> $GITHUB_ENV
+        echo "DB_PORT=3306" >> $GITHUB_ENV
+        echo "DB_DATABASE=wordpress" >> $GITHUB_ENV
+        echo "DB_TABLE_PREFIX=wp_" >> $GITHUB_ENV
+
+        echo "✅ Database environment configured"
+
+    # --------------------------------------------------
+    # 5. Print Docker diagnostics
+    #
+    # Extremely valuable for CI debugging:
+    # - failed container startup
+    # - unhealthy services
+    # - port collisions
+    # - unexpected exits
+    # --------------------------------------------------
+    - name: Print Docker diagnostics
+      shell: bash
+      run: |
+        echo "====================================="
+        echo "Docker containers:"
+        docker ps -a
+
+        echo "====================================="

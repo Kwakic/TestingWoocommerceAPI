@@ -1,0 +1,37 @@
+name: Docker Cleanup
+
+description: >
+  Stops and removes the Docker-based WooCommerce
+  test environment, including containers, networks,
+  and anonymous volumes to ensure clean CI isolation.
+
+runs:
+  using: composite
+
+  steps:
+
+    # --------------------------------------------------
+    # Stop Docker stack and remove resources
+    #
+    # - containers
+    # - networks
+    # - anonymous volumes
+    #
+    # Helps prevent:
+    # - state leakage
+    # - DB contamination
+    # - flaky integration behavior
+    # --------------------------------------------------
+    - name: Cleanup Docker environment
+      shell: bash
+      run: |
+
+        echo "====================================="
+        echo "Stopping Docker environment..."
+        echo "====================================="
+
+        docker compose -f docker-compose.wp.yml down -v
+
+        echo "====================================="
+        echo "✅ Docker cleanup completed"
+        echo "====================================="

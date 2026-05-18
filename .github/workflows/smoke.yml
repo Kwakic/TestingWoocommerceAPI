@@ -7,13 +7,6 @@ name: Smoke Tests 🔥
 # concurrency
 
 # ==================================================
-# 🔒 Prevent concurrent GitHub Pages deployments
-# ==================================================
-concurrency:
-  group: pages-deploy
-  cancel-in-progress: false
-
-# ==================================================
 # 🔁 Triggers
 # ==================================================
 on:
@@ -62,28 +55,27 @@ jobs:
       pytest_maxfail: 3
 
 
-  # ==================================================
+    # ==================================================
   # 📊 JOB 2 — GENERATE + PUBLISH ALLURE REPORT
-  #
-  # NOTE:
-  # This job intentionally remains local for now.
-  #
-  # Why?
-  # ----
-  # GitHub Pages deployment and Allure history
-  # restoration are more sensitive infrastructure
-  # concerns and should be extracted separately
-  # after the reusable test runner stabilizes.
-  #
-  # This is the safest enterprise migration strategy.
   # ==================================================
   report:
+
+    # --------------------------------------------------
+    # 🔒 Prevent concurrent GitHub Pages deployments
+    #
+    # Only report jobs should serialize because
+    # they deploy to the shared gh-pages branch.
+    #
+    # Test jobs can safely run in parallel.
+    # --------------------------------------------------
+    concurrency:
+      group: pages-deploy
+      cancel-in-progress: false
 
     needs: test
 
     permissions:
       contents: write
-
 
     uses: ./.github/workflows/reusable-allure-report.yml
 
