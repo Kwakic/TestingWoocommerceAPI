@@ -185,28 +185,23 @@ def assert_customer_creation_failed(response: dict):
 
 def assert_customer_not_found_error(response):
     """
-    Validate error returned when customers does not exist.
-
-    Expected:
-        code: wc_user_invalid_id
-        message: "Invalid user ID."
-        status: 404
+    Validate error returned when customer does not exist.
     """
-    # Base error contract validation
+
     assert_customer_error_response(response)
 
     assert (
         response["data"]["status"] == 404
     ), f"Expected status 404, got {response['data']['status']}"
 
-    assert response["code"] == "wc_user_invalid_id", (
+    assert response["code"] == "woocommerce_rest_invalid_id", (
         f"Invalid Error code. Current: '{response['code']}', "
-        f"Expected: 'wc_user_invalid_id' "
+        f"Expected: 'woocommerce_rest_invalid_id'"
     )
 
-    assert response["message"] == "Invalid user ID.", (
+    assert response["message"] == "Invalid resource ID.", (
         f"Invalid Error message. Current: '{response['message']}', "
-        f"Expected: 'Invalid user ID'"
+        f"Expected: 'Invalid resource ID.'"
     )
 
 
