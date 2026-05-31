@@ -334,6 +334,10 @@ Now:
 ### 3.2 Install WooCommerce
 ```bash
 wp plugin install woocommerce --activate
+
+# or
+
+wp plugin install woocommerce --version=9.1.4 --activate
 ```
 Now:
 ```

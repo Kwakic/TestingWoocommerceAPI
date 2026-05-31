@@ -14,13 +14,13 @@ TestEcommerceAPI (project suite/root)
 │     │     └── reusable-test-runner.yml
 │     └── actions/
 │           ├── setup-python-project
-│           │      └── actions.yml
+│           │      └── action.yml
 │           ├── configure-ci-env
-│           │      └── actions.yml
+│           │      └── action.yml
 │           ├── docker-cleanup
-│           │      └── actions.yml
+│           │      └── action.yml
 │           └── setup-woocommerce
-│                  └── actions.yml
+│                  └── action.yml
 ├── .venv/...                                       ← shared virtual environment (optional)
 │
 ├── docs/...                                         ← shared

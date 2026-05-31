@@ -51,7 +51,7 @@ else
   apt install -y unzip curl &&
   cd /var/www/html/wp-content/plugins &&
   rm -rf woocommerce woocommerce.zip &&
-  curl -L -o woocommerce.zip https://downloads.wordpress.org/plugin/woocommerce.latest-stable.zip &&
+  curl -L -o woocommerce.zip https://downloads.wordpress.org/plugin/woocommerce.9.1.4.zip &&
   unzip -o woocommerce.zip &&
   rm -f woocommerce.zip &&
   chown -R www-data:www-data woocommerce

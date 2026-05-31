@@ -285,10 +285,18 @@ Generate and publish reports even on failed test runs to preserve trend consiste
     ```
 
 ---
+## ⚠️ Note:
+### Never use in CI:
 
-## Extras & suggestions I can add for you
-- Add `scripts/generate_allure.sh` to repo (I can produce file content and a patch).
-- Add `workflow_dispatch` input to your GitHub workflow (I can prepare and patch the workflow).
-- Add an upload step in GitLab CI to expose Allure HTML artifacts (I can provide snippet/patch).
+```
+latest
+latest-stable
+nightly
+edge
+```
 
-Which of these would you like me to add next?
+Because:
+
+* CI becomes nondeterministic
+* builds randomly break
+* historical runs become unreproducible
