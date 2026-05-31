@@ -1,5 +1,5 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Sun May 31 19:43:51 UTC 2026","Sun May 31 19:43:51 UTC 2026","91","tests.shared.security","test_authentication_success","","","","test_authenticated_requests_are_allowed[coupons]","
+"passed","Sun May 31 19:54:36 UTC 2026","Sun May 31 19:54:36 UTC 2026","95","tests.shared.security","test_authentication_success","","","","test_authenticated_requests_are_allowed[products]","
 Authentication success guard.
 
 Ensures valid OAuth credentials allow access
@@ -8,79 +8,21 @@ to WooCommerce API endpoints.
 This complements the negative authentication matrix
 which verifies invalid credentials are rejected.
 "
-"passed","Sun May 31 19:43:48 UTC 2026","Sun May 31 19:43:48 UTC 2026","612","tests.customers.api","test_create_customer","","","","test_create_single_customer_with_email_and_password_only","
-Create a customers using the minimum valid payload.
-
-The fixture `create_valid_customer` already performs:
-    - POST /customers
-    - status code validation (201)
-    - response structure validation (Pydantic)
-    - cleanup registration
-
-Test flow:
-    1. Create a customers
-    2. Fetch customers via API
-    3. Verify API data matches database record
-"
-"passed","Sun May 31 19:43:51 UTC 2026","Sun May 31 19:43:51 UTC 2026","102","tests.shared.security","test_authentication_success","","","","test_authenticated_requests_are_allowed[customers]","
-Authentication success guard.
-
-Ensures valid OAuth credentials allow access
-to WooCommerce API endpoints.
-
-This complements the negative authentication matrix
-which verifies invalid credentials are rejected.
-"
-"passed","Sun May 31 19:43:51 UTC 2026","Sun May 31 19:43:51 UTC 2026","91","tests.shared.security","test_authentication_success","","","","test_authenticated_requests_are_allowed[orders]","
-Authentication success guard.
-
-Ensures valid OAuth credentials allow access
-to WooCommerce API endpoints.
-
-This complements the negative authentication matrix
-which verifies invalid credentials are rejected.
-"
-"passed","Sun May 31 19:43:49 UTC 2026","Sun May 31 19:43:49 UTC 2026","501","tests.customers.api","test_get_customer","","","","test_get_customer_by_email","
-Verify that a customers can be retrieved using the email filter.
-
-Endpoint tested:
-    GET /customers?email={email}
-
-Fixture responsibilities (`create_valid_customer`):
-    - POST /customers
-    - response validation (Pydantic)
-    - automatic cleanup registration
-
-Test flow:
-    1. Create a customers
-    2. Retrieve customers using email filter
-    3. Validate returned dataset
-    4. Verify returned customers identity
-    5. Verify API data matches database
-"
-"passed","Sun May 31 19:43:51 UTC 2026","Sun May 31 19:43:51 UTC 2026","93","tests.shared.security","test_authentication_success","","","","test_authenticated_requests_are_allowed[products]","
-Authentication success guard.
-
-Ensures valid OAuth credentials allow access
-to WooCommerce API endpoints.
-
-This complements the negative authentication matrix
-which verifies invalid credentials are rejected.
-"
-"passed","Sun May 31 19:43:48 UTC 2026","Sun May 31 19:43:49 UTC 2026","394","tests.customers.api","test_get_all_customers","","","","test_get_all_customers_list_not_empty_and_valid_schema","
-Smoke test for GET /customers endpoint.
+"passed","Sun May 31 19:54:35 UTC 2026","Sun May 31 19:54:35 UTC 2026","305","tests.customers.api","test_update_customer","","","","test_update_customer_first_name","
+Verify that a customers can be updated successfully.
 
 Validates that:
-    - API returns a non-empty list of customers
-    - Each returned customers has a valid structure (Pydantic validation)
+    - PUT /customers/{id} returns a successful response
+    - Updated fields are reflected in the API response
+    - Returned customers structure is valid (Pydantic validation)
 
 Test flow:
-    1. Create customer for test
-    2. Call GET /customers
-    3. Ensure response contains customers
-    4. Validate structure of each customers
+    1. Create customers via fixture
+    2. Update first_name and email
+    3. Validate response structure
+    4. Verify updated values
 "
-"passed","Sun May 31 19:43:49 UTC 2026","Sun May 31 19:43:50 UTC 2026","484","tests.customers.api","test_get_customer","","","","test_get_customer_by_id","
+"passed","Sun May 31 19:54:34 UTC 2026","Sun May 31 19:54:35 UTC 2026","458","tests.customers.api","test_get_customer","","","","test_get_customer_by_id","
 Verify that a customers can be retrieved by ID.
 
 Endpoint tested:
@@ -98,17 +40,75 @@ Test flow:
     4. Verify returned customers identity
     5. Verify API data matches database
 "
-"passed","Sun May 31 19:43:50 UTC 2026","Sun May 31 19:43:50 UTC 2026","305","tests.customers.api","test_update_customer","","","","test_update_customer_first_name","
-Verify that a customers can be updated successfully.
+"passed","Sun May 31 19:54:36 UTC 2026","Sun May 31 19:54:36 UTC 2026","89","tests.shared.security","test_authentication_success","","","","test_authenticated_requests_are_allowed[coupons]","
+Authentication success guard.
 
-Validates that:
-    - PUT /customers/{id} returns a successful response
-    - Updated fields are reflected in the API response
-    - Returned customers structure is valid (Pydantic validation)
+Ensures valid OAuth credentials allow access
+to WooCommerce API endpoints.
+
+This complements the negative authentication matrix
+which verifies invalid credentials are rejected.
+"
+"passed","Sun May 31 19:54:34 UTC 2026","Sun May 31 19:54:34 UTC 2026","490","tests.customers.api","test_get_customer","","","","test_get_customer_by_email","
+Verify that a customers can be retrieved using the email filter.
+
+Endpoint tested:
+    GET /customers?email={email}
+
+Fixture responsibilities (`create_valid_customer`):
+    - POST /customers
+    - response validation (Pydantic)
+    - automatic cleanup registration
 
 Test flow:
-    1. Create customers via fixture
-    2. Update first_name and email
-    3. Validate response structure
-    4. Verify updated values
+    1. Create a customers
+    2. Retrieve customers using email filter
+    3. Validate returned dataset
+    4. Verify returned customers identity
+    5. Verify API data matches database
+"
+"passed","Sun May 31 19:54:33 UTC 2026","Sun May 31 19:54:34 UTC 2026","386","tests.customers.api","test_get_all_customers","","","","test_get_all_customers_list_not_empty_and_valid_schema","
+Smoke test for GET /customers endpoint.
+
+Validates that:
+    - API returns a non-empty list of customers
+    - Each returned customers has a valid structure (Pydantic validation)
+
+Test flow:
+    1. Create customer for test
+    2. Call GET /customers
+    3. Ensure response contains customers
+    4. Validate structure of each customers
+"
+"passed","Sun May 31 19:54:35 UTC 2026","Sun May 31 19:54:36 UTC 2026","91","tests.shared.security","test_authentication_success","","","","test_authenticated_requests_are_allowed[customers]","
+Authentication success guard.
+
+Ensures valid OAuth credentials allow access
+to WooCommerce API endpoints.
+
+This complements the negative authentication matrix
+which verifies invalid credentials are rejected.
+"
+"passed","Sun May 31 19:54:33 UTC 2026","Sun May 31 19:54:33 UTC 2026","531","tests.customers.api","test_create_customer","","","","test_create_single_customer_with_email_and_password_only","
+Create a customers using the minimum valid payload.
+
+The fixture `create_valid_customer` already performs:
+    - POST /customers
+    - status code validation (201)
+    - response structure validation (Pydantic)
+    - cleanup registration
+
+Test flow:
+    1. Create a customers
+    2. Fetch customers via API
+    3. Verify API data matches database record
+"
+"passed","Sun May 31 19:54:36 UTC 2026","Sun May 31 19:54:36 UTC 2026","86","tests.shared.security","test_authentication_success","","","","test_authenticated_requests_are_allowed[orders]","
+Authentication success guard.
+
+Ensures valid OAuth credentials allow access
+to WooCommerce API endpoints.
+
+This complements the negative authentication matrix
+which verifies invalid credentials are rejected.
 "
