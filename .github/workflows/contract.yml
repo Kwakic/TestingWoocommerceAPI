@@ -11,10 +11,17 @@ name: Contract Tests 📋
 # ==================================================
 on:
   # --------------------------------------------------
-  # Run on pushes to main branch
+  # Run on crone job
   # --------------------------------------------------
-  push:
-    branches: [ main ]
+  schedule:
+    - cron: "0 2 * * *"  # 2 AM daily
+
+#on:
+#  # --------------------------------------------------
+#  # Run on pushes to main branch
+#  # --------------------------------------------------
+#  push:
+#    branches: [ main ]
 
   # --------------------------------------------------
   # Allow manual execution from GitHub UI

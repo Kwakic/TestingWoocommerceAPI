@@ -39,6 +39,11 @@ on:
         type: string
         default: ""
 
+      entity:
+        required: false
+        type: string
+        default: ""
+
 
 jobs:
 

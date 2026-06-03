@@ -1085,5 +1085,23 @@ Your framework is implementing enterprise-grade concepts:
 
 ---
 
+## ⚠️ Note:
+### Never use in CI:
+
+```
+latest
+latest-stable
+nightly
+edge
+```
+
+Because:
+
+* CI becomes nondeterministic
+* builds randomly break
+* historical runs become unreproducible
+
+---
+
 **Last updated:** 2026-05-08
 **Guide version:** 1.2 (Enterprise-grade CI/CD & Allure best practices)
