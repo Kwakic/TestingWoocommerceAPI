@@ -1,10 +1,31 @@
+
 name: Smoke Tests 🔥
+
+# ==================================================
 # Controls:
-# orchestration
-# dependencies
-# permissions
-# triggers
-# concurrency
+# - orchestration
+# - dependencies
+# - permissions
+# - triggers
+# - concurrency
+#
+# Enterprise philosophy:
+# Smoke tests validate critical business paths
+# independently per entity/team.
+#
+# Each entity runs in isolated matrix jobs:
+# - customers
+# - orders
+# - products
+# - coupons
+#
+# This preserves:
+# - ownership boundaries
+# - failure isolation
+# - independent diagnostics
+# - future scalability
+# ==================================================
+
 
 # ==================================================
 # 🔁 Triggers
@@ -13,6 +34,11 @@ on:
 
   # --------------------------------------------------
   # Run on pushes to main branch
+  #
+  # Smoke suite acts as:
+  # - deployment confidence gate
+  # - operational confidence signal
+  # - README badge source
   # --------------------------------------------------
   push:
     branches: [ main ]
@@ -27,6 +53,15 @@ jobs:
 
   # ==================================================
   # 🧪 JOB 1 — EXECUTE SMOKE TESTS
+  #
+  # Matrix strategy:
+  # One isolated job per entity/team.
+  #
+  # Enterprise rationale:
+  # - independent ownership
+  # - isolated failures
+  # - parallel execution
+  # - scalable architecture
   #
   # Delegates all shared CI logic to the reusable
   # enterprise test runner workflow.
@@ -45,17 +80,71 @@ jobs:
   # ==================================================
   test:
 
+    # --------------------------------------------------
+    # Enterprise matrix execution
+    #
+    # Each entity represents:
+    # - ownership boundary
+    # - deployment boundary
+    # - reporting boundary
+    #
+    # IMPORTANT:
+    # One entity failure must NOT cancel others.
+    #
+    # Example:
+    # customers failure must NOT cancel:
+    # - orders
+    # - products
+    # - coupons
+    #
+    # This preserves full diagnostic visibility.
+    # --------------------------------------------------
+    strategy:
+
+      fail-fast: false
+
+      matrix:
+        entity:
+          - customers
+          - orders
+          - products
+          - coupons
+
     uses: ./.github/workflows/reusable-test-runner.yml
 
     with:
+
+      # --------------------------------------------------
+      # Test suite metadata
+      # --------------------------------------------------
       suite_name: smoke
       pytest_markers: smoke
+
+      # --------------------------------------------------
+      # Pytest runtime configuration
+      # --------------------------------------------------
       timeout_minutes: 20
       pytest_durations: 10
       pytest_maxfail: 3
 
+      # --------------------------------------------------
+      # Matrix entity input
+      #
+      # NOTE:
+      # reusable-test-runner.yml does NOT yet
+      # support this input.
+      #
+      # This is intentional for STEP 1.
+      #
+      # Next step:
+      # - extend reusable-test-runner.yml
+      # - make pytest entity-aware
+      # - isolate reports/artifacts
+      # --------------------------------------------------
+      entity: ${{ matrix.entity }}
 
-    # ==================================================
+
+  # ==================================================
   # 📊 JOB 2 — GENERATE + PUBLISH ALLURE REPORT
   # ==================================================
   report:

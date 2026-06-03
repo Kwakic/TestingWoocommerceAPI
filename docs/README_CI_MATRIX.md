@@ -255,3 +255,173 @@ pip install -e './EcommerceAPI[dev]'
 * **WooCommerce credentials are required** (`WC_KEY` and `WC_SECRET`)
 * Framework imports remain **as-is** to avoid breaking the pipeline
 * Preflight and matrix tests now correctly **initialize the shared framework**
+
+---
+
+# 🏛️ What Your Final Architecture Should Become
+
+### You should evolve into:
+
+
+| Workflow        | Matrix Dimension |
+| --------------- | ---------------- |
+| smoke.yml       | entity           |
+| integration.yml | entity           |
+| regression.yml  | entity           |
+| contract.yml    | entity           |
+| performance.yml | entity           |
+| security.yml    | entity           |
+
+## Meaning
+
+```
+smoke.yml
+ ├── customers
+ ├── orders
+ ├── products
+ └── coupons
+
+integration.yml
+ ├── customers
+ ├── orders
+ ├── products
+ └── coupons
+
+```
+
+### This gives:
+
+* independent teams
+* independent failures
+* independent reports
+* independent reruns
+* independent ownership
+* independent badges later
+* scalable to 20+ services
+
+---
+## 👉 The Most Important Concept
+
+The matrix should represent:
+
+"deployment/test ownership boundary"
+
+NOT:
+
+* marker type
+* test folder
+* pytest command variation
+
+Your ownership boundary is clearly:
+
+* customers
+* orders
+* products
+* coupons
+
+
+---
+
+## 💡 The CRITICAL Allure Design Decision
+
+This is where most teams break matrix reporting.
+
+You CANNOT share:
+
+```
+reports/allure-results
+```
+
+across matrix jobs.
+
+Each matrix job MUST own isolated directories.
+
+Example:
+
+```
+reports/customers/smoke/allure-results
+reports/orders/smoke/allure-results
+reports/products/smoke/allure-results
+```
+
+And
+```
+reports/customers/smoke/allure-report
+```
+
+etc.
+
+This is mandatory.
+
+---
+
+## Recommended Future Enterprise Evolution
+
+Later you can evolve into:
+
+```
+matrix:
+  include:
+    - entity: customers
+      owner: customers-team
+      criticality: high
+
+    - entity: coupons
+      owner: promotions-team
+      criticality: low
+```
+
+Then:
+
+* selective retries
+* ownership tagging
+* slack notifications
+* flaky quarantine
+* deployment gates
+
+become possible.
+
+Your architecture is already very close to this.
+
+---
+
+## IMPORTANT Enterprise Rules For Step 1
+
+We will NOT yet:
+
+* dynamically discover entities
+* merge reports
+* aggregate histories
+* add owner metadata
+* add notifications
+* add deployment gates
+
+We ONLY establish:
+
+* stable matrix orchestration
+* isolated execution
+* isolated reports
+* isolated artifacts
+
+
+TARGET ARCHITECTURE
+
+We want this flow:
+
+```
+smoke.yml
+   ↓
+matrix(entity)
+   ↓
+reusable-test-runner.yml
+   ↓
+pytest tests/<entity>
+   ↓
+reports/<entity>/smoke/
+```
+
+---
+
+```
+
+```
