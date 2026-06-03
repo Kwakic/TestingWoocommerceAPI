@@ -44,7 +44,6 @@ on:
         type: string
         default: ""
 
-
 jobs:
 
   # ==================================================
@@ -102,7 +101,40 @@ jobs:
         uses: ./.github/actions/configure-ci-env
 
       # --------------------------------------------------
-      # 5. Run pytest
+      # 5. Determine pytest collection target
+      #
+      # Enterprise rationale:
+      #
+      # Allows matrix jobs to execute only the tests
+      # owned by the target entity/team.
+      #
+      # Examples:
+      #
+      # customers -> tests/customers
+      # orders    -> tests/orders
+      # products  -> tests/products
+      # coupons   -> tests/coupons
+      #
+      # Backward compatibility:
+      #
+      # Workflows that do not yet pass an entity
+      # continue to execute the entire repository.
+      # --------------------------------------------------
+      - name: Determine test target
+        shell: bash
+        run: |
+
+          if [ -n "${{ inputs.entity }}" ]; then
+            echo "TEST_TARGET=tests/${{ inputs.entity }}" >> "$GITHUB_ENV"
+          else
+            echo "TEST_TARGET=tests" >> "$GITHUB_ENV"
+          fi
+
+          echo "Selected test target:"
+          echo "$TEST_TARGET"
+
+      # --------------------------------------------------
+      # 6. Run pytest
       # Generates:
       # - Allure raw results
       # - JUnit XML
@@ -111,7 +143,7 @@ jobs:
       - name: Run pytest
         shell: bash
         run: |
-          python -m pytest \
+          python -m pytest "$TEST_TARGET" \
             -m "${{ inputs.pytest_markers }}" \
             -ra \
             ${{ inputs.pytest_extra_args }} \
@@ -122,7 +154,7 @@ jobs:
             --alluredir=reports/allure-results
 
       # --------------------------------------------------
-      # 6. Upload Allure raw results
+      # 7. Upload Allure raw results
       # --------------------------------------------------
       - name: Upload Allure results
         if: always()
@@ -133,7 +165,7 @@ jobs:
           if-no-files-found: warn
 
       # --------------------------------------------------
-      # 7. Upload structured logs
+      # 8. Upload structured logs
       # --------------------------------------------------
       - name: Upload structured logs
         if: always()
@@ -144,7 +176,7 @@ jobs:
           if-no-files-found: warn
 
       # --------------------------------------------------
-      # 8. Upload JUnit XML results
+      # 9. Upload JUnit XML results
       # --------------------------------------------------
       - name: Upload JUnit XML
         if: always()
@@ -155,7 +187,7 @@ jobs:
           if-no-files-found: warn
 
       # --------------------------------------------------
-      # 9. Cleanup Docker environment
+      # 10. Cleanup Docker environment
       #
       # Shared composite action:
       # - stop containers
