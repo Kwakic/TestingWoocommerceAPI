@@ -114,6 +114,7 @@ jobs:
       # orders    -> tests/orders
       # products  -> tests/products
       # coupons   -> tests/coupons
+      # shared   -> tests/shared
       #
       # Backward compatibility:
       #
@@ -125,22 +126,70 @@ jobs:
         run: |
 
           if [ -n "${{ inputs.entity }}" ]; then
-            echo "TEST_TARGET=tests/${{ inputs.entity }}" >> "$GITHUB_ENV"
+
+            TARGET="tests/${{ inputs.entity }}"
+
           else
-            echo "TEST_TARGET=tests" >> "$GITHUB_ENV"
+
+            TARGET="tests"
+
           fi
 
+          echo "TEST_TARGET=$TARGET" >> "$GITHUB_ENV"
+
           echo "Selected test target:"
-          echo "$TEST_TARGET"
+          echo "$TARGET"
 
       # --------------------------------------------------
-      # 6. Run pytest
+      # 6. Validate entity test presence
+      #
+      # Enterprise rationale:
+      #
+      # Some entities may exist before tests are written.
+      #
+      # Example:
+      # - customers -> tests exist
+      # - orders    -> entity scaffold only
+      # - coupons   -> entity scaffold only
+      #
+      # Rather than failing CI with:
+      #   Exit Code 5 (no tests collected)
+      #
+      # we gracefully skip execution.
+      #
+      # This preserves:
+      # - ownership visibility
+      # - matrix stability
+      # - incremental adoption
+      # --------------------------------------------------
+      - name: Check for tests
+        shell: bash
+        run: |
+
+          echo "Checking for tests in: $TEST_TARGET"
+
+          if ! find "$TEST_TARGET" \( -name "test_*.py" -o -name "*_test.py" \) | grep -q .; then
+
+            echo "No tests found for entity:"
+            echo "$TEST_TARGET"
+
+            echo "SKIP_ENTITY=true" >> "$GITHUB_ENV"
+
+          else
+
+            echo "SKIP_ENTITY=false" >> "$GITHUB_ENV"
+
+          fi
+
+      # --------------------------------------------------
+      # 7. Run pytest
       # Generates:
       # - Allure raw results
       # - JUnit XML
       # - structured logs
       # --------------------------------------------------
       - name: Run pytest
+        if: env.SKIP_ENTITY != 'true'
         shell: bash
         run: |
           python -m pytest "$TEST_TARGET" \
@@ -154,7 +203,7 @@ jobs:
             --alluredir=reports/allure-results
 
       # --------------------------------------------------
-      # 7. Upload Allure raw results
+      # 8. Upload Allure raw results
       # --------------------------------------------------
       - name: Upload Allure results
         if: always()
@@ -165,7 +214,7 @@ jobs:
           if-no-files-found: warn
 
       # --------------------------------------------------
-      # 8. Upload structured logs
+      # 9. Upload structured logs
       # --------------------------------------------------
       - name: Upload structured logs
         if: always()
@@ -176,7 +225,7 @@ jobs:
           if-no-files-found: warn
 
       # --------------------------------------------------
-      # 9. Upload JUnit XML results
+      # 10. Upload JUnit XML results
       # --------------------------------------------------
       - name: Upload JUnit XML
         if: always()
@@ -187,7 +236,7 @@ jobs:
           if-no-files-found: warn
 
       # --------------------------------------------------
-      # 10. Cleanup Docker environment
+      # 11. Cleanup Docker environment
       #
       # Shared composite action:
       # - stop containers
