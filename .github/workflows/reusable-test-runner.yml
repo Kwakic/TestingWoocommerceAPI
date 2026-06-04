@@ -141,57 +141,67 @@ jobs:
           echo "$TARGET"
 
       # --------------------------------------------------
-      # 6. Validate entity test presence
-      #
-      # Enterprise rationale:
-      #
-      # Some entities may exist before tests are written.
-      #
-      # Example:
-      # - customers -> tests exist
-      # - orders    -> entity scaffold only
-      # - coupons   -> entity scaffold only
-      #
-      # Rather than failing CI with:
-      #   Exit Code 5 (no tests collected)
-      #
-      # we gracefully skip execution.
-      #
-      # This preserves:
-      # - ownership visibility
-      # - matrix stability
-      # - incremental adoption
-      # --------------------------------------------------
-      - name: Check for tests
-        shell: bash
-        run: |
-
-          echo "Checking for tests in: $TEST_TARGET"
-
-          if ! find "$TEST_TARGET" \( -name "test_*.py" -o -name "*_test.py" \) | grep -q .; then
-
-            echo "No tests found for entity:"
-            echo "$TEST_TARGET"
-
-            echo "SKIP_ENTITY=true" >> "$GITHUB_ENV"
-
-          else
-
-            echo "SKIP_ENTITY=false" >> "$GITHUB_ENV"
-
-          fi
-
-      # --------------------------------------------------
-      # 7. Run pytest
+      # 6. Run pytest
       # Generates:
       # - Allure raw results
       # - JUnit XML
       # - structured logs
+      #
+      # Enterprise rationale:
+      #
+      # Pytest is the source of truth for test collection.
+      #
+      # We intentionally do NOT inspect the filesystem
+      # to determine whether tests exist.
+      #
+      # Reasons:
+      #
+      # - tests may be commented out
+      # - tests may be deselected by markers
+      # - tests may be skipped
+      # - tests may be under development
+      #
+      # Pytest exit code semantics:
+      #
+      #   0 = tests executed successfully
+      #   1 = test failures
+      #   2+ = execution / infrastructure issues
+      #   5 = no tests collected
+      #
+      # In a growing multi-entity framework,
+      # "no tests collected" is NOT considered
+      # a CI failure.
+      #
+      # Example:
+      #
+      # customers -> active smoke tests
+      # orders    -> entity scaffold only
+      # products  -> tests under development
+      # coupons   -> tests temporarily disabled
+      #
+      # Exit code 5 is therefore treated as:
+      #
+      #   SUCCESS (Skipped Entity)
+      #
+      # This preserves:
+      # - matrix stability
+      # - ownership visibility
+      # - incremental team adoption
+
+      # Supports all scenarios automatically:
+      # Scenario	                            Result
+      # Active smoke tests	                    Run
+      # Folder exists but tests commented out	Skip
+      # Folder exists but marker mismatch	    Skip
+      # Tests under development	                Skip
+      # No tests yet	                        Skip
+      # Test failure	                        Fail
+      # Infrastructure failure	                Fail
       # --------------------------------------------------
       - name: Run pytest
-        if: env.SKIP_ENTITY != 'true'
         shell: bash
         run: |
+
           python -m pytest "$TEST_TARGET" \
             -m "${{ inputs.pytest_markers }}" \
             -ra \
@@ -201,6 +211,26 @@ jobs:
             --clean-alluredir \
             --junitxml=reports/junit/results.xml \
             --alluredir=reports/allure-results
+
+          PYTEST_EXIT_CODE=$?
+
+          # ----------------------------------------------
+          # Exit Code 5 = No tests collected
+          #
+          # Treat as a successful skipped entity.
+          # ----------------------------------------------
+          if [ "$PYTEST_EXIT_CODE" -eq 5 ]; then
+
+            echo "No eligible tests collected."
+            echo "Entity: ${{ inputs.entity }}"
+            echo "Result: SKIPPED"
+
+            exit 0
+
+          fi
+
+          exit "$PYTEST_EXIT_CODE"
+
 
       # --------------------------------------------------
       # 8. Upload Allure raw results

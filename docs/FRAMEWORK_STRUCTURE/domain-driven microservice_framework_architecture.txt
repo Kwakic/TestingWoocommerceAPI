@@ -150,7 +150,6 @@ TestEcommerceAPI (project suite/root)
 │     │     ├── data/
 │     │     │     ├── __init__.py
 │     │     │     └── create_customer_payload.json
-│     │     ├── .gitlab-ci-template.yml
 │     │     ├── __init__.py
 │     │     ├── conftest.py
 │     │     ├── README.md
@@ -183,7 +182,24 @@ TestEcommerceAPI (project suite/root)
 │     │            ├── __init__.py
 │     │            └── README_PREFLIGHT.md
 │     │
-│     ├── orders/..                                ← orders-specific
+│     ├── orders/                                 ← orders-specific
+│     │     ├── configs/
+│     │     │     ├── config_customers.py          ← storing API_HOSTS
+│     │     │     ├── __init__.py
+│     │     │     └── README.md
+│     │     ├── data/
+│     │     │     ├── __init__.py
+│     │     │     └── create_order_payload.json
+│     │     ├── __init__.py
+│     │     ├── conftest.py
+│     │     ├── README.md
+│     │     └── api/
+│     │            ├── test_apply_valid_coupon_to_order.py
+│     │            ├── test_create_order_smoke.py
+│     │            ├── test_orders_param_inside_module.py
+│     │            ├── test_orders_params_using_json_file.py
+│     │            ├── test_update_order.py
+│     │            └── __init__.py
 │     ├── coupons/..                               ← coupons-specific
 │     ├── products/..                              ← products-specific
 │     ├── __init__.py

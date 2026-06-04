@@ -11,15 +11,16 @@
 3. Entity = Team = Microservice
 4. Team Discovery
 5. Entity Discovery
-6. EntityBundle Architecture
-7. Entities Registry
-8. Shared API Resources
-9. Allure Ownership
-10. Structured Logging
-11. CI/CD Matrix Strategy
-12. Adding a New Entity
-13. Future Architecture Vision
-14. Single Source of Truth
+6. Discovery Architecture Overview
+7. EntityBundle Architecture
+8. Entities Registry
+9. Shared API Resources
+10. Allure Ownership
+11. Structured Logging
+12. CI/CD Matrix Strategy
+13. Adding a New Entity
+14. Future Architecture Vision
+15. Single Source of Truth
 
 ---
 
@@ -150,6 +151,194 @@ customers
 ```
 
 is registered as an entity.
+
+---
+## 🏛️ Discovery Architecture Overview
+
+Although the framework contains multiple discovery mechanisms, they all ultimately resolve to the same ownership model.
+
+### Ownership Model
+
+```text
+customers
+    ↓
+Entity
+    ↓
+Microservice
+    ↓
+Owning Team
+```
+
+The framework intentionally treats:
+
+```text
+Entity = Team = Microservice
+```
+
+Examples:
+
+| Entity    | Team      | Microservice          |
+| --------- | --------- | --------------------- |
+| customers | customers | Customers Service     |
+| orders    | orders    | Orders Service        |
+| products  | products  | Products Service      |
+| coupons   | coupons   | Coupons Service       |
+| shared    | shared    | Shared Platform Tests |
+
+---
+
+### Discovery Flows
+
+The framework currently contains two discovery systems.
+
+#### 1️⃣ Team Discovery
+
+Used by:
+
+* Allure Reporting
+* Structured Logging
+* Ownership Tracking
+* Reporting
+
+Flow:
+
+```text
+tests/customers/api/test_create_customer.py
+                    ↓
+             pytest nodeid
+                    ↓
+         extract_team_from_nodeid()
+                    ↓
+                customers
+```
+
+Result:
+
+```text
+customers
+```
+
+becomes the owner for:
+
+* Allure metadata
+* Structured logs
+* Future notifications
+* Reporting
+
+---
+
+#### 2️⃣ Entity Discovery
+
+Used by:
+
+* Runtime resources
+* Fixtures
+* Helpers
+* DAOs
+* Cleanup registration
+
+Flow:
+
+```text
+customers_helper.py
+customers_api.py
+customers_dao.py
+          ↓
+   discover_entities()
+          ↓
+      EntityBundle
+          ↓
+      customers
+```
+
+Result:
+
+```text
+customers
+```
+
+becomes available through:
+
+```python
+entity_helper("customers")
+entity_dao("customers")
+all_resources.customers
+```
+
+---
+
+### Why Two Discovery Systems?
+
+At first glance they appear duplicated.
+
+However, they solve different problems.
+
+Team Discovery answers:
+
+```text
+Who owns this test?
+```
+
+Entity Discovery answers:
+
+```text
+What runtime resources are available?
+```
+
+Both ultimately resolve to:
+
+```text
+customers
+orders
+products
+coupons
+shared
+```
+
+which keeps ownership consistent across the framework.
+
+---
+
+### Complete Ownership Flow
+
+```text
+customers
+     │
+     ├── tests/customers/
+     │         ↓
+     │   Team Discovery
+     │         ↓
+     │  Allure + Logging
+     │
+     ├── customers_helper.py
+     ├── customers_api.py
+     ├── customers_dao.py
+     │         ↓
+     │   Entity Discovery
+     │         ↓
+     │   EntityBundle
+     │
+     └── CI Matrix
+               ↓
+      entity: customers
+```
+
+Every layer of the framework therefore points to the same ownership domain:
+
+```text
+customers
+```
+
+which enables consistent:
+
+* Reporting
+* Logging
+* Resource discovery
+* CI execution
+* Future deployment gates
+* Future team notifications
+
+
 
 ---
 
