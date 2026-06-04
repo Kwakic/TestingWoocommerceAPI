@@ -199,6 +199,12 @@ jobs:
         shell: bash
         run: |
 
+          # ----------------------------------------------
+          # Allow pytest to return non-zero exit codes
+          # so we can evaluate them explicitly.
+          # ----------------------------------------------
+          set +e
+
           python -m pytest "$TEST_TARGET" \
             -m "${{ inputs.pytest_markers }}" \
             -ra \
@@ -211,10 +217,13 @@ jobs:
 
           PYTEST_EXIT_CODE=$?
 
+          # Restore strict mode
+          set -e
+
           # ----------------------------------------------
           # Exit Code 5 = No tests collected
           #
-          # Treat as a successful skipped entity.
+          # Treat as successful skipped entity.
           # ----------------------------------------------
           if [ "$PYTEST_EXIT_CODE" -eq 5 ]; then
 
