@@ -169,31 +169,35 @@ jobs:
       #
       # In a growing multi-entity framework, "no tests collected" is NOT considered a CI failure.
       #
-      # Example:
+      # Examples:
       #
-      # customers -> active smoke tests
-      # orders    -> entity scaffold only
-      # products  -> tests under development
-      # coupons   -> tests temporarily disabled
+      # - entity contains active tests
+      # - entity tests are temporarily disabled
+      # - marker filtering excludes all tests
+      # - entity is under development
       #
-      # Exit code 5 is therefore treated as:
+      # In all cases, Exit Code 5 is treated as:
       #
       #   SUCCESS (Skipped Entity)
+      #
+      # This allows the matrix to represent ownership
+      # boundaries even when a team has not yet
+      # implemented or enabled its tests.
       #
       # This preserves:
       # - matrix stability
       # - ownership visibility
       # - incremental team adoption
 
-      # Supports all scenarios automatically:
-      # Scenario	                            Result
-      # Active smoke tests	                    Run
-      # Folder exists but tests commented out	Skip
-      # Folder exists but marker mismatch	    Skip
-      # Tests under development	                Skip
-      # No tests yet	                        Skip
-      # Test failure	                        Fail
-      # Infrastructure failure	                Fail
+      # Supported scenarios:
+      #
+      # - Active smoke tests                -> Run
+      # - Tests temporarily disabled        -> Skip
+      # - Marker filtering excludes tests   -> Skip
+      # - Entity under development          -> Skip
+      # - No tests yet                      -> Skip
+      # - Test failures                     -> Fail
+      # - Infrastructure failures           -> Fail
       # --------------------------------------------------
       - name: Run pytest
         shell: bash
@@ -231,7 +235,30 @@ jobs:
             echo "Entity: ${{ inputs.entity }}"
             echo "Result: SKIPPED"
 
+            # ----------------------------------------------
+            # Publish execution summary to GitHub Actions
+            #
+            # This provides visibility that the entity was
+            # intentionally skipped rather than silently
+            # succeeding.
+            # ----------------------------------------------
+            echo "## Entity Execution Summary" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Entity: ${{ inputs.entity }}" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Status: SKIPPED" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Reason: No eligible tests collected" >> "$GITHUB_STEP_SUMMARY"
+
             exit 0
+
+          fi
+
+          if [ "$PYTEST_EXIT_CODE" -eq 0 ]; then
+
+            echo "## Entity Execution Summary" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Entity: ${{ inputs.entity }}" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Status: EXECUTED" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Result: SUCCESS" >> "$GITHUB_STEP_SUMMARY"
 
           fi
 
