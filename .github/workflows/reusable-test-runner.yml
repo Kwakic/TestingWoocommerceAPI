@@ -268,11 +268,35 @@ jobs:
       # --------------------------------------------------
       # 8. Upload Allure raw results
       # --------------------------------------------------
+      # Entity-specific artifacts
+      #
+      # Ownership model:
+      #
+      # Entity == Team == Microservice
+      #
+      # Each matrix job publishes its own artifacts.
+      #
+      # Example:
+      #
+      # customers-smoke-allure-results
+      # orders-smoke-allure-results
+      # products-smoke-allure-results
+      # coupons-smoke-allure-results
+      #
+      # This enables:
+      #
+      # - independent team ownership
+      # - per-entity troubleshooting
+      # - future deployment gates
+      # - future notification routing
+      # - future report isolation
+      # --------------------------------------------------
+      # --------------------------------------------------
       - name: Upload Allure results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.suite_name }}-allure-results
+          name: ${{ inputs.entity }}-${{ inputs.suite_name }}-allure-results
           path: reports/allure-results
           if-no-files-found: warn
 
@@ -283,7 +307,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.suite_name }}-structured-logs
+          name: ${{ inputs.entity }}-${{ inputs.suite_name }}-structured-logs
           path: reports/logs
           if-no-files-found: warn
 
@@ -294,7 +318,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.suite_name }}-junit-results
+          name: ${{ inputs.entity }}-${{ inputs.suite_name }}-junit-results
           path: reports/junit/results.xml
           if-no-files-found: warn
 
