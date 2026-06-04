@@ -151,8 +151,7 @@ jobs:
       #
       # Pytest is the source of truth for test collection.
       #
-      # We intentionally do NOT inspect the filesystem
-      # to determine whether tests exist.
+      # We intentionally do NOT inspect the filesystem to determine whether tests exist.
       #
       # Reasons:
       #
@@ -168,9 +167,7 @@ jobs:
       #   2+ = execution / infrastructure issues
       #   5 = no tests collected
       #
-      # In a growing multi-entity framework,
-      # "no tests collected" is NOT considered
-      # a CI failure.
+      # In a growing multi-entity framework, "no tests collected" is NOT considered a CI failure.
       #
       # Example:
       #
