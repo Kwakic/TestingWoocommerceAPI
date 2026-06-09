@@ -298,7 +298,7 @@ jobs:
         with:
           name: ${{ inputs.entity }}-${{ inputs.suite_name }}-allure-results
           path: reports/allure-results
-          if-no-files-found: warn
+          if-no-files-found: ignore
 
       # --------------------------------------------------
       # 9. Upload structured logs
@@ -309,7 +309,7 @@ jobs:
         with:
           name: ${{ inputs.entity }}-${{ inputs.suite_name }}-structured-logs
           path: reports/logs
-          if-no-files-found: warn
+          if-no-files-found: ignore
 
       # --------------------------------------------------
       # 10. Upload JUnit XML results
