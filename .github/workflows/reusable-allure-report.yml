@@ -113,6 +113,7 @@ jobs:
       # Used for Allure history/trend preservation
       # --------------------------------------------------
       - name: Checkout gh-pages branch
+        if: env.HAS_ALLURE_RESULTS == 'true'
         uses: actions/checkout@v4
         with:
           ref: gh-pages
@@ -126,6 +127,7 @@ jobs:
       # across CI runs.
       # --------------------------------------------------
       - name: Restore Allure history
+        if: env.HAS_ALLURE_RESULTS == 'true'
         run: |
           mkdir -p reports/allure-results/history
 
@@ -143,6 +145,7 @@ jobs:
       # Required for Allure CLI
       # --------------------------------------------------
       - name: Setup Java
+        if: env.HAS_ALLURE_RESULTS == 'true'
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -152,6 +155,7 @@ jobs:
       # 6. Install Allure CLI
       # --------------------------------------------------
       - name: Install Allure
+        if: env.HAS_ALLURE_RESULTS == 'true'
         run: |
           curl -L -o allure.zip https://github.com/allure-framework/allure2/releases/download/2.29.0/allure-2.29.0.zip
 
@@ -163,6 +167,7 @@ jobs:
       # 7. Generate Allure HTML report
       # --------------------------------------------------
       - name: Generate Allure report
+        if: env.HAS_ALLURE_RESULTS == 'true'
         run: |
           allure generate reports/allure-results \
             -o reports/allure-report/${{ inputs.entity }}/${{ inputs.suite_name }} \
@@ -172,7 +177,7 @@ jobs:
       # 8. Upload generated HTML report
       # --------------------------------------------------
       - name: Upload HTML Report Artifact
-        if: always()
+        if: env.HAS_ALLURE_RESULTS == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.entity }}-${{ inputs.suite_name }}-allure-report
@@ -183,7 +188,7 @@ jobs:
       # 9. Deploy report to GitHub Pages
       # --------------------------------------------------
       - name: Deploy to GitHub Pages
-        if: always()
+        if: env.HAS_ALLURE_RESULTS == 'true'
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -195,6 +200,7 @@ jobs:
       # 10. Print clickable Allure URL
       # --------------------------------------------------
       - name: Print Allure URL
+        if: env.HAS_ALLURE_RESULTS == 'true'
         run: |
           echo "====================================="
           echo "Allure Report:"
