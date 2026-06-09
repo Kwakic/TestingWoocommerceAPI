@@ -81,7 +81,7 @@ jobs:
   test:
 
     # --------------------------------------------------
-    # Enterprise matrix execution
+    # Matrix execution
     #
     # Each entity represents:
     # - ownership boundary
@@ -149,16 +149,19 @@ jobs:
   # ==================================================
   report:
 
-    # --------------------------------------------------
-    # 🔒 Prevent concurrent GitHub Pages deployments
-    #
-    # Only report jobs should serialize because
-    # they deploy to the shared gh-pages branch.
-    #
-    # Test jobs can safely run in parallel.
-    # --------------------------------------------------
+    strategy:
+
+      fail-fast: false
+
+      matrix:
+        entity:
+          - customers
+#          - orders
+#          - products
+#          - coupons
+
     concurrency:
-      group: pages-deploy
+      group: pages-deploy-${{ matrix.entity }}
       cancel-in-progress: false
 
     needs: test
@@ -171,3 +174,4 @@ jobs:
     with:
       suite_name: smoke
       report_timeout_minutes: 10
+      entity: ${{ matrix.entity }}
