@@ -194,14 +194,14 @@ def assert_customer_not_found_error(response):
         response["data"]["status"] == 404
     ), f"Expected status 404, got {response['data']['status']}"
 
-    assert response["code"] == "woocommerce_rest_invalid_id", (
+    assert response["code"] == "wc_user_invalid_id", (
         f"Invalid Error code. Current: '{response['code']}', "
-        f"Expected: 'woocommerce_rest_invalid_id'"
+        f"Expected: 'wc_user_invalid_id'"
     )
 
-    assert response["message"] == "Invalid resource ID.", (
+    assert response["message"] == "Invalid user ID.", (
         f"Invalid Error message. Current: '{response['message']}', "
-        f"Expected: 'Invalid resource ID.'"
+        f"Expected: 'Invalid user ID.'"
     )
 
 
