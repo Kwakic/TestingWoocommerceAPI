@@ -199,9 +199,9 @@ def assert_customer_not_found_error(response):
         f"Expected: 'woocommerce_rest_invalid_id'"
     )
 
-    assert response["message"] == "Invalid user ID.", (
+    assert response["message"] == "Invalid resource ID.", (
         f"Invalid Error message. Current: '{response['message']}', "
-        f"Expected: 'Invalid user ID.'"
+        f"Expected: 'Invalid resource ID.'"
     )
 
 

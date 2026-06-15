@@ -1,91 +1,54 @@
 name: Preflight Checks ⚡
 
 on:
-  # Run on pull requests (any branch)
-  pull_request:  # Every PR
+#  # Run on pull requests (any branch)
+#  pull_request:  # Every PR
+
+  push:
+    branches: [ main ]
 
   workflow_dispatch:  # Allow manual execution from GitHub UI
 
 jobs:
+
+  # ==================================================
+  # ⚡ PRE-FLIGHT VALIDATION
+  #
+  # Platform ownership domain.
+  #
+  # Ultra-fast validation before expensive
+  # infrastructure-dependent suites execute.
+  #
+  # Intentionally:
+  #
+  # - no Docker
+  # - no WooCommerce bootstrap
+  # - no MySQL startup
+  #
+  # Goal:
+  #
+  # Fail fast and provide rapid feedback
+  # during pull request validation.
+  # ==================================================
   preflight:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
+
     permissions:
       contents: read
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    uses: ./.github/workflows/reusable-test-runner.yml
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-          cache: pip
+    with:
 
-      - name: Install project
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e "./EcommerceAPI[dev]"
+      suite_name: preflight
 
-      # --------------------------------------------------
-      # CI environment overrides
-      # --------------------------------------------------
-      - name: Configure environment (CI overrides)
-        run: |
-          echo "AUTO_ALLURE_REPORT=false" >> $GITHUB_ENV
-          echo "ENABLE_STRUCTURED_LOGS=true" >> $GITHUB_ENV
-          echo "STRICT_ENTITY_DISCOVERY=true" >> $GITHUB_ENV
-          echo "REQUIRE_ENV=true" >> $GITHUB_ENV
-          echo "SESSION_ID=${{ github.run_id }}" >> $GITHUB_ENV
-          echo "API_ENV=ci" >> $GITHUB_ENV
-          echo "PERF_ITERATIONS=5" >> $GITHUB_ENV
-#          echo "DISABLE_LOG_EMOJIS=true" >> $GITHUB_ENV
+      pytest_markers: preflight
 
-      # --------------------------------------------------
-      # Run pytest (generate Allure raw results)
-      # --------------------------------------------------
-      - name: Run preflight suite
-        run: |
-          pytest \
-            -m "preflight" \
-            -ra \
-            -v \
-            --maxfail=1 \
-            --durations=5 \
-            --clean-alluredir \
-            --junitxml=reports/junit/results.xml \
-            --alluredir=reports/allure-results
+      timeout_minutes: 5
 
-      # --------------------------------------------------
-      # Upload Allure raw results
-      # --------------------------------------------------
-      - name: Upload Allure results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: preflight-allure-results
-          path: reports/allure-results
-          if-no-files-found: warn
+      pytest_durations: 5
 
-      # --------------------------------------------------
-      # Upload JUnit XML
-      # --------------------------------------------------
-      - name: Upload JUnit XML
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: preflight-junit-results
-          path: reports/junit/results.xml
-          if-no-files-found: warn
+      pytest_maxfail: "1"
 
-      # --------------------------------------------------
-      # Upload structured logs
-      # --------------------------------------------------
-      - name: Upload structured logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: preflight-structured-logs
-          path: reports/logs
-          if-no-files-found: warn
+      pytest_extra_args: "-v"
+
+      setup_woocommerce: false

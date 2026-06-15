@@ -44,6 +44,11 @@ on:
         type: string
         default: ""
 
+      setup_woocommerce:
+        required: false
+        type: boolean
+        default: true
+
 jobs:
 
   # ==================================================
@@ -77,8 +82,30 @@ jobs:
 
       # --------------------------------------------------
       # 3. Setup WooCommerce environment
+      # Optional:
       #
-      # Shared composite action:
+      # Some suites require a full Dockerized
+      # WooCommerce stack.
+      #
+      # Examples:
+      #
+      # - smoke
+      # - integration
+      # - regression
+      # - performance
+      #
+      # Other suites intentionally remain
+      # lightweight and execute without Docker.
+      #
+      # Examples:
+      #
+      # - preflight
+      #
+      # This preserves fast developer feedback
+      # while keeping infrastructure-heavy suites
+      # fully reproducible.
+
+      # What it does:
       # - Docker startup
       # - MySQL readiness
       # - WooCommerce bootstrap
@@ -86,6 +113,7 @@ jobs:
       # - DB environment configuration
       # --------------------------------------------------
       - name: Setup WooCommerce environment
+        if: inputs.setup_woocommerce
         uses: ./.github/actions/setup-woocommerce
 
       # --------------------------------------------------
@@ -331,5 +359,5 @@ jobs:
       # - remove anonymous volumes
       # --------------------------------------------------
       - name: Cleanup Docker environment
-        if: always()
+        if: always() && inputs.setup_woocommerce
         uses: ./.github/actions/docker-cleanup
