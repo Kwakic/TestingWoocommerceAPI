@@ -22,7 +22,31 @@ runs:
     - name: Start Docker stack
       shell: bash
       run: |
-        docker compose -f docker-compose.wp.yml up -d
+        set -e
+
+        MAX_ATTEMPTS=3
+        RETRY_DELAY=30
+
+        for ATTEMPT in $(seq 1 $MAX_ATTEMPTS); do
+          echo "Docker compose attempt $ATTEMPT/$MAX_ATTEMPTS"
+
+          if docker compose -f docker-compose.wp.yml up -d; then
+            echo "✅ Docker stack started"
+            exit 0
+          fi
+
+          echo "❌ Attempt failed"
+
+          docker compose -f docker-compose.wp.yml ps || true
+
+          if [ $ATTEMPT -lt $MAX_ATTEMPTS ]; then
+            echo "Retrying in $RETRY_DELAY seconds..."
+            sleep $RETRY_DELAY
+          fi
+        done
+
+        echo "❌ Docker compose failed after $MAX_ATTEMPTS attempts"
+        exit 1
 
     # --------------------------------------------------
     # 2. Wait for MySQL readiness

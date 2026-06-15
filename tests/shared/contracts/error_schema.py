@@ -1,3 +1,4 @@
+# CONTRACT TEST
 # error_schema.py — JSON Schema definitions for WooCommerce resources
 
 """

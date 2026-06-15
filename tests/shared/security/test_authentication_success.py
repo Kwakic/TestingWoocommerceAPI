@@ -1,3 +1,5 @@
+# SECURITY TEST
+
 import pytest
 
 pytestmark = [pytest.mark.security, pytest.mark.smoke, pytest.mark.shared]

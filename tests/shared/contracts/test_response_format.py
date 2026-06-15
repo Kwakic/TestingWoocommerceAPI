@@ -1,3 +1,5 @@
+# CONTRACT TEST
+
 import pytest
 
 pytestmark = [pytest.mark.shared, pytest.mark.contract, pytest.mark.integration]

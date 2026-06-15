@@ -1,6 +1,6 @@
-"""
-Preflight Schema Smoke Tests (uses APIClient )
+# CONTRACT TEST
 
+"""
 Overview
 --------
 These lightweight schema tests verify that WooCommerce API endpoints return responses

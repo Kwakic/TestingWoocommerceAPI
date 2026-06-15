@@ -263,14 +263,15 @@ pip install -e './EcommerceAPI[dev]'
 ### You should evolve into:
 
 
-| Workflow        | Matrix Dimension |
-| --------------- | ---------------- |
-| smoke.yml       | entity           |
-| integration.yml | entity           |
-| regression.yml  | entity           |
-| contract.yml    | entity           |
-| performance.yml | entity           |
-| security.yml    | entity           |
+| Workflow        | Execution Model |
+|-----------------|-----------------|
+| smoke.yml       | entity matrix   |
+| integration.yml | entity matrix   |
+| regression.yml  | entity matrix   |
+| contract.yml    | platform        |
+| performance.yml | platform        |
+| security.yml    | platform        |
+| preflight.yml   | platform        |
 
 ## Meaning
 
@@ -298,6 +299,155 @@ integration.yml
 * independent ownership
 * independent badges later
 * scalable to 20+ services
+
+---
+
+
+# 👥 Ownership Domains
+
+The framework intentionally separates testing responsibilities into two
+different ownership domains.
+
+This distinction is important because not every test should participate
+in the entity matrix.
+
+---
+
+## Entity Domain
+
+Entity workflows validate business functionality owned by a specific
+microservice team.
+
+Examples:
+
+- customers
+- orders
+- products
+- coupons
+
+These workflows execute through the CI entity matrix because each
+entity represents an independent ownership boundary.
+
+Example:
+
+* smoke.yml
+* integration.yml
+* regression.yml
+
+Entity matrix:
+
+customers
+orders
+products
+coupons
+
+Benefits:
+
+- independent ownership
+- independent failures
+- independent reruns
+- isolated reports
+- isolated artifacts
+- future deployment gates
+
+---
+
+## Platform Domain
+
+Shared workflows validate framework-wide guarantees and platform behavior.
+
+Examples:
+
+- contracts
+- security
+- performance
+- preflight
+
+These workflows intentionally execute once per pipeline.
+
+Reason:
+
+Shared tests already validate all entities internally through
+parametrization.
+
+Examples:
+
+test_api_connectivity.py
+
+    customers
+    products
+    orders
+    coupons
+
+test_authentication_matrix.py
+
+    customers
+    products
+    orders
+    coupons
+
+test_api_response_times.py
+
+    customers
+    products
+    orders
+    coupons
+
+Running these tests through an entity matrix would create duplicate
+execution and significantly increase CI runtime without increasing
+coverage.
+
+---
+
+## Design Rule
+
+The matrix represents:
+
+    ownership boundaries
+
+NOT:
+
+    pytest markers
+    test folders
+    workflow names
+
+Therefore:
+
+Entity workflows
+    → use matrix execution
+
+Platform workflows
+    → run once
+
+This preserves:
+
+- stable trends
+- lower CI costs
+- cleaner reports
+- clearer ownership
+- easier scaling
+
+---
+
+## Current Ownership Model
+
+Entity Domain
+
+    customers
+    orders
+    products
+    coupons
+
+Platform Domain
+
+    contracts
+    security
+    performance
+    preflight
+
+This model should remain the default architecture unless shared tests
+become entity-specific in the future.
+
 
 ---
 ## 👉 The Most Important Concept
@@ -404,23 +554,18 @@ We ONLY establish:
 * isolated artifacts
 
 
-TARGET ARCHITECTURE
+CURRENT ARCHITECTURE
 
-We want this flow:
 
-```
-smoke.yml
-   ↓
-matrix(entity)
-   ↓
-reusable-test-runner.yml
-   ↓
-pytest tests/<entity>
-   ↓
-reports/<entity>/smoke/
-```
+We have now:
 
----
+* Entity Matrix Execution        ✅
+* Entity Ownership              ✅
+* Entity-Specific Artifacts      ✅
+* Entity-Specific Allure Reports ✅
+* GitHub Pages Deployment        ✅
+* Graceful Test Skip             ✅
+* Clean Report Matrix            ✅
 
 ```
 
