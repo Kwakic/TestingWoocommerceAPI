@@ -1,5 +1,5 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Mon Jun 15 09:26:33 UTC 2026","Mon Jun 15 09:26:33 UTC 2026","504","tests.customers.api","test_get_customer","","","","test_get_customer_by_email","
+"passed","Mon Jun 15 09:37:52 UTC 2026","Mon Jun 15 09:37:53 UTC 2026","506","tests.customers.api","test_get_customer","","","","test_get_customer_by_email","
 Verify that a customers can be retrieved using the email filter.
 
 Endpoint tested:
@@ -17,7 +17,21 @@ Test flow:
     4. Verify returned customers identity
     5. Verify API data matches database
 "
-"passed","Mon Jun 15 09:26:34 UTC 2026","Mon Jun 15 09:26:34 UTC 2026","297","tests.customers.api","test_update_customer","","","","test_update_customer_first_name","
+"passed","Mon Jun 15 09:37:51 UTC 2026","Mon Jun 15 09:37:51 UTC 2026","571","tests.customers.api","test_create_customer","","","","test_create_single_customer_with_email_and_password_only","
+Create a customers using the minimum valid payload.
+
+The fixture `create_valid_customer` already performs:
+    - POST /customers
+    - status code validation (201)
+    - response structure validation (Pydantic)
+    - cleanup registration
+
+Test flow:
+    1. Create a customers
+    2. Fetch customers via API
+    3. Verify API data matches database record
+"
+"passed","Mon Jun 15 09:37:53 UTC 2026","Mon Jun 15 09:37:54 UTC 2026","333","tests.customers.api","test_update_customer","","","","test_update_customer_first_name","
 Verify that a customers can be updated successfully.
 
 Validates that:
@@ -31,7 +45,7 @@ Test flow:
     3. Validate response structure
     4. Verify updated values
 "
-"passed","Mon Jun 15 09:26:32 UTC 2026","Mon Jun 15 09:26:33 UTC 2026","389","tests.customers.api","test_get_all_customers","","","","test_get_all_customers_list_not_empty_and_valid_schema","
+"passed","Mon Jun 15 09:37:52 UTC 2026","Mon Jun 15 09:37:52 UTC 2026","390","tests.customers.api","test_get_all_customers","","","","test_get_all_customers_list_not_empty_and_valid_schema","
 Smoke test for GET /customers endpoint.
 
 Validates that:
@@ -44,7 +58,7 @@ Test flow:
     3. Ensure response contains customers
     4. Validate structure of each customers
 "
-"passed","Mon Jun 15 09:26:33 UTC 2026","Mon Jun 15 09:26:34 UTC 2026","477","tests.customers.api","test_get_customer","","","","test_get_customer_by_id","
+"passed","Mon Jun 15 09:37:53 UTC 2026","Mon Jun 15 09:37:53 UTC 2026","480","tests.customers.api","test_get_customer","","","","test_get_customer_by_id","
 Verify that a customers can be retrieved by ID.
 
 Endpoint tested:
@@ -61,18 +75,4 @@ Test flow:
     3. Validate response structure
     4. Verify returned customers identity
     5. Verify API data matches database
-"
-"passed","Mon Jun 15 09:26:32 UTC 2026","Mon Jun 15 09:26:32 UTC 2026","687","tests.customers.api","test_create_customer","","","","test_create_single_customer_with_email_and_password_only","
-Create a customers using the minimum valid payload.
-
-The fixture `create_valid_customer` already performs:
-    - POST /customers
-    - status code validation (201)
-    - response structure validation (Pydantic)
-    - cleanup registration
-
-Test flow:
-    1. Create a customers
-    2. Fetch customers via API
-    3. Verify API data matches database record
 "
