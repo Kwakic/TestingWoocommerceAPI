@@ -194,9 +194,9 @@ def assert_customer_not_found_error(response):
         response["data"]["status"] == 404
     ), f"Expected status 404, got {response['data']['status']}"
 
-    assert response["code"] == "wc_user_invalid_id", (
+    assert response["code"] == "woocommerce_rest_invalid_id", (
         f"Invalid Error code. Current: '{response['code']}', "
-        f"Expected: 'wc_user_invalid_id'"
+        f"Expected: 'woocommerce_rest_invalid_id'"
     )
 
     assert response["message"] == "Invalid user ID.", (
