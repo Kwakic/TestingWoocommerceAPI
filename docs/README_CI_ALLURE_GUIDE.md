@@ -187,7 +187,7 @@ API_ENV=ci
 
 Validate full API + database integration behavior across services.
 
-This suite verifies that:
+**This suite verifies that:**
 
 * API operations correctly persist data
 * Database state matches API responses
