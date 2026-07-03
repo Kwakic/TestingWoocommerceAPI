@@ -1,0 +1,52 @@
+INFO     tests.customers.api.test_get_customer:test_get_customer.py:136 🛠 Creating a test customers via factory fixture.
+DEBUG    EcommerceAPI.src.utils.generic_utilities:generic_utilities.py:32 📝 Generating random email and password.
+DEBUG    EcommerceAPI.src.utils.generic_utilities:generic_utilities.py:49 📝 Generated credentials email and password=***'email': 'testuser_cofggdrpbb@supersqa.com', 'password': '***'}
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:179 ⚙️ Creating customers with payload keys: ['email', 'password']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.200s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=5, email=testuser_cofggdrpbb@supersqa.com
+DEBUG    EcommerceAPI.plugins.api_fixtures:api_fixtures.py:209 ℹ️ Registered customers with ID: 5 for cleanup.
+INFO     tests.customers.api.test_get_customer:test_get_customer.py:147 🔎 Fetching customers by ID: 5
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:294 🟢 Calling 'Get Customer' for ID 5.
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:88 📡 GET /customers/5
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/customers/5 → Status code: 200 (completed in 0.094s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=5, email=testuser_cofggdrpbb@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:344 ✅ Customer identity verified (id=5, email=testuser_cofggdrpbb@supersqa.com)
+INFO     tests.customers.api.test_get_customer:test_get_customer.py:165 ✅ Fetched customers matches created one: ID=5, Email=testuser_cofggdrpbb@supersqa.com
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:554 🔎 Validating customers integrity for email=testuser_cofggdrpbb@supersqa.com
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:401 ⚙️ Calling 'List All Customers' via pagination utility
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:36 🧰 Starting paginated fetch for '/customers'
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:49 📦 Fetching /customers page 1 (attempt 1/3)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/customers?per_page=100&email=testuser_cofggdrpbb%40supersqa.com&page=1 → Status code: 200 (completed in 0.094s)
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:60 📄 Pagination request OK: endpoint=/customers page=1 status=200
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:77 ➡️ Page 1 → 1 items
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:49 📦 Fetching /customers page 2 (attempt 1/3)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/customers?per_page=100&email=testuser_cofggdrpbb%40supersqa.com&page=2 → Status code: 200 (completed in 0.093s)
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:60 📄 Pagination request OK: endpoint=/customers page=2 status=200
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:72 ⛔ Stop pagination (no more results at page 2)
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:73 📊 Total pages fetched: 1
+DEBUG    EcommerceAPI.src.customers.dao.customers_dao:customers_dao.py:66 ℹ️ Found customers for email 'testuser_cofggdrpbb@supersqa.com': {'ID': 5, 'user_login': 'testuser_cofggdrpbb', 'user_pass': '***', 'user_nicename': 'testuser_cofggdrpbb', 'user_email': 'testuser_cofggdrpbb@supersqa.com', 'user_url': '', 'user_registered': datetime.datetime(2026, 7, 3, 20, 32, 17), 'user_activation_key': '1783110737:$generic$Mkl9EeMrWZwmGsrNMxx1CWcLQYcryXaT1KLT9ZnI', 'user_status': 0, 'display_name': 'testuser_cofggdrpbb'}
+DEBUG    EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:270 ⚙️ Validating existence of customers by email: testuser_cofggdrpbb@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=5, email=testuser_cofggdrpbb@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:141 ✅ Customer found in dataset: id=5 email=testuser_cofggdrpbb@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:278 ✅ Customer found in API response (id=5, email=testuser_cofggdrpbb@supersqa.com)
+INFO     EcommerceAPI.src.customers.validators.customer_db_validators:customer_db_validators.py:61 ✅ Assertion passed: API customers matches DB record (ID=5)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:290 ✅ Customer matches database record (ID=5)
+INFO     EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:571 ✅ Customer validated against API and DB (email=testuser_cofggdrpbb@supersqa.com)
+INFO     tests.customers.api.test_get_customer:test_get_customer.py:177 🎯 Full validation complete for customers ID: 5
+INFO     EcommerceAPI.plugins.entities:entities.py:615 🔧 Starting teardown of created test resources...
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up customer(s)... (2 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 4
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ DELETE /wp-json/wc/v3/customers/4?force=True → Status code: 200 (completed in 0.121s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 4
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 5
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ DELETE /wp-json/wc/v3/customers/5?force=True → Status code: 200 (completed in 0.128s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 5
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for customer(s).
+INFO     EcommerceAPI.plugins.entities:entities.py:646 
+
+🧹 ====================================== CLEANUP SUMMARY ======================================
+INFO     EcommerceAPI.plugins.entities:entities.py:649 📊 Created during test run: {'customers': 2}
+INFO     EcommerceAPI.plugins.entities:entities.py:650 🧾 Cleanup total summary:
+INFO     EcommerceAPI.plugins.entities:entities.py:652    • customer: 2 deleted (2 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:653 ✅ All test data cleanup completed.
