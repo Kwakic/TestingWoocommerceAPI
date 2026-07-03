@@ -58,12 +58,12 @@ jobs:
   test:
     # --------------------------------------------------
     # Matrix execution
-    #
+
     # Each entity represents:
     # - ownership boundary
     # - deployment boundary
     # - reporting boundary
-    #
+
     # IMPORTANT:
     # One entity failure must NOT cancel others.
     #
