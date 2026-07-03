@@ -14,8 +14,8 @@ on:
 #  schedule:
 #    - cron: "0 4 * * 0"  # Sunday 4 AM
 
-  push:
-    branches: [ main ]
+#  push:
+#    branches: [ main ]
 
   # --------------------------------------------------
   # Allow manual execution from GitHub UI
