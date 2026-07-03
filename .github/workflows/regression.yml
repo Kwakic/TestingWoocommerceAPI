@@ -14,8 +14,12 @@ on:
   # --------------------------------------------------
   # Run on crone job
   # --------------------------------------------------
-  schedule:
-    - cron: "0 2 * * *"  # 2 AM daily
+#  schedule:
+#    - cron: "0 2 * * *"  # 2 AM daily
+
+  push:
+    branches: [ main ]
+
   # --------------------------------------------------
   # Allow manual execution from GitHub UI
   # --------------------------------------------------
@@ -25,7 +29,16 @@ on:
 jobs:
 
   # ==================================================
-  # 🧪 JOB 1 — EXECUTE REGRESSION TESTS
+  # 🧪 JOB 1 — EXECUTE SMOKE TESTS
+  #
+  # Matrix strategy:
+  # One isolated job per entity/team.
+  #
+  # Enterprise rationale:
+  # - independent ownership
+  # - isolated failures
+  # - parallel execution
+  # - scalable architecture
   #
   # Delegates all shared CI logic to the reusable
   # enterprise test runner workflow.
@@ -43,30 +56,72 @@ jobs:
   # - docker cleanup
   # ==================================================
   test:
+    # --------------------------------------------------
+    # Matrix execution
+    #
+    # Each entity represents:
+    # - ownership boundary
+    # - deployment boundary
+    # - reporting boundary
+    #
+    # IMPORTANT:
+    # One entity failure must NOT cancel others.
+    #
+    # Example:
+    # customers failure must NOT cancel:
+    # - orders
+    # - products
+    # - coupons
+    #
+    # This preserves full diagnostic visibility.
+    # --------------------------------------------------
 
     uses: ./.github/workflows/reusable-test-runner.yml
 
     with:
+      # --------------------------------------------------
+      # Test suite metadata
+      # --------------------------------------------------
       suite_name: regression
       pytest_markers: regression
+
+      # --------------------------------------------------
+      # Pytest runtime configuration
+      # --------------------------------------------------
       timeout_minutes: 45
       pytest_durations: 20
 
-  # ==================================================
+      # --------------------------------------------------
+      # Entity ownership boundary
+      #
+      # Entity == Team == Microservice
+      #
+      # Passed to the reusable runner to isolate:
+      # - test execution
+      # - artifacts
+      # - logs
+      # - reports
+      # --------------------------------------------------
+      entity: ${{ matrix.entity }}
+
+    # ==================================================
   # 📊 JOB 2 — GENERATE + PUBLISH ALLURE REPORT
   # ==================================================
   report:
 
-    # --------------------------------------------------
-    # 🔒 Prevent concurrent GitHub Pages deployments
-    #
-    # Only report jobs should serialize because
-    # they deploy to the shared gh-pages branch.
-    #
-    # Test jobs can safely run in parallel.
-    # --------------------------------------------------
+    strategy:
+
+      fail-fast: false
+
+      matrix:
+        entity:
+          - customers
+#          - orders
+#          - products
+#          - coupons
+
     concurrency:
-      group: pages-deploy
+      group: pages-deploy-${{ matrix.entity }}
       cancel-in-progress: false
 
     needs: test
@@ -74,9 +129,9 @@ jobs:
     permissions:
       contents: write
 
-
     uses: ./.github/workflows/reusable-allure-report.yml
 
     with:
       suite_name: regression
-      report_timeout_minutes: 15
+      report_timeout_minutes: 10
+      entity: ${{ matrix.entity }}
