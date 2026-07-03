@@ -39,10 +39,9 @@ on:
   # - operational confidence signal
   # - README badge source
   # --------------------------------------------------
-#  push:
-#    branches: [ main ]
+  push:
+    branches: [ main ]
 
-  pull_request:  # Every PR
 
   # --------------------------------------------------
   # Allow manual execution from GitHub UI

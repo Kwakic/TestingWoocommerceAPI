@@ -75,6 +75,16 @@ jobs:
     #
     # This preserves full diagnostic visibility.
     # --------------------------------------------------
+    strategy:
+
+      fail-fast: false
+
+      matrix:
+        entity:
+          - customers
+          - orders
+          - products
+          - coupons
 
     uses: ./.github/workflows/reusable-test-runner.yml
 

@@ -11,8 +11,11 @@ name: Performance Tests ⏱️
 # 🔁 Triggers
 # ==================================================
 on:
-  schedule:
-    - cron: "0 4 * * 0"  # Sunday 4 AM
+#  schedule:
+#    - cron: "0 4 * * 0"  # Sunday 4 AM
+
+  push:
+    branches: [ main ]
 
   # --------------------------------------------------
   # Allow manual execution from GitHub UI
@@ -23,7 +26,16 @@ on:
 jobs:
 
   # ==================================================
-  # 🧪 JOB 1 — EXECUTE PERFORMANCE TESTS
+  # 🧪 JOB 1 — EXECUTE SMOKE TESTS
+  #
+  # Matrix strategy:
+  # One isolated job per entity/team.
+  #
+  # Enterprise rationale:
+  # - independent ownership
+  # - isolated failures
+  # - parallel execution
+  # - scalable architecture
   #
   # Delegates all shared CI logic to the reusable
   # enterprise test runner workflow.
@@ -42,29 +54,90 @@ jobs:
   # ==================================================
   test:
 
+    # --------------------------------------------------
+    # Matrix execution
+    #
+    # Each entity represents:
+    # - ownership boundary
+    # - deployment boundary
+    # - reporting boundary
+    #
+    # IMPORTANT:
+    # One entity failure must NOT cancel others.
+    #
+    # Example:
+    # customers failure must NOT cancel:
+    # - orders
+    # - products
+    # - coupons
+    #
+    # This preserves full diagnostic visibility.
+    # --------------------------------------------------
+    strategy:
+
+      fail-fast: false
+
+      matrix:
+        entity:
+          - customers
+          - orders
+          - products
+          - coupons
+
     uses: ./.github/workflows/reusable-test-runner.yml
 
     with:
+
+      # --------------------------------------------------
+      # Test suite metadata
+      # --------------------------------------------------
       suite_name: performance
       pytest_markers: performance
+
+      # --------------------------------------------------
+      # Pytest runtime configuration
+      # --------------------------------------------------
       timeout_minutes: 45
       pytest_durations: 20
+
+      # --------------------------------------------------
+      # Entity ownership boundary
+      #
+      # Entity == Team == Microservice
+      #
+      # Examples:
+      # - customers
+      # - orders
+      # - products
+      # - coupons
+      #
+      # Passed to reusable-test-runner.yml
+      # for:
+      # - entity-specific test execution
+      # - entity-specific reporting
+      # - entity-specific artifacts
+      # - ownership isolation
+      # --------------------------------------------------
+      entity: ${{ matrix.entity }}
 
   # ==================================================
   # 📊 JOB 2 — GENERATE + PUBLISH ALLURE REPORT
   # ==================================================
   report:
 
-    # --------------------------------------------------
-    # 🔒 Prevent concurrent GitHub Pages deployments
-    #
-    # Only report jobs should serialize because
-    # they deploy to the shared gh-pages branch.
-    #
-    # Test jobs can safely run in parallel.
-    # --------------------------------------------------
+    strategy:
+
+      fail-fast: false
+
+      matrix:
+        entity:
+          - customers
+#          - orders
+#          - products
+#          - coupons
+
     concurrency:
-      group: pages-deploy
+      group: pages-deploy-${{ matrix.entity }}
       cancel-in-progress: false
 
     needs: test
@@ -72,9 +145,9 @@ jobs:
     permissions:
       contents: write
 
-
     uses: ./.github/workflows/reusable-allure-report.yml
 
     with:
       suite_name: performance
       report_timeout_minutes: 10
+      entity: ${{ matrix.entity }}

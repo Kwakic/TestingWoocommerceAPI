@@ -14,11 +14,8 @@ on:
   # --------------------------------------------------
   # Run on pushes to main branch
   # --------------------------------------------------
-#  push:
-#    branches: [ main ]
-#
-  pull_request:  # Every PR
-
+  push:
+    branches: [ main ]
 
   # --------------------------------------------------
   # Allow manual execution from GitHub UI
@@ -76,6 +73,16 @@ jobs:
     #
     # This preserves full diagnostic visibility.
     # --------------------------------------------------
+    strategy:
+
+      fail-fast: false
+
+      matrix:
+        entity:
+          - customers
+          - orders
+          - products
+          - coupons
 
     uses: ./.github/workflows/reusable-test-runner.yml
 
