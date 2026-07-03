@@ -9,20 +9,13 @@ name: Integration Tests 🔗
 # --------------------------------------------------
 # 🔁 Triggers
 # --------------------------------------------------
-#on:
-#
-#  # --------------------------------------------------
-#  # Run on pushes to main branch
-#  # --------------------------------------------------
-#  push:
-#    branches: [ main ]
-
 on:
+
   # --------------------------------------------------
-  # Run on crone job
+  # Run on pushes to main branch
   # --------------------------------------------------
-  schedule:
-    - cron: "0 2 * * *"  # 2 AM daily
+  push:
+    branches: [ main ]
 
 
   # --------------------------------------------------
@@ -34,7 +27,16 @@ on:
 jobs:
 
   # ==================================================
-  # 🧪 JOB 1 — EXECUTE INTEGRATION TESTS
+  # 🧪 JOB 1 — EXECUTE SMOKE TESTS
+  #
+  # Matrix strategy:
+  # One isolated job per entity/team.
+  #
+  # Enterprise rationale:
+  # - independent ownership
+  # - isolated failures
+  # - parallel execution
+  # - scalable architecture
   #
   # Delegates all shared CI logic to the reusable
   # enterprise test runner workflow.
@@ -53,44 +55,76 @@ jobs:
   # ==================================================
   test:
 
+    # --------------------------------------------------
+    # Matrix execution
+    #
+    # Each entity represents:
+    # - ownership boundary
+    # - deployment boundary
+    # - reporting boundary
+    #
+    # IMPORTANT:
+    # One entity failure must NOT cancel others.
+    #
+    # Example:
+    # customers failure must NOT cancel:
+    # - orders
+    # - products
+    # - coupons
+    #
+    # This preserves full diagnostic visibility.
+    # --------------------------------------------------
+
     uses: ./.github/workflows/reusable-test-runner.yml
 
     with:
+
+      # --------------------------------------------------
+      # Test suite metadata
+      # --------------------------------------------------
       suite_name: integration
       pytest_markers: integration
+
+      # --------------------------------------------------
+      # Pytest runtime configuration
+      # --------------------------------------------------
       timeout_minutes: 25
       pytest_durations: 20
       pytest_maxfail: 5
       pytest_extra_args: "-v"
 
+      # --------------------------------------------------
+      # Entity ownership boundary
+      #
+      # Entity == Team == Microservice
+      #
+      # Passed to the reusable runner to isolate:
+      # - test execution
+      # - artifacts
+      # - logs
+      # - reports
+      # --------------------------------------------------
+      entity: ${{ matrix.entity }}
+
 
   # ==================================================
   # 📊 JOB 2 — GENERATE + PUBLISH ALLURE REPORT
-  #
-  # NOTE:
-  # This job intentionally remains local for now.
-  #
-  # Why?
-  # ----
-  # GitHub Pages deployment and Allure history
-  # restoration are more sensitive infrastructure
-  # concerns and should be extracted separately
-  # after the reusable test runner stabilizes.
-  #
-  # This is the safest enterprise migration strategy.
   # ==================================================
   report:
 
-    # --------------------------------------------------
-    # 🔒 Prevent concurrent GitHub Pages deployments
-    #
-    # Only report jobs should serialize because
-    # they deploy to the shared gh-pages branch.
-    #
-    # Test jobs can safely run in parallel.
-    # --------------------------------------------------
+    strategy:
+
+      fail-fast: false
+
+      matrix:
+        entity:
+          - customers
+#          - orders
+#          - products
+#          - coupons
+
     concurrency:
-      group: pages-deploy
+      group: pages-deploy-${{ matrix.entity }}
       cancel-in-progress: false
 
     needs: test
@@ -103,3 +137,4 @@ jobs:
     with:
       suite_name: integration
       report_timeout_minutes: 10
+      entity: ${{ matrix.entity }}
