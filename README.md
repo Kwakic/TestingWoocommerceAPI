@@ -21,17 +21,19 @@
 
 ---
 
-### 📊 Public HTML Dashboards
+## 🌐 QA Dashboard
 
-| Dashboard | URL |
-|---|---|
-| 🔥 Smoke Report | https://kwakic.github.io/TestingWoocommerceAPI |
-| 🔗 Integration Report | https://kwakic.github.io/TestingWoocommerceAPI/integration |
-| 🔬 Regression Report | https://kwakic.github.io/TestingWoocommerceAPI/regression |
-| ⏱️ Performance Report | https://kwakic.github.io/TestingWoocommerceAPI/performance |
+The project publishes interactive Allure reports to GitHub Pages.
 
-> **Contract**, **Security**, and **Preflight** workflows generate private CI artifacts only (not public dashboards).
+| Dashboard | URL | Description |
+|-----------|-----|-------------|
+| 🏠 **QA Portal** | https://kwakic.github.io/TestingWooCommerceAPI | Entry point for all public reports |
+| 🔥 Smoke | https://kwakic.github.io/TestingWooCommerceAPI/smoke | Critical business validation |
+| 🔗 Integration | https://kwakic.github.io/TestingWooCommerceAPI/integration | API + Database validation |
+| 🔬 Regression | https://kwakic.github.io/TestingWooCommerceAPI/regression | Full regression suite |
+| ⏱ Performance | https://kwakic.github.io/TestingWooCommerceAPI/performance | Performance trends |
 
+> Contract, Security and Preflight workflows intentionally publish CI artifacts only.
 ---
 
 # 🧪 TestEcommerceAPI
@@ -88,10 +90,10 @@ Allure history management, and reporting architecture.
 
 The project uses:
 - **GitHub Actions** for automated testing
-- **Allure Reports** for test dashboards
+- **Allure Reports (🌐 QA Dashboard)** for test dashboards
 - **GitHub Pages** for report hosting
 
-View live Allure reports: [kwakic.github.io/TestingWoocommerceAPI](https://kwakic.github.io/TestingWoocommerceAPI)
+View live QA Dashboard: [kwakic.github.io/TestingWoocommerceAPI](https://kwakic.github.io/TestingWoocommerceAPI)
 
 ### Workflows
 
@@ -344,6 +346,9 @@ API keys already exist — skipping
 
 # ✅ Current Capabilities
 - ✔️ GitHub Actions CI pipeline (see ci.yml)
+- ✔️ Public QA Dashboard (GitHub Pages)
+- ✔️ Independent Smoke, Integration, Regression and Performance dashboards
+- ✔️ Allure history preservation
 - ✔️ Allure report publishing (https://kwakic.github.io/TestingWoocommerceAPI)
 - ✔️ Docker-based test execution
 - ✔️ API + Database validation
@@ -360,7 +365,7 @@ API keys already exist — skipping
 
 | Resource | Link |
 |----------|------|
-| 📋 Allure Reports | [Live Dashboard](https://kwakic.github.io/TestingWoocommerceAPI) |
+| 📋 🌐 QA Dashboard | [Live Dashboard](https://kwakic.github.io/TestingWoocommerceAPI) |
 | 🔧 CI Workflows | [GitHub Actions](https://github.com/Kwakic/TestingWoocommerceAPI/actions) |
 | 📖 API Docs | [Customers Tests](./tests/customers/README.md) |
 | ⚙️ Config Guide | [Environment Setup](./docs/ENVIRONMENT_CONFIG_GUIDE.md) |

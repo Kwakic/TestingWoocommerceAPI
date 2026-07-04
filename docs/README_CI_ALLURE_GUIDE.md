@@ -45,6 +45,12 @@ Splitting pipelines by intent because:
 
 # 2. Recommended Workflow Architecture
 
+### Reporting Strategy
+
+Public Allure reports are organized first by **entity** (customers, orders, products, coupons) and then by **test suite** (smoke, integration, regression, performance).
+
+This mirrors the framework's domain-driven architecture, allowing each microservice to own its own testing lifecycle while keeping GitHub Pages scalable as additional entities are introduced.
+
 ---
 
 ## 2.1 preflight.yml ⚡
@@ -111,7 +117,7 @@ cache: pip  # Critical for speed
 
 ---
 
-## 2.2 smoke.yml 🔥
+## 2.2 smoke.yml (Critical business validation) 🔥
 
 ### Purpose
 Validate critical business paths. Powers README badge & deployment gate.
@@ -169,7 +175,8 @@ API_ENV=ci
 ```
 
 ### Report Structure
-- **Dashboard location:** `https://username.github.io/repo/`
+- **Dashboard location:** `https://username.github.io/repo/customers/smoke`
+  - (Currently only the Customers entity publishes public reports. As additional entities are implemented, reports will be available under /orders/, /products/, /coupons/, etc.)
 - **History:** Tracks run-to-run pass/fail trends
 - **Badge:** Shows last smoke run status
 
@@ -181,7 +188,7 @@ API_ENV=ci
 
 ---
 
-## 2.3 integration.yml 🔗
+## 2.3 integration.yml (API + Database validation) 🔗
 
 ### Purpose
 
@@ -257,7 +264,7 @@ API_ENV=ci
 
 ### Report Structure
 
-* **Dashboard location:** `https://username.github.io/repo/integration`
+* **Dashboard location:** `https://username.github.io/repo/customers/integration`
 * **History enabled** for trend analysis
 * **Separate from smoke/regression** to avoid trend contamination
 
@@ -334,7 +341,7 @@ SESSION_ID=${{ github.run_id }}
 
 ---
 
-## 2.5 regression.yml 🔬
+## 2.5 regression.yml (Full functional validation) 🔬
 
 ### Purpose
 Full comprehensive testing. Powers historical trend analysis & nightly validation.
@@ -393,7 +400,7 @@ API_ENV=ci
 ```
 
 ### Report Structure
-- **Dashboard location:** `https://username.github.io/repo/regression`
+- **Dashboard location:** `https://username.github.io/repo/customers/regression`
 - **History:** Full trend analysis enabled
 - **Separate from smoke** to maintain distinct trend graphs
 - **Badge:** Shows last smoke run status
@@ -407,7 +414,7 @@ API_ENV=ci
 
 ---
 
-## 2.6 performance.yml ⏱️
+## 2.6 performance.yml (Performance trends) ⏱️
 
 ### Purpose
 Track API latency & response times over time. Detect performance regressions early.
@@ -463,7 +470,7 @@ on:
 
 
 ### Report Structure
-- **Dashboard location:** `https://username.github.io/repo/performance`
+- **Dashboard location:** `https://username.github.io/repo/customers/performance`
 - **Metrics tracked:** Response times, durations, outliers
 - **History enabled** for SLA trending
 - **Badge:** Shows last smoke run status
@@ -901,10 +908,9 @@ Your report deployment pattern:
   uses: peaceiris/actions-gh-pages@v4
   with:
     github_token: ${{ secrets.GITHUB_TOKEN }}
-    publish_dir: reports/allure-report
+    publish_dir: reports/allure-report/${{ inputs.entity }}/${{ inputs.suite_name }}
     publish_branch: gh-pages
     keep_files: true
-    destination_dir: smoke  # or "regression", "performance"
 ```
 
 ### How It Works
@@ -916,15 +922,20 @@ Your report deployment pattern:
 
 ### Result
 
+
 ```
 main branch:  Your code & workflows
-gh-pages:     Generated reports (indexed by destination_dir)
-              ├── /smoke           (latest smoke report)
-              ├── /regression      (latest regression report)
-              ├── /performance     (latest performance report)
-              └── /history         (all historical data)
+gh-pages/     Generated reports (indexed by destination_dir)
+├── customers/
+│   ├── smoke/ (latest smoke report)
+│   ├── integration/ (latest integration report)
+│   ├── regression/ (latest regression report)
+│   └── performance/  (latest performance report)
+│
+├── orders/
+├── products/
+└── coupons/
 ```
-
 ---
 
 # 16. Suggested Repository Structure
@@ -940,7 +951,10 @@ gh-pages:     Generated reports (indexed by destination_dir)
 └── security.yml         # Auth validation (weekly)
 
 docs/
-├── README_CI_ALLURE_GUIDE.md  # This guide
+├── portal/
+│   ├── index.html
+│   └── styles.css
+├── README_CI_ALLURE_GUIDE.md
 ├── ENVIRONMENT_CONFIG_GUIDE.md
 ├── CONFIG_CONTRACT.md
 └── CI_TROUBLESHOOTING.md
@@ -955,24 +969,29 @@ reports/
 
 # 17. Dashboard Recommendation
 
-### Public Dashboards (README Badge)
+### Public Dashboards
 
-Use for **external visibility** & **stakeholder confidence:**
+Public reports are organized by **entity** and **test suite**.
 
-```markdown
-[![Smoke Tests](https://github.com/user/repo/actions/workflows/smoke.yml/badge.svg?branch=main)](https://user.github.io/repo/)
+Current public structure:
+
+```
+customers/
+├── smoke/
+├── integration/
+├── regression/
+└── performance/
 ```
 
-- **Smoke report** — Powers "passing" status
-- **Regression report** — Powers historical trends
+As additional entities are implemented, the same structure will be extended to:
 
-### Internal Dashboards (Team Tools)
+```
+orders/
+products/
+coupons/
+```
 
-Use for **engineering diagnostics:**
-
-- **Contract tests** — Artifacts only (on-demand debugging)
-- **Performance tests** — Separate dashboard (SLA tracking)
-- **Security tests** — Artifacts only (audit trail)
+The README links directly to the public dashboards, while GitHub Actions badges provide the latest workflow status.
 
 ---
 
