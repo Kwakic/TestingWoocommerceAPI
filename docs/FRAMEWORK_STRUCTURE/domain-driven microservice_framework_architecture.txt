@@ -120,18 +120,29 @@ TestEcommerceAPI (project suite/root)
 │
 │
 │─── reports/
-│      ├── allure-html/
-│      │    └── data/export/history/plugins/widgets etc...
+│      ├── allure-report/
+│      │    ├── data/..
+│      │    ├── export/..
+│      │    ├── history/..
+│      │    ├── plugins/..
+│      │    ├── widgets/..
+│      │    ├── app.js
+│      │    ├── favicon.ico
+│      │    ├── index.html
+│      │    └── style.css
+│      │
 │      ├── allure-results/
 │      │    ├── 04af3878-18b7-4028-9c9d-6081964f70bd-result.json
 │      │    ├── 84fb7175-704e-4839-8998-33d4a95e927e-container.json
 │      │    ├── 2281ae1a-d91a-4316-b475-a2665d3edbf2-attachment.txt
 │      │    ├── ac0d7cb9-9fea-422d-b0e9-a0a8cbb08369-container.json
-│      │    └── etc...
+│      │    ├── categories.json
+│      │    ├── environment.properties
+│      │    └── etc.
 │      │
 │      └── logs
 │           ├── customers/
-│           │        ├── dev/
+│           │        ├── docker/
 │           │        │     └── test_debug_structured_20260109_195544.jsonl
 │           │        └── test/
 │           │              └── test_debug_structured_20260109_093007.jsonl
