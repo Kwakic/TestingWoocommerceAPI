@@ -217,7 +217,7 @@ jobs:
   publish-report:
 
     needs:
-      - discover
+      - discover-entities
       - test
 
     strategy:
