@@ -594,30 +594,36 @@ Test ownership and runtime entity registration are related but technically indep
 
 # ⚙️ CI/CD Matrix Strategy
 
-Current Enterprise Recommendation:
-
-```yaml
-matrix:
-  entity:
-    - customers
-    - orders
-    - products
-    - coupons
+```text
+Framework
+     │
+     ▼
+discover_entity_names()
+     │
+     ▼
+.github/scripts/generate_matrix.py
+     │
+     ▼
+{
+  "include": [
+    {
+      "entity": "customers",
+      "team": "customers",
+      "tier": "critical"
+    }
+  ]
+}
+     │
+     ▼
+GitHub Actions Matrix
+     │
+     ├── Test • customers
+     └── Publish Report • customers
 ```
+The CI pipeline never maintains a hardcoded list of entities.
 
-Why explicit?
-
-✅ Visible ownership
-
-✅ Easier debugging
-
-✅ Predictable CI behavior
-
-✅ Stable reporting
-
-✅ Stable permissions model
-
-✅ Future deployment gates
+The framework is the single source of truth. Every workflow dynamically builds its execution matrix by calling
+`discover_entity_names()` through `.github/scripts/generate_matrix.py`.
 
 ---
 
@@ -675,14 +681,13 @@ tests/inventory/
 
 Step 3:
 
-Add CI matrix entry:
+```text
+Push the changes.
 
-```yaml
-- inventory
+No CI workflow modifications are required.
+
+The framework automatically discovers the new entity and the GitHub Actions matrix is generated dynamically.
 ```
-
-No framework modifications should be required.
-
 ---
 
 # 🔮 Future Enterprise Evolution
@@ -708,6 +713,35 @@ Benefits:
 - 🚧 Deployment gates
 - 🧪 Flaky-test quarantine
 - 📊 Team dashboards
+
+
+---
+# 🚀 Dynamic CI Matrix
+
+The framework owns entity discovery.
+
+GitHub Actions consumes that information rather than maintaining its own list of entities.
+
+Architecture:
+
+```
+Framework
+        │
+        ▼
+discover_entity_names()
+        │
+        ▼
+generate_matrix.py
+        │
+        ▼
+Dynamic GitHub Actions Matrix
+        │
+        ├── Test
+        └── Publish Report
+
+```
+
+This approach eliminates duplicated configuration, keeps CI aligned with the framework, and allows new entities to participate in the pipeline without modifying workflow YAML files.
 
 ---
 

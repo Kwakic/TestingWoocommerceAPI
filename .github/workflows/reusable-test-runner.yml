@@ -44,6 +44,25 @@ on:
         type: string
         default: ""
 
+      # --------------------------------------------------
+      # Optional metadata propagated from the CI matrix.
+      #
+      # These inputs are not yet consumed by the reusable
+      # workflow, but are exposed now so future workflows
+      # (notifications, deployment gates, dashboards, etc.)
+      # can reuse the same interface without breaking
+      # existing callers.
+      # --------------------------------------------------
+      team:
+        required: false
+        type: string
+        default: ""
+
+      tier:
+        required: false
+        type: string
+        default: ""
+
       setup_woocommerce:
         required: false
         type: boolean
@@ -54,7 +73,21 @@ jobs:
   # ==================================================
   # 🧪 JOB — RUN TESTS + GENERATE ALLURE RESULTS
   # ==================================================
+
+  # --------------------------------------------------
+  # 🧪 Execute a single matrix entry
+  #
+  # The displayed job name uses the entity so GitHub
+  # Actions remains readable as the number of
+  # microservices grows.
+  #
+  # Example:
+  #
+  # Test • customers
+  # Test • orders
+  # --------------------------------------------------
   test:
+    name: Test • ${{ inputs.entity }}
 
     runs-on: ubuntu-latest
 

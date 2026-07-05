@@ -26,13 +26,40 @@ on:
         required: true
         type: string
 
+      # --------------------------------------------------
+      # Optional CI metadata.
+      #
+      # Reserved for future ownership reporting,
+      # deployment gates and notifications.
+      # --------------------------------------------------
+      team:
+        required: false
+        type: string
+        default: ""
+
+      tier:
+        required: false
+        type: string
+        default: ""
+
 
 jobs:
 
   # ==================================================
   # 📊 JOB — GENERATE + PUBLISH ALLURE REPORT
   # ==================================================
+
+  # --------------------------------------------------
+  # 📊 Generate a single Allure report
+  #
+  # Each matrix entry publishes its own report.
+  #
+  # Example:
+  #
+  # Publish Report • customers
+  # --------------------------------------------------
   publish-report:
+    name: Publish Report • ${{ inputs.entity }}
 
     # --------------------------------------------------
     # Always run even if previous jobs failed

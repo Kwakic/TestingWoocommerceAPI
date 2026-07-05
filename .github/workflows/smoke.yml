@@ -52,23 +52,17 @@ on:
 jobs:
 
   # ==================================================
-  # 🔍 JOB 0 — DISCOVER FRAMEWORK ENTITIES
-  #
-  # Single Source of Truth
-  # ---------------------
-  # The framework itself owns entity discovery.
-  #
-  # CI never maintains the list of entities.
+  # 🔍 JOB 1 — DISCOVER FRAMEWORK ENTITIES
   #
   # The framework is the Single Source of Truth.
-  # Entity discovery is delegated to
-  # EcommerceAPI.plugins.entities.discover_entity_names().
   #
-  # Instead, it asks the framework which entities
-  # are fully implemented.
+  # CI never maintains a hardcoded entity list.
   #
-  # The resulting JSON matrix is consumed by all
-  # downstream jobs.
+  # The discovery script delegates to
+  # EcommerceAPI.plugins.entities.discover_entity_names()
+  #
+  # The generated matrix includes metadata
+  # (entity, team, tier) used by all downstream jobs.
   # ==================================================
   discover-entities:
 
@@ -117,7 +111,7 @@ jobs:
           echo "Framework entities discovered"
           echo "$MATRIX"
   # ==================================================
-  # 🧪 JOB 1 — EXECUTE SMOKE TESTS
+  # 🧪 JOB 2 — EXECUTE SMOKE TESTS
   #
   # Matrix strategy:
   # One isolated job per entity/team.
@@ -209,10 +203,16 @@ jobs:
       # - ownership isolation
       # --------------------------------------------------
       entity: ${{ matrix.entity }}
+      # Reserved for future enterprise features.
+      # The reusable workflows currently ignore
+      # these values, but exposing them now keeps
+      # every workflow interface consistent.
+      team: ${{ matrix.team }}
+      tier: ${{ matrix.tier }}
 
 
   # ==================================================
-  # 📊 JOB 2 — GENERATE + PUBLISH ALLURE REPORT
+  # 📊 JOB 3 — GENERATE + PUBLISH ALLURE REPORT
   # ==================================================
   publish-report:
 
@@ -239,3 +239,8 @@ jobs:
       suite_name: smoke
       report_timeout_minutes: 10
       entity: ${{ matrix.entity }}
+      # Reserved for future enterprise features.
+      # The reusable workflows currently ignore these values, but exposing them now keeps
+      # every workflow interface consistent.
+      team: ${{ matrix.team }}
+      tier: ${{ matrix.tier }}
