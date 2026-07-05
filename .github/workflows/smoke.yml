@@ -160,13 +160,13 @@ jobs:
       matrix:
         entity:
           - customers
-#          - orders
-#          - products
-#          - coupons
+          - orders
+          - products
+          - coupons
 
-    concurrency:
-      group: pages-deploy-${{ matrix.entity }}
-      cancel-in-progress: false
+#    concurrency:
+#      group: pages-deploy-${{ matrix.entity }}
+#      cancel-in-progress: false
 
     needs: test
 

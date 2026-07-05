@@ -1,4 +1,17 @@
-name: Deploy QA Dashboard 🚀
+name: Deploy GitHub Pages 🚀
+
+# ==================================================
+# TODO (Future Improvements)
+#
+# - Automatic artifact discovery across workflow runs
+# - Automatic entity discovery
+# - Automatic suite discovery
+# - QA Portal enhancements
+# - Remove manual workflow_dispatch
+#
+# Current Version:
+# - Downloads report artifacts produced by the current workflow run.
+# ==================================================
 
 # ==================================================
 # Purpose
@@ -48,85 +61,124 @@ jobs:
         uses: actions/checkout@v4
 
       # --------------------------------------------------
-      # Download report artifacts
+      # Download step
+      # --------------------------------------------------
+      - name: Download all report artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: report-*
+          path: downloaded-reports
+          merge-multiple: false
+
+      # --------------------------------------------------
+      # Build GitHub Pages website
       #
-      # Version 1:
-      # Start with Customers only.
+      # This is the heart of the deployment workflow.
       #
-      # Later this becomes automatic.
+      # Responsibilities:
+      #
+      # 1. Copy the QA Portal.
+      # 2. Discover every downloaded report artifact.
+      # 3. Extract entity and suite names from the artifact.
+      # 4. Rebuild the GitHub Pages directory structure.
+      #
+      # No entities or test suites are hardcoded.
+      #
+      # Example:
+      #
+      # report-customers-smoke
+      #           │
+      #           ▼
+      # site/customers/smoke
+      #
+      # report-orders-regression
+      #           │
+      #           ▼
+      # site/orders/regression
+      #
       # --------------------------------------------------
 
-      - name: Download Smoke report
-        uses: actions/download-artifact@v4
-        with:
-          name: report-customers-smoke
-          path: site/customers/smoke
-
-      - name: Download Integration report
-        continue-on-error: true
-        uses: actions/download-artifact@v4
-        with:
-          name: report-customers-integration
-          path: site/customers/integration
-
-      - name: Download Regression report
-        continue-on-error: true
-        uses: actions/download-artifact@v4
-        with:
-          name: report-customers-regression
-          path: site/customers/regression
-
-      - name: Download Performance report
-        continue-on-error: true
-        uses: actions/download-artifact@v4
-        with:
-          name: report-customers-performance
-          path: site/customers/performance
-
-      # --------------------------------------------------
-      # Copy QA Portal
-      # --------------------------------------------------
-
-      - name: Copy QA Portal
+      - name: Build website
+        shell: bash
         run: |
+
+          mkdir -p site
+
+          # -----------------------------
+          # Copy QA Portal
+          # -----------------------------
           cp docs/portal/index.html site/index.html
           cp docs/portal/styles.css site/styles.css
+
+          echo
+          echo "===== Downloaded artifacts ====="
+          find downloaded-reports
+
+          echo
+          echo "===== Building website ====="
+
+          for artifact in downloaded-reports/report-*; do
+
+            [ -d "$artifact" ] || continue
+
+            artifact_name=$(basename "$artifact")
+
+            # Remove the standard artifact prefix.
+            #
+            # report-customers-smoke
+            #        ↓
+            # customers-smoke
+            name="${artifact_name#report-}"
+
+            # Extract the entity name.
+            #
+            # customers-smoke
+            # └────────┘
+            entity="${name%-*}"
+
+            # Extract the test suite.
+            #
+            # customers-smoke
+            #           └───┘
+            suite="${name##*-}"
+
+            echo "Publishing $entity / $suite"
+
+            mkdir -p "site/$entity/$suite"
+
+            cp -R "$artifact"/. "site/$entity/$suite"
+
+          done
+
+          echo
+          echo "===== Final site ====="
+
+          find site
 
       # --------------------------------------------------
       # Debug generated website
       #
-      # Temporary step during the deployment refactor.
-      # Remove once the deployment workflow is stable.
+      # Temporary verification step.
+      # Shows the final GitHub Pages structure before deployment.
+      # Remove once the workflow is stable.
       # --------------------------------------------------
 
       - name: Debug generated website
+        shell: bash
         run: |
-          echo "===== CURRENT DIRECTORY ====="
+          echo "=========================================="
+          echo " GitHub Pages Website"
+          echo "=========================================="
+
           pwd
 
           echo
-          echo "===== SITE TREE ====="
-          find site
+          echo "Generated site:"
+          find site | sort
 
           echo
-          echo "===== TOP LEVEL ====="
-          ls -la site
-
-          echo
-          echo "===== CUSTOMERS ====="
-          ls -la site/customers || true
-
-          echo
-          echo "===== SMOKE ====="
-          ls -la site/customers/smoke || true
-
-          echo
-          echo "===== INTEGRATION ====="
-          ls -la site/customers/integration || true
-
-          echo
-          echo "===== REGRESSION ====="
-          ls -la site/customers/regression || true
+          echo "Downloaded report artifacts:"
+          find downloaded-reports | sort
 
       # --------------------------------------------------
       # Publish website

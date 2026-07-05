@@ -294,7 +294,7 @@ jobs:
 
 
       # --------------------------------------------------
-      # 8. Upload Allure raw results
+      # 8. Publish Allure results artifact
       # --------------------------------------------------
       # Entity-specific artifacts
       #
@@ -329,7 +329,7 @@ jobs:
           if-no-files-found: ignore
 
       # --------------------------------------------------
-      # 9. Upload structured logs
+      # 9. Publish structured logs artifact
       # --------------------------------------------------
       - name: Publish structured logs artifact
         if: always()
@@ -340,7 +340,7 @@ jobs:
           if-no-files-found: ignore
 
       # --------------------------------------------------
-      # 10. Upload JUnit XML results
+      # 10. Publish JUnit artifact
       # --------------------------------------------------
       - name: Publish JUnit artifact
         if: always()
