@@ -14,8 +14,8 @@ on:
   # --------------------------------------------------
   # Run on pushes to main branch
   # --------------------------------------------------
-  push:
-    branches: [ main ]
+#  push:
+#    branches: [ main ]
 
   # --------------------------------------------------
   # Allow manual execution from GitHub UI

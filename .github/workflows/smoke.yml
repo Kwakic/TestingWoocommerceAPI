@@ -52,6 +52,71 @@ on:
 jobs:
 
   # ==================================================
+  # 🔍 JOB 0 — DISCOVER FRAMEWORK ENTITIES
+  #
+  # Single Source of Truth
+  # ---------------------
+  # The framework itself owns entity discovery.
+  #
+  # CI never hardcodes:
+  #   - customers
+  #   - orders
+  #   - products
+  #   - coupons
+  #
+  # Instead, it asks the framework which entities
+  # are fully implemented.
+  #
+  # The resulting JSON matrix is consumed by all
+  # downstream jobs.
+  # ==================================================
+  discover-entities:
+
+    name: Discover framework entities
+
+    runs-on: ubuntu-latest
+
+    outputs:
+      matrix: ${{ steps.discovery.outputs.matrix }}
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install framework
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e "./EcommerceAPI[dev]"
+
+      # --------------------------------------------------
+      # Build GitHub Actions matrix
+      #
+      # The framework is the Single Source of Truth for
+      # entity discovery.
+      #
+      # The CI simply asks the framework which entities
+      # are fully implemented and converts the result into
+      # a GitHub Actions matrix.
+      # --------------------------------------------------
+      - id: discovery
+        name: Build entity matrix
+        shell: bash
+        run: |
+          MATRIX=$(python .github/scripts/generate_matrix.py)
+
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+
+          echo "=========================================="
+          echo "Framework entities discovered"
+          echo "$MATRIX"
+  # ==================================================
   # 🧪 JOB 1 — EXECUTE SMOKE TESTS
   #
   # Matrix strategy:
@@ -78,7 +143,10 @@ jobs:
   # - artifact uploads
   # - docker cleanup
   # ==================================================
+
   test:
+
+    needs: discover-entities
 
     # --------------------------------------------------
     # Matrix execution
@@ -103,12 +171,7 @@ jobs:
 
       fail-fast: false
 
-      matrix:
-        entity:
-          - customers
-          - orders
-          - products
-          - coupons
+      matrix: ${{ fromJson(needs.discover-entities.outputs.matrix) }}
 
     uses: ./.github/workflows/reusable-test-runner.yml
 
@@ -153,22 +216,19 @@ jobs:
   # ==================================================
   publish-report:
 
+    needs:
+      - discover
+      - test
+
     strategy:
 
       fail-fast: false
 
-      matrix:
-        entity:
-          - customers
-          - orders
-          - products
-          - coupons
+      matrix: ${{ fromJson(needs.discover-entities.outputs.matrix) }}
 
 #    concurrency:
 #      group: pages-deploy-${{ matrix.entity }}
 #      cancel-in-progress: false
-
-    needs: test
 
     permissions:
       contents: write

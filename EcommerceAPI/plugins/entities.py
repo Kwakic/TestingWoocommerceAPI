@@ -518,6 +518,67 @@ def discover_entities(api_client: APIClient) -> Dict[str, EntityBundle]:
 
 
 # ----------------------------------------------------------------
+# Lightweight entity discovery (CI/CD)
+# ----------------------------------------------------------------
+def discover_entity_names() -> list[str]:
+    """
+    Discover entity names without instantiating helpers, DAOs or API clients.
+
+    Purpose
+    -------
+    This function is intended for CI/CD workflows that only need to know
+    which framework entities exist in order to build a dynamic matrix.
+
+    Unlike discover_entities(), this function:
+
+    • does NOT create API clients
+    • does NOT instantiate helpers
+    • does NOT instantiate DAOs
+    • does NOT require pytest fixtures
+
+    It simply returns the list of valid framework entities.
+
+    Example
+    -------
+        >>> discover_entity_names()
+        ['customers', 'orders', 'products', 'coupons']
+
+    Note: It only returns entities that have a complete framework implementation.
+    """
+
+    base_path = EcommerceAPI.src.__path__
+
+    all_modules = {
+        modname
+        for _, modname, _ in pkgutil.walk_packages(
+            base_path,
+            prefix="EcommerceAPI.src.",
+        )
+    }
+
+    helpers = {
+        name.rsplit(".", 1)[-1].replace("_helper", "")
+        for name in all_modules
+        if name.endswith("_helper")
+    }
+
+    apis = {
+        name.rsplit(".", 1)[-1].replace("_api", "")
+        for name in all_modules
+        if name.endswith("_api")
+    }
+
+    daos = {
+        name.rsplit(".", 1)[-1].replace("_dao", "")
+        for name in all_modules
+        if name.endswith("_dao")
+    }
+
+    # An entity is considered available only if all framework components exist.
+    return sorted(helpers & apis & daos)
+
+
+# ----------------------------------------------------------------
 # Shared API resource fixture with cleanup support
 # ----------------------------------------------------------------
 @pytest.fixture(scope="module")

@@ -2,8 +2,11 @@ TestEcommerceAPI (project suite/root)
 │
 ├──.git/
 ├──.github/
+│     ├── scripts
+│     │     └── generate_matrix.py
 │     ├── workflows/
 │     │     ├── contract.yml
+│     │     ├── deploy-dashboard.yml
 │     │     ├── integration.yml
 │     │     ├── performance.yml
 │     │     ├── preflight.yml
