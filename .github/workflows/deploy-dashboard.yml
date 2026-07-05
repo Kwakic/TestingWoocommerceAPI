@@ -40,7 +40,29 @@ name: Deploy GitHub Pages 🚀
 #
 # ==================================================
 
+# ==================================================
+# Trigger
+#
+# The dashboard is rebuilt whenever one of the public
+# reporting workflows finishes successfully.
+#
+# Manual execution is kept for debugging and local
+# verification.
+# ==================================================
+
 on:
+
+  workflow_run:
+
+    workflows:
+      - "Smoke Tests 🔥"
+      - "Integration Tests 🔗"
+      - "Regression Tests 🔬"
+      - "Performance Tests ⏱"
+
+    types:
+      - completed
+
   workflow_dispatch:
 
 permissions:
@@ -61,14 +83,54 @@ jobs:
         uses: actions/checkout@v4
 
       # --------------------------------------------------
-      # Download step
+      # Download report artifacts
       # --------------------------------------------------
-      - name: Download all report artifacts
-        uses: actions/download-artifact@v4
+      #
+      # Reports are produced by another workflow
+      # (Smoke, Integration, Regression, Performance).
+      #
+      # Since this workflow runs independently, it must
+      # retrieve artifacts from the workflow that triggered
+      # the deployment.
+      # --------------------------------------------------
+
+      - name: Download report artifacts
+        uses: dawidd6/action-download-artifact@v9
         with:
-          pattern: report-*
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+          # Workflow run that triggered this deployment.
+          run_id: ${{ github.event.workflow_run.id }}
+
+          # Download every published report.
+          name: report-*
+
           path: downloaded-reports
-          merge-multiple: false
+
+          search_artifacts: true
+
+
+      # --------------------------------------------------
+      # Verify downloaded artifacts
+      # --------------------------------------------------
+      #
+      # Fail early if no reports were found.
+      # This usually indicates that the triggering workflow
+      # did not publish any report artifacts.
+      # --------------------------------------------------
+
+      - name: Verify downloaded artifacts
+        shell: bash
+        run: |
+
+          echo "Downloaded artifacts"
+
+          find downloaded-reports || true
+
+          if [ ! -d downloaded-reports ]; then
+            echo "No report artifacts found."
+            exit 1
+          fi
 
       # --------------------------------------------------
       # Build GitHub Pages website

@@ -231,7 +231,11 @@ jobs:
 #      cancel-in-progress: false
 
     permissions:
+
       contents: write
+
+      actions: read  # dawidd6/action-download-artifact reads artifacts from another workflow run. Giving it:
+      # "actions: read" makes the permission explicit instead of relying on GitHub defaults.
 
     uses: ./.github/workflows/reusable-allure-report.yml
 
