@@ -58,11 +58,11 @@ jobs:
   # ---------------------
   # The framework itself owns entity discovery.
   #
-  # CI never hardcodes:
-  #   - customers
-  #   - orders
-  #   - products
-  #   - coupons
+  # CI never maintains the list of entities.
+  #
+  # The framework is the Single Source of Truth.
+  # Entity discovery is delegated to
+  # EcommerceAPI.plugins.entities.discover_entity_names().
   #
   # Instead, it asks the framework which entities
   # are fully implemented.
