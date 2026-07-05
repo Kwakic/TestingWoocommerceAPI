@@ -1,8 +1,141 @@
-# RESPONSIBILITY:
-# Download report artifacts
-#↓
-#Build website
-#↓
-#Copy portal
-#↓
-#Deploy once
+name: Deploy QA Dashboard 🚀
+
+# ==================================================
+# Purpose
+#
+# Single responsibility:
+# Build and publish the GitHub Pages website.
+#
+# This workflow never executes tests.
+# It only assembles already-generated reports.
+#
+# Enterprise architecture:
+#
+#   Smoke
+#   Integration
+#   Regression
+#   Performance
+#          │
+#          ▼
+#   Report Artifacts
+#          │
+#          ▼
+#   Deploy QA Dashboard
+#          │
+#          ▼
+#     GitHub Pages
+#
+# ==================================================
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+
+  deploy-dashboard:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # --------------------------------------------------
+      # Checkout repository
+      # --------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # --------------------------------------------------
+      # Download report artifacts
+      #
+      # Version 1:
+      # Start with Customers only.
+      #
+      # Later this becomes automatic.
+      # --------------------------------------------------
+
+      - name: Download Smoke report
+        uses: actions/download-artifact@v4
+        with:
+          name: report-customers-smoke
+          path: site/customers/smoke
+
+      - name: Download Integration report
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: report-customers-integration
+          path: site/customers/integration
+
+      - name: Download Regression report
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: report-customers-regression
+          path: site/customers/regression
+
+      - name: Download Performance report
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: report-customers-performance
+          path: site/customers/performance
+
+      # --------------------------------------------------
+      # Copy QA Portal
+      # --------------------------------------------------
+
+      - name: Copy QA Portal
+        run: |
+          cp docs/portal/index.html site/index.html
+          cp docs/portal/styles.css site/styles.css
+
+      # --------------------------------------------------
+      # Debug generated website
+      #
+      # Temporary step during the deployment refactor.
+      # Remove once the deployment workflow is stable.
+      # --------------------------------------------------
+
+      - name: Debug generated website
+        run: |
+          echo "===== CURRENT DIRECTORY ====="
+          pwd
+
+          echo
+          echo "===== SITE TREE ====="
+          find site
+
+          echo
+          echo "===== TOP LEVEL ====="
+          ls -la site
+
+          echo
+          echo "===== CUSTOMERS ====="
+          ls -la site/customers || true
+
+          echo
+          echo "===== SMOKE ====="
+          ls -la site/customers/smoke || true
+
+          echo
+          echo "===== INTEGRATION ====="
+          ls -la site/customers/integration || true
+
+          echo
+          echo "===== REGRESSION ====="
+          ls -la site/customers/regression || true
+
+      # --------------------------------------------------
+      # Publish website
+      # --------------------------------------------------
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: site
+          keep_files: false

@@ -331,25 +331,24 @@ jobs:
       # --------------------------------------------------
       # 9. Upload structured logs
       # --------------------------------------------------
-      - name: Upload structured logs
+      - name: Publish structured logs artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.entity }}-${{ inputs.suite_name }}-structured-logs
+          name: logs-${{ inputs.entity }}-${{ inputs.suite_name }}
           path: reports/logs
           if-no-files-found: ignore
 
       # --------------------------------------------------
       # 10. Upload JUnit XML results
       # --------------------------------------------------
-      - name: Upload JUnit XML
+      - name: Publish JUnit artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.entity }}-${{ inputs.suite_name }}-junit-results
+          name: junit-${{ inputs.entity }}-${{ inputs.suite_name }}
           path: reports/junit/results.xml
           if-no-files-found: warn
-
       # --------------------------------------------------
       # 11. Cleanup Docker environment
       #

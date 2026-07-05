@@ -176,7 +176,7 @@ jobs:
       # --------------------------------------------------
       # 8. Upload generated HTML report
       # --------------------------------------------------
-      - name: Publish standardized report artifact
+      - name: Publish report artifact
         if: env.HAS_ALLURE_RESULTS == 'true'
         uses: actions/upload-artifact@v4
         with:

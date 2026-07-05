@@ -123,7 +123,7 @@ jobs:
   # ==================================================
   # 📊 JOB 2 — GENERATE + PUBLISH ALLURE REPORT
   # ==================================================
-  report:
+  publish-report:
 
     strategy:
 
