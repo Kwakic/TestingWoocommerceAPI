@@ -235,6 +235,18 @@ jobs:
 
           find site
 
+          echo
+          echo "===== Portal ====="
+          ls -R site
+
+          echo
+          echo "===== Smoke ====="
+          ls -R site/customers || true
+
+          echo
+          echo "===== HTML ====="
+          find site -name index.html
+
       # --------------------------------------------------
       # Debug generated website
       #

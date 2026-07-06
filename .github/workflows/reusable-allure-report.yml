@@ -208,5 +208,19 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: report-${{ inputs.entity }}-${{ inputs.suite_name }}
-          path: reports/allure-report
+          # --------------------------------------------------
+          # Upload only the generated report for this
+          # entity/suite.
+          #
+          # Example:
+          #
+          # reports/allure-report/
+          # └── customers/
+          #     └── smoke/
+          #
+          # becomes artifact:
+          #
+          # report-customers-smoke
+          # --------------------------------------------------
+          path: reports/allure-report/${{ inputs.entity }}/${{ inputs.suite_name }}
           if-no-files-found: warn
