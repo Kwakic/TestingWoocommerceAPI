@@ -1,44 +1,126 @@
+
 name: Integration Tests 🔗
+
+# ==================================================
 # Controls:
-# orchestration
-# dependencies
-# permissions
-# triggers
-# concurrency
+# - orchestration
+# - dependencies
+# - permissions
+# - triggers
+# - concurrency
+#
+# The philosophy:
+# Integration tests validate full API + database integration behavior across services.
+#
+# Each entity runs in isolated matrix jobs:
+# - customers
+# - orders
+# - products
+# - coupons
+#
+# This preserves:
+# - ownership boundaries
+# - failure isolation
+# - independent diagnostics
+# - future scalability
+# ==================================================
 
-# --------------------------------------------------
+
+# ==================================================
 # 🔁 Triggers
-# --------------------------------------------------
+# ==================================================
 on:
-
-  # --------------------------------------------------
   # Run on pushes to main branch
-  # --------------------------------------------------
-#  push:
-#    branches: [ main ]
+  #
+  # Integration suite acts as:
+  # - TBD
+  # - TBD
+  # - README badge source
+  # ==================================================
+  push:
+    branches: [ main ]
 
-  # --------------------------------------------------
+
+  # ==================================================
   # Allow manual execution from GitHub UI
-  # --------------------------------------------------
+  # ==================================================
   workflow_dispatch:
 
 
 jobs:
 
   # ==================================================
-  # 🧪 JOB 1 — EXECUTE SMOKE TESTS
+  # 🔍 JOB 1 — DISCOVER FRAMEWORK ENTITIES
+  # ==================================================
+  #
+  # The framework is the Single Source of Truth.
+  #
+  # CI never maintains a hardcoded entity list.
+  #
+  # The discovery script delegates to EcommerceAPI.plugins.entities.discover_entity_names()
+  #
+  # The generated matrix includes metadata (entity, team, tier) used by all downstream jobs.
+  # ==================================================
+  discover-entities:
+
+    name: Discover framework entities
+
+    runs-on: ubuntu-latest
+
+    outputs:
+      matrix: ${{ steps.discovery.outputs.matrix }}
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install framework
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e "./EcommerceAPI[dev]"
+
+      # ==================================================
+      # Build GitHub Actions matrix
+      # ==================================================
+      #
+      # The framework is the Single Source of Truth for
+      # entity discovery.
+      #
+      # The CI simply asks the framework which entities
+      # are fully implemented and converts the result into
+      # a GitHub Actions matrix.
+      # ==================================================
+      - id: discovery
+        name: Build entity matrix
+        shell: bash
+        run: |
+          MATRIX=$(python .github/scripts/generate_matrix.py)
+
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+
+          echo "=========================================="
+          echo "Framework entities discovered"
+          echo "$MATRIX"
+  # ==================================================
+  # 🧪 JOB 2 — EXECUTE INTEGRATION TESTS
   #
   # Matrix strategy:
   # One isolated job per entity/team.
   #
-  # Enterprise rationale:
+  # The rationale:
   # - independent ownership
   # - isolated failures
   # - parallel execution
   # - scalable architecture
   #
-  # Delegates all shared CI logic to the reusable
-  # enterprise test runner workflow.
+  # Delegates all shared CI logic to the reusable test runner workflow.
   #
   # Shared responsibilities extracted:
   # - checkout
@@ -52,10 +134,14 @@ jobs:
   # - artifact uploads
   # - docker cleanup
   # ==================================================
+
   test:
 
-    # --------------------------------------------------
+    needs: discover-entities
+
+    # ==================================================
     # Matrix execution
+    # ==================================================
     #
     # Each entity represents:
     # - ownership boundary
@@ -72,74 +158,83 @@ jobs:
     # - coupons
     #
     # This preserves full diagnostic visibility.
-    # --------------------------------------------------
+    # ==================================================
     strategy:
 
       fail-fast: false
 
-      matrix:
-        entity:
-          - customers
-          - orders
-          - products
-          - coupons
+      matrix: ${{ fromJson(needs.discover-entities.outputs.matrix) }}
 
     uses: ./.github/workflows/reusable-test-runner.yml
 
     with:
 
-      # --------------------------------------------------
+      # ==================================================
       # Test suite metadata
-      # --------------------------------------------------
+      # ==================================================
       suite_name: integration
       pytest_markers: integration
 
-      # --------------------------------------------------
+      # ==================================================
       # Pytest runtime configuration
-      # --------------------------------------------------
+      # ==================================================
       timeout_minutes: 25
       pytest_durations: 20
       pytest_maxfail: 5
       pytest_extra_args: "-v"
 
-      # --------------------------------------------------
+      # ==================================================
       # Entity ownership boundary
       #
       # Entity == Team == Microservice
       #
-      # Passed to the reusable runner to isolate:
-      # - test execution
-      # - artifacts
-      # - logs
-      # - reports
-      # --------------------------------------------------
+      # Examples:
+      # - customers
+      # - orders
+      # - products
+      # - coupons
+      #
+      # Passed to reusable-test-runner.yml
+      # for:
+      # - entity-specific test execution
+      # - entity-specific reporting
+      # - entity-specific artifacts
+      # - ownership isolation
+      # ==================================================
       entity: ${{ matrix.entity }}
+      # Reserved for future features.
+      # The reusable workflows currently ignore
+      # these values, but exposing them now keeps
+      # every workflow interface consistent.
+      team: ${{ matrix.team }}
+      tier: ${{ matrix.tier }}
 
 
   # ==================================================
-  # 📊 JOB 2 — GENERATE + PUBLISH ALLURE REPORT
+  # 📊 JOB 3 — GENERATE + PUBLISH ALLURE REPORT
   # ==================================================
   publish-report:
+
+    needs:
+      - discover-entities
+      - test
 
     strategy:
 
       fail-fast: false
 
-      matrix:
-        entity:
-          - customers
-#          - orders
-#          - products
-#          - coupons
+      matrix: ${{ fromJson(needs.discover-entities.outputs.matrix) }}
 
-    concurrency:
-      group: pages-deploy-${{ matrix.entity }}
-      cancel-in-progress: false
-
-    needs: test
+#    concurrency:
+#      group: pages-deploy-${{ matrix.entity }}
+#      cancel-in-progress: false
 
     permissions:
+
       contents: write
+
+      actions: read  # dawidd6/action-download-artifact reads artifacts from another workflow run. Giving it:
+      # "actions: read" makes the permission explicit instead of relying on GitHub defaults.
 
     uses: ./.github/workflows/reusable-allure-report.yml
 
@@ -147,3 +242,8 @@ jobs:
       suite_name: integration
       report_timeout_minutes: 10
       entity: ${{ matrix.entity }}
+      # Reserved for future features.
+      # The reusable workflows currently ignore these values, but exposing them now keeps
+      # every workflow interface consistent.
+      team: ${{ matrix.team }}
+      tier: ${{ matrix.tier }}

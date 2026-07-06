@@ -9,9 +9,8 @@ name: Smoke Tests 🔥
 # - triggers
 # - concurrency
 #
-# Enterprise philosophy:
-# Smoke tests validate critical business paths
-# independently per entity/team.
+# The philosophy:
+# Smoke tests validate critical business paths independently per entity/team.
 #
 # Each entity runs in isolated matrix jobs:
 # - customers
@@ -117,14 +116,13 @@ jobs:
   # Matrix strategy:
   # One isolated job per entity/team.
   #
-  # Enterprise rationale:
+  # The rationale:
   # - independent ownership
   # - isolated failures
   # - parallel execution
   # - scalable architecture
   #
-  # Delegates all shared CI logic to the reusable
-  # enterprise test runner workflow.
+  # Delegates all shared CI logic to the reusable test runner workflow.
   #
   # Shared responsibilities extracted:
   # - checkout
@@ -205,7 +203,7 @@ jobs:
       # - ownership isolation
       # ==================================================
       entity: ${{ matrix.entity }}
-      # Reserved for future enterprise features.
+      # Reserved for future features.
       # The reusable workflows currently ignore
       # these values, but exposing them now keeps
       # every workflow interface consistent.
@@ -245,7 +243,7 @@ jobs:
       suite_name: smoke
       report_timeout_minutes: 10
       entity: ${{ matrix.entity }}
-      # Reserved for future enterprise features.
+      # Reserved for future features.
       # The reusable workflows currently ignore these values, but exposing them now keeps
       # every workflow interface consistent.
       team: ${{ matrix.team }}
