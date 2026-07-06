@@ -31,21 +31,20 @@ name: Smoke Tests 🔥
 # 🔁 Triggers
 # ==================================================
 on:
-  # --------------------------------------------------
   # Run on pushes to main branch
   #
   # Smoke suite acts as:
   # - deployment confidence gate
   # - operational confidence signal
   # - README badge source
-  # --------------------------------------------------
+  # ==================================================
   push:
     branches: [ main ]
 
 
-  # --------------------------------------------------
+  # ==================================================
   # Allow manual execution from GitHub UI
-  # --------------------------------------------------
+  # ==================================================
   workflow_dispatch:
 
 
@@ -53,6 +52,7 @@ jobs:
 
   # ==================================================
   # 🔍 JOB 1 — DISCOVER FRAMEWORK ENTITIES
+  # ==================================================
   #
   # The framework is the Single Source of Truth.
   #
@@ -89,8 +89,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e "./EcommerceAPI[dev]"
 
-      # --------------------------------------------------
+      # ==================================================
       # Build GitHub Actions matrix
+      # ==================================================
       #
       # The framework is the Single Source of Truth for
       # entity discovery.
@@ -98,7 +99,7 @@ jobs:
       # The CI simply asks the framework which entities
       # are fully implemented and converts the result into
       # a GitHub Actions matrix.
-      # --------------------------------------------------
+      # ==================================================
       - id: discovery
         name: Build entity matrix
         shell: bash
@@ -142,8 +143,9 @@ jobs:
 
     needs: discover-entities
 
-    # --------------------------------------------------
+    # ==================================================
     # Matrix execution
+    # ==================================================
     #
     # Each entity represents:
     # - ownership boundary
@@ -160,7 +162,7 @@ jobs:
     # - coupons
     #
     # This preserves full diagnostic visibility.
-    # --------------------------------------------------
+    # ==================================================
     strategy:
 
       fail-fast: false
@@ -171,20 +173,20 @@ jobs:
 
     with:
 
-      # --------------------------------------------------
+      # ==================================================
       # Test suite metadata
-      # --------------------------------------------------
+      # ==================================================
       suite_name: smoke
       pytest_markers: smoke
 
-      # --------------------------------------------------
+      # ==================================================
       # Pytest runtime configuration
-      # --------------------------------------------------
+      # ==================================================
       timeout_minutes: 20
       pytest_durations: 10
       pytest_maxfail: 3
 
-      # --------------------------------------------------
+      # ==================================================
       # Entity ownership boundary
       #
       # Entity == Team == Microservice
@@ -201,7 +203,7 @@ jobs:
       # - entity-specific reporting
       # - entity-specific artifacts
       # - ownership isolation
-      # --------------------------------------------------
+      # ==================================================
       entity: ${{ matrix.entity }}
       # Reserved for future enterprise features.
       # The reusable workflows currently ignore

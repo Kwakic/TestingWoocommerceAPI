@@ -45,11 +45,88 @@ Splitting pipelines by intent because:
 
 # 2. Recommended Workflow Architecture
 
+## 🏛️ Repository Architecture
+
+```text
+.github/
+│
+├── actions/
+│      configure-ci-env
+│      docker-cleanup
+│      ...
+│
+├── workflows/
+│      smoke.yml
+│      integration.yml
+│      ...
+│
+├── scripts/
+│      generate_matrix.py
+│
+EcommerceAPI/
+│
+└── plugins/
+       entities.py
+       entity_metadata.py
+       team_discovery.py
+```
+
 ### Reporting Strategy
 
-Public Allure reports are organized first by **entity** (customers, orders, products, coupons) and then by **test suite** (smoke, integration, regression, performance).
+Public Allure reports are organized first by **entity** (customers, orders, products, coupons..) and then by **test suite** (smoke, integration, regression, performance).
 
 This mirrors the framework's domain-driven architecture, allowing each microservice to own its own testing lifecycle while keeping GitHub Pages scalable as additional entities are introduced.
+
+
+## Enterprise CI Flow
+
+```text
+                Framework
+                    │
+                    ▼
+        discover_entity_names()
+                    │
+                    ▼
+         build_entity_matrix()
+                    │
+                    ▼
+      .github/scripts/generate_matrix.py
+                    │
+                    ▼
+         GitHub Actions Matrix
+                    │
+      ┌─────────────┼─────────────┐
+      ▼             ▼             ▼
+   Smoke      Integration    Regression
+      │             │             │
+      └─────────────┼─────────────┘
+                    ▼
+        reusable-test-runner.yml
+                    │
+                    ▼
+      reusable-allure-report.yml
+                    │
+                    ▼
+      deploy-dashboard.yml
+                    │
+                    ▼
+             GitHub Pages
+```
+
+
+1. [x] Framework owns discovery.
+2. [x] Framework owns metadata.
+3. [x] GitHub Actions consumes metadata.
+4. [x] Deployment is independent.
+5. [x] Reports are organized as:
+
+```
+customers/
+    smoke/
+    integration/
+    regression/
+    performance/
+```
 
 ---
 

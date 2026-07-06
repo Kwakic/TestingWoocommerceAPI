@@ -4,6 +4,8 @@ from pathlib import Path
 import json
 import sys
 
+# Imported after the repository root has been added to sys.path.
+
 
 def main() -> None:
     """Generate the GitHub Actions matrix from the framework."""
@@ -11,20 +13,9 @@ def main() -> None:
     repo_root = Path(__file__).resolve().parents[2]
     sys.path.insert(0, str(repo_root))
 
-    from EcommerceAPI.plugins.entities import discover_entity_names
+    from EcommerceAPI.plugins.entities import build_entity_matrix
 
-    matrix = {
-        "include": [
-            {
-                "entity": entity,
-                "team": entity,
-                "tier": "critical",
-            }
-            for entity in discover_entity_names()
-        ]
-    }
-
-    print(json.dumps(matrix))
+    print(json.dumps(build_entity_matrix()))
 
 
 if __name__ == "__main__":

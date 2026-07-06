@@ -112,6 +112,14 @@ import pkgutil
 from dataclasses import dataclass
 from enum import Enum
 
+# ----------------------------------------------------------------
+# CI metadata
+# ----------------------------------------------------------------
+from EcommerceAPI.src.metadata.entity_metadata import (
+    DEFAULT_ENTITY_METADATA,
+    ENTITY_METADATA,
+)
+
 import EcommerceAPI.src
 
 from EcommerceAPI.src.clients.api_client import APIClient
@@ -576,6 +584,49 @@ def discover_entity_names() -> list[str]:
 
     # An entity is considered available only if all framework components exist.
     return sorted(helpers & apis & daos)
+
+
+# ----------------------------------------------------------------
+# GitHub Actions matrix builder
+# ----------------------------------------------------------------
+def build_entity_matrix() -> dict[str, list[dict[str, str]]]:
+    """
+    Build the GitHub Actions execution matrix.
+
+    Responsibilities
+    ----------------
+    • Discover framework entities dynamically.
+    • Apply enterprise metadata.
+    • Produce a GitHub Actions compatible matrix.
+
+    The framework remains the Single Source of Truth.
+
+    CI should never implement entity discovery or business
+    metadata itself. It simply consumes the matrix produced
+    by this function.
+    """
+
+    matrix: dict[str, list[dict[str, str]]] = {"include": []}
+
+    for entity in discover_entity_names():
+
+        metadata = {
+            **DEFAULT_ENTITY_METADATA,
+            **ENTITY_METADATA.get(entity, {}),
+        }
+
+        matrix["include"].append(
+            {
+                # Framework entity.
+                "entity": entity,
+                # Entity = Team by design.
+                "team": entity,
+                # Business metadata.
+                "tier": metadata["tier"],
+            }
+        )
+
+    return matrix
 
 
 # ----------------------------------------------------------------

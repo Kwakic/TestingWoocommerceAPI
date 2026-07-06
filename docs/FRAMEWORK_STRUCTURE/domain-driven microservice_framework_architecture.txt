@@ -68,10 +68,16 @@ TestEcommerceAPI (project suite/root)
 │     │     ├── config_pytest.py
 │     │     ├── db_fixtures.py
 │     │     ├── entities.py
+│     │     ├── entity_metadata.py
 │     │     ├── reporting.py
 │     │     ├── logging_plugin.py
 │     │     └── README_plugins.md
 │     │── src/                                      ← ⚠ ONLY reusable/shared/global
+│     │     ├── metadata/
+│     │     │     ├── entity_metadata.py
+│     │     │     ├── runtime_metadata.py        # future
+│     │     │     ├── deployment_metadata.py     # future
+│     │     │     └── __init__.py
 │     │     ├── configs/
 │     │     │     ├── config_loader.py
 │     │     │     ├── runtime_config.py
