@@ -2811,3 +2811,4 @@ without ever needing to touch your local `main` branch.
 - Protect main branch
 - Keep commits clean and small
 - Use PyCharm UI for simplicity
+---
