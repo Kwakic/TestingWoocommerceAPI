@@ -27,12 +27,11 @@ The project publishes interactive Allure reports to GitHub Pages.
 
 | Dashboard | URL | Description |
 |-----------|-----|-------------|
-| 🏠 **QA Portal** | https://kwakic.github.io/TestingWooCommerceAPI | Entry point for all public reports |
-| 🔥 Smoke | https://kwakic.github.io/TestingWooCommerceAPI/smoke | Critical business validation |
-| 🔗 Integration | https://kwakic.github.io/TestingWooCommerceAPI/integration | API + Database validation |
-| 🔬 Regression | https://kwakic.github.io/TestingWooCommerceAPI/regression | Full regression suite |
-| ⏱ Performance | https://kwakic.github.io/TestingWooCommerceAPI/performance | Performance trends |
-
+| 🏠 **QA Portal** | https://kwakic.github.io/TestingWoocommerceAPI | Entry point for all public reports |
+| 🔥 Smoke | https://kwakic.github.io/TestingWoocommerceAPI/customers/smoke | Customers Smoke suite |
+| 🔗 Integration | https://kwakic.github.io/TestingWoocommerceAPI/customers/integration | Customers Integration suite |
+| 🔬 Regression | https://kwakic.github.io/TestingWoocommerceAPI/customers/regression | Customers Regression suite |
+| ⏱ Performance | https://kwakic.github.io/TestingWoocommerceAPI/customers/performance | Customers Performance suite |
 > Contract, Security and Preflight workflows intentionally publish CI artifacts only.
 ---
 
