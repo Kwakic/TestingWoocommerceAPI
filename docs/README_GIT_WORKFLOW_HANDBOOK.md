@@ -835,7 +835,7 @@ feature → feature → feature  ❌ (causes history pollution)
 * Predictable Git workflow
 
 ---
-### ➕ The other way would be:
+## ➕ The other way would be:
 
 1. Update main
 
