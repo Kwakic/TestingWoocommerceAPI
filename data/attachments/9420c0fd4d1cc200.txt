@@ -1,1 +1,0 @@
-INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/customers → Status code: 200 (completed in 0.063s)

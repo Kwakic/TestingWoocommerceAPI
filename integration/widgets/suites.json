@@ -1,1 +1,0 @@
-{"total":2,"items":[{"uid":"7adf597181e3b8e6346c49ab96e94a1a","name":"tests.customers.api","statistic":{"failed":0,"broken":0,"skipped":4,"passed":33,"unknown":0,"total":37}},{"uid":"a43323f9994b59b43247ecf56a68beea","name":"tests.shared.contracts","statistic":{"failed":0,"broken":0,"skipped":0,"passed":8,"unknown":0,"total":8}}]}

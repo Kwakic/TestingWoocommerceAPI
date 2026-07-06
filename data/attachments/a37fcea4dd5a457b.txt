@@ -1,9 +1,0 @@
-INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ DELETE /wp-json/wc/v3/orders/999999 → Status code: 401 (completed in 0.046s)
-DEBUG    EcommerceAPI.src.clients.api_client:api_client.py:580 {
-                                                                 "code": "woocommerce_rest_authentication_error",
-                                                                 "message": "Consumer key is invalid.",
-                                                                 "data": {
-                                                                   "status": 401
-                                                                 }
-                                                               }
-INFO     tests.shared.security.test_authentication_matrix:test_authentication_matrix.py:224 DELETE orders/999999 → invalid key=ck_invalid_key_123

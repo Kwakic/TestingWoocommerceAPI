@@ -1,9 +1,0 @@
-INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/coupons → Status code: 401 (completed in 0.051s)
-DEBUG    EcommerceAPI.src.clients.api_client:api_client.py:580 {
-                                                                 "code": "woocommerce_rest_authentication_error",
-                                                                 "message": "Invalid signature - provided signature does not match.",
-                                                                 "data": {
-                                                                   "status": 401
-                                                                 }
-                                                               }
-INFO     tests.shared.security.test_authentication_matrix:test_authentication_matrix.py:224 GET coupons → invalid key=2f174c06fea06eaa72785b0c3d28e59bf48894c1
