@@ -71,6 +71,17 @@ on:
 
   workflow_dispatch:
 
+  workflow_run:
+
+    workflows:
+      - Smoke Tests 🔥
+      - Integration Tests 🔗
+      - Regression Tests 🔬
+      - Performance Tests ⏱
+
+    types:
+      - completed
+
 permissions:
   contents: write
 
