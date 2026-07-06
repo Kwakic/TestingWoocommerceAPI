@@ -10,7 +10,22 @@ name: Deploy GitHub Pages 🚀
 # - Remove manual workflow_dispatch
 #
 # Current Version:
-# - Downloads report artifacts produced by the current workflow run.
+# ==================================================
+# Enterprise Deployment Philosophy
+#
+# Test execution and dashboard publication are
+# intentionally decoupled.
+#
+# Test workflows only generate report artifacts.
+#
+# This workflow periodically rebuilds the public
+# QA Portal from all available report artifacts.
+#
+# Benefits:
+# - eliminates GitHub Pages deployment races
+# - scales to any number of workflows
+# - centralizes publication
+# - mirrors enterprise CI/CD platforms
 # ==================================================
 
 # ==================================================
@@ -52,16 +67,15 @@ name: Deploy GitHub Pages 🚀
 
 on:
 
-  workflow_run:
+  schedule:
 
-    workflows:
-      - "Smoke Tests 🔥"
-      - "Integration Tests 🔗"
-      - "Regression Tests 🔬"
-      - "Performance Tests ⏱"
-
-    types:
-      - completed
+    # Every 5 minutes.
+    #
+    # The dashboard rebuilds only if new report
+    # artifacts exist.
+    #
+    # This completely eliminates deployment races.The task will run every 5 minutes.
+    - cron: "*/5 * * * *"
 
   workflow_dispatch:
 

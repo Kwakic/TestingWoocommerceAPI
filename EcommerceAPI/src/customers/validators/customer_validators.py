@@ -104,7 +104,7 @@ def assert_valid_customer_response(customer: Dict[str, Any]) -> CustomerModel:
     # -------------------------------------------------------
     # 📦 Return typed object
     # -------------------------------------------------------
-    # Returning the model allows downstream assertions to safely access fields using dot notation.
+    # Returning the model allows downstream validators to safely access fields using dot notation.
     return customer_model  # example: CustomerModel(id=1452, email='testuser_cfitmuyfvq@supersqa.com',
     # username='testuser_cfitmuyfvq')
 
@@ -307,7 +307,7 @@ def assert_customer_identity(
         - responses where a SINGLE customers object is expected
 
     Why this validator exists:
-        - Removes duplicated assertions across tests
+        - Removes duplicated validators across tests
         - Improves readability for junior engineers
         - Provides consistent error messages
         - Works with validated Pydantic models

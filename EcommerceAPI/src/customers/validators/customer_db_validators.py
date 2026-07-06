@@ -31,7 +31,7 @@ def assert_customer_matches_db(
 
     Args:
         customer (CustomerModel):
-            Validated customers object returned by API assertions.
+            Validated customers object returned by API validators.
 
         db_customer (Dict[str, Any]):
             Customer record retrieved from the database via DAO.
