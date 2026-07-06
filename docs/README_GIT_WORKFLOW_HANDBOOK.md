@@ -835,6 +835,70 @@ feature → feature → feature  ❌ (causes history pollution)
 * Predictable Git workflow
 
 ---
+### ➕ The other way would be:
+
+1. Update main
+
+```
+git checkout main
+git pull origin main
+```
+
+2. Create a recovery branch from the last good commit
+
+```
+git checkout -b fix/ci-stabilization f58371a
+```
+
+Notice the difference:
+
+You're creating the branch directly from the good commit.
+
+No cherry-pick needed.
+
+3. Continue working on that branch
+
+Make all the fixes we decide on.
+
+Commit normally, for example:
+```
+git add .
+git commit -m "refactor(ci): stabilize reusable workflows"
+```
+
+4. Push the branch
+```
+git push -u origin fix/ci-stabilization
+```
+
+5. Open a Pull Request
+Base: `main`
+Compare: `fix/ci-stabilization`
+Why this is cleaner
+
+Your current history is:
+```
+main
+
+f58371a  ✅ Testing Integration workflow
+5644134  ❌ Integration workflow v.2
+e30b134  ❌ New workflow
+db42014  ❌ step back
+```
+Your new branch starts here:
+```
+fix/ci-stabilization
+
+f58371a  ✅
+   │
+   ├── New clean commit
+   ├── New clean commit
+   └── ...
+```
+You're not carrying forward the experimental commits at all.
+
+
+---
 
 ## 🧠 Key Takeaway
 
