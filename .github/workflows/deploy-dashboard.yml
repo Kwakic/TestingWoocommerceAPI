@@ -58,24 +58,16 @@ name: Deploy GitHub Pages 🚀
 # ==================================================
 # Trigger
 #
-# The dashboard is rebuilt whenever one of the public
-# reporting workflows finishes successfully.
+# The dashboard acts as a publishing service.
 #
-# Manual execution is kept for debugging and local
-# verification.
+# Test workflows request publication once they have
+# successfully generated their reports.
+#
+# The workflow may also be started manually from the
+# GitHub Actions UI for debugging.
 # ==================================================
 
 on:
-
-  schedule:
-
-    # Every 5 minutes.
-    #
-    # The dashboard rebuilds only if new report
-    # artifacts exist.
-    #
-    # This completely eliminates deployment races.The task will run every 5 minutes.
-    - cron: "*/5 * * * *"
 
   workflow_dispatch:
 
@@ -85,6 +77,24 @@ permissions:
 jobs:
 
   deploy-dashboard:
+
+    concurrency:
+
+      # --------------------------------------------------
+      # Enterprise deployment queue
+      #
+      # GitHub Pages only allows a single deployment.
+      #
+      # Multiple workflows may request publication
+      # simultaneously.
+      #
+      # Requests are queued rather than cancelled.
+      #
+      # This mirrors enterprise CI/CD deployment queues.
+      # --------------------------------------------------
+      group: github-pages-publisher
+
+      cancel-in-progress: false
 
     runs-on: ubuntu-latest
 
