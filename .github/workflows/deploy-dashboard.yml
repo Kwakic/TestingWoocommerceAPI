@@ -172,11 +172,23 @@ jobs:
 
           mkdir -p site
 
-          # -----------------------------
+          # --------------------------------------------------
           # Copy QA Portal
-          # -----------------------------
-          cp docs/portal/index.html site/index.html
-          cp docs/portal/styles.css site/styles.css
+          #
+          # The portal acts as the landing page for all
+          # published Allure reports.
+          #
+          # Source:
+          #   docs/portal/
+          #
+          # Destination:
+          #   site/
+          # --------------------------------------------------
+
+          mkdir -p site
+
+          cp docs/portal/index.html site/
+          cp docs/portal/style.css site/
 
           echo
           echo "===== Downloaded artifacts ====="

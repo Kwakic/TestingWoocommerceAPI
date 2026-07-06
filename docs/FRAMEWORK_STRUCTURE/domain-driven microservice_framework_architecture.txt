@@ -27,6 +27,36 @@ TestEcommerceAPI (project suite/root)
 ├── .venv/...                                       ← shared virtual environment (optional)
 │
 ├── docs/...                                         ← shared
+│     ├── FRAMEWORK_STRUCTURE
+│     │     └── domain-driven microservice_framework_architecture.txt
+│     ├── portal
+│     │     ├── index.html
+│     │     └── style.css
+│     ├── TEAM GUIDES
+│     │     └── README_CUSTOMERS.md
+│     ├── README_ALLURE.md
+│     ├── README_API_CLIENT.md
+│     ├── README_API_FRAMEWORK_EXPLAINED.md
+│     ├── README_API_TESTING_STANDARDS.md
+│     ├── README_ARCHITECTURE.md
+│     ├── README_ARCHITECTURE_QUICK_START.md
+│     ├── README_AUTHENTICATION.md
+│     ├── README_CHANGELOG_GUIDELINES.md
+│     ├── README_CI_ALLURE_GUIDE.md
+│     ├── README_CONFIG_CONTRACT.md
+│     ├── README_ENV_AND_CI.md
+│     ├── README_ENVIRONMENT_CONFIG_GUIDE.md
+│     ├── README_FRAMEWORK_OVERVIEW.md
+│     ├── README_GIT_GITLAB_SETUP_GUIDE.md
+│     ├── README_GIT_WORKFLOW_HANDBOOK.md
+│     ├── README_INFRA_DOCKER_INSTALL_GUIDE.md
+│     ├── README_LOGGING.md
+│     ├── README_PLUGINS_REFERENCE.md
+│     ├── README_PYPROJECT.md
+│     ├── README_QA_DEVELOPER_ONBOARDING.md
+│     ├── README_TEAM_ENTITY_DISCOVER_GUIDE.md
+│     ├── README_TEST_WRITING_GUIDE.md
+│     └── README_VALIDATORS.md
 │
 ├── EcommerceAPI (installable framework package)/    ← SHARED INSTALLABLE FRAMEWORK
 │     ├── ecommerceapitest.egg-info/..
