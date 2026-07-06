@@ -736,6 +736,8 @@ git rebase --abort
 
 ## 🔧 Clean Solution (Recommended)
 
+👉 **Note: The cherry-pick workflow is ideal when you have good commits on top of a bad base that you want to keep.**
+
 Recreate your branch from a clean `main` and keep only relevant commits.
 
 ### 1️⃣ Update main
