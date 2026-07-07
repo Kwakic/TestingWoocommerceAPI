@@ -37,8 +37,8 @@ on:
   # - operational confidence signal
   # - README badge source
   # ==================================================
-  push:
-    branches: [ main ]
+#  push:
+#    branches: [ main ]
 
 
   # ==================================================
@@ -57,11 +57,9 @@ jobs:
   #
   # CI never maintains a hardcoded entity list.
   #
-  # The discovery script delegates to
-  # EcommerceAPI.plugins.entities.discover_entity_names()
+  # The discovery script delegates to EcommerceAPI.plugins.entities.discover_entity_names()
   #
-  # The generated matrix includes metadata
-  # (entity, team, tier) used by all downstream jobs.
+  # The generated matrix includes metadata (entity, team, tier) used by all downstream jobs.
   # ==================================================
   discover-entities:
 
@@ -214,6 +212,11 @@ jobs:
   # ==================================================
   # 📊 JOB 3 — GENERATE + PUBLISH ALLURE REPORT
   # ==================================================
+  # Generates and publishes one Allure report
+  # per discovered entity.
+  #
+  # Report publication remains independent from
+  # test execution to preserve failure visibility.
   publish-report:
 
     needs:
@@ -226,16 +229,15 @@ jobs:
 
       matrix: ${{ fromJson(needs.discover-entities.outputs.matrix) }}
 
-#    concurrency:
-#      group: pages-deploy-${{ matrix.entity }}
-#      cancel-in-progress: false
+
 
     permissions:
 
       contents: write
 
-      actions: read  # dawidd6/action-download-artifact reads artifacts from another workflow run. Giving it:
-      # "actions: read" makes the permission explicit instead of relying on GitHub defaults.
+      # Required by dawidd6/action-download-artifact
+      # to download artifacts from the current workflow execution.
+      actions: read
 
     uses: ./.github/workflows/reusable-allure-report.yml
 

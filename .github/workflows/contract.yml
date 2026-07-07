@@ -5,6 +5,17 @@ name: Contract Tests 📋
 # permissions
 # triggers
 
+# ==================================================
+# The philosophy:
+#
+# Contract tests validate API contracts and
+# response schemas independently for every
+# discovered framework entity.
+#
+# Results are kept as CI artifacts for
+# diagnostics and schema evolution analysis.
+# ==================================================
+
 
 # ==================================================
 # 🔁 Triggers
@@ -14,8 +25,8 @@ on:
   # --------------------------------------------------
   # Run on pushes to main branch
   # --------------------------------------------------
-#  push:
-#    branches: [ main ]
+  push:
+    branches: [ main ]
 
 
   # --------------------------------------------------
@@ -50,6 +61,6 @@ jobs:
 
     with:
       suite_name: contract
-      pytest_markers: contract
+      pytest_markers: contract  # Execute only contract validation tests.
       timeout_minutes: 15
       pytest_durations: 10

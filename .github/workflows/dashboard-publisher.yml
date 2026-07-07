@@ -1,41 +1,43 @@
 name: Deploy GitHub Pages 🚀
 
 # ==================================================
-# TODO (Future Improvements)
+# GitHub Pages Publisher
 #
-# - Automatic artifact discovery across workflow runs
-# - Automatic entity discovery
-# - Automatic suite discovery
-# - QA Portal enhancements
-# - Remove manual workflow_dispatch
+# Enterprise design principle:
 #
-# Current Version:
-# ==================================================
-# Enterprise Deployment Philosophy
+# Test execution and report publication are
+# intentionally separated.
 #
-# Test execution and dashboard publication are
-# intentionally decoupled.
+# Test workflows:
+#   • execute tests
+#   • generate Allure HTML
+#   • upload report artifacts
 #
-# Test workflows only generate report artifacts.
+# This workflow:
+#   • downloads report artifacts
+#   • rebuilds the QA Portal
+#   • publishes GitHub Pages
 #
-# This workflow periodically rebuilds the public
-# QA Portal from all available report artifacts.
-#
-# Benefits:
-# - eliminates GitHub Pages deployment races
-# - scales to any number of workflows
-# - centralizes publication
-# - mirrors enterprise CI/CD platforms
+# GitHub Pages allows only one deployment at a time.
+# Therefore concurrent workflow executions may
+# occasionally result in one deployment being
+# cancelled. This is a GitHub Pages platform
+# limitation rather than a framework limitation.
 # ==================================================
 
 # ==================================================
 # Purpose
 #
 # Single responsibility:
-# Build and publish the GitHub Pages website.
 #
-# This workflow never executes tests.
-# It only assembles already-generated reports.
+# Assemble every generated Allure report into a
+# single GitHub Pages website.
+#
+# No tests are executed here.
+#
+# This workflow only consumes artifacts produced
+# by the individual test suites.
+# ==================================================
 #
 # Enterprise architecture:
 #
@@ -58,13 +60,11 @@ name: Deploy GitHub Pages 🚀
 # ==================================================
 # Trigger
 #
-# The dashboard acts as a publishing service.
+# The workflow is started automatically whenever a
+# report-producing workflow completes.
 #
-# Test workflows request publication once they have
-# successfully generated their reports.
-#
-# The workflow may also be started manually from the
-# GitHub Actions UI for debugging.
+# A manual trigger is also available for debugging
+# or republishing existing report artifacts.
 # ==================================================
 
 on:
@@ -92,16 +92,12 @@ jobs:
     concurrency:
 
       # --------------------------------------------------
-      # Enterprise deployment queue
+      # GitHub Pages deployment queue
       #
-      # GitHub Pages only allows a single deployment.
+      # GitHub Pages accepts only one deployment at a time.
       #
-      # Multiple workflows may request publication
-      # simultaneously.
-      #
-      # Requests are queued rather than cancelled.
-      #
-      # This mirrors enterprise CI/CD deployment queues.
+      # Queue deployment requests instead of cancelling
+      # them when multiple workflows finish together.
       # --------------------------------------------------
       group: github-pages-publisher
 
@@ -185,7 +181,7 @@ jobs:
       # 3. Extract entity and suite names from the artifact.
       # 4. Rebuild the GitHub Pages directory structure.
       #
-      # No entities or test suites are hardcoded.
+      # # Reports are discovered dynamically from the downloaded artifacts.
       #
       # Example:
       #
@@ -283,11 +279,10 @@ jobs:
           find site -name index.html
 
       # --------------------------------------------------
-      # Debug generated website
+      # Optional diagnostic output.
       #
-      # Temporary verification step.
-      # Shows the final GitHub Pages structure before deployment.
-      # Remove once the workflow is stable.
+      # Helps troubleshoot GitHub Pages publication when
+      # investigating CI failures.
       # --------------------------------------------------
 
       - name: Debug generated website
@@ -318,3 +313,10 @@ jobs:
           publish_branch: gh-pages
           publish_dir: site
           keep_files: false
+
+      # --------------------------------------------------
+      # Publish the rebuilt QA Portal to GitHub Pages.
+      #
+      # Existing reports remain available because the
+      # deployment preserves the complete site structure.
+      # --------------------------------------------------

@@ -5,12 +5,30 @@ name: Security Tests 🔒
 # permissions
 # triggers
 
+
+# ==================================================
+# The philosophy:
+#
+# Security tests validate authentication,
+# authorization and permission boundaries.
+#
+# Results are intentionally kept internal.
+#
+# Security diagnostics are published as CI
+# artifacts only and are never exposed through
+# the public GitHub Pages dashboard.
+# ==================================================
+
 # ==================================================
 # 🔁 Triggers
 # ==================================================
 on:
   schedule:
-    - cron: "0 3 * * 0"  # Sunday 3 AM
+    # Weekly execution keeps CI costs low while
+    # providing regular security validation.
+    #
+    # Every Sunday at 03:00 UTC.
+    - cron: "0 3 * * 0"
 
   workflow_dispatch:
 
@@ -34,12 +52,14 @@ jobs:
   # - artifact uploads
   # - docker cleanup
   # ==================================================
+
+
   test:
 
     uses: ./.github/workflows/reusable-test-runner.yml
 
     with:
       suite_name: security
-      pytest_markers: security
+      pytest_markers: security  # Execute only security-focused tests.
       timeout_minutes: 15
       pytest_durations: 10

@@ -10,7 +10,8 @@ name: Integration Tests 🔗
 # - concurrency
 #
 # The philosophy:
-# Integration tests validate full API + database integration behavior across services.
+# Integration tests validate API + database consistency
+# independently for every discovered entity.
 #
 # Each entity runs in isolated matrix jobs:
 # - customers
@@ -33,9 +34,9 @@ on:
   # Run on pushes to main branch
   #
   # Integration suite acts as:
-  # - TBD
-  # - TBD
-  # - README badge source
+  # - API + database validation
+  # - End-to-end consistency verification
+  # - Operational confidence signal
   # ==================================================
 #  push:
 #    branches: [ main ]
@@ -90,8 +91,7 @@ jobs:
       # Build GitHub Actions matrix
       # ==================================================
       #
-      # The framework is the Single Source of Truth for
-      # entity discovery.
+      # The framework is the Single Source of Truth for entity discovery.
       #
       # The CI simply asks the framework which entities
       # are fully implemented and converts the result into
@@ -165,6 +165,14 @@ jobs:
 
       matrix: ${{ fromJson(needs.discover-entities.outputs.matrix) }}
 
+    # ==================================================
+    # Execute the Integration suite for every discovered
+    # entity using the shared enterprise test runner.
+    #
+    # Entity discovery remains framework-owned.
+    # GitHub Actions only consumes the generated matrix.
+    # ==================================================
+
     uses: ./.github/workflows/reusable-test-runner.yml
 
     with:
@@ -213,6 +221,11 @@ jobs:
   # ==================================================
   # 📊 JOB 3 — GENERATE + PUBLISH ALLURE REPORT
   # ==================================================
+  # Generates and publishes one Allure report
+  # per discovered entity.
+  #
+  # Report publication remains independent from
+  # test execution to preserve failure visibility.
   publish-report:
 
     needs:

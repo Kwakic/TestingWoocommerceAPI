@@ -1,8 +1,8 @@
-# 📚 CI/CD & Allure Reporting Guide for TestEcommerceAPI
+# 📚 CI/CD Architecture & Allure Reporting Guide
 
 Your framework has evolved beyond a "simple pytest project." You now have:
 
-- ✅ Layered enterprise API testing
+- ✅ Layered API testing
 - ✅ Segmented CI/CD pipelines
 - ✅ Dockerized test environments
 - ✅ Structured logging
@@ -12,7 +12,7 @@ Your framework has evolved beyond a "simple pytest project." You now have:
 - ✅ Smoke validation & security testing
 - ✅ Trend/history preservation
 
-Your custom Allure integration implements many advanced enterprise reporting concepts.
+Your custom Allure integration implements many advanced reporting concepts.
 
 ---
 
@@ -78,7 +78,7 @@ Public Allure reports are organized first by **entity** (customers, orders, prod
 This mirrors the framework's domain-driven architecture, allowing each microservice to own its own testing lifecycle while keeping GitHub Pages scalable as additional entities are introduced.
 
 
-## Enterprise CI Flow
+## CI Flow
 
 ```text
                 Framework
@@ -107,12 +107,30 @@ This mirrors the framework's domain-driven architecture, allowing each microserv
       reusable-allure-report.yml
                     │
                     ▼
-      deploy-dashboard.yml
+      dashboard-publisher.yml
                     │
                     ▼
              GitHub Pages
 ```
 
+## GitHub Pages limitation
+
+GitHub Pages accepts only one deployment at a time.
+
+If two report-producing workflows (for example Smoke and Integration)
+finish simultaneously, GitHub may cancel one of the deployments.
+
+This is a GitHub Pages platform limitation rather than a framework limitation.
+
+For this project each workflow remains independently executable and
+independently publishes its own report.
+
+This keeps the CI architecture simple, reusable and easy to understand.
+
+Enterprise environments commonly publish reports to dedicated artifact
+repositories or static hosting platforms (Azure Storage, Amazon S3,
+Artifactory, Nexus, internal web servers, etc.), where this limitation
+does not exist.
 
 1. [x] Framework owns discovery.
 2. [x] Framework owns metadata.
@@ -127,6 +145,18 @@ customers/
     regression/
     performance/
 ```
+---
+## Design principles
+
+The CI/CD platform follows five principles:
+
+1. The framework is the single source of truth.
+2. Entity discovery is dynamic.
+3. GitHub Actions orchestrates, it does not own metadata.
+4. Every workflow answers one specific quality question.
+5. Workflows remain independently executable.
+6. Public dashboards are reserved for operational test suites
+   (Smoke, Integration, Regression and Performance).
 
 ---
 
@@ -388,7 +418,7 @@ on:
 ```
 
 ### Allure Report?
-⚠️ **Optional** — Captured as artifact for diagnostics
+⚠️ **Artifact only** — Contract validation remains internal and is intentionally not published to GitHub Pages.
 
 ### GitHub Pages?
 ❌ **NO** — Not for public dashboard
@@ -602,10 +632,9 @@ on:
 
 ### Artifacts produced during runtime?
 ✅ **YES**
-* `regression-allure-reports/` — Interactive HTML dashboard
-* `regression-allure-results/` — Diagnostic raw data
-* `regression-structured-logs/` — Structured logs for troubleshooting
-* `regression-junit-results/` — A structured text file (XML) listing all tests and their results
+* `security-allure-reports/` — Interactive HTML dashboard
+* `security-structured-logs/` — Structured logs for troubleshooting
+* `security-junit-results/` — A structured text file (XML) listing all tests and their results
 
 
 ### Key CI Variables
@@ -952,7 +981,7 @@ pytest \
 
 ---
 
-# 14. Correct Enterprise Failure Flow
+# 14. Correct Failure Flow
 
 When tests fail, the proper sequence is:
 
@@ -1013,6 +1042,15 @@ gh-pages/     Generated reports (indexed by destination_dir)
 ├── products/
 └── coupons/
 ```
+
+### Note:
+
+> Because GitHub Pages accepts only one deployment at a time,
+> concurrent workflow executions may occasionally result in one
+> deployment being cancelled. The generated reports and artifacts
+> remain available in GitHub Actions. Running the affected
+> workflow again republishes the report successfully.
+
 ---
 
 # 16. Suggested Repository Structure
@@ -1031,7 +1069,7 @@ docs/
 ├── portal/
 │   ├── index.html
 │   └── styles.css
-├── README_CI_ALLURE_GUIDE.md
+├── README_CI_ARCHITECTURE.md
 ├── ENVIRONMENT_CONFIG_GUIDE.md
 ├── CONFIG_CONTRACT.md
 └── CI_TROUBLESHOOTING.md
@@ -1107,9 +1145,9 @@ on:
 
 ---
 
-# 19. Your Framework Maturity
+# 19. Framework Maturity
 
-Your framework is implementing enterprise-grade concepts:
+The framework is implementing enterprise-grade concepts:
 
 ✅ Full API + DB integration dashboards\
 ✅ Multi-dashboard GitHub Pages publishing\
@@ -1138,7 +1176,11 @@ Your framework is implementing enterprise-grade concepts:
 - Trend analysis & flaky detection
 - Ownership-aware reporting
 
-**Note:** Your custom Allure integration is significantly more advanced than what many teams maintain internally. This is enterprise-grade infrastructure.
+**Note:** Your custom Allure integration demonstrates many practices commonly found in mature CI/CD environments,
+including reusable workflows, structured reporting, history preservation and metadata-driven execution.
+
+The framework adopts many enterprise CI/CD practices, including reusable workflows, dynamic entity discovery,
+metadata-driven execution, structured reporting and GitHub Pages publication for public reports.
 
 ---
 
@@ -1199,5 +1241,5 @@ Because:
 
 ---
 
-**Last updated:** 2026-05-08
-**Guide version:** 1.2 (Enterprise-grade CI/CD & Allure best practices)
+**Last updated:** 2026-07-07
+**Guide version:** 1.3 (CI/CD & Allure best practices)

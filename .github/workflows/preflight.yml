@@ -1,5 +1,16 @@
 name: Preflight Checks ⚡
 
+# ==================================================
+# The philosophy:
+#
+# Preflight validates the framework itself before
+# any infrastructure-dependent suites execute.
+#
+# It provides fast developer feedback and prevents
+# expensive CI resources from being consumed when
+# the framework cannot even start correctly.
+# ==================================================
+
 on:
   # Run on pull requests (any branch)
   pull_request:  # Every PR
@@ -11,7 +22,7 @@ jobs:
   # ==================================================
   # ⚡ PRE-FLIGHT VALIDATION
   #
-  # Platform ownership domain.
+  # Framework validation workflow.
   #
   # Ultra-fast validation before expensive
   # infrastructure-dependent suites execute.
@@ -48,4 +59,7 @@ jobs:
 
       pytest_extra_args: "-v"
 
+      # No Docker or WordPress bootstrap required.
+      #
+      # Preflight validates the framework only.
       setup_woocommerce: false
