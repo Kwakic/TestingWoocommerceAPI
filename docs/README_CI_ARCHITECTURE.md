@@ -146,7 +146,7 @@ customers/
     performance/
 ```
 ---
-## Design principles
+## 🎨 Design principles
 
 The CI/CD platform follows five principles:
 
@@ -157,6 +157,68 @@ The CI/CD platform follows five principles:
 5. Workflows remain independently executable.
 6. Public dashboards are reserved for operational test suites
    (Smoke, Integration, Regression and Performance).
+
+---
+## 🧬 Entity vs Shared Test Suites
+
+The framework contains two categories of automated test suites.
+
+### Entity Suites
+
+Entity suites execute independently for each discovered framework entity.
+
+Examples:
+
+- Smoke
+- Integration
+- Regression
+- Performance
+
+These workflows use dynamic entity discovery and execute once for every supported entity (customers, orders, products, coupons, ...).
+
+Each entity receives its own:
+
+- workflow execution
+- artifacts
+- Allure history
+- GitHub Pages report (when enabled)
+
+This approach keeps reports isolated and allows every microservice to own its own quality metrics.
+---
+
+### Shared Framework Suites
+
+Shared Framework suites validate the testing framework or platform itself rather than individual business entities.
+
+Examples:
+
+- Preflight
+- Contract
+- Security
+
+These workflows execute once for the entire framework.
+
+They intentionally do not use entity discovery.
+
+Typical validations include:
+
+- framework startup
+- authentication
+- API contracts
+- schema validation
+- environment configuration
+
+For this reason, their workflow summary displays:
+
+```text
+Scope: Shared Framework
+```
+
+instead of:
+
+```text
+Entity: customers
+```
 
 ---
 

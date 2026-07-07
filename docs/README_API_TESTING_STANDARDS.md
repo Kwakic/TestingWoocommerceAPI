@@ -290,6 +290,21 @@ Always validate responses in this order:
 The framework also contains shared tests that validate infrastructure,
 security, and environment behavior before running entity-specific tests.
 
+These suites are framework-level validation suites.
+
+Shared Framework suites execute once for the framework rather than once per entity.
+
+Where validation must cover every supported API entity (for example Contract
+and Security), the tests dynamically discover the framework entities and
+iterate over them internally.
+
+This avoids duplicated CI executions while ensuring complete platform
+coverage.
+
+Consequently, CI reports identify them using
+
+**Scope: Shared Framework rather than an entity name.**
+
 Directory structure:
 
 tests/shared/
@@ -303,8 +318,11 @@ tests/shared/
         test_authentication_matrix.py
         test_authentication_success.py
 
-    performance/
-        test_basic_response_times.py
+    contracts/
+        test_api_connectivity.py
+        test_response_format.py
+
+---
 
 Purpose of each category:
 
@@ -318,6 +336,8 @@ Examples:
 - logging configuration
 - response format validation
 
+---
+
 Security tests
 --------------
 Validate authentication and access control behavior.
@@ -329,9 +349,33 @@ Example matrix:
 × 3 invalid credential cases
 = 48 security tests
 
+---
+
 Performance tests
 -----------------
 Provide lightweight baseline response time checks to detect regressions
 in API responsiveness.
+
+---
+
+Contract tests
+-----------------
+
+Contract tests validate API contracts and response schemas independently for every discovered framework entity
+
+---
+
+
+### 🔀 The workflow:
+
+| Workflow | Type | Scope | Public |
+|----------|------|-------|:------:|
+| Preflight | Shared | Framework | ❌ |
+| Contract | Shared | Framework | ❌ |
+| Security | Shared | Framework | ❌ |
+| Smoke | Entity | Customers / Orders / ... | ✅ |
+| Integration | Entity | Customers / Orders / ... | ✅ |
+| Regression | Entity | Customers / Orders / ... | ✅ |
+| Performance | Entity | Customers / Orders / ... | ✅ |
 
 ------------------------------------------------------------------

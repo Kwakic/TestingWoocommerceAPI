@@ -95,6 +95,31 @@ If you need a new entity:
   - No framework changes required
 
 ──────────────────────────────────────────────────────────────────────────────
+
+| Function                        | Responsibility                              | Heavy?         |
+| ------------------------------- | ------------------------------------------- | -------------  |
+| `discover_entity_names()`       | Discover **what entities exist**            | ❌ Lightweight |
+| `discover_entities(api_client)` | Build the runtime registry (`EntityBundle`) | ✅ Heavy       |
+
+                 Discovery Engine
+                        │
+        ┌───────────────┴───────────────┐
+        │                               │
+ discover_entity_names()        discover_entities()
+        │                               │
+     names only                  runtime objects
+
+If it called discover_entities(api_client) function it would unnecessarily:
+
+- instantiate every API client
+- instantiate every helper
+- instantiate every DAO
+- create delete methods
+- create EntityBundles
+
+just to obtain four strings.
+
+──────────────────────────────────────────────────────────────────────────────
 This module is intentionally conservative.
 Changes here affect the entire test platform.
 ──────────────────────────────────────────────────────────────────────────────
@@ -525,24 +550,24 @@ def discover_entities(api_client: APIClient) -> Dict[str, EntityBundle]:
     return entities
 
 
-# ----------------------------------------------------------------
-# Lightweight entity discovery (CI/CD)
-# ----------------------------------------------------------------
 def discover_entity_names() -> list[str]:
     """
-    Discover entity names without instantiating helpers, DAOs or API clients.
+    Lightweight framework entity discovery
+
+    This helper intentionally avoids creating helpers, DAOs or API clients (no runtime initialization)
+    and therefore can safely be reused anywhere the framework simply needs to enumerate supported entities.
 
     Purpose
     -------
-    This function is intended for CI/CD workflows that only need to know
-    which framework entities exist in order to build a dynamic matrix.
+    Discover every supported framework entity without instantiating helpers, DAOs or API clients.
 
-    Unlike discover_entities(), this function:
+    Typical consumers include:
 
-    • does NOT create API clients
-    • does NOT instantiate helpers
-    • does NOT instantiate DAOs
-    • does NOT require pytest fixtures
+    • GitHub Actions dynamic matrix generation
+    • Contract test suites
+    • Security test suites
+    • Framework tooling
+    • Future reporting utilities
 
     It simply returns the list of valid framework entities.
 

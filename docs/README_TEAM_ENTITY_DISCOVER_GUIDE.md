@@ -130,27 +130,30 @@ Source:
 entities.py
 ```
 
-Entity discovery powers runtime resources.
+Entity discovery is the framework's **Single Source of Truth** for supported
+business entities.
 
-Unlike Team Discovery, it does not inspect tests.
+Unlike Team Discovery, it does not inspect the test suite.
 
-Instead it scans framework modules.
+Instead it discovers entities by scanning the framework implementation itself.
 
-Example:
-
-```text
-customers_helper.py
-customers_api.py
-customers_dao.py
-```
-
-If all required pieces exist:
+A valid entity requires a complete framework implementation:
 
 ```text
-customers
+<entity>_helper.py
+<entity>_api.py
+<entity>_dao.py
 ```
 
-is registered as an entity.
+Only fully implemented entities are exposed to the rest of the framework.
+
+Current consumers include:
+
+- Runtime resource discovery
+- GitHub Actions dynamic matrix generation
+- Contract test suites
+- Security test suites
+- Future framework tooling
 
 ---
 ## 🏛️ Discovery Architecture Overview
@@ -187,7 +190,7 @@ Examples:
 
 ---
 
-### Discovery Flows
+## 🔍 Discovery Flows
 
 The framework currently contains two discovery systems.
 
@@ -231,11 +234,11 @@ becomes the owner for:
 
 Used by:
 
-* Runtime resources
-* Fixtures
-* Helpers
-* DAOs
-* Cleanup registration
+- Runtime resources
+- Generic fixtures
+- Contract test suites
+- Security test suites
+- GitHub Actions dynamic matrix
 
 Flow:
 
@@ -243,27 +246,23 @@ Flow:
 customers_helper.py
 customers_api.py
 customers_dao.py
-          ↓
-   discover_entities()
-          ↓
-      EntityBundle
-          ↓
-      customers
+          │
+          ▼
+discover_entity_names()
+          │
+          ├── GitHub Actions Matrix
+          ├── Contract Tests
+          ├── Security Tests
+          └── discover_entities()
+                     │
+                     ▼
+                EntityBundle
 ```
 
-Result:
+This lightweight discovery mechanism allows multiple framework components
+to enumerate supported entities without instantiating helpers, DAOs or API
+clients.
 
-```text
-customers
-```
-
-becomes available through:
-
-```python
-entity_helper("customers")
-entity_dao("customers")
-all_resources.customers
-```
 
 ---
 
@@ -274,6 +273,7 @@ At first glance they appear duplicated.
 However, they solve different problems.
 
 Team Discovery answers:
+
 
 ```text
 Who owns this test?
@@ -627,6 +627,32 @@ The framework is the single source of truth. Every workflow dynamically builds i
 
 ---
 
+## 🔗 Shared Framework Discovery
+
+Entity discovery is not limited to GitHub Actions.
+
+The same discovery mechanism is reused throughout the framework wherever
+all supported entities must be enumerated.
+
+Examples:
+
+```python
+discover_entity_names()
+```
+
+Current consumers include:
+
+- GitHub Actions matrix generation
+- Contract test suites
+- Security test suites
+
+This avoids maintaining duplicated entity lists and ensures that adding a
+new entity automatically expands both CI execution and shared framework
+validation.
+
+
+---
+
 # 🚦 CI Ownership Model
 
 Each matrix entry represents:
@@ -751,7 +777,8 @@ Today several components determine ownership:
 
 ```text
 team_discovery.py
-entities.py
+discover_entity_names()
+discover_entities()
 config_loader.detect_service()
 CI matrix entity
 ```

@@ -148,6 +148,7 @@ TestEcommerceAPI (project suite/root)
 │     │     │     ├── generic_utilities.py
 │     │     │     ├── log_context.py
 │     │     │     ├── pagination_utils.py
+│     │     │     ├── performance_utils.py
 │     │     │     ├── team_discovery.py
 │     │     │     └── truncate_logging_utils.py
 │     │     └── __init__.py
@@ -203,25 +204,25 @@ TestEcommerceAPI (project suite/root)
 │     │     ├── __init__.py
 │     │     ├── conftest.py
 │     │     ├── README.md
-│     │     └── api/
-│     │            ├── test_create_customer.py
-│     │            ├── test_customer_deletion.py
-│     │            ├── test_customer_filters.py
-│     │            ├── test_e2e_customer_lifecycle.py
-│     │            ├── test_get_all_customers.py
-│     │            ├── test_get_customer.py
-│     │            ├── test_soft_deleted_customer_handling.py
-│     │            ├── test_update_customer.py
-│     │            └── __init__.py
+│     │     ├── api/
+│     │     │     ├── test_create_customer.py
+│     │     │     ├── test_customer_deletion.py
+│     │     │     ├── test_customer_filters.py
+│     │     │     ├── test_e2e_customer_lifecycle.py
+│     │     │     ├── test_get_all_customers.py
+│     │     │     ├── test_get_customer.py
+│     │     │     ├── test_soft_deleted_customer_handling.py
+│     │     │     ├── test_update_customer.py
+│     │     │     └── __init__.py
+│     │     └── performance/
+│     │           ├── test_customer_response_times.py
+│     │           └── __init__.py
 │     ├── shared/
 │     │     ├── __init__.py
 │     │     ├── contracts/                          ← JSON contract schemas (contract testing)
 │     │     │      ├──error_schema.py
 │     │     │      ├── test_response_format.py
 │     │     │      ├── test_api_connectivity.py
-│     │     │      └── __init__.py
-│     │     ├── performance/
-│     │     │      ├── test_basic_response_times.py
 │     │     │      └── __init__.py
 │     │     ├── security/
 │     │     │      ├── test_authentication_matrix.py

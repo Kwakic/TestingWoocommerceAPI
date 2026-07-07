@@ -17,22 +17,32 @@ Instead it tests the transport layer directly using APIClient.
 
 Coverage
 --------
-Entities:
-    customers
-    products
-    orders
-    coupons
 
-Methods:
-    GET
-    POST
-    PUT
-    DELETE
+Entities
+~~~~~~~~
 
-Credential variants:
-    invalid key + invalid secret
-    invalid key + valid secret
-    valid key + invalid secret
+Every framework entity discovered through:
+
+    discover_entity_names()
+
+is automatically included in the authentication matrix.
+
+No entity list is maintained inside this test.
+
+Methods
+~~~~~~~
+
+GET
+POST
+PUT
+DELETE
+
+Credential variants
+~~~~~~~~~~~~~~~~~~~
+
+• invalid key + invalid secret
+• invalid key + valid secret
+• valid key + invalid secret
 
 Total tests matrix executed:
 
@@ -51,7 +61,9 @@ from jsonschema import validate
 from EcommerceAPI.src.utils.credentials_utility import get_wc_api_keys
 from EcommerceAPI.src.clients.api_client import APIClient
 from EcommerceAPI.src.auth.base_auth import AuthStrategy
+from EcommerceAPI.plugins.entities import discover_entity_names
 from tests.shared.contracts.error_schema import error_schema
+
 
 logger = logging.getLogger(__name__)
 
@@ -85,19 +97,30 @@ class InvalidOAuthStrategy(AuthStrategy):
 
 
 # ------------------------------------------------------------------
-# Entities covered by the authentication matrix
+# Framework entity discovery
+#
+# The entities plugin is the Single Source of Truth for supported framework entities.
+#
+# Authentication is a platform concern rather than an entity concern,
+# therefore every discovered entity automatically participates in the authentication matrix.
+#
+# Adding a new entity requires NO changes to this test.
 # ------------------------------------------------------------------
 
-ENTITIES = [
-    "customers",
-    "products",
-    "orders",
-    "coupons",
-]
-
+ENTITIES = discover_entity_names()
 
 # ------------------------------------------------------------------
 # HTTP method matrix
+#
+# Tuple format:
+#
+#     (
+#         HTTP method,
+#         requires resource id,
+#         requires request payload,
+#     )
+#
+# This allows a single test implementation to validate every authentication scenario consistently.
 # ------------------------------------------------------------------
 
 METHOD_MATRIX = [
@@ -183,9 +206,13 @@ def test_authentication_rejects_invalid_credentials(
         base_url, auth_strategy=InvalidOAuthStrategy(invalid_key, invalid_secret)
     )
 
-    # --------------------------------------------------------------
-    # Build endpoint
-    # --------------------------------------------------------------
+    # ------------------------------------------------------------------
+    # Build the endpoint under test.
+    #
+    # PUT and DELETE require a resource identifier.
+    # We intentionally inject a non-existent ID because authentication
+    # should fail before resource existence is evaluated.
+    # ------------------------------------------------------------------
 
     endpoint = entity
 

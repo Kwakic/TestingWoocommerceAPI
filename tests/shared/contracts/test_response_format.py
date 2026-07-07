@@ -16,6 +16,7 @@ ENTITIES = [
 def test_api_returns_json(api_client, endpoint):
     """
     API response format guard.
+    It ensures that every public endpoint follows the transport contract.
 
     Ensures endpoints return JSON responses and
     correct content-type headers.

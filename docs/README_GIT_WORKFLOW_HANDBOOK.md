@@ -837,26 +837,26 @@ feature → feature → feature  ❌ (causes history pollution)
 ---
 ## ➕ The other way would be:
 
-1. Update main
+### 1. Update main
 
 ```
 git checkout main
 git pull origin main
 ```
 
-2. Create a recovery branch from the last good commit
+### 2. Create a recovery branch from the last good commit
 
 ```
 git checkout -b fix/ci-stabilization f58371a
 ```
 
-Notice the difference:
+**Notice the difference:**
 
 You're creating the branch directly from the good commit.
 
 No cherry-pick needed.
 
-3. Continue working on that branch
+### 3. Continue working on that branch
 
 Make all the fixes we decide on.
 
@@ -866,12 +866,12 @@ git add .
 git commit -m "refactor(ci): stabilize reusable workflows"
 ```
 
-4. Push the branch
+### 4. Push the branch
 ```
 git push -u origin fix/ci-stabilization
 ```
 
-5. Open a Pull Request
+### 5. Open a Pull Request
 Base: `main`
 Compare: `fix/ci-stabilization`
 Why this is cleaner
