@@ -9,18 +9,19 @@
 1. Overview
 2. Core Philosophy
 3. Entity = Team = Microservice
-4. Team Discovery
-5. Entity Discovery
-6. Discovery Architecture Overview
-7. EntityBundle Architecture
-8. Entities Registry
-9. Shared API Resources
-10. Allure Ownership
-11. Structured Logging
-12. CI/CD Matrix Strategy
-13. Adding a New Entity
-14. Future Architecture Vision
-15. Single Source of Truth
+4. Discovery Architecture
+5. Entity Discovery (Test Ownership)
+6. Framework Entity Discovery
+7. Runtime Registry Discovery
+8. EntityBundle Architecture
+9. Entities Registry
+10. Shared API Resources
+11. Allure Ownership
+12. Structured Logging
+13. CI/CD Matrix Strategy
+14. Adding a New Entity
+15. Future Architecture Vision
+16. Single Source of Truth
 
 ---
 
@@ -53,292 +54,265 @@ Examples:
 For this framework:
 
 ```text
-customers
-    ↓
-Entity
-    ↓
+Business Entity
+↓
+
 Microservice
-    ↓
+↓
+
 Owning Team
-    ↓
-Logging Ownership
-    ↓
-Allure Ownership
-    ↓
-CI Matrix Ownership
+↓
+
+Logging
+
+↓
+
+Reporting
+
+↓
+
+CI Boundary
 ```
-
-Important:
-
-✅ Entity = Team
-
-The team is derived from the microservice/entity.
-
-This keeps ownership consistent across the framework.
 
 ---
 
-# 🔍 Team Discovery
+## 🧩 Current framework convention
 
-Source:
+Entity == Owning Team
 
-```text
-team_discovery.py
-```
+Today each business entity is owned by a dedicated team.
 
-Team discovery is used primarily by:
+This one-to-one relationship simplifies reporting, logging and CI ownership.
 
-- Allure Reporting
-- Structured Logging
-- Ownership Tracking
-- Future Notifications
+Future versions may allow a single team to own multiple entities without changing the framework architecture.
 
-The framework extracts the team from the pytest nodeid.
+---
+
+# 🏛️ Framework Discovery Architecture
+
+The framework contains **three independent discovery mechanisms**.
+
+Each one answers a different architectural question.
+
+| Discovery | Question | Consumers |
+|------------|----------|-----------|
+| Entity Discovery | **Who owns this test?** | Logging, Allure, Reporting |
+| Framework Entity Discovery | **What business domains belong to this framework?** | CI Matrix, Contract, Security, Documentation |
+| Runtime Registry Discovery | **Build executable runtime resources.** | Fixtures, EntityBundle, Cross-domain access |
+
+Although these mechanisms are independent, they all ultimately resolve to the same business entity.
 
 Example:
 
 ```text
-tests/customers/api/test_create_customer.py
-                    ↓
-                customers
+customers
 ```
 
-Rule:
+represents:
+
+- Business Entity
+- Microservice
+- Team
+- CI Boundary
+- Reporting Boundary
+
+---
+
+                         Test File
+                             │
+                             ▼
+              extract_entity_from_nodeid()
+                             │
+                             ▼
+                        customers
+                             │
+        ┌────────────────────┼────────────────────┐
+        ▼                    ▼                    ▼
+     Logging             Allure            Reporting
+
+
+                 FRAMEWORK_ENTITIES
+                             │
+                             ▼
+           discover_framework_entities()
+                             │
+        ┌────────────────────┼────────────────────┐
+        ▼                    ▼                    ▼
+        CI               Contract            Security
+
+
+                  discover_entities()
+                             │
+                             ▼
+                     Runtime Registry
+                             │
+                             ▼
+                        EntityBundle
+                             │
+        ┌────────────────────┼────────────────────┐
+        ▼                    ▼                    ▼
+     entity_helper()      entity_dao()      all_resources
+
+
+---
+# 1. 🔍 Entity Discovery (Test Ownership)
+
+**Source**
+
+```text
+src/utils/team_discovery.py
+```
+
+Entity Discovery determines **which business entity owns a test**.
+
+The framework derives the entity directly from the pytest nodeid.
+
+Example
+
+```text
+tests/customers/api/test_create_customer.py
+                    │
+                    ▼
+extract_entity_from_nodeid()
+                    │
+                    ▼
+               customers
+```
+
+The convention is intentionally simple:
 
 ```text
 tests/<entity>/...
 ```
 
-The first folder below tests determines ownership.
+The first directory immediately below `tests/` determines the entity.
 
-Examples:
+Examples
 
-| Test Path | Team |
-|------------|------------|
+| Test Path | Entity |
+|-----------|---------|
 | tests/customers/api/test_x.py | customers |
 | tests/orders/api/test_x.py | orders |
 | tests/products/api/test_x.py | products |
-| tests/shared/utils/test_x.py | shared |
+| tests/shared/preflight/test_x.py | shared |
+
+### Purpose
+
+This discovery mechanism identifies **ownership**.
+
+It is used by:
+
+- Structured logging
+- Allure reporting
+- Reporting
+- Future notifications
+
+It does **not** inspect the framework implementation and performs no runtime initialization.
 
 ---
 
-# 🧩 Entity Discovery
+# 2. 🗂️ Framework Entity Discovery
 
-Source:
-
-```text
-entities.py
-```
-
-Entity discovery is the framework's **Single Source of Truth** for supported
-business entities.
-
-Unlike Team Discovery, it does not inspect the test suite.
-
-Instead it discovers entities by scanning the framework implementation itself.
-
-A valid entity requires a complete framework implementation:
+**Source**
 
 ```text
-<entity>_helper.py
-<entity>_api.py
-<entity>_dao.py
+src/metadata/entity_metadata.py
 ```
 
-Only fully implemented entities are exposed to the rest of the framework.
+Framework Entity Discovery defines **which business domains officially belong to the framework**.
 
-Current consumers include:
+Unlike runtime discovery, it does **not** inspect helpers, APIs or DAOs.
 
-- Runtime resource discovery
-- GitHub Actions dynamic matrix generation
+Instead, the framework maintains an explicit architectural registry.
+
+```python
+FRAMEWORK_ENTITIES = (
+    "customers",
+    "orders",
+    "products",
+    "coupons",
+)
+```
+
+The registry is intentionally explicit.
+
+Adding a new business entity is considered an architectural change and therefore becomes visible during code review.
+
+### Purpose
+
+Framework Entity Discovery is consumed by:
+
+- GitHub Actions matrix generation
 - Contract test suites
 - Security test suites
-- Future framework tooling
+- Documentation
 
----
-## 🏛️ Discovery Architecture Overview
-
-Although the framework contains multiple discovery mechanisms, they all ultimately resolve to the same ownership model.
-
-### Ownership Model
-
-```text
-customers
-    ↓
-Entity
-    ↓
-Microservice
-    ↓
-Owning Team
-```
-
-The framework intentionally treats:
-
-```text
-Entity = Team = Microservice
-```
-
-Examples:
-
-| Entity    | Team      | Microservice          |
-| --------- | --------- | --------------------- |
-| customers | customers | Customers Service     |
-| orders    | orders    | Orders Service        |
-| products  | products  | Products Service      |
-| coupons   | coupons   | Coupons Service       |
-| shared    | shared    | Shared Platform Tests |
+This registry represents **framework architecture**, not runtime implementation.
 
 ---
 
-## 🔍 Discovery Flows
+# 3. ⚙️ Runtime Registry Discovery
 
-The framework currently contains two discovery systems.
-
-#### 1️⃣ Team Discovery
-
-Used by:
-
-* Allure Reporting
-* Structured Logging
-* Ownership Tracking
-* Reporting
-
-Flow:
+**Source**
 
 ```text
-tests/customers/api/test_create_customer.py
-                    ↓
-             pytest nodeid
-                    ↓
-         extract_team_from_nodeid()
-                    ↓
-                customers
+plugins/entities.py
 ```
 
-Result:
+Runtime Registry Discovery builds the executable resources required during test execution.
+
+Unlike Framework Entity Discovery, it performs runtime initialization.
+
+For every implemented entity it creates:
 
 ```text
-customers
+API Client
+      │
+      ▼
+API
+      │
+      ▼
+Helper
+      │
+      ▼
+DAO
+      │
+      ▼
+EntityBundle
 ```
 
-becomes the owner for:
+Every successfully initialized entity is wrapped into an **EntityBundle** and registered in the runtime registry.
 
-* Allure metadata
-* Structured logs
-* Future notifications
-* Reporting
+Tests can then access entities through a single unified interface.
 
----
+Example:
 
-#### 2️⃣ Entity Discovery
+```python
+all_resources.customers.helper
 
-Used by:
+entity_helper("customers")
 
-- Runtime resources
-- Generic fixtures
-- Contract test suites
-- Security test suites
-- GitHub Actions dynamic matrix
+entity_dao("customers")
+```
 
-Flow:
+### Runtime validation
+
+During initialization the framework validates that every runtime component exists.
+
+Entities that cannot be initialized are skipped and reported.
+
+Example:
 
 ```text
-customers_helper.py
-customers_api.py
-customers_dao.py
-          │
-          ▼
-discover_entity_names()
-          │
-          ├── GitHub Actions Matrix
-          ├── Contract Tests
-          ├── Security Tests
-          └── discover_entities()
-                     │
-                     ▼
-                EntityBundle
+🔍 ENTITY DISCOVERY SUMMARY
+
+customers   READY
+orders      SKIPPED (missing API)
+products    SKIPPED (missing DAO)
+coupons     SKIPPED (missing API)
 ```
 
-This lightweight discovery mechanism allows multiple framework components
-to enumerate supported entities without instantiating helpers, DAOs or API
-clients.
-
-
----
-
-### Why Two Discovery Systems?
-
-At first glance they appear duplicated.
-
-However, they solve different problems.
-
-Team Discovery answers:
-
-
-```text
-Who owns this test?
-```
-
-Entity Discovery answers:
-
-```text
-What runtime resources are available?
-```
-
-Both ultimately resolve to:
-
-```text
-customers
-orders
-products
-coupons
-shared
-```
-
-which keeps ownership consistent across the framework.
-
----
-
-### Complete Ownership Flow
-
-```text
-customers
-     │
-     ├── tests/customers/
-     │         ↓
-     │   Team Discovery
-     │         ↓
-     │  Allure + Logging
-     │
-     ├── customers_helper.py
-     ├── customers_api.py
-     ├── customers_dao.py
-     │         ↓
-     │   Entity Discovery
-     │         ↓
-     │   EntityBundle
-     │
-     └── CI Matrix
-               ↓
-      entity: customers
-```
-
-Every layer of the framework therefore points to the same ownership domain:
-
-```text
-customers
-```
-
-which enables consistent:
-
-* Reporting
-* Logging
-* Resource discovery
-* CI execution
-* Future deployment gates
-* Future team notifications
-
-
+This diagnostic information is produced during runtime registry construction and greatly simplifies troubleshooting.
 
 ---
 
@@ -372,7 +346,7 @@ EntityBundle(
 
 ---
 
-# ✅ Entity Registration Requirements
+# ✅ Runtime Implementation Requirements
 
 Required modules:
 
@@ -594,62 +568,33 @@ Test ownership and runtime entity registration are related but technically indep
 
 # ⚙️ CI/CD Matrix Strategy
 
+The CI pipeline does **not** maintain its own list of entities.
+
+Instead it consumes the framework architecture.
+
 ```text
-Framework
-     │
-     ▼
-discover_entity_names()
-     │
-     ▼
-.github/scripts/generate_matrix.py
-     │
-     ▼
-{
-  "include": [
-    {
-      "entity": "customers",
-      "team": "customers",
-      "tier": "critical"
-    }
-  ]
-}
-     │
-     ▼
+FRAMEWORK_ENTITIES
+        │
+        ▼
+discover_framework_entities()
+        │
+        ▼
+generate_matrix.py
+        │
+        ▼
 GitHub Actions Matrix
-     │
-     ├── Test • customers
-     └── Publish Report • customers
-```
-The CI pipeline never maintains a hardcoded list of entities.
-
-The framework is the single source of truth. Every workflow dynamically builds its execution matrix by calling
-`discover_entity_names()` through `.github/scripts/generate_matrix.py`.
-
----
-
-## 🔗 Shared Framework Discovery
-
-Entity discovery is not limited to GitHub Actions.
-
-The same discovery mechanism is reused throughout the framework wherever
-all supported entities must be enumerated.
-
-Examples:
-
-```python
-discover_entity_names()
 ```
 
-Current consumers include:
+Every supported business entity automatically participates in:
 
-- GitHub Actions matrix generation
-- Contract test suites
-- Security test suites
+- Smoke
+- Integration
+- Regression
+- Performance
 
-This avoids maintaining duplicated entity lists and ensures that adding a
-new entity automatically expands both CI execution and shared framework
-validation.
+Shared framework suites (Preflight, Contract and Security) execute independently from the entity matrix.
 
+This keeps CI aligned with the framework architecture while avoiding duplicated configuration across workflows.
 
 ---
 
@@ -681,15 +626,36 @@ is much more than simply selecting tests.
 
 # ➕ Adding a New Entity
 
-Example:
+Introducing a new business entity is an architectural change.
 
-```text
-inventory
+### Step 1
+
+Register the entity in the framework architecture.
+
+```python
+FRAMEWORK_ENTITIES = (
+    ...
+    "inventory",
+)
 ```
 
-Step 1:
+### Step 2
 
-Create framework modules:
+(Optional)
+
+Override metadata when required.
+
+```python
+ENTITY_METADATA = {
+    "inventory": {
+        "tier": "critical",
+    },
+}
+```
+
+### Step 3
+
+Implement the runtime components.
 
 ```text
 inventory_helper.py
@@ -697,23 +663,18 @@ inventory_api.py
 inventory_dao.py
 ```
 
-Step 2:
+### Step 4
 
-Create tests:
+Create the test suite.
 
 ```text
 tests/inventory/
 ```
 
-Step 3:
+No GitHub Actions workflow needs to be modified.
 
-```text
-Push the changes.
+The framework automatically generates the CI matrix from the architectural registry.
 
-No CI workflow modifications are required.
-
-The framework automatically discovers the new entity and the GitHub Actions matrix is generated dynamically.
-```
 ---
 
 # 🔮 Future Enterprise Evolution
@@ -751,19 +712,16 @@ GitHub Actions consumes that information rather than maintaining its own list of
 Architecture:
 
 ```
-Framework
+FRAMEWORK_ENTITIES
         │
         ▼
-discover_entity_names()
+discover_framework_entities()
         │
         ▼
 generate_matrix.py
         │
         ▼
-Dynamic GitHub Actions Matrix
-        │
-        ├── Test
-        └── Publish Report
+GitHub Actions Matrix
 
 ```
 
@@ -773,57 +731,77 @@ This approach eliminates duplicated configuration, keeps CI aligned with the fra
 
 # 🎯 Single Source of Truth Vision
 
-Today several components determine ownership:
+Today ownership and execution are intentionally separated.
 
-```text
-team_discovery.py
-discover_entity_names()
+```
+Ownership
+
+↓
+
+extract_entity_from_nodeid()
+
+Framework
+
+↓
+
+FRAMEWORK_ENTITIES
+
+Runtime
+
+↓
+
 discover_entities()
-config_loader.detect_service()
-CI matrix entity
 ```
-
-All ultimately answer:
-
-```text
-What entity am I executing?
-```
-
-Long-term vision:
-
-```python
-get_current_entity()
-```
-
-used consistently by:
-
-- Logging
-- Allure
-- Reporting
-- Runtime Resources
-- CI Metadata
 
 ---
 
 # 🏁 Summary
 
-The framework follows a single ownership model:
+The framework intentionally separates three different discovery mechanisms.
 
-```text
-Entity
-   =
-Microservice
-   =
-Owning Team
-```
+## 1. Entity Discovery
 
-Everything else is derived from that:
+Determines **who owns a test**.
 
-- Tests
+Used by:
+
 - Logging
 - Allure
-- Runtime Resources
-- CI/CD
 - Reporting
 
-This alignment is what enables the framework to scale cleanly across multiple microservices and teams.
+---
+
+## 2. Framework Entity Discovery
+
+Determines **which business domains belong to the framework**.
+
+Used by:
+
+- CI Matrix
+- Contract
+- Security
+- Documentation
+
+---
+
+## 3. Runtime Registry Discovery
+
+Builds executable runtime resources.
+
+Used by:
+
+- EntityBundle
+- Shared fixtures
+- Cross-domain helpers
+- Automatic cleanup
+
+---
+
+Together these mechanisms provide a clear separation between:
+
+- **Test ownership**
+- **Framework architecture**
+- **Runtime execution**
+
+This separation keeps the framework maintainable, scalable and suitable for multi-team development while avoiding
+duplicated configuration and hidden runtime behaviour.

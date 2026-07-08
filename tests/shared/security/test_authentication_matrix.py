@@ -23,7 +23,7 @@ Entities
 
 Every framework entity discovered through:
 
-    discover_entity_names()
+    discover_framework_entities()
 
 is automatically included in the authentication matrix.
 
@@ -61,7 +61,7 @@ from jsonschema import validate
 from EcommerceAPI.src.utils.credentials_utility import get_wc_api_keys
 from EcommerceAPI.src.clients.api_client import APIClient
 from EcommerceAPI.src.auth.base_auth import AuthStrategy
-from EcommerceAPI.plugins.entities import discover_entity_names
+from EcommerceAPI.src.metadata.entity_metadata import discover_framework_entities
 from tests.shared.contracts.error_schema import error_schema
 
 
@@ -107,7 +107,7 @@ class InvalidOAuthStrategy(AuthStrategy):
 # Adding a new entity requires NO changes to this test.
 # ------------------------------------------------------------------
 
-ENTITIES = discover_entity_names()
+ENTITIES = discover_framework_entities()
 
 # ------------------------------------------------------------------
 # HTTP method matrix

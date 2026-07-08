@@ -84,7 +84,7 @@ This mirrors the framework's domain-driven architecture, allowing each microserv
                 Framework
                     │
                     ▼
-        discover_entity_names()
+        discover_framework_entities()
                     │
                     ▼
          build_entity_matrix()
@@ -151,7 +151,7 @@ customers/
 The CI/CD platform follows five principles:
 
 1. The framework is the single source of truth.
-2. Entity discovery is dynamic.
+2. Framework entities are centrally registered.
 3. GitHub Actions orchestrates, it does not own metadata.
 4. Every workflow answers one specific quality question.
 5. Workflows remain independently executable.
@@ -174,7 +174,7 @@ Examples:
 - Regression
 - Performance
 
-These workflows use dynamic entity discovery and execute once for every supported entity (customers, orders, products, coupons, ...).
+These workflows use framework entity registry and execute once for every supported entity (customers, orders, products, coupons, ...).
 
 Each entity receives its own:
 
@@ -1241,7 +1241,7 @@ The framework is implementing enterprise-grade concepts:
 **Note:** Your custom Allure integration demonstrates many practices commonly found in mature CI/CD environments,
 including reusable workflows, structured reporting, history preservation and metadata-driven execution.
 
-The framework adopts many enterprise CI/CD practices, including reusable workflows, dynamic entity discovery,
+The framework adopts many enterprise CI/CD practices, including reusable workflows, framework - driven entity registry,
 metadata-driven execution, structured reporting and GitHub Pages publication for public reports.
 
 ---

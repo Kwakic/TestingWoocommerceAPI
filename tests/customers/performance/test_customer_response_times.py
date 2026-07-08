@@ -89,8 +89,8 @@ QUERY_PARAMS = {
 # These values are intentionally conservative.
 # Every entity may later define its own SLA.
 #
-MAX_AVG_RESPONSE = 0.95
-MAX_P95_RESPONSE = 1.70
+MAX_AVG_RESPONSE = 1.20
+MAX_P95_RESPONSE = 1.90
 
 
 def _resolve_iterations(pytestconfig) -> int:

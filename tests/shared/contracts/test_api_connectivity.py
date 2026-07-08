@@ -37,17 +37,27 @@ This acts as:
 import pytest
 import logging
 
+from EcommerceAPI.src.metadata.entity_metadata import discover_framework_entities
+
 log = logging.getLogger(__name__)
 
 pytestmark = [pytest.mark.contract, pytest.mark.shared, pytest.mark.integration]
 
+# ---------------------------------------------------------------------
+# Business entities officially supported by the framework.
+#
+# Shared framework suites execute once for every supported entity.
+# The registry is maintained centrally in entity_metadata.py.
+# ---------------------------------------------------------------------
+
+ENTITIES = discover_framework_entities()
 
 # =====================================================================
 #  PARAMETRIZED TEST
 # =====================================================================
 
 
-@pytest.mark.parametrize("endpoint", ["customers", "products", "orders", "coupons"])
+@pytest.mark.parametrize("endpoint", ENTITIES)
 def test_api_endpoint_available(api_client, endpoint):
     """
     Preflight API availability check.

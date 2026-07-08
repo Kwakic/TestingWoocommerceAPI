@@ -95,31 +95,6 @@ If you need a new entity:
   - No framework changes required
 
 ──────────────────────────────────────────────────────────────────────────────
-
-| Function                        | Responsibility                              | Heavy?         |
-| ------------------------------- | ------------------------------------------- | -------------  |
-| `discover_entity_names()`       | Discover **what entities exist**            | ❌ Lightweight |
-| `discover_entities(api_client)` | Build the runtime registry (`EntityBundle`) | ✅ Heavy       |
-
-                 Discovery Engine
-                        │
-        ┌───────────────┴───────────────┐
-        │                               │
- discover_entity_names()        discover_entities()
-        │                               │
-     names only                  runtime objects
-
-If it called discover_entities(api_client) function it would unnecessarily:
-
-- instantiate every API client
-- instantiate every helper
-- instantiate every DAO
-- create delete methods
-- create EntityBundles
-
-just to obtain four strings.
-
-──────────────────────────────────────────────────────────────────────────────
 This module is intentionally conservative.
 Changes here affect the entire test platform.
 ──────────────────────────────────────────────────────────────────────────────
@@ -143,6 +118,7 @@ from enum import Enum
 from EcommerceAPI.src.metadata.entity_metadata import (
     DEFAULT_ENTITY_METADATA,
     ENTITY_METADATA,
+    discover_framework_entities,
 )
 
 import EcommerceAPI.src
@@ -550,67 +526,6 @@ def discover_entities(api_client: APIClient) -> Dict[str, EntityBundle]:
     return entities
 
 
-def discover_entity_names() -> list[str]:
-    """
-    Lightweight framework entity discovery
-
-    This helper intentionally avoids creating helpers, DAOs or API clients (no runtime initialization)
-    and therefore can safely be reused anywhere the framework simply needs to enumerate supported entities.
-
-    Purpose
-    -------
-    Discover every supported framework entity without instantiating helpers, DAOs or API clients.
-
-    Typical consumers include:
-
-    • GitHub Actions dynamic matrix generation
-    • Contract test suites
-    • Security test suites
-    • Framework tooling
-    • Future reporting utilities
-
-    It simply returns the list of valid framework entities.
-
-    Example
-    -------
-        >>> discover_entity_names()
-        ['customers', 'orders', 'products', 'coupons']
-
-    Note: It only returns entities that have a complete framework implementation.
-    """
-
-    base_path = EcommerceAPI.src.__path__
-
-    all_modules = {
-        modname
-        for _, modname, _ in pkgutil.walk_packages(
-            base_path,
-            prefix="EcommerceAPI.src.",
-        )
-    }
-
-    helpers = {
-        name.rsplit(".", 1)[-1].replace("_helper", "")
-        for name in all_modules
-        if name.endswith("_helper")
-    }
-
-    apis = {
-        name.rsplit(".", 1)[-1].replace("_api", "")
-        for name in all_modules
-        if name.endswith("_api")
-    }
-
-    daos = {
-        name.rsplit(".", 1)[-1].replace("_dao", "")
-        for name in all_modules
-        if name.endswith("_dao")
-    }
-
-    # An entity is considered available only if all framework components exist.
-    return sorted(helpers & apis & daos)
-
-
 # ----------------------------------------------------------------
 # GitHub Actions matrix builder
 # ----------------------------------------------------------------
@@ -633,7 +548,7 @@ def build_entity_matrix() -> dict[str, list[dict[str, str]]]:
 
     matrix: dict[str, list[dict[str, str]]] = {"include": []}
 
-    for entity in discover_entity_names():
+    for entity in discover_framework_entities():
 
         metadata = {
             **DEFAULT_ENTITY_METADATA,

@@ -1,28 +1,58 @@
 """
-Entity metadata used by CI, reporting and future deployment policies.
+Framework entity metadata.
 
-Only values that cannot be discovered automatically belong here.
+This module contains the architectural definition of every business
+domain supported by the framework.
 
-Entity names are discovered dynamically by `discover_entity_names()`.
-The owning team is derived from the entity name (Entity = Team).
+Unlike runtime discovery, entities listed here represent domains that
+belong to the framework regardless of whether their implementation is
+currently complete.
 
-This file should remain intentionally small.
+This registry is intentionally explicit.
 
-
-An example for the future:
-
-ENTITY_METADATA = {
-    "customers": {
-        "tier": "critical",
-        "owner": "customers",
-        "deployment_gate": True,
-        "slack_channel": "#customers",
-    }
-}
-
+Adding a new entity is considered an architectural change and therefore
+requires updating this file during code review.
 """
 
 from __future__ import annotations
+
+# --------------------------------------------------
+# Supported business domains
+#
+# This is the authoritative registry consumed by:
+#
+# • GitHub Actions matrix generation
+# • Contract suites
+# • Security suites
+# • Documentation
+#
+# Entity = Team by current framework design.
+# --------------------------------------------------
+
+FRAMEWORK_ENTITIES = (
+    "customers",
+    "orders",
+    "products",
+    "coupons",
+)
+
+
+def discover_framework_entities() -> list[str]:
+    """
+    Return every business domain officially supported by the framework.
+
+    Unlike runtime discovery, this function performs no filesystem
+    scanning and does not validate whether an entity has been fully
+    implemented.
+
+    It simply exposes the architectural registry maintained by the
+    framework.
+
+    Returns:
+        Sorted list of supported framework entities.
+    """
+    return sorted(FRAMEWORK_ENTITIES)
+
 
 # --------------------------------------------------
 # Default metadata applied to every discovered entity.

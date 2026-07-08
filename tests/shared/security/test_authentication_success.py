@@ -20,8 +20,10 @@ its implementation.
 """
 
 import pytest
-from EcommerceAPI.plugins.entities import discover_entity_names
 
+from EcommerceAPI.src.metadata.entity_metadata import (
+    discover_framework_entities,
+)
 
 pytestmark = [pytest.mark.security, pytest.mark.smoke, pytest.mark.shared]
 
@@ -38,7 +40,7 @@ pytestmark = [pytest.mark.security, pytest.mark.smoke, pytest.mark.shared]
 
 @pytest.mark.parametrize(
     "entity",
-    discover_entity_names(),
+    discover_framework_entities(),
 )
 def test_authenticated_requests_are_allowed(api_client, entity):
     """

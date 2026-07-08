@@ -2,14 +2,19 @@
 
 import pytest
 
+from EcommerceAPI.src.metadata.entity_metadata import discover_framework_entities
+
 pytestmark = [pytest.mark.shared, pytest.mark.contract, pytest.mark.integration]
 
-ENTITIES = [
-    "customers",
-    "products",
-    "orders",
-    "coupons",
-]
+# ---------------------------------------------------------------------
+# Business entities officially supported by the framework.
+#
+# Shared framework suites execute once for every supported entity.
+# The registry is maintained centrally in entity_metadata.py.
+# ---------------------------------------------------------------------
+
+
+ENTITIES = discover_framework_entities()
 
 
 @pytest.mark.parametrize("endpoint", ENTITIES)
