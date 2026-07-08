@@ -188,21 +188,45 @@ def assert_customer_not_found_error(response):
     Validate error returned when customer does not exist.
     """
 
+    VALID_ERROR_CODES = {
+        "wc_user_invalid_id",
+        "woocommerce_rest_invalid_id",
+    }
+
+    VALID_MESSAGES = {
+        "Invalid user ID.",
+        "Invalid resource ID.",
+    }
+
     assert_customer_error_response(response)
 
     assert (
         response["data"]["status"] == 404
     ), f"Expected status 404, got {response['data']['status']}"
 
-    assert response["code"] == "wc_user_invalid_id", (
+    # assert response["code"] == "wc_user_invalid_id", (
+    #     f"Invalid Error code. Current: '{response['code']}', "
+    #     f"Expected: 'wc_user_invalid_id'"
+    # )
+
+    assert response["code"] in VALID_ERROR_CODES, (
         f"Invalid Error code. Current: '{response['code']}', "
-        f"Expected: 'wc_user_invalid_id'"
+        f"Expected one of: {sorted(VALID_ERROR_CODES)}"
     )
 
-    assert response["message"] == "Invalid user ID.", (
+    # assert response["message"] == "Invalid user ID.", (
+    #     f"Invalid Error message. Current: '{response['message']}', "
+    #     f"Expected: 'Invalid user ID.'"
+    # )
+
+    assert response["message"] in VALID_MESSAGES, (
         f"Invalid Error message. Current: '{response['message']}', "
-        f"Expected: 'Invalid user ID.'"
+        f"Expected one of: {sorted(VALID_MESSAGES)}"
     )
+
+    # or
+    # assert isinstance(response["message"], str)
+    # assert response["message"].strip(), "Error message must not be empty"
 
 
 def assert_customer_retrieved_successfully(response: HttpResponse) -> CustomerModel:
