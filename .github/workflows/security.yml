@@ -59,6 +59,7 @@ jobs:
     uses: ./.github/workflows/reusable-test-runner.yml
 
     with:
+      scope: shared
       suite_name: security
       pytest_markers: security  # Execute only security-focused tests.
       timeout_minutes: 15

@@ -13,7 +13,10 @@ name: Preflight Checks ⚡
 
 on:
   # Run on pull requests (any branch)
-  pull_request:  # Every PR
+#  pull_request:  # Every PR
+
+  push:
+    branches: [ main ]
 
   workflow_dispatch:  # Allow manual execution from GitHub UI
 
@@ -46,6 +49,7 @@ jobs:
     uses: ./.github/workflows/reusable-test-runner.yml
 
     with:
+      scope: shared
 
       suite_name: preflight
 
