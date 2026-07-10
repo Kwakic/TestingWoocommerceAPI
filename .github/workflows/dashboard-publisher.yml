@@ -114,6 +114,25 @@ jobs:
         uses: actions/checkout@v4
 
       # --------------------------------------------------
+      # Checkout the currently published GitHub Pages site.
+      #
+      # The existing website becomes the base for the new
+      # deployment so that previously published reports are
+      # preserved.
+      #
+      # The existing GitHub Pages site becomes the base for the new deployment.
+      #
+      # Only reports produced by the triggering workflow
+      # are overwritten. All previously published reports remain available.
+      # --------------------------------------------------
+      - name: Checkout GitHub Pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages
+        continue-on-error: true
+
+      # --------------------------------------------------
       # Download every generated HTML report.
       #
       # Artifact names follow the convention:
@@ -201,26 +220,29 @@ jobs:
         shell: bash
         run: |
 
-          mkdir -p site
-
           # --------------------------------------------------
-          # Copy QA Portal
+          # Start from the previously published website.
           #
-          # The portal acts as the landing page for all
-          # published Allure reports.
+          # This preserves every existing report while allowing
+          # the current workflow to overwrite only the reports
+          # it has just generated.
           #
-          # Source:
-          #   docs/portal/
-          #
-          # Destination:
-          #   site/
+          # First deployment:
+          #   gh-pages may not exist yet.
           # --------------------------------------------------
 
-          mkdir -p site
+          if [ -d gh-pages ]; then
+              echo "Restoring existing GitHub Pages website..."
+              mkdir -p site
+              cp -R gh-pages/. site/
+          else
+              echo "First deployment. Creating new website..."
+              mkdir -p site
+          fi
 
-          cp docs/portal/index.html site/
-          cp docs/portal/style.css site/
-
+          # Refresh the portal every deployment.
+          cp docs/portal/index.html site/index.html
+          cp docs/portal/style.css site/style.css
           echo
           echo "===== Downloaded artifacts ====="
           find downloaded-reports
@@ -271,8 +293,9 @@ jobs:
           ls -R site
 
           echo
-          echo "===== Smoke ====="
-          ls -R site/customers || true
+          echo
+          echo "===== Published entities ====="
+          find site -maxdepth 2 -type d | sort
 
           echo
           echo "===== HTML ====="
