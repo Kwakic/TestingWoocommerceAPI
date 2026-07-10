@@ -163,7 +163,7 @@ The CI/CD platform follows five principles:
 
 The framework contains two categories of automated test suites.
 
-### Entity Suites
+### 1. Entity Suites
 
 Entity suites execute independently for each discovered framework entity.
 
@@ -186,7 +186,7 @@ Each entity receives its own:
 This approach keeps reports isolated and allows every microservice to own its own quality metrics.
 ---
 
-### Shared Framework Suites
+### 2. Shared Framework Suites
 
 Shared Framework suites validate the testing framework or platform itself rather than individual business entities.
 
@@ -198,7 +198,8 @@ Examples:
 
 These workflows execute once for the entire framework.
 
-They intentionally do not use entity discovery.
+These workflows intentionally do not use framework entity discovery because they validate the testing framework itself
+rather than individual business domains.
 
 Typical validations include:
 
@@ -219,6 +220,37 @@ instead of:
 ```text
 Entity: customers
 ```
+---
+
+### 📍 Missing Allure Artifacts
+
+During framework development, some discovered entities may not yet contain
+implemented tests.
+
+In this situation, the reusable test runner intentionally skips test
+execution for that entity, so no Allure results artifact is produced.
+
+The reusable report workflow still attempts to download the expected
+artifact. GitHub Actions may therefore display an **"Artifact not found"**
+annotation before the workflow detects the missing artifact.
+
+The workflow then converts this expected condition into a clean report
+summary, for example:
+
+```text
+Report Summary
+
+Entity: orders
+Status: SKIPPED
+Reason: No Allure results artifact found
+```
+
+This behaviour is expected and does **not** indicate a CI failure.
+
+As additional entities gain test coverage, the corresponding Allure
+artifacts will be generated automatically and the annotations will
+disappear without requiring workflow changes.
+
 
 ---
 

@@ -105,8 +105,9 @@ from __future__ import annotations
 import logging
 import os
 import pytest
-from typing import Callable, TypedDict, Any, Dict, Optional, Mapping
+from typing import Callable, TypedDict, Any, Dict, Optional, Mapping, cast
 from collections import defaultdict
+from collections.abc import Iterator
 import importlib
 import pkgutil
 from dataclasses import dataclass
@@ -197,7 +198,16 @@ class SharedAPIResources(TypedDict, total=False):
     - register_resource: function used by tests to register created resources.
     - mark_resource_deleted: function to mark a resource as deleted.
     - api_client: shared APIClient instance.
-    - _entity_registry: internal dict mapping entity names to EntityBundle instances.
+    - _entity_registry: internal EntitiesRegistry mapping entity names to EntityBundle instances.
+
+    IMPORTANT — this TypedDict intentionally documents only the stable, fixed
+    keys of the dict a fixture yields. At runtime that dict *also* contains
+    dynamically-named keys (e.g. "customers_helper", "orders_dao") generated
+    per-entity from discover_entities(). Those keys can't be declared here
+    because they aren't known until the entity registry is built, so they
+    are deliberately left out of this schema rather than guessed at. This is
+    why the fixture below casts its return value instead of annotating the
+    dict literal directly — see the comment at the yield site.
 
     Note: Kept as TypedDict for runtime compatibility; use AllResources for ergonomic attribute access.
 
@@ -206,7 +216,7 @@ class SharedAPIResources(TypedDict, total=False):
     register_resource: Callable[[str, str], None]
     mark_resource_deleted: Callable[[str, str], None]
     api_client: Any
-    _entity_registry: Dict[str, EntityBundle]  # Internal plumbing, not for tests
+    _entity_registry: EntitiesRegistry[EntityBundle]  # Internal plumbing, not for tests
 
 
 # ----------------------------------------------------------------
@@ -573,7 +583,16 @@ def build_entity_matrix() -> dict[str, list[dict[str, str]]]:
 # Shared API resource fixture with cleanup support
 # ----------------------------------------------------------------
 @pytest.fixture(scope="module")
-def shared_api_resources(api_client: APIClient) -> SharedAPIResources:
+# NOTE: this fixture uses `yield`, so its real return type is a generator/
+# iterator over SharedAPIResources, not SharedAPIResources itself. Annotating
+# it as -> SharedAPIResources (the yielded value's type) is what causes
+# checkers to report mismatched Generator/SharedAPIResources types at both
+# this definition and at every call site that consumes the fixture.
+# Iterator[SharedAPIResources] is preferred here over Generator[..., None, None]
+# since this fixture never receives values via .send() or returns a final value.
+def shared_api_resources(
+    api_client: APIClient,
+) -> Iterator[SharedAPIResources]:
     """
     Module-scoped fixture that discovers and exposes API helpers, DAOs, and resource tracking utils.
 
@@ -646,6 +665,24 @@ def shared_api_resources(api_client: APIClient) -> SharedAPIResources:
     wrapped_registry = EntitiesRegistry.from_dict(entity_registry)
 
     # The resource fixture exposes helpers, DAOs, delete methods, and tracking utils
+    # `data` is deliberately left untyped (inferred as dict[str, object]) rather than
+    # annotated `data: SharedAPIResources = {...}` — it contains dynamically-named
+    # keys (the two starred comprehensions above) that SharedAPIResources doesn't
+    # and can't declare, since they depend on discover_entities() at runtime.
+    # Annotating the literal directly would assert a stronger contract than the
+    # code guarantees, and is checker-dependent: some type checkers reject **
+    # unpacking a plain dict into a TypedDict literal, others accept it — so the
+    # annotation would risk trading today's warning for a different, checker-specific
+    # one. Casting at the yield boundary instead tells the checker "the fixture's
+    # public/typed surface is SharedAPIResources" without misrepresenting the dict
+    # literal itself, and behaves the same across mypy and pyright.
+    #
+    # PyCharm's own inspector additionally flags a direct dict->TypedDict cast as
+    # "not in the same inheritance hierarchy" — its own conservative sanity check,
+    # not a real type error (mypy/pyright don't raise this; cast() is unconditionally
+    # trusted by design). Routing the cast through `object` first, exactly as
+    # PyCharm's message suggests, silences that nuisance warning without changing
+    # what the cast actually asserts. See the yield statement below.
     data = {
         **{
             f"{entity}_helper": bundle.helper
@@ -658,7 +695,7 @@ def shared_api_resources(api_client: APIClient) -> SharedAPIResources:
         "_entity_registry": wrapped_registry,  # <-- now always an EntitiesRegistry
     }
 
-    yield data
+    yield cast(SharedAPIResources, cast(object, data))
 
     # ------------------------------
     # Conditional teardown (run only if something was created)
@@ -725,9 +762,22 @@ def shared_api_resources_obj(
       or still use dict-style:
         shared_api_resources_obj["register_resource"](...)
     """
-    return EntitiesRegistry.from_dict(
-        shared_api_resources
-    )  # EntitiesRegistry accepts any dict-like
+    # TODO(typing): EntitiesRegistry.from_dict lives in entities_registry.py and is
+    # not defined in this file, so it can't be fixed here. The call below is only
+    # checker-clean if that method's signature accepts Mapping[str, Any] (or
+    # Mapping[str, T]) rather than dict[str, T]:
+    #
+    #     from collections.abc import Mapping
+    #     @classmethod
+    #     def from_dict(cls, data: Mapping[str, Any]) -> "EntitiesRegistry[Any]": ...
+    #
+    # SharedAPIResources (a TypedDict) is structurally a Mapping[str, Any] but is
+    # NOT a dict[str, T] for any single T, since its declared values are
+    # heterogeneous (Callable, Any, EntitiesRegistry). If from_dict is still typed
+    # as dict[str, T] when you read this, re-add a cast here rather than leaving
+    # this call unguarded:
+    #     return EntitiesRegistry.from_dict(cast(Dict[str, Any], shared_api_resources))
+    return EntitiesRegistry.from_dict(shared_api_resources)
 
 
 # ----------------------------------------------------------------

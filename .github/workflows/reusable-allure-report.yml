@@ -91,6 +91,20 @@ jobs:
       # Example:
       # customers-smoke-allure-results
       # --------------------------------------------------
+      # Some framework entities may legitimately produce
+      # no Allure artifact because no tests currently
+      # exist for that entity.
+      #
+      # GitHub's download-artifact action emits an
+      # "Artifact not found" annotation before the
+      # workflow can recover.
+      #
+      # This is expected behaviour.
+      #
+      # The following step converts the missing artifact
+      # into a clean SKIPPED report summary.
+      # --------------------------------------------------
+
       - name: Download Allure results
         id: download_allure
         continue-on-error: true
