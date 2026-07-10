@@ -39,6 +39,26 @@ on:
         type: string
         default: ""
 
+      # --------------------------------------------------
+      # Execution scope
+      #
+      # entity
+      #   Executes once for each discovered framework
+      #   entity (customers, orders, products...).
+      #
+      # shared
+      #   Executes once for the entire framework.
+      #
+      # Used by:
+      # - Preflight
+      # - Contract
+      # - Security
+      # --------------------------------------------------
+      scope:
+        required: false
+        type: string
+        default: entity
+
       entity:
         required: false
         type: string
@@ -87,7 +107,10 @@ jobs:
   # Test • orders
   # --------------------------------------------------
   test:
-    name: Test • ${{ inputs.entity }}
+    name: >-
+      ${{ inputs.scope == 'shared'
+          && format('Shared • {0}', inputs.suite_name)
+          || format('Test • {0}', inputs.entity) }}
 
     runs-on: ubuntu-latest
 
@@ -303,9 +326,15 @@ jobs:
             # intentionally skipped rather than silently
             # succeeding.
             # ----------------------------------------------
-            echo "## Entity Execution Summary" >> "$GITHUB_STEP_SUMMARY"
+            echo "## Execution Summary" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "- Entity: ${{ inputs.entity }}" >> "$GITHUB_STEP_SUMMARY"
+
+            if [ "${{ inputs.scope }}" = "shared" ]; then
+              echo "- Scope: Shared Framework" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "- Entity: ${{ inputs.entity }}" >> "$GITHUB_STEP_SUMMARY"
+            fi
+
             echo "- Status: SKIPPED" >> "$GITHUB_STEP_SUMMARY"
             echo "- Reason: No eligible tests collected" >> "$GITHUB_STEP_SUMMARY"
 
@@ -315,9 +344,13 @@ jobs:
 
           if [ "$PYTEST_EXIT_CODE" -eq 0 ]; then
 
-            echo "## Entity Execution Summary" >> "$GITHUB_STEP_SUMMARY"
+            echo "## Execution Summary" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "- Entity: ${{ inputs.entity }}" >> "$GITHUB_STEP_SUMMARY"
+            if [ "${{ inputs.scope }}" = "shared" ]; then
+              echo "- Scope: Shared Framework" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "- Entity: ${{ inputs.entity }}" >> "$GITHUB_STEP_SUMMARY"
+            fi
             echo "- Status: EXECUTED" >> "$GITHUB_STEP_SUMMARY"
             echo "- Result: SUCCESS" >> "$GITHUB_STEP_SUMMARY"
 
@@ -357,7 +390,9 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.entity }}-${{ inputs.suite_name }}-allure-results
+          name: ${{ inputs.scope == 'shared'
+            && format('shared-{0}-allure-results', inputs.suite_name)
+            || format('{0}-{1}-allure-results', inputs.entity, inputs.suite_name) }}
           path: reports/allure-results
           if-no-files-found: ignore
 
@@ -368,7 +403,9 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: logs-${{ inputs.entity }}-${{ inputs.suite_name }}
+          name: ${{ inputs.scope == 'shared'
+            && format('shared-{0}-structured-logs', inputs.suite_name)
+            || format('{0}-{1}-structured-logs', inputs.entity, inputs.suite_name) }}
           path: reports/logs
           if-no-files-found: ignore
 
@@ -379,7 +416,9 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: junit-${{ inputs.entity }}-${{ inputs.suite_name }}
+          name: ${{ inputs.scope == 'shared'
+            && format('shared-{0}-junit-results', inputs.suite_name)
+            || format('{0}-{1}-junit-results', inputs.entity, inputs.suite_name) }}
           path: reports/junit/results.xml
           if-no-files-found: warn
       # --------------------------------------------------

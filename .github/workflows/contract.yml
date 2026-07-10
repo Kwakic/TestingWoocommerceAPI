@@ -60,6 +60,7 @@ jobs:
     uses: ./.github/workflows/reusable-test-runner.yml
 
     with:
+      scope: shared
       suite_name: contract
       pytest_markers: contract  # Execute only contract validation tests.
       timeout_minutes: 15
