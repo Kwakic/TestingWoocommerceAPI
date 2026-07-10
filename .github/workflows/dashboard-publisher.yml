@@ -137,9 +137,9 @@ jobs:
       #
       # Artifact names follow the convention:
       #
-      #   report-customers-smoke
-      #   report-orders-smoke
-      #   report-products-regression
+      #   customers-smoke-report
+      #   orders-smoke-report
+      #   products-regression-report
       #
       # Therefore we search using a regular expression
       # instead of an exact artifact name.
@@ -159,7 +159,7 @@ jobs:
           name_is_regexp: true
 
           # Download every HTML report artifact.
-          name: "^report-.*$"
+          name: ".*-report$"
 
           path: downloaded-reports
 
@@ -234,7 +234,13 @@ jobs:
           if [ -d gh-pages ]; then
               echo "Restoring existing GitHub Pages website..."
               mkdir -p site
-              cp -R gh-pages/. site/
+              # Copy the previously published website while excluding
+              # the Git metadata from the checked-out gh-pages branch.
+              tar \
+                --exclude='.git' \
+                -cf - \
+                -C gh-pages . \
+              | tar -xf - -C site
           else
               echo "First deployment. Creating new website..."
               mkdir -p site
@@ -250,7 +256,7 @@ jobs:
           echo
           echo "===== Building website ====="
 
-          for artifact in downloaded-reports/report-*; do
+          for artifact in downloaded-reports/*-report; do
 
             [ -d "$artifact" ] || continue
 
@@ -261,7 +267,7 @@ jobs:
             # report-customers-smoke
             #        ↓
             # customers-smoke
-            name="${artifact_name#report-}"
+            name="${artifact_name%-report}"
 
             # Extract the entity name.
             #

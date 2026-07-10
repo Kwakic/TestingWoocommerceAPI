@@ -221,7 +221,7 @@ jobs:
         if: env.HAS_ALLURE_RESULTS == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: report-${{ inputs.entity }}-${{ inputs.suite_name }}
+          name: ${{ inputs.entity }}-${{ inputs.suite_name }}-report
           # --------------------------------------------------
           # Upload only the generated report for this
           # entity/suite.
