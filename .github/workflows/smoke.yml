@@ -37,8 +37,8 @@ on:
   # - operational confidence signal
   # - README badge source
   # ==================================================
-#  push:
-#    branches: [ main ]
+  push:
+    branches: [ main ]
 
 
   # ==================================================
