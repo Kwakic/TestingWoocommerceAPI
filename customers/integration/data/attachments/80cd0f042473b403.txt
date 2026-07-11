@@ -1,0 +1,10 @@
+INFO     tests.customers.api.test_create_customer:test_create_customer.py:400 🧪 Testing customers creation with invalid email: 'plainaddress'
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ POST /wp-json/wc/v3/customers → Status code: 400 (completed in 0.091s)
+DEBUG    EcommerceAPI.src.clients.api_client:api_client.py:580 {
+                                                                 "code": "customer_invalid_email",
+                                                                 "message": "Invalid email address",
+                                                                 "data": {
+                                                                   "status": 400
+                                                                 }
+                                                               }
+INFO     tests.customers.api.test_create_customer:test_create_customer.py:417 ✅ Proper error returned for payload: {'email': 'plainaddress', 'password': '***'} → customer_invalid_email: Invalid email address
