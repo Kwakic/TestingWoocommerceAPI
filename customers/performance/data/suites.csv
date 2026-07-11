@@ -1,0 +1,12 @@
+"Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
+"passed","Sat Jul 11 10:10:31 UTC 2026","Sat Jul 11 10:10:31 UTC 2026","579","tests.customers.performance","test_customer_response_times","","","","test_customer_response_times","
+Benchmark the Customers endpoint.
+
+Workflow
+
+    1. Execute N GET requests.
+    2. Measure every response time.
+    3. Calculate summary statistics.
+    4. Validate benchmark expectations.
+    5. Emit concise CI-friendly logs.
+"
