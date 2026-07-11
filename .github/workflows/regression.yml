@@ -43,11 +43,8 @@ on:
   # - Historical trend analysis
   # - Release confidence
   # ==================================================
-#    schedule:
-#      - cron: "0 2 * * *"  # Daily 2 AM UTC
-#
-#  push:
-#    branches: [ main ]
+  schedule:
+    - cron: "0 2 * * *"  # Daily 2 AM UTC
 
 
   # ==================================================

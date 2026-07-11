@@ -77,7 +77,7 @@ on:
       - Smoke Tests 🔥
       - Integration Tests 🔗
       - Regression Tests 🔬
-      - Performance Tests ⏱
+      - Performance Tests ⏱️
 
     types:
       - completed
