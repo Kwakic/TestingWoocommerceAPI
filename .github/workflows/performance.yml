@@ -45,8 +45,11 @@ on:
   # ==================================================
 # Weekly execution keeps CI costs low
 # while preserving long-term trends.
-  schedule:
-    - cron: "0 4 * * 0"  # Every Sunday at 04:00 UTC
+#  schedule:
+#    - cron: "0 4 * * 0"  # Every Sunday at 04:00 UTC
+
+  push:
+    branches: [ main ]
 
   # ==================================================
   # Allow manual execution from GitHub UI
