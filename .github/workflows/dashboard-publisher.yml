@@ -82,8 +82,19 @@ on:
     types:
       - completed
 
+# --------------------------------------------------
+# Permissions
+#
+# contents: write
+#   Publish the rebuilt QA Portal to the gh-pages branch.
+#
+# actions: read
+#   Required to query and download report artifacts
+#   produced by completed workflow runs.
+# --------------------------------------------------
 permissions:
   contents: write
+  actions: read
 
 jobs:
 

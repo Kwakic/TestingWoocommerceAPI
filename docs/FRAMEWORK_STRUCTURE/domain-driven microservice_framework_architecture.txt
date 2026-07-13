@@ -6,7 +6,7 @@ TestEcommerceAPI (project suite/root)
 │     │     └── generate_matrix.py
 │     ├── workflows/
 │     │     ├── contract.yml
-│     │     ├── deploy-dashboard.yml
+│     │     ├── dashboard-publisher.yml
 │     │     ├── integration.yml
 │     │     ├── performance.yml
 │     │     ├── preflight.yml

@@ -238,6 +238,7 @@ The registry is intentionally explicit.
 
 Adding a new business entity is considered an architectural change and therefore becomes visible during code review.
 
+
 ### Purpose
 
 Framework Entity Discovery is consumed by:
@@ -248,6 +249,18 @@ Framework Entity Discovery is consumed by:
 - Documentation
 
 This registry represents **framework architecture**, not runtime implementation.
+
+> **Naming convention**
+>
+> Framework entity identifiers are lowercase, singular architectural
+> identifiers without hyphens (for example `customers`, `orders`,
+> `products`, `coupons`).
+>
+> This convention is relied upon by the CI/CD workflows when constructing
+> artifact names and GitHub Pages report paths.
+>
+> Introducing hyphens into entity identifiers would require updating the
+> artifact naming and parsing strategy.
 
 ---
 

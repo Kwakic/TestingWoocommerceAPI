@@ -73,8 +73,17 @@ jobs:
     # --------------------------------------------------
     # Required for GitHub Pages deployment
     # --------------------------------------------------
+    # Permissions
+    #
+    # contents: read
+    #   Required only to checkout the gh-pages branch
+    #   and restore Allure history.
+    #
+    # This workflow never publishes to GitHub Pages.
+    # Deployment is delegated to dashboard-publisher.yml.
+    # --------------------------------------------------
     permissions:
-      contents: write
+      contents: read
 
     steps:
 
