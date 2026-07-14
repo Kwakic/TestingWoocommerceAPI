@@ -1,0 +1,12 @@
+Session ID: 29343005030
+ENV: test
+
+Duration: 0m 3s
+
+Total tests: 5
+Passed: 5
+Failed: 0
+Skipped: 0
+
+Failures by team:
+None 🎉
