@@ -51,52 +51,20 @@ runs:
     # --------------------------------------------------
     # 2. Wait for MySQL readiness
     #
-    # Stage 1
-    #   Wait until MySQL accepts TCP connections.
-    #
-    # Stage 2
-    #   Wait until WordPress can successfully connect
-    #   to the database through WP-CLI.
-    #
-    # This avoids a common race condition where MySQL
-    # opens its port before it is fully ready to accept
-    # authenticated client connections.
+    # Prevents race conditions during bootstrap.
+    # CI runners can be inconsistent in startup timing,
+    # so we explicitly wait until MySQL accepts
+    # TCP connections.
     # --------------------------------------------------
-    - name: Wait for WooCommerce environment
+    - name: Wait for MySQL
       shell: bash
       run: |
-        set -e
-
-        echo "Waiting for MySQL TCP..."
-
         until nc -z 127.0.0.1 3306; do
+          echo "Waiting for MySQL..."
           sleep 3
         done
 
-        echo "✅ MySQL TCP is available"
-
-        MAX_ATTEMPTS=30
-
-        for ATTEMPT in $(seq 1 $MAX_ATTEMPTS); do
-
-          if docker compose -f docker-compose.wp.yml exec -T wordpress \
-              wp core is-installed --allow-root >/dev/null 2>&1
-          then
-            echo "✅ WordPress can connect to MySQL"
-            exit 0
-          fi
-
-          echo "Waiting for WordPress database connection ($ATTEMPT/$MAX_ATTEMPTS)..."
-
-          sleep 2
-        done
-
-        echo "❌ WordPress never became ready"
-
-        docker compose -f docker-compose.wp.yml logs wordpress
-        docker compose -f docker-compose.wp.yml logs db
-
-        exit 1
+        echo "✅ MySQL is ready"
 
     # --------------------------------------------------
     # 3. Bootstrap WooCommerce
@@ -115,22 +83,20 @@ runs:
       run: |
         set -e
 
-        echo "Bootstrapping WooCommerce..."
-
         if ! OUTPUT=$(bash scripts/setup.sh); then
-            echo "❌ WooCommerce bootstrap failed"
+          echo "❌ WooCommerce bootstrap failed"
 
-            echo "$OUTPUT"
+          echo "$OUTPUT"
 
-            echo
-            echo "===== WordPress logs ====="
-            docker compose -f docker-compose.wp.yml logs wordpress
+          echo
+          echo "===== WordPress logs ====="
+          docker compose -f docker-compose.wp.yml logs wordpress
 
-            echo
-            echo "===== MySQL logs ====="
-            docker compose -f docker-compose.wp.yml logs db
+          echo
+          echo "===== MySQL logs ====="
+          docker compose -f docker-compose.wp.yml logs db
 
-            exit 1
+          exit 1
         fi
 
         echo "$OUTPUT"
