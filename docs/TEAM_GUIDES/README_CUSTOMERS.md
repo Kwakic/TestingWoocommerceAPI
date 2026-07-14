@@ -156,23 +156,25 @@ framework maintainers on the team channel. 😊
 
 
 ------------------------------------------------------------------
-# 🧪 Validation Pattern in Customer Tests (NEW)
+# 🧪 Validation Pattern in Customer Tests
 
 Customer tests follow a structured validation pipeline.
 
 Example:
 
-response = customer_helper.get_customer_by_id(customer_id, return_http_response=True)
+`response = customer_helper.get_customer_by_id(customer_id, return_http_response=True)
+`
 
-customer_model = assert_customer_retrieved_successfully(response)
+`customer_model = assert_customer_retrieved_successfully(response)`
 
-assert_customer_identity(customer_model, customer_id, email)
+`assert_customer_identity(customer_model, customer_id, email)`
 
-customer_helper.assert_customer_exists_and_matches_db(email, customers_dao)
-
+`customer_helper.assert_customer_exists_and_matches_db(email, customers_dao)
+`
 
 Validation stages:
 
+```
 Transport validation
       ↓
 Structure validation (Pydantic)
@@ -181,7 +183,7 @@ Business validation
       ↓
 DB validation
 
-
+```
 ------------------------------------------------------------------
 # 🧠 Why This Pattern Exists
 
