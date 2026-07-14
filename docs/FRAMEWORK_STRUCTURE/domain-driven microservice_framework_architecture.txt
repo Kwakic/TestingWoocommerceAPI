@@ -60,14 +60,20 @@ TestEcommerceAPI (project suite/root)
 │
 ├── EcommerceAPI (installable framework package)/    ← SHARED INSTALLABLE FRAMEWORK
 │     ├── ecommerceapitest.egg-info/..
-│     ├── plugins/                                   ← ⚠ ONLY shared plugins here
+│     ├── plugins/
+│     │     ├── api/
+│     │     │     ├── shared.py                      ← api_client-infra only (API client, auth, etc.)
+│     │     │     ├── customers.py                   ← customer fixtures
+│     │     │     ├── products.py                    ← products fixtures
+│     │     │     ├── coupons.py                     ← coupons fixtures
+│     │     │     └── orders.py                      ← orders fixtures
 │     │     ├── __init__.py
 │     │     ├── config_pytest.py
 │     │     ├── allure_autogen.py
 │     │     ├── api_fixtures.py
 │     │     ├── config_pytest.py
 │     │     ├── db_fixtures.py
-│     │     ├── entities.py
+│     │     ├── entities.py                          ← dependency container
 │     │     ├── entity_metadata.py
 │     │     ├── reporting.py
 │     │     ├── logging_plugin.py
@@ -102,7 +108,7 @@ TestEcommerceAPI (project suite/root)
 │     │     │     ├── __init__.py
 │     │     │     └── api_client.py                ← orchestration layer (used to be requestUtility)
 │     │     ├── customers/
-│     │     │     ├── dao/
+│     │     │     ├── dao/                         ← business + API logic
 │     │     │     │      │── customers_dao.py
 │     │     │     │      └── __init__.py
 │     │     │     ├── api/                         ← domain API
@@ -115,7 +121,7 @@ TestEcommerceAPI (project suite/root)
 │     │     │     ├── models/                      ← Pydantic validation models (runtime validation)
 │     │     │     │      │── customer_model.py
 │     │     │     │      └── _init__.py
-│     │     │     └── helpers/
+│     │     │     └── helpers/                      ← business + API logic
 │     │     │            │── customers_helper.py
 │     │     │            └── __init__.py
 │     │     ├── coupons/...

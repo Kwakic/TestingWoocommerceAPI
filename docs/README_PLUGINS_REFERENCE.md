@@ -6,7 +6,7 @@ If this document conflicts with any README or comment, **this document wins**.
 
 ---
 
-## Core Principles
+## 🎯 Core Principles
 
 1. Plugins are isolated units
 2. Plugins must never import each other
@@ -16,7 +16,7 @@ If this document conflicts with any README or comment, **this document wins**.
 
 ---
 
-## Architecture Layers
+## 🏛️ Architecture Layers
 
 ```
 ┌─────────────────────────────┐
@@ -42,7 +42,7 @@ If this document conflicts with any README or comment, **this document wins**.
 
 ---
 
-## Plugin Contracts
+## 📋 Plugin Contracts
 
 ### logging_plugin.py
 
@@ -92,7 +92,7 @@ This is the **only place** allowed to read env vars.
 
 ---
 
-## Forbidden Patterns (Hard Rules)
+## 🚫 Forbidden Patterns (Hard Rules)
 
 ❌ Plugin importing plugin
 
@@ -106,7 +106,7 @@ This is the **only place** allowed to read env vars.
 
 ---
 
-## Why This Matters
+## 💡 Why This Matters
 
 Breaking these rules causes:
 - Pytest rewrite warnings
@@ -118,8 +118,16 @@ Breaking these rules causes:
 This architecture exists to prevent exactly those failures.
 
 ---
+## ⚠️ Important Note:
 
-## Final Rule
+fixtures are not auto-discovered across arbitrary nested folders unless they’re exposed via conftest.py or registered
+plugins.
+So putting api_fixtures.py under tests/customers/plugins/ and expecting global availability will fail.
+
+
+---
+
+## 🏁 Final Rule
 
 If you are unsure where something belongs:
 
