@@ -1,169 +1,94 @@
-# structure validation only
-"""
-Product Pydantic Models (RUNTIME STRUCTURE VALIDATION LAYER)
-
-🎯 Purpose
----------------------------------------------------------------------
-Define the expected structure of products objects returned by the API.
-
-These models replace JSON Schema validation and provide:
-
-• type validation
-• nested object validation
-• strong typing for tests
-• cleaner error messages
-• IDE autocomplete support
-
-🧠 Design Rules
----------------------------------------------------------------------
-• Models validate **structure only**
-• NO business logic
-• NO DB logic
-• Used internally by validators
-
-Typical usage (inside validators):
-
-    product_model = ProductModel(**product_dict)
-
-If validation fails → Pydantic raises ValidationError.
-
-📌 Notes
----------------------------------------------------------------------
-• WooCommerce APIs frequently return empty strings instead of null.
-• A global normalizer converts "" → None to prevent validation errors.
-• Error payloads are still validated via JSON schema.
-
----------------------------------------------------------------------
-When you need a dict (for DB validators):
-Use:
-    products.model_dump()
-
-"""
 from typing import Optional, List, Dict, Any
-
-from pydantic import BaseModel, EmailStr, ConfigDict, model_validator
-
-
-# ============================================================
-# Base API Model
-# ============================================================
-
-
-class APIModel(BaseModel):
-    """
-    Base model used by all API response models.
-
-    Provides shared behavior:
-
-    • Allows unknown fields (future-proof for API evolution)
-    • Normalizes empty strings returned by APIs like WooCommerce
-    • Enables assignment validation
-    """
-
-    model_config = ConfigDict(
-        extra="allow",  # Allow unknown API fields
-        frozen=True,  # Prevent any field change. Make an object immutable
-        # validate_assignment=True  # Validate when fields are changed. Note: If the model is frozen, mutation is
-        # impossible, so validate_assignment becomes useless.
-    )
-
-    @model_validator(mode="before")
-    def normalize_empty_strings(cls, values):
-        """
-        Normalize WooCommerce responses that use "" instead of null.
-
-        Example:
-            ""  →  None
-
-        This prevents validation errors for Optional fields such as
-        email, phone, postcode, etc.
-        """
-        if isinstance(values, dict):
-            return {k: (None if v == "" else v) for k, v in values.items()}
-        return values
+from pydantic import BaseModel
 
 
 # ============================================================
-# Address Model
+# Supporting Models
 # ============================================================
 
+class ImageModel(APIModel):
+    id: Optional[int] = None
+    src: Optional[str] = None
+    name: Optional[str] = None
+    alt: Optional[str] = None
 
-class AddressModel(APIModel):
-    """
-    Represents billing or shipping address information.
-    """
 
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    address_1: Optional[str] = None
-    address_2: Optional[str] = None
-    company: Optional[str] = None
-    city: Optional[str] = None
-    state: Optional[str] = None
-    postcode: Optional[str] = None
-    country: Optional[str] = None
-    email: Optional[EmailStr] = None
-    phone: Optional[str] = None
+class CategoryModel(APIModel):
+    id: int
+    name: Optional[str] = None
+    slug: Optional[str] = None
+
+
+class MetaDataModel(APIModel):
+    id: Optional[int] = None
+    key: Optional[str] = None
+    value: Optional[Any] = None
 
 
 # ============================================================
 # Product Model
 # ============================================================
 
-
 class ProductModel(APIModel):
     """
-    Represents a Product object returned by the API.
+    Represents a WooCommerce Product object.
 
-    Validation includes:
-    • required fields (`id`, `email`)
-    • nested address objects
-    • optional WooCommerce fields
-    • email validation via `EmailStr`
+    Structure validation only (no business logic).
 
-    This model converts a raw API dictionary into a strongly typed object.
-
-    This provides:
-        - type validation
-        - email validation
-        - nested object validation
-        - optional fields support
-
-    ProductModel takes a dictionary and validates + parses it into a structured Python object.
-    Step-by-step:
-        - 📥 Input = dictionary (API response)
-        - 🧱 Pydantic validates it
-        - 🔄 Pydantic parses / transforms it
-        - 📦 Output = ProductModel object (not dict anymore)
+    Covers:
+    • Core product fields
+    • Pricing
+    • Inventory
+    • Relationships (categories, images)
     """
 
+    # --- Core पहचान ---
     id: int
-    email: EmailStr
+    name: str
+    slug: Optional[str] = None
+    permalink: Optional[str] = None
 
-    username: Optional[str] = None
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-
-    billing: AddressModel
-    shipping: AddressModel
-
+    # --- Dates ---
     date_created: Optional[str] = None
     date_created_gmt: Optional[str] = None
     date_modified: Optional[str] = None
     date_modified_gmt: Optional[str] = None
 
-    is_paying_product: Optional[bool] = None
-    avatar_url: Optional[str] = None
-    role: Optional[str] = None
+    # --- Status / Type ---
+    type: Optional[str] = None
+    status: Optional[str] = None
+    featured: Optional[bool] = None
+    catalog_visibility: Optional[str] = None
 
-    meta_data: Optional[List[Dict[str, Any]]] = None
+    # --- Descriptions ---
+    description: Optional[str] = None
+    short_description: Optional[str] = None
+
+    # --- SKU / Pricing ---
+    sku: Optional[str] = None
+    price: Optional[str] = None
+    regular_price: Optional[str] = None
+    sale_price: Optional[str] = None
+    on_sale: Optional[bool] = None
+
+    # --- Inventory ---
+    manage_stock: Optional[bool] = None
+    stock_quantity: Optional[int] = None
+    stock_status: Optional[str] = None
+
+    # --- Dimensions ---
+    weight: Optional[str] = None
+    dimensions: Optional[Dict[str, Any]] = None  # keep flexible
+
+    # --- Relationships ---
+    categories: Optional[List[CategoryModel]] = None
+    images: Optional[List[ImageModel]] = None
+
+    # --- Metadata ---
+    meta_data: Optional[List[MetaDataModel]] = None
+
+    # --- Links ---
     _links: Optional[Dict[str, Any]] = None
 
     def __repr__(self):
-        """
-        Compact representation used in logs and assertion errors.
-
-        Example:
-            ProductModel(id=1457, email=test@example.com)
-        """
-        return f"ProductModel(id={self.id}, email={self.email})"
+        return f"ProductModel(id={self.id}, name='{self.name}', sku='{self.sku}')"
