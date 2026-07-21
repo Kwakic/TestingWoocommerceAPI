@@ -58,6 +58,6 @@ def assert_customer_matches_db(
         db_customer["user_email"] == customer.email
     ), "❌ DB email does not match API email"
 
-    logger.info(
-        "✅ Assertion passed: API customers matches DB record (ID=%s)", customer.id
-    )
+    # logger.info(
+    #     "✅ Assertion passed: API customers matches DB record (ID=%s)", customer.id
+    # )

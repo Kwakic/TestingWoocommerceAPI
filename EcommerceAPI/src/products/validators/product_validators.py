@@ -97,9 +97,10 @@ def assert_valid_product_response(product: Dict[str, Any]) -> ProductModel:
     # products dict and pass them as named arguments.
 
     logger.info(
-        "✅ Product structure valid: id=%s, email=%s",
+        "✅ Product structure valid: id=%s, name=%s, sku=%s",
         product_model.id,
-        product_model.email,
+        product_model.name,
+        product_model.sku,
     )
 
     # -------------------------------------------------------
@@ -110,39 +111,40 @@ def assert_valid_product_response(product: Dict[str, Any]) -> ProductModel:
     # username='testuser_cfitmuyfvq')
 
 
-def assert_single_product_by_email(
-    products: List[Dict[str, Any]], email: str
+def assert_single_product_by_id(
+    products: List[Dict[str, Any]],
+    product_id: int,
 ) -> ProductModel:
     """
-    Validate that exactly ONE products exists for a given email in a dataset response (list endpoint).
+    Validate that exactly one product exists for the given ID in a dataset response.
 
     Typical use cases:
         - GET /products
-        - GET /products?email=
+        - GET /products?id=
         - paginated dataset responses
 
     This validator performs:
-        1. Filter dataset by email
+        1. Filter dataset by id
         2. Ensure exactly one match exists
         3. Validate structure using Pydantic
 
     Returns:
         ProductModel (validated object)
+
     """
 
-    matches = [c for c in products if c.get("email") == email]
+    matches = [p for p in products if p.get("id") == product_id]
 
-    assert (
-        len(matches) == 1
-    ), f"❌ Expected 1 products for {email}, found {len(matches)}"
+    assert len(matches) == 1, (
+        f"Expected exactly one product with ID={product_id}, " f"found {len(matches)}"
+    )
 
-    # Validate structure via Pydantic
     product_model = assert_valid_product_response(matches[0])
 
     logger.info(
-        "✅ Product found in dataset: id=%s email=%s",
+        "✅ Product found in dataset: id=%s name=%s",
         product_model.id,
-        product_model.email,
+        product_model.name,
     )
 
     return product_model
@@ -256,13 +258,11 @@ def assert_product_retrieved_successfully(response: HttpResponse) -> ProductMode
 
 def assert_product_exists_and_matches_api(
     products: List[Dict[str, Any]],
-    email: str,
+    product_id: int,
     db_product: Dict[str, Any],
 ) -> None:
     """
-    Validate that the returned products matches the expected identity.
-
-    Used when a single products object should be returned by the API.
+    Validate that a product exists in the API and matches the corresponding database record.
 
     This validator performs two layers of validation:
 
@@ -292,18 +292,20 @@ def assert_product_exists_and_matches_api(
             If API data or DB data are inconsistent.
     """
 
-    logger.debug("⚙️ Validating existence of products by email: %s", email)
+    logger.debug(
+        "⚙️ Validating product by ID=%s",
+        product_id,
+    )
 
-    # -------------------------------------------------------
-    # 1️⃣ DATASET VALIDATION
-    # -------------------------------------------------------
-    # Ensure exactly one products exists in API dataset and validate structure using Pydantic.
-    product = assert_single_product_by_email(products, email)
+    product = assert_single_product_by_id(
+        products,
+        product_id,
+    )
 
     logger.info(
-        "✅ Product found in API response (id=%s, email=%s)",
+        "✅ Product found in API response (id=%s, name=%s)",
         product.id,
-        product.email,
+        product.name,
     )
 
     # -------------------------------------------------------
@@ -328,7 +330,6 @@ def assert_product_identity(
 
     Typical use cases:
         - GET /products/{id}
-        - GET /products?email=
         - responses where a SINGLE products object is expected
 
     Why this validator exists:
@@ -355,19 +356,13 @@ def assert_product_identity(
     # -------------------------------------------------------
     # Validate products ID
     # -------------------------------------------------------
-    assert (
-        product.id == expected_id
-    ), f"❌ Product ID mismatch: expected {expected_id}, got {product.id}"
-
-    # -------------------------------------------------------
-    # Validate products email
-    # -------------------------------------------------------
-    assert (
-        product.email == expected_email
-    ), f"❌ Product email mismatch: expected {expected_email}, got {product.email}"
+    assert product.id == expected_id, (
+        f"Product ID mismatch. " f"Expected {expected_id}, got {product.id}"
+    )
 
     logger.info(
-        "✅ Product identity verified (id=%s, email=%s)", product.id, product.email
+        "✅ Product identity verified (ID=%s)",
+        product.id,
     )
 
 

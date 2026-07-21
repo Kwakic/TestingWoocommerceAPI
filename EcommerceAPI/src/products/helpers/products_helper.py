@@ -472,8 +472,6 @@ class ProductsHelper(object):
 
     # -------- VALIDATION HELPERS --------
 
-    # -------- VALIDATION HELPERS --------
-
     def assert_product_exists_and_matches_db(self, product_id: int, dao) -> None:
         """
         High-level helper that validates that a product exists
@@ -500,6 +498,10 @@ class ProductsHelper(object):
         db_product = dao.get_product_by_id(product_id)
 
         # --------- Assertion layer ---------
-        assert_product_exists_and_matches_api(products, str(product_id), db_product)
+        assert_product_exists_and_matches_api(
+            products,
+            product_id,
+            db_product,
+        )
 
         logger.info("✅ Product validated against API and DB (ID=%s)", product_id)

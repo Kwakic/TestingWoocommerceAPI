@@ -54,10 +54,12 @@ def assert_product_matches_db(
 
     assert str(db_product["ID"]) == str(product.id), "❌ DB ID does not match API ID"
 
-    assert (
-        db_product["user_email"] == product.email
-    ), "❌ DB email does not match API email"
-
-    logger.info(
-        "✅ Assertion passed: API products matches DB record (ID=%s)", product.id
+    assert db_product["post_title"] == product.name, (
+        f"Product title mismatch. "
+        f"DB='{db_product['post_title']}' "
+        f"API='{product.name}'"
     )
+
+    # logger.info(
+    #     "✅ Assertion passed: API products matches DB record (ID=%s)", product.id
+    # )

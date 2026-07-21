@@ -1,10 +1,10 @@
 """
 ====================================================================================================
-🧪 Customers Performance Test Suite
+🧪 Products Performance Test Suite
 
 Purpose
 -------
-Validate the response time of the Customers API.
+Validate the response time of the Products  API.
 
 Unlike Contract, Security and Preflight, performance tests belong to each
 business entity.
@@ -75,9 +75,9 @@ pytestmark = [
 #     search=SUMMER
 # ==============================================================================
 
-ENTITY = "customers"
+ENTITY = "products"
 
-ENDPOINT = "customers"
+ENDPOINT = "products"
 
 QUERY_PARAMS = {
     "per_page": 100,
@@ -89,8 +89,8 @@ QUERY_PARAMS = {
 # These values are intentionally conservative.
 # Every entity may later define its own SLA.
 #
-MAX_AVG_RESPONSE = 1.20
-MAX_P95_RESPONSE = 1.90
+MAX_AVG_RESPONSE = 2.20
+MAX_P95_RESPONSE = 2.90
 
 
 def _resolve_iterations(pytestconfig) -> int:
@@ -120,13 +120,13 @@ def _resolve_iterations(pytestconfig) -> int:
 
 
 @pytest.mark.performance
-def test_customer_response_times(
+def test_product_response_times(
     pytestconfig,
     api_client,
     session_metadata,
 ):
     """
-    Benchmark the Customers endpoint.
+    Benchmark the Products endpoint.
 
     Workflow
 
@@ -139,7 +139,10 @@ def test_customer_response_times(
 
     iterations = _resolve_iterations(pytestconfig)
 
-    logger.info("🔁 Customers benchmark (%d iterations)", iterations)
+    logger.info(
+        "🔁 Products benchmark (%d iterations)",
+        iterations,
+    )
 
     response_times: list[float] = []
 
@@ -218,7 +221,7 @@ def test_customer_response_times(
     ci = session_metadata.get("ci", {})
 
     logger.info("=" * 80)
-    logger.info("📊 CUSTOMERS PERFORMANCE SUMMARY")
+    logger.info("📊 PRODUCTS PERFORMANCE SUMMARY")
     logger.info("=" * 80)
 
     logger.info("Environment : %s", ENV.upper())

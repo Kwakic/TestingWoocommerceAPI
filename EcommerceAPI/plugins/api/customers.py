@@ -144,6 +144,23 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
         4. Validate schema + domain
         5. Register cleanup
 
+            helper
+              ↓
+        HttpResponse
+              ↓
+        status validation
+              ↓
+        response.json
+              ↓
+        Pydantic validation
+              ↓
+        business validation
+              ↓
+        cleanup registration  -> Register cleanup
+              ↓
+        return dict
+
+
         Args:
             skip_cleanup (bool):
                 If True → resource is NOT registered for cleanup
@@ -172,8 +189,8 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
         # 2️⃣ Transport validation (FAIL FAST) Status validated BEFORE JSON
         # -----------------------------------------------------------------
         assert response.status_code == 201, (
-            f" POST /Customers creation failed."
-            f"Expected: 201, got {response.status_code}"
+            "POST /customers creation failed. "
+            f"Expected: 201, got {response.status_code}. "
             f"Response: {response.text}"
         )
         # Note: Using response.text:

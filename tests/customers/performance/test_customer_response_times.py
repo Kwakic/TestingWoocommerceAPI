@@ -83,12 +83,10 @@ QUERY_PARAMS = {
     "per_page": 100,
 }
 
-#
+
 # Initial benchmark expectations.
-#
 # These values are intentionally conservative.
 # Every entity may later define its own SLA.
-#
 MAX_AVG_RESPONSE = 1.20
 MAX_P95_RESPONSE = 1.90
 

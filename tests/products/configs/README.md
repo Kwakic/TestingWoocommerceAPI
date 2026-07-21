@@ -1,228 +1,253 @@
-# Configuration System Overview
+# 📘 Customers Microservice Test Suite
 
-This README explains how the project manages environments, configuration files, and dynamic selection of hosts, credentials, and databases using:
+*(Matrix-aligned, framework-compatible, and future-proof)*
 
-- `.env` file (sensitive variables)
-- `hosts_config.py` (non-sensitive mappings)
-- `config_loader.py` (dynamic configuration selector)
-
-This structure ensures a clean separation between secrets and public configuration, supports multiple machines, and enables easy switching between `test`, `dev`, and `prod` environments.
+This directory contains all automated API tests, data models, schemas, fixtures, and plugins dedicated to the Customers microservice.
+It follows the unified test framework architecture, enables CI autodiscovery, and is structured for maximum coverage and future extensibility.
 
 ---
 
-## 1. `.env` File (Sensitive Data)
+## ✅ Status: **Complete, Future-Proof, and CI-Ready**
 
-The `.env` file contains **private credentials and selectors** that must never be committed to Git. Example:
+- Covers full CRUD, edge cases, search, pagination, schema validation, and DAO assertions for the `/customers` entity.
+- Defensive: negative and edge testing included.
+- Maintainable: clear structure, data-driven, extensible for new features.
+- **CI autodiscovery:** Easily integrates with matrix-style pipelines.
+- **Future-proof testing:** Utilities and test skeletons prepared for rate limiting, auth changes, and user/role-based access.
 
+---
+
+## 1. 📁 Directory Structure
+
+```
+├── tests/                                         ← The test suite root - Each team got its own file
+│     ├── customers/                               ← customers-specific
+│     │     ├── configs/
+│     │     │     └── config_customers.py          ← storing API_HOSTS
+│     │     │     └── README.py
+│     │     │     └── __init__.py
+│     │     ├── data/
+│     │     │     └── create_customer_payload.json
+│     │     ├── performance/
+│     │     │     └── test_customer_response_times.py
+│     │     │     └── __init__.py
+│     │     ├── __init__.py
+│     │     ├── conftest.py
+│     │     ├── README.md
+│     │     └── api/
+│     │           └── test_e2e_customer_lifecycle.py
+│     │           └── test_create_customer.py
+│     │           └── test_customer_deletion.py
+│     │           └── test_customer_filters.py
+│     │           └── test_get_all_customers.py
+│     │           └── test_get_customer.py
+│     │           └── test_soft_deleted_customer_handling.py
+│     │           └── test_update_custom
+│     │           └── __init__.py
+│     ├── shared/
+│     │     ├── security/
+│     │     │       ├── test_authentication_matrix.py
+│     │     │       └── test_authentication_success.py
+│     │     ├── contract/
+│     │     │       ├── error_schema.py
+│     │     │       ├── test_api_connectivy.py
+│     │     │       ├── test_response_format.py
+│     │     │       └── __init__.py
+│     │     └── preflight/
+│     │             ├── test_logging_globals.py
+│     │             ├── __init__.py
+│     │             └── README_PREFLIGHT.md
+│     │
+│     ├── orders/..                                ← orders-specific
+│     ├── coupons/..                               ← coupons-specific
+│     └── products/..                              ← products-specific
+│
+└── conftest.py           # registers Customers-specific plugins
+```
+
+This folder is fully isolated, supporting clean per-domain plugins, independent reporting, and targeted CI runs.
+
+---
+
+## 2. 🧪 Test Coverage Summary & Checklist
+
+### ✔️ CRUD Operations
+- [x] Create (single, bulk, with/without metadata)
+- [x] Read (by ID, list, filters, search)
+- [x] Update (partial, full, ignores immutable fields)
+- [x] Delete (via API & DB/DAO layer)
+
+### ✔️ Negative/Edge Testing
+- [x] Missing required fields
+- [x] Invalid input formats (email, timestamps)
+- [x] Update deleted entities
+- [x] Duplicate emails/entities
+- [x] Invalid/extra fields ignored
+- [x] Invalid search terms
+- [x] Invalid update keys
+
+### ✔️ Timestamps & Filters
+- [x] ISO 8601 parsing
+- [x] `after` / `before` filtering
+- [x] Field & timestamp consistency
+
+### ✔️ Search / Pagination / Sorting
+- [x] Search by `email`, `first_name`, `last_name` (exact/partial, case-insensitive)
+- [x] Pagination (`per_page`, `page`)
+- [x] Sorting (asc, desc)
+
+### ✔️ Schema Validation & DB Assertions
+- [x] Schema: POST, GET, PUT response shape/type/required fields
+- [x] Ensures no system-managed fields mutated
+- [x] API response = DB/DAO state
+
+### ✔️ Metadata
+- [x] Create with meta-fields
+- [x] Retrieve metadata
+- [x] Absence validated when meta absent
+
+### ✔️ Future-Proof (Prepared/skipped)
+- [x] Rate limiting (429): utility exists, tests ready but skipped unless enabled
+- [x] Auth/token (valid/invalid/expired): utility exists
+- [ ] User/role-based isolation: test skeleton, not yet supported
+
+---
+
+## 3. 🔌 Plugins & Fixtures
+
+- **Location:** `tests/customers/plugins/`
+    - `api_fixtures.py`: Factories, clients, request helpers
+    - `entities.py`: Domain objects & builders
+    - `_config.py`: Plugin config, lifecycle hooks
+- Register in `conftest.py`:
+    ```python
+    pytest_plugins = [
+        "tests.customers.plugins.api_fixtures",
+        "tests.customers.plugins.entities",
+        "tests.customers.plugins._config",
+    ]
+    ```
+
+---
+
+## 4. 📦 Payloads & Scenario Data
+
+| Path                               | Use case                   |
+|-------------------------------------|----------------------------|
+| `data/create_customer_payload.json` | common create ops/flows    |
+| `data/customers_scenarios.json`     | E2E and error permutations |
+| `data/customer_update_payload.json` | update flows               |
+
+Reusable for E2E, regression, and data-driven scenario tests.
+
+---
+
+## 5. 📐 Schemas
+
+Validate every response using Pydantic/models in `schemas/`:
+
+- `customers_general.py`, `customers_filters.py`, `customers_patch.py`, etc.
+- Validators include: field/type checks, required logic, pagination, metadata format
+
+---
+
+## 6. 🧪 Typical Test Categories
+
+- Create customer
+- Update customer
+- Get customer(s)
+- List/pagination/sorting
+- Filtering & search
+- Timestamp logic & validation
+- Metadata creation/retrieval
+- Authentication & authorization
+- Soft delete / recovery
+- Negative and error scenarios
+- Schema validation (with `FAIL_ON_EMPTY_LIST` support)
+- DAO/DB assertions
+
+---
+
+## 7. ➕ Adding New Tests/Features (Team Workflow)
+
+- Add/update schema in `schemas/` if needed
+- Add new/edited payloads in `data/`
+- Add helpers into `helpers/` (optional)
+- Update/add fixtures in `plugins/`
+- New/updated tests go in `api/`
+- Run full suite locally:
+  `pytest tests/customers -vv`
+- Update `CHANGELOG.md` (required for CI+docs)
+
+---
+
+## 8. ▶️ Running Customers Tests
+
+**Quick Run:**
 ```bash
-# --- Environment and machine ---
-ENV=test
-MACHINE=machine1
-
-# --- WooCommerce API credentials ---
-WC_KEY=ck_******
-WC_SECRET=cs_******
-
-# --- Database credentials ---
-DB_USER=my_user
-DB_PASSWORD=my_password
-
-# --- System settings ---
-PYTHONIOENCODING=utf-8
+pytest tests/customers -q
 ```
 
-### Purpose
-
-- Defines which environment is currently active (`test`, `dev`, `prod`).
-- Stores credentials that must remain secret.
-
-### Switching Environment
-
-You can temporarily override the environment when running commands:
-
+**Verbose:**
 ```bash
-ENV=dev pytest
+pytest tests/customers -vv
 ```
 
-Or set it permanently by editing `.env`.
-
----
-
-## 2. `hosts_config.py` (Non-Sensitive Public Configuration)
-
-This file contains **public, non-sensitive settings** for multiple environments and machines, including:
-
-- API base URLs
-- WooCommerce endpoints
-- Database hosts and ports (non-secret)
-
-Example structure:
-
-```python
-API_HOSTS = {
-    "test": "http://localhost:8888/kwakiweb/wp-json/wc/v3/",
-    "dev": "https://dev.example.com/wp-json/wc/v3/",
-    "prod": "https://example.com/wp-json/wc/v3/"
-}
-
-WOO_API_HOSTS = {
-    "test": "http://localhost:8888/kwakiweb",
-    "dev": "https://dev.example.com",
-    "prod": "https://example.com"
-}
-
-```
-
-### Purpose
-
-- Contains **public endpoint mappings** per environment.
-- Supports multiple machines (e.g., laptop vs Docker).
-- Safe to commit to Git.
-
----
-
-## 3. `config_loader.py` (Dynamic Config Selector)
-
-This module loads `.env`, reads `hosts_config.py`, and provides a **clean API** for accessing environment-specific configuration.
-
-### Example Implementation
-
-```python
-import os
-from dotenv import load_dotenv
-from hosts_config import API_HOSTS, WOO_API_HOSTS, DB_HOST
-
-load_dotenv()
-
-ENV = os.getenv("ENV", "test").lower()
-MACHINE = os.getenv("MACHINE", "machine1").lower()
-
-def get_api_host():
-    return API_HOSTS.get(ENV, "")
-
-def get_woo_host():
-    return WOO_API_HOSTS.get(ENV, "")
-
-def get_db_config():
-    machine_cfg = DB_HOST.get(MACHINE, {})
-    return machine_cfg.get(ENV, {})
-
-def get_config():
-    return {
-        "env": ENV,
-        "machine": MACHINE,
-        "api_host": get_api_host(),
-        "woo_host": get_woo_host(),
-        "db": get_db_config(),
-        "wc_key": os.getenv("WC_KEY"),
-        "wc_secret": os.getenv("WC_SECRET")
-
-    }
-```
-
-### Purpose
-
-- Provides unified access to: API URLs, DB config, credentials, and environment parameters.
-- Ensures consistent environment selection across the whole test suite.
-- Eliminates hardcoding and reduces risk of mixing environments.
-
-### Usage Example
-
-```python
-from config_loader import get_config
-
-cfg = get_config()
-print(cfg["api_host"])
-print(cfg["db"]["host"])
-```
-
----
-
-## 4. How to Switch Environments
-
-### Option A — Use `.env`
-
-Edit:
-
-```text
-ENV=dev
-MACHINE=docker
-```
-
-### Option B — Temporary override in shell
-
+**HTML Report + Structured Logs:**
 ```bash
-ENV=prod MACHINE=docker pytest
+pytest tests/customers --auto-html-report --log-cli-level=INFO
 ```
 
-### Option C — CI/CD (e.g., GitHub Actions)
-
-```yaml
-env:
-  ENV: prod
-  MACHINE: docker
+**Override environment in CI-style:**
+```bash
+ENABLE_STRUCTURED_LOGS=true LOG_PAYLOADS=false pytest tests/customers --auto-html-report
 ```
 
 ---
 
-## 5. Recommended Pattern Summary
+## 9. 🧱 CI Integration (Matrix-Ready)
 
-| File               | Contains                            | Sensitive | Committed | Purpose                        |
-| ------------------ | ----------------------------------- | --------- | --------- | ------------------------------ |
-| `.env`             | Secrets, environment selectors      | Yes       | No        | Secure runtime variables       |
-| `hosts_config.py`  | Public endpoints, DB host structure | No        | Yes       | Static configuration mapping   |
-| `config_loader.py` | Logic to combine `.env` + config    | No        | Yes       | Provides dynamic config access |
-
----
-
-## 6. Benefits of This System
-
-- Safe separation of sensitive vs non-sensitive data.
-- Easy environment switching (local + CI/CD).
-- Supports multiple machines (machine1, docker, machine2…).
-- Centralized configuration avoids duplication.
-- Cleaner code — no more hardcoded URLs or DB settings.
-
----
-
-## 7. Configuration Flow Diagram
-
-```
- ┌──────────────┐        ┌──────────────────┐        ┌────────────────────────┐
- │    .env      │        │ hosts_config.py  │        │   config_loader.py      │
- │ (Sensitive:  │        │ (Public: APIs,   │        │ - Loads .env           │
- │  ENV, MACHINE│        │  DB hosts, URLs) │        │ - Selects env + machine│
- │  Credentials)│        └──────────────────┘        │ - Combines config      │
- └──────┬───────┘                   ▲                │ - Provides get_config() │
-        │                           │                └───────────┬────────────┘
-        │  Environment + Secrets    │ Public Config               │ Unified Config
-        ▼                           │                            ▼
- ┌──────────────────────────────────────────────────────────────────────────────┐
- │                              Test Suite / App                               │
- │                                                                              │
- │  Uses:                                                                       │
- │   - cfg["api_host"]                                                          │
- │   - cfg["woo_host"]                                                          │
- │   - cfg["db"]                                                                 │
- │   - cfg["wc_key"], cfg["wc_secret"]                                          │
- │   - cfg["env"], cfg["machine"]                                               │
- │                                                                              │
- └──────────────────────────────────────────────────────────────────────────────┘
-```
-
-This diagram shows:
-
-- `.env` provides the **sensitive** data and environment selectors.
-- `hosts_config.py` provides **non-sensitive** mappings.
-- `config_loader.py` merges both sources into a unified configuration object.
-- Your test suite or application consumes `get_config()` for all environment-specific data.
+- Folder is auto-detected via matrix/glob in CI pipelines.
+- Example rule (GitLab):
+    ```yaml
+    rules:
+      - exists:
+          - tests/customers/
+    ```
+- Example matrix expansion:
+    ```yaml
+    matrix:
+      - SERVICE: "customers"
+      - SERVICE: "orders"
+      - SERVICE: "billing"
+    ```
+- CI passes: environment, logging, report dirs, flags; all test suites run in parallel, report independently.
 
 ---
 
-If you want, I can also create:
+## 10. 👥 Ownership
 
-- A diagram explaining the configuration flow (SVG or ASCII in a separate file)
-- A template folder structure for the entire project
-- A section on environment-specific report directories
+| Role              | Person           | Notes                     |
+|-------------------|------------------|---------------------------|
+| QA Owner          | Your Name        | Primary maintainer        |
+| Developer Owner   | TBD              | Customers backend lead    |
+| Test Framework    | Automation Guild | Maintains shared utilities|
 
-Let me know which of the above you'd like next and I will add it to the repo (or produce the files here).
+---
+
+## 11. 🧰 Utilities Included
+
+- `utils/rate_limit.py`: endpoint hammering, test throttling
+- `utils/auth_tokens.py`: various token state simulations
+- `get_auth_header()`: universal request auth header
+
+---
+
+## 12. ℹ️ Notes
+
+* ✔ Matrix-compliant, future-proof
+* ✔ Defensive & thorough coverage
+* ✔ CI-ready, HTML/log artifact support
+* ✔ Standardized with all microservices
+* ✔ Actively maintained, test utilities provided
+* ✔ Rate limiting/auth isolation: test-ready for future endpoint features
