@@ -1,0 +1,17 @@
+"Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
+"passed","Tue Jul 21 21:40:30 UTC 2026","Tue Jul 21 21:40:30 UTC 2026","500","tests.products.api","test_create_products","","","","test_create_single_simple_product","
+Create a simple product using the minimum valid payload.
+
+The fixture `create_valid_product` already performs:
+
+    - POST /products
+    - status code validation (201)
+    - response structure validation (Pydantic)
+    - cleanup registration
+
+Test flow:
+
+    1. Create a simple product
+    2. Fetch product via API
+    3. Verify API data matches database record
+"
