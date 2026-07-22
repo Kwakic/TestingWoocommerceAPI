@@ -1,0 +1,24 @@
+DEBUG    EcommerceAPI.plugins.entities:entities.py:459 ✅ [customers] Loaded API client: CustomersApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:468 ✅ [customers] Instantiated helper with API client
+DEBUG    EcommerceAPI.plugins.entities:entities.py:459 ✅ [products] Loaded API client: ProductsApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:468 ✅ [products] Instantiated helper with API client
+DEBUG    EcommerceAPI.src.products.dao.products_dao:products_dao.py:45 🗄️ ProductsDAO initialized: table=wordpress.wp_posts
+INFO     EcommerceAPI.plugins.entities:entities.py:532 🔍 ENTITY DISCOVERY SUMMARY
+INFO     EcommerceAPI.plugins.entities:entities.py:534    coupons      | ⏭️ SKIPPED (missing API module)
+INFO     EcommerceAPI.plugins.entities:entities.py:534    customers    | ✅  READY
+INFO     EcommerceAPI.plugins.entities:entities.py:534    orders       | ⏭️ SKIPPED (missing API module)
+INFO     EcommerceAPI.plugins.entities:entities.py:534    products     | ✅  READY
+INFO     tests.customers.api.test_get_customer:test_get_customer.py:199 🚫 Retrieving non-existent customers ID: 99999999
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:294 🟢 Calling 'Get Customer' for ID 99999999.
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:88 📡 GET /customers/99999999
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/customers/99999999 → Status code: 404 (completed in 0.089s)
+DEBUG    EcommerceAPI.src.clients.api_client:api_client.py:580 {
+                                                                 "code": "woocommerce_rest_invalid_id",
+                                                                 "message": "Invalid resource ID.",
+                                                                 "data": {
+                                                                   "status": 404
+                                                                 }
+                                                               }
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:428 ✅ Valid error response received (code=woocommerce_rest_invalid_id status=404)
+INFO     tests.customers.api.test_get_customer:test_get_customer.py:211 ✅ Error response schema validated for non-existent customers fetch
+DEBUG    EcommerceAPI.plugins.entities:entities.py:745 🧹 No test data created — skipping teardown.
