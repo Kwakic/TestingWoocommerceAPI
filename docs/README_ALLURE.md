@@ -413,7 +413,7 @@ A few important details in simple terms:
 
 ---
 
-## View the report (two simple options)
+# 🔎 View the report (two simple options)
 
 1) Quick preview (one-step)
 ```powershell

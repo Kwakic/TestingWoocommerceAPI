@@ -308,6 +308,8 @@ cache: pip  # Critical for speed
 
 ### Report Structure
 - **Dashboard location:** `https://username.github.io/repo/`
+  (Each implemented entity publishes its own report. As new entities are added to the framework, reports become
+available automatically.)
 - **Badge:** Shows last smoke run status
 
 ### Why This Configuration?

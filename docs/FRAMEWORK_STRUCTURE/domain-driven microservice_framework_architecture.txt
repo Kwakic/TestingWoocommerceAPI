@@ -188,15 +188,31 @@ TestEcommerceAPI (project suite/root)
 │      │
 │      └── logs
 │           ├── customers/
-│           │        ├── docker/
-│           │        │     └── test_debug_structured_20260109_195544.jsonl
-│           │        └── test/
-│           │              └── test_debug_structured_20260109_093007.jsonl
+│           │       ├── docker/
+│           │       │     ├── test_debug_structured_20260208_155351.jsonl
+│           │       │     ├── test_debug_structured_20260208_155841.jsonl
+│           │       │     ├── test_debug_structured_20260208_163244.jsonl
+│           │       │     └── test_debug_structured_20260208_170719.jsonl
+│           │       └── test/
+│           │             ├── test_debug_structured_20260708_140941.jsonl
+│           │             ├── test_debug_structured_20260708_144150.jsonl
+│           │             ├── test_debug_structured_20260708_152206.jsonl
+│           │             └── test_debug_structured_20260710_132812.jsonl
+│           ├── products/
+│           │       └── test/
+│           │             ├── test_debug_structured_20260722_122849.jsonl
+│           │             ├── test_debug_structured_20260722_123304.jsonl
+│           │             ├── test_debug_structured_20260722_125350.jsonl
+│           │             └── test_debug_structured_20260722_125630.jsonl
 │           └── shared/
 │                   ├── dev/
-│                   │     └── test_debug_structured_20260109_195544.jsonl
+│                   │     └── test_debug_structured_20260119_101107.jsonl
 │                   └── test/
-│                         └── test_debug_structured_20260109_093007.jsonl
+│                         ├── test_debug_structured_20260714_140218.jsonl
+│                         ├── test_debug_structured_20260714_140229.jsonl
+│                         ├── test_debug_structured_20260714_145453.jsonl
+│                         └── test_debug_structured_20260714_145501.jsonl
+│
 │
 ├── tests/                                         ← The test suite root - Each team got its own file
 │     ├── customers/                               ← customers-specific

@@ -79,7 +79,7 @@ ENTITY_METADATA = {
     #     "tier": "critical",
     # },
     #
-    # "products": {
-    #     "tier": "high",
-    # },
+    "products": {
+        "tier": "high",
+    },
 }

@@ -38,8 +38,8 @@ on:
   # - End-to-end consistency verification
   # - Operational confidence signal
   # ==================================================
-  push:
-    branches: [ main ]
+#  push:
+#    branches: [ main ]
 
 
   # ==================================================
