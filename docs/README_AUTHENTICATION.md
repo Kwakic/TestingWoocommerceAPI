@@ -198,7 +198,7 @@ Currently supported:
 
 Example `.env`:
 
-    ENV=test
+    API_ENV=test
     AUTH_TYPE=oauth1
 
     WC_KEY=ck_xxxxxxxxx

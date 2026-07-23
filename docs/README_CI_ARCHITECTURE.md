@@ -71,12 +71,44 @@ EcommerceAPI/
        team_discovery.py
 ```
 
-### Reporting Strategy
+---
+
+# 🌍 Environment Selection
+
+The framework supports multiple execution environments. The selected environment determines which API endpoint is used during test execution.
+
+| Context | `API_ENV` | Description |
+|----------|-----------|-------------|
+| Local developer | `test` | Local development using Docker Desktop (`localhost:8888`) |
+| Local developer (no Docker) | `local` | Local environment without Docker |
+| Tests running inside Docker | `docker` | Uses the Docker network (`wordpress`) |
+| GitHub Actions | `ci` | CI runner communicating with Docker services (`localhost:8080`) |
+| Development server | `dev` | Shared development environment |
+| Staging | `staging` | Staging deployment |
+| Production | `prod` | Production environment |
+
+## Recommended Usage
+
+| Where | `API_ENV` |
+|-------|-----------|
+| Local development | `test` |
+| GitHub Actions | `ci` |
+| Docker-native execution | `docker` |
+
+> **Note**
+>
+> - All GitHub Actions workflows use `API_ENV=ci`.
+> - Developers should normally use `API_ENV=test` when running tests locally.
+
+---
+
+## Reporting Strategy
 
 Public Allure reports are organized first by **entity** (customers, orders, products, coupons..) and then by **test suite** (smoke, integration, regression, performance).
 
 This mirrors the framework's domain-driven architecture, allowing each microservice to own its own testing lifecycle while keeping GitHub Pages scalable as additional entities are introduced.
 
+---
 
 ## CI Flow
 
@@ -114,6 +146,8 @@ This mirrors the framework's domain-driven architecture, allowing each microserv
 
 ```
 👉 The matrix includes optional ownership metadata (for example team). When omitted, the framework defaults the team to the entity name.
+
+---
 
 ## GitHub Pages limitation
 

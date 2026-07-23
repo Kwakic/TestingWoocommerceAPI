@@ -180,7 +180,7 @@ def _write_allure_environment(cfg, results_dir: Path) -> None:
     This file defines run identity, not framework internals.
 
     Example UI:
-        ENV=test
+        API_ENV=test
         teams=customers,orders
         framework=EcommerceAPI
         framework_version=dev

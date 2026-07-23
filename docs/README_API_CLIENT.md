@@ -215,8 +215,76 @@ TEST ASSERTIONS ✅
 ```
 
 ---
+# 🧪 Validation Layer
 
-# 🧠 Key Concept
+After the API client returns an HttpResponse, validation happens in
+a dedicated validation pipeline.
+
+Execution flow:
+```
+HttpResponse
+     ↓
+Validators
+     ↓
+Pydantic Models
+     ↓
+DB Validators
+```
+
+---
+
+# 🧪 Shared Test Suites (Framework-Level Tests)
+
+The framework also contains shared tests that validate infrastructure,
+security, and environment behavior before running entity-specific tests.
+
+Directory structure:
+
+tests/shared/
+
+    preflight/
+        test_api_connectivity.py
+        test_response_format.py
+        test_logging_globals.py
+
+    security/
+        test_authentication_matrix.py
+        test_authentication_success.py
+
+    performance/
+        test_basic_response_times.py
+
+Purpose of each category:
+
+Preflight tests
+---------------
+Verify the test environment and framework configuration before executing
+the full test suite.
+
+Examples:
+- API connectivity
+- logging configuration
+- response format validation
+
+Security tests
+--------------
+Validate authentication and access control behavior.
+
+Example matrix:
+
+4 entities
+× 4 HTTP methods
+× 3 invalid credential cases
+= 48 security tests
+
+Performance tests
+-----------------
+Provide lightweight baseline response time checks to detect regressions
+in API responsiveness.
+
+---
+
+# 💡 Key Concept
 
 ```
 Server → requests.Response → HttpResponse → dict → test
@@ -224,14 +292,32 @@ Server → requests.Response → HttpResponse → dict → test
 
 ---
 
+# 🧠 Design Philosophy
+
+Transport layer responsibilities:
+- send HTTP request
+- receive response
+- wrap response in HttpResponse
+
+Validation layer responsibilities:
+- validate response structure
+- validate business rules
+- validate API/DB consistency
+
+Tests responsibilities:
+- verify expected behaviour
+- perform business assertions
+
+---
+
 # 🔍 requests.Response vs HttpResponse
 
-| Feature | requests.Response | HttpResponse |
-|--------|------------------|-------------|
-| Source | requests library | Your framework |
+| Feature     | requests.Response | HttpResponse |
+|-------------|------------------|-------------|
+| Source      | requests library | Your framework |
 | JSON access | response.json() | response.json |
-| Safe | ❌ No | ✅ Yes |
-| Usage | Debugging | Standard |
+| Safe        | ❌ No | ✅ Yes |
+| Usage       | Debugging | Standard |
 
 ---
 
@@ -404,14 +490,31 @@ Both ultimately hit requests and return requests.Response
 | Intended use | testing/debugging            | transport only         |
 ---
 
+
+# ✅ BEST PRACTICES
+
+## Transport validation
+```
+assert response.status_code == 200
+```
+
+## Business validation
+```
+assert data["id"]
+```
+
+
+---
+
 # 🧠 Mental Model
 
 ```
-HttpClient → send request
-request_raw → debug safely
-get/post → normal usage
+HttpClient      → send request
+APIClient       → manage request
+HttpResponse    → safe response
+Helper          → business data
+Test            → validate
 ```
-
 ---
 
 # 🚀 Summary

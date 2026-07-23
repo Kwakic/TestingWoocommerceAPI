@@ -36,7 +36,6 @@ TestEcommerceAPI (project suite/root)
 │     │     └── README_CUSTOMERS.md
 │     ├── README_ALLURE.md
 │     ├── README_API_CLIENT.md
-│     ├── README_API_FRAMEWORK_EXPLAINED.md
 │     ├── README_API_TESTING_STANDARDS.md
 │     ├── README_ARCHITECTURE.md
 │     ├── README_ARCHITECTURE_QUICK_START.md
@@ -158,12 +157,8 @@ TestEcommerceAPI (project suite/root)
 │     │     │     ├── team_discovery.py
 │     │     │     └── truncate_logging_utils.py
 │     │     └── __init__.py
-│     │
 │     │── __init__.py
-│     │── __main__.py
-│     ├── cli.py                                    ← Defines EcommerceAPItest as pip-installable
 │     └── pyproject.toml
-│
 │
 │─── reports/
 │      ├── allure-report/

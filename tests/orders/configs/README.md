@@ -16,7 +16,7 @@ The `.env` file contains **private credentials and selectors** that must never b
 
 ```bash
 # --- Environment and machine ---
-ENV=test
+API_ENV=test
 MACHINE=machine1
 
 # --- WooCommerce API credentials ---

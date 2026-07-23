@@ -1,5 +1,7 @@
 # Environment & CI Notes — local & CI runbook 🧭
 
+## Operational guide ("How do I run this?")
+
 This document explains local `.env` usage, Allure reporting, Docker test image behavior, and CI best practices (GitHub Actions / GitLab). It also includes small helper snippets and tips to make running and debugging easier.
 
 > Summary: keep secrets in CI, use editable installs for local dev, write Allure results with `--alluredir`, and generate HTML in CI or via the helper script locally.

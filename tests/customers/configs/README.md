@@ -27,7 +27,7 @@ Example `.env`:
 
 ```text
 # --- Environment selection ---
-ENV=test
+API_ENV=test
 MACHINE=machine1
 
 # --- WooCommerce credentials ---

@@ -13,7 +13,7 @@ def api_base_url() -> str:
 
     Controlled via:
       SERVICE=customers|orders|products|...
-      ENV=test|staging|prod
+      API_ENV=test|staging|prod
     """
 
     service = os.getenv("SERVICE", "customers").lower()

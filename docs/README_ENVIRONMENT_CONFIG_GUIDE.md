@@ -1,4 +1,4 @@
-# 🧭 Environment & Configuration Guide
+# 🧭 Environment & Configuration Guide ("How does configuration work?")
 
 **Practical guide for developers, QA, and CI users.**
 For authoritative rules, see `CONFIG_CONTRACT.md`.
@@ -224,7 +224,7 @@ Different environments require different host resolution:
 If CI runs with:
 
 ```bash
-ENV=test
+API_ENV=test
 ```
 
 Then the framework resolves:

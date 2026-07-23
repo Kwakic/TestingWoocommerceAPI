@@ -1,43 +1,32 @@
 # 🚀 API Testing Standards & Guidelines — TestEcommerceAPI
 
+For how the underlying client is built (HttpClient / APIClient / HttpResponse), see README_ARCHITECTURE.md.
+This document covers how to write tests against that architecture.
 ---
 
 # 🧠 Core Principles
 
-- ✅ Test layer owns validation
-- ✅ Fixtures act as Gatekeepers (validate + normalize)
-- ❌ Transport layers (HttpClient / APIClient / API) DO NOT validate
-- ✅ Keep tests clean, readable, and business-focused
-- ✅ Fail fast on transport errors
-- ✅ Use consistent response model (HttpResponse)
-
+- ✅ Tests own business validation; transport layers don't validate.
+- ✅Fixtures act as **gatekeepers**: they validate and normalize before a test ever sees the data.
+- ❌ Transport layers (`HttpClient` / `APIClient` / API layer) do **not** validate.
+- ✅ Keep tests clean, readable, and business-focused.
+- ✅Fail fast on transport errors.
+- ✅Use the framework's consistent response model (`HttpResponse`) rather than raw `requests.Response`.
 ---
 
-# 🧱 Framework Layers
+# 🧱 Layer Responsibilities (quick reference)
 
-| Layer            | Responsibility |
-|------------------|---------------|
-| HttpClient       | Sends raw HTTP requests (requests library) |
-| RequestUtility   | Orchestrates requests, retries, logging, returns HttpResponse |
-| HttpResponse     | Parsed + normalized response object |
-| API Layer        | Endpoint mapping (thin, no logic) |
-| Helper           | Orchestration + optional abstraction |
-| Fixture          | ✅ Validates + returns clean dict |
-| Test             | Business assertions |
+| Layer | Responsibility |
+|---|---|
+| HttpClient | Sends raw HTTP requests |
+| APIClient | Orchestrates requests, retries, logging; returns `HttpResponse` |
+| HttpResponse | Parsed + normalized response object |
+| API layer | Endpoint mapping (thin, no logic) |
+| Helper | Business orchestration, optional abstraction |
+| Fixture | ✅ Validates + returns a clean `dict` |
+| Test | Business assertions |
 
----
-
-# 🔄 Response Flow
-
-```
-requests.Response (raw)
-        ↓
-HttpResponse (safe + structured)
-        ↓
-Fixture (validated dict)
-        ↓
-Test (business assertions)
-```
+*(Full detail on each layer lives in `README_ARCHITECTURE.md`.)*
 
 ---
 
@@ -45,11 +34,23 @@ Test (business assertions)
 
 ```
 HttpClient      → send request
-RequestUtility  → manage request
+ApiClient       → manage request
 HttpResponse    → safe response
 Fixture         → validated data
 Test            → business validation
 ```
+
+---
+
+
+# 🛠️Choosing the Right Tool
+
+| Scenario | Use |
+|---|---|
+| Happy path | Fixture |
+| Need status code / headers | Helper (`return_http_response=True`) |
+| Negative testing | Helper (`return_http_response=True`) |
+| Deep debugging | `request_raw()` |
 
 ---
 
@@ -64,9 +65,9 @@ assert customer["id"]
 assert customer["email"]
 ```
 
-✔ No HTTP noise
-✔ Always valid data
-✔ Safe for juniors
+* No HTTP noise
+* Always valid data
+* Safe for juniors
 
 ---
 
@@ -101,8 +102,8 @@ response = customer_helper.create_customer(
 assert response.status_code == 400
 ```
 
-✔ Required for error scenarios
-✔ Do NOT use fixtures here
+* Required for error scenarios
+* Do NOT use fixtures here
 
 ---
 
@@ -131,7 +132,7 @@ print(resp.request.headers)
 
 # ⚠️ Core Rules
 
-## Rule 1 — Fixtures are STRICT
+## **Rule 1 — Fixtures are strict.** Fixtures like `create_valid_customer`:
 
 Fixtures like `create_valid_customer`:
 
@@ -142,14 +143,15 @@ Fixtures like `create_valid_customer`:
 
 ---
 
-## Rule 2 — Validation Order (MANDATORY)
+## **Rule 2 — Validation order (mandatory).** Always validate in this order:
 
 Always follow:
 
-1. status_code (transport)
+1. Transport status validation (`status_code`)
 2. JSON extraction
-3. schema validation
-4. business assertions
+3. Structure validation (Pydantic)
+4. Business validation
+5. Database validation (if applicable)
 
 ---
 
@@ -186,16 +188,15 @@ assert response.status_code == 201
 
 Fixtures act as **Gatekeepers**:
 
-✔ Call helper
-✔ Validate status
-✔ Extract JSON
-✔ Validate schema
-✔ Register cleanup
-✔ Return clean dict
-
+- Call the helper
+- Validate status
+- Extract JSON
+- Validate schema (Pydantic)
+- Register cleanup
+- Return a clean dict
 ---
 
-# 🧠 Why this works (Enterprise Pattern)
+# 🧠 Why this works
 
 - Separation of concerns
 - Fail-fast validation
@@ -208,11 +209,11 @@ Fixtures act as **Gatekeepers**:
 
 # 🚀 Summary
 
-✔ Fixtures → validated dict
-✔ Helpers → optional HttpResponse
-✔ Tests → business logic
-✔ No validation in transport layers
-✔ request_raw → debugging only
+*  Fixtures → validated dict
+*  Helpers → optional HttpResponse
+*  Tests → business logic
+*  No validation in transport layers
+*  request_raw → debugging only
 
 ---
 

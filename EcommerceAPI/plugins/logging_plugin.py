@@ -341,7 +341,7 @@ def pytest_configure(config):
 
     # 6) Internal noisy loggers: remove their StreamHandlers but keep propagation, lower level
     INTERNAL_NOISY = [
-        "ssqaapitest.src.utils.requestsUtility",
+        "EcommerceAPI.src.clients.api_client",
         # extend as needed
     ]
     for name in INTERNAL_NOISY:
