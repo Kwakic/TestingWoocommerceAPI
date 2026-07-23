@@ -46,5 +46,3 @@ Run preflight checks locally to validate your framework setup:
 
 ```bash
 pytest -m preflight -v
-
-blalblblb
