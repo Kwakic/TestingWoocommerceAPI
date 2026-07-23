@@ -1,0 +1,42 @@
+DEBUG    EcommerceAPI.plugins.entities:entities.py:459 ✅ [customers] Loaded API client: CustomersApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:468 ✅ [customers] Instantiated helper with API client
+DEBUG    EcommerceAPI.plugins.entities:entities.py:459 ✅ [products] Loaded API client: ProductsApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:468 ✅ [products] Instantiated helper with API client
+DEBUG    EcommerceAPI.src.products.dao.products_dao:products_dao.py:45 🗄️ ProductsDAO initialized: table=wordpress.wp_posts
+INFO     EcommerceAPI.plugins.entities:entities.py:532 🔍 ENTITY DISCOVERY SUMMARY
+INFO     EcommerceAPI.plugins.entities:entities.py:534    coupons      | ⏭️ SKIPPED (missing API module)
+INFO     EcommerceAPI.plugins.entities:entities.py:534    customers    | ✅  READY
+INFO     EcommerceAPI.plugins.entities:entities.py:534    orders       | ⏭️ SKIPPED (missing API module)
+INFO     EcommerceAPI.plugins.entities:entities.py:534    products     | ✅  READY
+INFO     EcommerceAPI.plugins.allure_autogen:allure_autogen.py:520 📎 Framework configuration attached to Allure
+INFO     tests.products.api.test_create_products:test_create_products.py:53 🛠 Creating a test product via factory fixture.
+DEBUG    EcommerceAPI.src.products.helpers.products_helper:products_helper.py:339 ⚙️ Creating product with payload keys: ['status']
+DEBUG    EcommerceAPI.src.products.api.products_api:products_api.py:74 📡 POST /products payload_keys=['status']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ POST /wp-json/wc/v3/products → Status code: 201 (completed in 0.263s)
+INFO     EcommerceAPI.src.products.validators.product_validators:product_validators.py:99 ✅ Product structure valid: id=10, name=Product, sku=None
+DEBUG    EcommerceAPI.plugins.api.products:products.py:140 ℹ️ Registered product with ID=10 for cleanup.
+DEBUG    EcommerceAPI.src.products.helpers.products_helper:products_helper.py:491 🔎 Validating product integrity for ID=10
+DEBUG    EcommerceAPI.src.products.helpers.products_helper:products_helper.py:101 🟢 Calling 'Get Product' for ID 10.
+DEBUG    EcommerceAPI.src.products.api.products_api:products_api.py:88 📡 GET /products/10
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ GET /wp-json/wc/v3/products/10 → Status code: 200 (completed in 0.082s)
+DEBUG    EcommerceAPI.src.products.dao.products_dao:products_dao.py:83 ℹ️ Found product for ID=10: {'ID': 10, 'post_author': 1, 'post_date': datetime.datetime(2026, 7, 23, 20, 16, 13), 'post_date_gmt': datetime.datetime(2026, 7, 23, 20, 16, 13), 'post_content': '', 'post_title': 'Product', 'post_excerpt': '', 'post_status': 'publish', 'comment_status': 'open', 'ping_status': 'closed', 'post_password': '', 'post_name': 'product', 'to_ping': '', 'pinged': '', 'post_modified': datetime.datetime(2026, 7, 23, 20, 16, 13), 'post_modified_gmt': datetime.datetime(2026, 7, 23, 20, 16, 13), 'post_content_filtered': '', 'post_parent': 0, 'guid': 'http://localhost:8080/product/product/', 'menu_order': 0, 'post_type': 'product', 'post_mime_type': '', 'comment_count': 0}
+DEBUG    EcommerceAPI.src.products.validators.product_validators:product_validators.py:295 ⚙️ Validating product by ID=10
+INFO     EcommerceAPI.src.products.validators.product_validators:product_validators.py:99 ✅ Product structure valid: id=10, name=Product, sku=None
+INFO     EcommerceAPI.src.products.validators.product_validators:product_validators.py:144 ✅ Product found in dataset: id=10 name=Product
+INFO     EcommerceAPI.src.products.validators.product_validators:product_validators.py:305 ✅ Product found in API response (id=10, name=Product)
+INFO     EcommerceAPI.src.products.validators.product_validators:product_validators.py:317 ✅ Product matches database record (ID=10)
+INFO     EcommerceAPI.src.products.helpers.products_helper:products_helper.py:507 ✅ Product validated against API and DB (ID=10)
+INFO     tests.products.api.test_create_products:test_create_products.py:67 🎯 Full validation complete for product ID: 10
+INFO     EcommerceAPI.plugins.entities:entities.py:715 🔧 Starting teardown of created test resources...
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up product(s)... (1 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 10
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:567 ✅ DELETE /wp-json/wc/v3/products/10?force=True → Status code: 200 (completed in 0.116s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 10
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for product(s).
+INFO     EcommerceAPI.plugins.entities:entities.py:746 
+
+🧹 ====================================== CLEANUP SUMMARY ======================================
+INFO     EcommerceAPI.plugins.entities:entities.py:749 📊 Created during test run: {'products': 1}
+INFO     EcommerceAPI.plugins.entities:entities.py:750 🧾 Cleanup total summary:
+INFO     EcommerceAPI.plugins.entities:entities.py:752    • product: 1 deleted (1 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:753 ✅ All test data cleanup completed.
