@@ -384,6 +384,18 @@ jobs:
       # Publish website
       # --------------------------------------------------
 
+      # --------------------------------------------------
+      # Publish the rebuilt QA Portal to GitHub Pages.
+      #
+      # The complete website (portal + all preserved
+      # Allure reports) is deployed from the generated
+      # `site/` directory.
+      #
+      # Existing reports remain available because the
+      # workflow first restores the previous GitHub Pages
+      # site and then updates only the reports generated
+      # by the current workflow run.
+      # --------------------------------------------------
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
@@ -393,8 +405,41 @@ jobs:
           keep_files: false
 
       # --------------------------------------------------
-      # Publish the rebuilt QA Portal to GitHub Pages.
+      # Deployment metadata
       #
-      # Existing reports remain available because the
-      # deployment preserves the complete site structure.
+      # Purpose
+      # -------
+      # Generate a small metadata file that records which
+      # Git commit and workflow run produced this GitHub
+      # Pages deployment.
+      #
+      # This file is intended for troubleshooting only.
+      #
+      # Example use:
+      #
+      # https://kwakic.github.io/TestingWoocommerceAPI/build.json
+      #
+      # If the QA Portal appears stale, compare the commit
+      # shown in build.json with the latest repository
+      # commit.
+      #
+      # If build.json already contains the latest commit,
+      # but the browser still displays an older report,
+      # the delay is most likely caused by GitHub Pages/CDN
+      # caching rather than the deployment workflow.
       # --------------------------------------------------
+      - name: Create deployment metadata
+        shell: bash
+        run: |
+          cat > site/build.json <<EOF
+          {
+            "framework": "TestEcommerceAPI",
+            "commit": "${{ github.sha }}",
+            "workflow": "Deploy GitHub Pages 🚀",
+            "run_id": "${{ github.run_id }}",
+            "published_at": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          }
+          EOF
+
+          echo "Deployment metadata:"
+          cat site/build.json
