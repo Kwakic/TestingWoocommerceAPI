@@ -554,6 +554,17 @@ def build_entity_matrix() -> dict[str, list[dict[str, str]]]:
     CI should never implement entity discovery or business
     metadata itself. It simply consumes the matrix produced
     by this function.
+
+
+    GitHub displays matrix values similar to:
+    -----------------------------------------
+        test (customers, commerce, critical)
+
+    where:
+
+        entity -> framework business domain
+        team   -> owning team (defaults to entity when omitted)
+        tier   -> business criticality
     """
 
     matrix: dict[str, list[dict[str, str]]] = {"include": []}
@@ -570,7 +581,7 @@ def build_entity_matrix() -> dict[str, list[dict[str, str]]]:
                 # Framework entity.
                 "entity": entity,
                 # Entity = Team by design.
-                "team": entity,
+                "team": metadata.get("team", entity),
                 # Business metadata.
                 "tier": metadata["tier"],
             }

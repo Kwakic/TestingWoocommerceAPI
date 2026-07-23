@@ -3,7 +3,8 @@ TestEcommerceAPI (project suite/root)
 ├──.git/
 ├──.github/
 │     ├── scripts
-│     │     └── generate_matrix.py
+│     │     ├── generate_matrix.py
+│     │     └── generate_portal.py
 │     ├── workflows/
 │     │     ├── contract.yml
 │     │     ├── dashboard-publisher.yml

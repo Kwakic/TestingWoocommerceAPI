@@ -25,8 +25,11 @@ from __future__ import annotations
 # • Contract suites
 # • Security suites
 # • Documentation
-#
-# Entity = Team by current framework design.
+
+# Entity metadata.
+# Optional attributes override the framework defaults.
+# If "team" is omitted, the framework assumes the owning
+# team has the same name as the entity.
 # --------------------------------------------------
 
 FRAMEWORK_ENTITIES = (
@@ -72,6 +75,7 @@ ENTITY_METADATA = {
     # Critical customer-facing service.
     "customers": {
         "tier": "critical",
+        "team": "commerce",
     },
     # Future examples:
     #
@@ -81,5 +85,6 @@ ENTITY_METADATA = {
     #
     "products": {
         "tier": "high",
+        "team": "catalog",
     },
 }

@@ -276,7 +276,7 @@ def build_html(entities: list[Entity]) -> str:
     <h1>🧪 TestEcommerceAPI</h1>
 
     <p class="subtitle">
-    Enterprise API Test Automation Framework
+    API Test Automation Framework
     </p>
 
     </header>

@@ -111,7 +111,9 @@ This mirrors the framework's domain-driven architecture, allowing each microserv
                     │
                     ▼
              GitHub Pages
+
 ```
+👉 The matrix includes optional ownership metadata (for example team). When omitted, the framework defaults the team to the entity name.
 
 ## GitHub Pages limitation
 

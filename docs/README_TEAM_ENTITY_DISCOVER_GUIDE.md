@@ -78,14 +78,19 @@ CI Boundary
 
 ## 🧩 Current framework convention
 
-Entity == Owning Team
+### Current convention
 
-Today each business entity is owned by a dedicated team.
+By default:
 
-This one-to-one relationship simplifies reporting, logging and CI ownership.
+> Entity → Owning Team
+
+- The optional `team` metadata allows ownership to differ from the entity when multiple business domains belong to the same team.
+
+- If omitted, the framework automatically uses the entity name as the owning team.
+
+Today, most business entities use the default convention where the entity name and owning team are identical. This keeps reporting, logging and CI ownership simple while allowing ownership to be overridden when needed.
 
 Future versions may allow a single team to own multiple entities without changing the framework architecture.
-
 ---
 
 # 🏛️ Framework Discovery Architecture
