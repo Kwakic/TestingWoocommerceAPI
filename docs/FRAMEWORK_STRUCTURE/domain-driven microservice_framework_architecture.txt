@@ -30,7 +30,6 @@ TestEcommerceAPI (project suite/root)
 │     ├── FRAMEWORK_STRUCTURE
 │     │     └── domain-driven microservice_framework_architecture.txt
 │     ├── portal
-│     │     ├── index.html
 │     │     └── style.css
 │     ├── TEAM GUIDES
 │     │     └── README_CUSTOMERS.md

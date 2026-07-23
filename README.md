@@ -21,18 +21,24 @@
 
 ---
 
-## 🌐 QA Dashboard
+## 🌐 QA Portal
 
 The project publishes interactive Allure reports to GitHub Pages.
 
-| Dashboard | URL | Description |
-|-----------|-----|-------------|
-| 🏠 **QA Portal** | https://kwakic.github.io/TestingWoocommerceAPI | Entry point for all public reports |
-| 🔥 Smoke | https://kwakic.github.io/TestingWoocommerceAPI/customers/smoke | Customers Smoke suite |
-| 🔗 Integration | https://kwakic.github.io/TestingWoocommerceAPI/customers/integration | Customers Integration suite |
-| 🔬 Regression | https://kwakic.github.io/TestingWoocommerceAPI/customers/regression | Customers Regression suite |
-| ⏱ Performance | https://kwakic.github.io/TestingWoocommerceAPI/customers/performance | Customers Performance suite |
-> Contract, Security and Preflight workflows intentionally publish CI artifacts only.
+The **live QA Portal** is available at:
+
+| Resource | URL |
+|----------|-----|
+| 🏠 QA Portal | https://kwakic.github.io/TestingWoocommerceAPI |
+
+The portal is generated automatically during deployment from the reports that
+are currently published to GitHub Pages.
+
+As additional framework entities publish Smoke, Integration, Regression or
+Performance reports, they automatically appear in the portal without requiring
+any HTML or README updates.
+
+> Contract, Security and Preflight intentionally publish CI artifacts only and are not displayed in the public QA Portal.
 ---
 
 # 🧪 TestEcommerceAPI
@@ -67,6 +73,14 @@ The project now uses a **fully segmented CI/CD architecture**.
 Each workflow has a dedicated responsibility, isolated runtime,
 separate artifacts, and independent reporting strategy.
 
+Public reports are hosted through the automatically generated QA Portal.
+
+Rather than maintaining a static landing page, the deployment workflow
+discovers every published entity report and rebuilds the portal during every
+GitHub Pages deployment.
+
+This allows the framework to scale naturally as new entities are implemented.
+
 | Workflow            | Trigger          | Runtime     | Public Allure | Purpose                                   |
 | ------------------- | ---------------- | ----------- | ------------- | ----------------------------------------- |
 | **preflight.yml**   | PR + push        | very fast   | ❌             | Framework sanity & import validation      |
@@ -77,6 +91,11 @@ separate artifacts, and independent reporting strategy.
 | **performance.yml** | scheduled/manual | long        | ✅             | Latency & performance trend analysis      |
 | **regression.yml**  | scheduled/manual | long        | ✅             | Full regression coverage                  |
 
+### Public reports are published to GitHub Pages.
+
+Rather than maintaining a static landing page, the deployment workflow
+generates the QA Portal from the reports currently available in the published
+site. This allows newly implemented entities to appear automatically.
 
 👉 See [CI/CD Architecture Guide](./docs/README_CI_ALLURE_GUIDE.md)
 for enterprise workflow rationale, artifact strategy,
@@ -89,10 +108,10 @@ Allure history management, and reporting architecture.
 
 The project uses:
 - **GitHub Actions** for automated testing
-- **Allure Reports (🌐 QA Dashboard)** for test dashboards
+- **Allure Reports (🌐 Generated QA Portal)**
 - **GitHub Pages** for report hosting
 
-View live QA Dashboard: [kwakic.github.io/TestingWoocommerceAPI](https://kwakic.github.io/TestingWoocommerceAPI)
+View live QA Portal: [kwakic.github.io/TestingWoocommerceAPI](https://kwakic.github.io/TestingWoocommerceAPI)
 
 ### Workflows
 
@@ -209,8 +228,11 @@ EcommerceAPI/
   └── utils/
 
 tests/
-  ├── customers/
-  └── shared/
+├── customers/    --> entity
+├── products/     --> entity
+├── orders/       --> entity
+├── coupons/      --> entity
+└── shared/
 
 scripts/
   └── setup.sh
@@ -344,12 +366,14 @@ API keys already exist — skipping
 ---
 
 # ✅ Current Capabilities
-- ✔️ GitHub Actions CI pipeline (see ci.yml)
-- ✔️ Public QA Dashboard (GitHub Pages)
+
+- ✔️ Segmented GitHub Actions CI/CD architecture
+- ✔️ Automatically generated GitHub Pages QA Portal
+- ✔️ Metadata-driven entity discovery
 - ✔️ Independent Smoke, Integration, Regression and Performance dashboards
 - ✔️ Allure history preservation
-- ✔️ Allure report publishing (https://kwakic.github.io/TestingWoocommerceAPI)
-- ✔️ Docker-based test execution
+- ✔️ Automated report publication to GitHub Pages
+- ✔️ Docker-based reproducible test execution
 - ✔️ API + Database validation
 
 ---
@@ -362,13 +386,13 @@ API keys already exist — skipping
 ---
 ## 🔗 Quick Links
 
-| Resource | Link |
-|----------|------|
-| 📋 🌐 QA Dashboard | [Live Dashboard](https://kwakic.github.io/TestingWoocommerceAPI) |
-| 🔧 CI Workflows | [GitHub Actions](https://github.com/Kwakic/TestingWoocommerceAPI/actions) |
-| 📖 API Docs | [Customers Tests](./tests/customers/README.md) |
-| ⚙️ Config Guide | [Environment Setup](./docs/ENVIRONMENT_CONFIG_GUIDE.md) |
-| 🚀 CI Architecture | [Enterprise Decisions](./docs/README_CI_ALLURE_GUIDE.md) |
+| Resource           | Link                                                                      |
+|--------------------|---------------------------------------------------------------------------|
+| 📋 🌐 QA Portal    | [Live portal](https://kwakic.github.io/TestingWoocommerceAPI)             |
+| 🔧 CI Workflows    | [GitHub Actions](https://github.com/Kwakic/TestingWoocommerceAPI/actions) |
+| 📖 API Docs        | [Customers Tests](./tests/customers/README.md)                            |
+| ⚙️ Config Guide    | [Environment Setup](./docs/ENVIRONMENT_CONFIG_GUIDE.md)                   |
+| 🚀 CI Architecture | [Enterprise Decisions](./docs/README_CI_ALLURE_GUIDE.md)                  |
 
 ---
 
