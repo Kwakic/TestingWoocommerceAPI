@@ -102,8 +102,11 @@ def _load_config_from_env() -> FrameworkConfig:
 
     This is the ONLY place where os.getenv is allowed.
     """
+
+    ACTIVE_ENV = os.getenv("API_ENV") or os.getenv("ENV", "test")
+
     return FrameworkConfig(
-        ENV=os.getenv("ENV", "test"),
+        ENV=ACTIVE_ENV,
         # Authentication method used by APIClient. Supported: oauth1 | oauth2 | jwt | basic
         AUTH_TYPE=os.getenv("AUTH_TYPE", "oauth1").lower(),
         STRICT_ENTITY_DISCOVERY=env_bool("STRICT_ENTITY_DISCOVERY", False),

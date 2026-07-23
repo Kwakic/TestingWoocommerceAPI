@@ -77,17 +77,19 @@ EcommerceAPI/
 
 The framework supports multiple execution environments. The selected environment determines which API endpoint is used during test execution.
 
-| Context | `API_ENV` | Description |
-|----------|-----------|-------------|
-| Local developer | `test` | Local development using Docker Desktop (`localhost:8888`) |
-| Local developer (no Docker) | `local` | Local environment without Docker |
+| Execution Context | `API_ENV` | Description |
+|-------------------|-----------|-------------|
+| Local development (Docker Desktop) | `test` | Tests run on the host, WordPress runs in Docker (`localhost:8888`) |
+| Local development (no Docker) | `local` | Tests and WordPress both run locally |
 | Tests running inside Docker | `docker` | Uses the Docker network (`wordpress`) |
-| GitHub Actions | `ci` | CI runner communicating with Docker services (`localhost:8080`) |
-| Development server | `dev` | Shared development environment |
-| Staging | `staging` | Staging deployment |
+| GitHub Actions | `ci` | GitHub runner communicates with Docker services (`localhost:8080`) |
+| Shared development server | `dev` | Shared development environment |
+| Staging | `staging` | Pre-production environment |
 | Production | `prod` | Production environment |
 
-## Recommended Usage
+---
+
+## 👉 Recommended Usage
 
 | Where | `API_ENV` |
 |-------|-----------|
@@ -102,7 +104,23 @@ The framework supports multiple execution environments. The selected environment
 
 ---
 
-## Reporting Strategy
+## 🔗 Backward Compatibility
+
+The framework primarily uses the `API_ENV` environment variable to select the execution environment.
+
+For compatibility with older framework versions, the legacy `ENV` variable is still accepted as a fallback.
+
+The active environment is resolved using:
+
+```python
+os.getenv("API_ENV") or os.getenv("ENV", "test")
+```
+
+New projects should always use `API_ENV`.
+
+---
+
+## 📊 Reporting Strategy
 
 Public Allure reports are organized first by **entity** (customers, orders, products, coupons..) and then by **test suite** (smoke, integration, regression, performance).
 
@@ -110,7 +128,7 @@ This mirrors the framework's domain-driven architecture, allowing each microserv
 
 ---
 
-## CI Flow
+## 🔀 CI Flow
 
 ```text
                 Framework

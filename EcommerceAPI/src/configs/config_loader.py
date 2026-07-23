@@ -33,8 +33,8 @@ load_dotenv()
 # =====================================================================
 #  SECTION 1: ENV + MACHINE
 # =====================================================================
-
-ENV = os.getenv("ENV", "test").lower()
+ENV = os.getenv("API_ENV") or os.getenv("ENV", "test")
+ENV = ENV.lower()
 MACHINE = os.getenv("MACHINE", "machine1").lower()
 
 

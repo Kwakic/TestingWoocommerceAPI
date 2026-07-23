@@ -66,15 +66,34 @@ This contract exists to guarantee:
 
 ## 4️⃣ The Single Source of Truth
 
-`_config.py` is the **only place** allowed to:
+`runtime_config.py` is the **single source of truth** for framework configuration.
 
-- Call `os.getenv`
-- Parse booleans / ints
+Framework configuration values must:
+
+- Read environment variables
+- Parse and normalize values
 - Apply defaults
-- Emit the startup configuration banner
-- Initialize runtime metadata (session id, env, CI info)
+- Validate configuration
+- Produce an immutable runtime configuration object
+- Provide a consistent view of framework settings for all plugins and utilities
 
-**If a value affects framework behavior:**
+If a value affects framework behavior:
+
+> It **must** be defined, resolved, and exposed through `runtime_config.py`.
+
+### Compatibility
+
+During the migration to `API_ENV`, the framework continues to accept the legacy `ENV` variable for backward compatibility.
+
+The active environment is resolved using:
+
+```python
+os.getenv("API_ENV") or os.getenv("ENV", "test")
+```
+
+This compatibility lookup exists only to support older configurations and **must not introduce new configuration semantics**.
+
+New framework code should use `API_ENV`.
 
 > It **must** appear in `_config.py`. **No exceptions.**
 

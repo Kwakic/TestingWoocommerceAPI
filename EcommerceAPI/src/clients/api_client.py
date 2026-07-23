@@ -212,7 +212,7 @@ class APIClient:
 
         """
         self.base_url = base_url
-        self.env = os.getenv("ENV", "test").lower()
+        self.env = (os.getenv("API_ENV") or os.getenv("ENV", "test")).lower()
 
         # Allow dependency injection for testing
         self.http_client = HttpClient()

@@ -71,7 +71,8 @@ def test_last_structured_log_set_when_enabled(tmp_path, monkeypatch):
     assert last is None or isinstance(last, str)
     if last:
         # File should exist on disk (handler created it, the file may exist as empty until flushed)
-        assert (tmp_path / "logs" / os.getenv("ENV", "test") / Path(last).name).exists()
+        env = (os.getenv("API_ENV") or os.getenv("ENV", "test")).lower()
+        assert (tmp_path / "logs" / env / Path(last).name).exists()
 
     # Cleanup: unset envs to avoid leaking into other tests
     monkeypatch.delenv("LOG_DIR", raising=False)
