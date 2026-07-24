@@ -168,7 +168,9 @@ def test_customer_response_times(
     # -------------------------------------------------------------------------
 
     if failures == iterations:
-        pytest.fail("All benchmark requests failed.")
+        pytest.fail(
+            "Performance test could not be completed because the API was unreachable."
+        )
 
     if failures:
 

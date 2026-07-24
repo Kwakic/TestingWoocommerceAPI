@@ -1,6 +1,6 @@
 """
-Unified Logging Module for API Test Framework
-=============================================
+Unified Logging Module for API Test Framework (logging engine)
+==============================================================
 
 This module configures two complementary logging targets:
 

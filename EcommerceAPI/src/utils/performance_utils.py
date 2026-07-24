@@ -32,6 +32,7 @@ team to evolve its own performance benchmarks independently.
 from __future__ import annotations
 
 import logging
+import requests
 import time
 from typing import Any, Dict, Optional, Tuple
 from urllib.parse import urlencode
@@ -117,24 +118,24 @@ def measure_get_response_time(
 
         duration = time.perf_counter() - start
 
-        logger.exception(
-            "❌ GET %s failed after %.3fs: %s",
+        logger.error(
+            "❌ GET %s failed\n" "Reason : %s\n" "Elapsed: %.3fs",
             display_endpoint,
-            duration,
             exc,
+            duration,
         )
 
         return duration, None
 
-    except Exception as exc:
+    except (
+        SchemaValidationError,
+        UnexpectedStatusCodeError,
+        APIRequestException,
+        requests.RequestException,
+    ):
 
         duration = time.perf_counter() - start
 
-        logger.exception(
-            "❌ Unexpected error for %s after %.3fs: %s",
-            display_endpoint,
-            duration,
-            exc,
-        )
+        logger.error("Elapsed : %.3fs", duration)
 
         return duration, None

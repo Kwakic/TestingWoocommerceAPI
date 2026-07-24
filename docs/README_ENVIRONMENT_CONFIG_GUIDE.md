@@ -164,22 +164,128 @@ env = os.getenv("API_ENV") or os.getenv("ENV", "test")
 ...
 return module.API_HOSTS[env]
 ```
+---
 
-### Resolution Flow
+### 🔄 Complete Base URL Resolution Flow
 
-```
+The framework resolves the API base URL dynamically at runtime.
+
+When a test creates an API client, the following sequence occurs:
+
+```text
 pytest
-   ↓
-api_base_url fixture
-   ↓
-API_ENV (or ENV fallback)
-   ↓
-config_<service>.py
-   ↓
-API_HOSTS[env]
-   ↓
-Final base URL
+    ↓
+api_base_url fixture (conftest.py)
+    ↓
+Read API_ENV
+(or ENV for backward compatibility)
+    ↓
+Import config_<entity>.py
+(e.g. config_products.py)
+    ↓
+Lookup:
+API_HOSTS[API_ENV]
+    ↓
+Resolve base URL
+    ↓
+Instantiate APIClient(base_url)
+    ↓
+APIClient builds the final request URL
+
+Example:
+
+API_ENV=dev
+        ↓
+config_products.py
+        ↓
+API_HOSTS["dev"]
+        ↓
+http://host.docker.internal:8888/kwakiweb/wp-json/wc/v3/
+        ↓
+POST products
+        ↓
+http://host.docker.internal:8888/kwakiweb/wp-json/wc/v3/products
 ```
+---
+### ➕ Adding a New Environment
+
+Adding a new execution environment requires only two steps.
+
+### Step 1 — Select the environment
+
+Set the desired environment before running pytest.
+
+Example:
+
+```bash
+API_ENV=qa
+```
+
+### Step 2 — Register the environment for the entity
+
+Each entity owns its own environment mapping under its `configs/` directory.
+
+Examples:
+
+```text
+tests/
+├── customers/
+│   └── configs/
+│       └── config_customers.py
+├── products/
+│   └── configs/
+│       └── config_products.py
+├── orders/
+│   └── configs/
+│       └── config_orders.py
+└── coupons/
+    └── configs/
+        └── config_coupons.py
+```
+
+Add the new environment to the appropriate `API_HOSTS` dictionary.
+
+Example (`tests/products/configs/config_products.py`):
+
+```python
+API_HOSTS = {
+    ...
+    "qa": "https://qa.example.com/wp-json/wc/v3/",
+}
+```
+
+If multiple entities expose the same environment, add the mapping to each entity's configuration file.
+
+No changes are required in:
+
+- APIClient
+- HttpClient
+- API classes
+- Helpers
+- Tests
+
+The framework automatically imports the correct `config_<entity>.py` module, looks up `API_HOSTS[API_ENV]`, and passes the resolved base URL to `APIClient`.
+
+> **CI note**
+>
+> If the new environment will also be used in automated pipelines, update the
+> CI environment configuration accordingly.
+>
+> For GitHub Actions in this project, the execution environment is configured
+> by the reusable `configure-ci-env` composite action located at:
+>
+> ```text
+> .github/
+> └── actions/
+>     └── configure-ci-env/
+>         └── action.yml
+> ```
+>
+> All workflows consume this shared action, ensuring a consistent
+> `API_ENV` configuration across Smoke, Integration, Regression,
+> Performance, Contract, Security and Preflight workflows.
+>
+> See **README_CI_ARCHITECTURE.md** for the complete CI workflow design.
 
 ---
 

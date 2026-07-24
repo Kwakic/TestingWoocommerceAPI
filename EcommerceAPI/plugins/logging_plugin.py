@@ -1,5 +1,5 @@
 """
-Pytest logging plugin.
+Pytest logging plugin (pytest integration / orchestration)
 
 This plugin configures logging for pytest runs:
 - Installs a LogRecord factory that enriches records with ContextVar-based fields
@@ -721,4 +721,8 @@ def pytest_runtest_logreport(report):
     if duration_ms is not None:
         extra["duration_ms"] = duration_ms
 
-    logging.getLogger().info("✨ Test completed", extra=extra)
+    if report.passed:
+        logging.getLogger().info(
+            "✅ Test completed",
+            extra=extra,
+        )

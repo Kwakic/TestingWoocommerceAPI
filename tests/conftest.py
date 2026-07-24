@@ -14,6 +14,12 @@ def api_base_url() -> str:
     Controlled via:
       SERVICE=customers|orders|products|...
       API_ENV=test|staging|prod
+
+    This fixture is responsible for:
+     - reading SERVICE
+     - reading API_ENV
+     - importing config_<entity>.py
+     - returning the correct URL from API_HOSTS
     """
 
     service = os.getenv("SERVICE", "customers").lower()

@@ -322,16 +322,61 @@ class APIClient:
 
                 if attempt < self.max_attempts:
                     sleep_time = self.backoff_factor**attempt + uniform(0, 1)
+
                     logger.warning(
-                        f"Retry {attempt} due to exception: {exc}. Sleeping {sleep_time:.3f}s",
+                        "⚠️ Retry %d/%d — %s (waiting %.2fs)",
+                        attempt,
+                        self.max_attempts - 1,
+                        exc.__class__.__name__,
+                        sleep_time,
                         extra={
                             "event": "request.exception",
                             "method": method.upper(),
                             "endpoint": url,
                         },
                     )
+
                     time.sleep(sleep_time)
                     continue
+
+                parsed = urlparse(url)
+                endpoint = parsed.path.split("/wc/v3/")[-1]
+
+                if parsed.query:
+                    endpoint += f"?{parsed.query}"
+
+                logger.error(
+                    "❌ CONNECTION FAILURE\n"
+                    "Environment : %s\n"
+                    "Base URL    : %s\n"
+                    "Method      : %s\n"
+                    "Endpoint    : %s\n"
+                    "Request URL : %s\n"
+                    "Reason      : %s\n"
+                    "Attempts    : %d\n"
+                    "Retries     : %d/%d (exhausted)\n\n"
+                    "%s",
+                    self.env,
+                    self.base_url,
+                    method.upper(),
+                    endpoint,
+                    url,
+                    exc.__class__.__name__,
+                    attempt,
+                    attempt - 1,
+                    self.max_attempts - 1,
+                    exc,
+                    extra={
+                        "event": "request.exception",
+                        "environment": self.env,
+                        "base_url": self.base_url,
+                        "method": method.upper(),
+                        "endpoint": endpoint,
+                        "url": url,
+                        "attempt": attempt,
+                        "retries_used": attempt - 1,
+                    },
+                )
 
                 raise
 

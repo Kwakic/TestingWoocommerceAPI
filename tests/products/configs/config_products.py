@@ -1,7 +1,7 @@
 """
 config_customers.py
 
-Environment-specific host mappings for the CUSTOMERS microservice.
+Environment-specific host mappings for the CUSTOMERS microservice (environment mapping).
 
 Only non-sensitive public endpoint roots should be kept here.
 The shared config loader dynamically imports this module based on SERVICE=customers.
