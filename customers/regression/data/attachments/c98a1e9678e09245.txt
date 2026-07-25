@@ -1,0 +1,2 @@
+INFO     tests.customers.api.test_get_all_customers:test_get_all_customers.py:197 🟢 Mocking list_customers_paginated to return empty list
+INFO     tests.customers.api.test_get_all_customers:test_get_all_customers.py:204 ✅ Successfully mocked empty customers list
