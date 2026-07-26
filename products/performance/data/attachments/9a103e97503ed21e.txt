@@ -1,0 +1,28 @@
+INFO     EcommerceAPI.plugins.allure_autogen:allure_autogen.py:520 📎 Framework configuration attached to Allure
+INFO     tests.products.performance.test_product_response_times:test_product_response_times.py:142 🔁 Products benchmark (5 iterations)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.226s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.227s
+DEBUG    tests.products.performance.test_product_response_times:test_product_response_times.py:169 Run 01 → 0.227s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.073s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.073s
+DEBUG    tests.products.performance.test_product_response_times:test_product_response_times.py:169 Run 02 → 0.073s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.070s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.071s
+DEBUG    tests.products.performance.test_product_response_times:test_product_response_times.py:169 Run 03 → 0.071s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.070s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.071s
+DEBUG    tests.products.performance.test_product_response_times:test_product_response_times.py:169 Run 04 → 0.071s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.068s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.068s
+DEBUG    tests.products.performance.test_product_response_times:test_product_response_times.py:169 Run 05 → 0.068s
+INFO     tests.products.performance.test_product_response_times:test_product_response_times.py:225 ================================================================================
+INFO     tests.products.performance.test_product_response_times:test_product_response_times.py:226 📊 PRODUCTS PERFORMANCE SUMMARY
+INFO     tests.products.performance.test_product_response_times:test_product_response_times.py:227 ================================================================================
+INFO     tests.products.performance.test_product_response_times:test_product_response_times.py:229 Environment : CI
+INFO     tests.products.performance.test_product_response_times:test_product_response_times.py:232 CI          : github_actions (30191349120)
+INFO     tests.products.performance.test_product_response_times:test_product_response_times.py:239 Git         : bc2c1f1 (main)
+INFO     tests.products.performance.test_product_response_times:test_product_response_times.py:245 Average     : 0.102s
+INFO     tests.products.performance.test_product_response_times:test_product_response_times.py:246 P95         : 0.335s
+INFO     tests.products.performance.test_product_response_times:test_product_response_times.py:247 Minimum     : 0.068s
+INFO     tests.products.performance.test_product_response_times:test_product_response_times.py:248 Maximum     : 0.227s
+INFO     tests.products.performance.test_product_response_times:test_product_response_times.py:250 ================================================================================
