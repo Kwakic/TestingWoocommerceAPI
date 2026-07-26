@@ -17,6 +17,21 @@ This module configures two complementary logging targets:
     session_id, test_name, status_code, duration_ms, url, env, etc.
    - If enabled, rotates old structured logs according to KEEP_STRUCTURED_LOGS (default: 3)
 
+
+        logging_plugin.py
+                │
+                ▼
+        custom_logger.py
+                │
+      ┌─────────┴─────────┐
+      ▼                   ▼
+ Console logs       Structured JSONL
+
+The pytest lifecycle is handled by logging_plugin.py.
+
+This module only implements logging behaviour.
+
+
 Environment variables
 ---------------------
 REDACT_SENSITIVE_FIELDS   (default: on)
@@ -43,16 +58,6 @@ Redaction covers:
   - quoted and unquoted patterns
   - "Authorization: Bearer <token>"
 
-This module is safe-by-default and production-ready.
-
-Highlights of fixes applied:
- - Formatters no longer treat ContextVar defaults ("-" / "unknown") as "missing".
-   They accept the values produced by the LogRecord factory (which in turn
-   reads ContextVars). This prevents accidental dropping of nodeid/correlation_id.
- - JSONFormatter always includes GLOBAL_METADATA entries, and preserves sentinel
-   defaults unless you explicitly want to filter them later.
- - configure_logging remains idempotent and creates structured JSONL only when
-   ENABLE_STRUCTURED_LOGS is set.
 """
 
 import os
@@ -65,7 +70,7 @@ from datetime import datetime, timezone
 from typing import Any, Iterable, Optional, Dict, TextIO
 
 from EcommerceAPI.src.utils import log_context
-from EcommerceAPI.src.configs.config_loader import ENV
+from EcommerceAPI.src.configs.runtime_config import get_config
 from EcommerceAPI.src.utils.date_timestamp_utils import to_iso_utc
 from EcommerceAPI.src.utils.team_discovery import extract_team_from_nodeid
 
@@ -73,7 +78,7 @@ from EcommerceAPI.src.utils.team_discovery import extract_team_from_nodeid
 log = logging.getLogger(__name__)
 
 # ==============================================================================================
-# Advertised exports for external consumers (conftest / CI glue)
+# Shared logging state for external consumers (conftest / CI glue)
 # ==============================================================================================
 # LAST_STRUCTURED_LOG: when configure_logging() creates a structured JSONL file, this is set to its path.
 LAST_STRUCTURED_LOG: Optional[str] = None
@@ -86,12 +91,20 @@ def attach_global_logging_metadata(
     env: str, session_id: str, ci_info: dict, git_info: dict
 ) -> None:
     """
-    Attach shared metadata that will be injected into every structured JSON log entry.
+    Store metadata that will be included in every structured log entry.
 
-    Called once from conftest after configure_logging to populate metadata included in every structured log entry.
+    This information describes the current test session rather than an
+    individual log message.
 
-    This should be called once after configure_logging() so JSONFormatter includes these keys.
-    Example keys added: env, session_id, ci_provider, ci_job_id, is_ci, git_commit, git_branch.
+    Typical examples include:
+
+    - environment
+    - session ID
+    - Git commit
+    - Git branch
+    - CI provider
+
+    The pytest logging plugin calls this function once during startup.
     """
     GLOBAL_METADATA.update(
         {
@@ -104,7 +117,7 @@ def attach_global_logging_metadata(
 
 
 # ----------------------------------------------------------------------
-# Module environment toggles (import-time defaults, adjustable at runtime)
+# Module environment toggles - (import-time defaults, adjustable at runtime)
 # ----------------------------------------------------------------------
 _REDACT_ENABLED = os.getenv("REDACT_SENSITIVE_FIELDS", "1").lower() in (
     "1",
@@ -161,19 +174,22 @@ DEFAULT_SENSITIVE_KEYS = {
 
 
 # ----------------------------------------------------------------------
-# Recursive redaction helper
+# Sensitive data redaction
 # ----------------------------------------------------------------------
 def redact_obj(obj: Any, sensitive_keys: Optional[Iterable[str]] = None) -> Any:
     """
-    Recursively redact sensitive values in dict/list/tuple and redact strings via regex.
+    Remove sensitive information from objects before they are logged.
 
-    Behavior summary:
-    - If redaction is disabled via is_redaction_enabled(), returns obj unchanged.
-    - If obj is a dict -> returns a new dict with sensitive keys masked ('***').
-    - If obj is a list/tuple -> returns a new sequence with elements redacted.
-    - If obj is a str -> performs regex-based redaction for common shapes.
-    - Otherwise returns obj unchanged.
-    - Only narrow exceptions are caught (TypeError, ValueError, AttributeError) to avoid masking bugs.
+    The function works with dictionaries, lists, tuples and strings.
+
+    Examples of values that are automatically hidden include:
+
+    - passwords
+    - API keys
+    - OAuth tokens
+    - Bearer tokens
+
+    If redaction is disabled, the original object is returned unchanged.
     """
     if not is_redaction_enabled():
         return obj
@@ -250,7 +266,7 @@ def redact_obj(obj: Any, sensitive_keys: Optional[Iterable[str]] = None) -> Any:
 
 
 # ----------------------------------------------------------------------
-# Human log format uses nodeid_block and env_block computed by CustomFormatter
+# Human log format (Console logging format) uses nodeid_block and env_block computed by CustomFormatter
 # ----------------------------------------------------------------------
 
 LOG_FORMAT = (
@@ -268,13 +284,19 @@ LOG_DATEFMT = "%H:%M:%S"
 # ----------------------------------------------------------------------
 class CustomFormatter(logging.Formatter):
     """
-    Console formatter with nodeid/env/correlation blocks and optional emoji stripping.
+    Format log messages for humans.
 
-    Human-friendly formatter.
-    - Adds nodeid_block, correlation_block, and env_block to the record for use in LOG_FORMAT.
-    - Respects record.suppress_nodeid.
-    - Performs message redaction when enabled.
-    - Optionally strips emojis when DISABLE_LOG_EMOJIS is set.
+    This formatter prepares console output shown during local test
+    execution.
+
+    It automatically adds useful context such as:
+
+    - test name
+    - environment
+    - correlation ID
+
+    It also performs message redaction and can optionally remove emojis
+    for environments that do not display Unicode well.
     """
 
     SENSITIVE_KEYS = DEFAULT_SENSITIVE_KEYS
@@ -386,21 +408,27 @@ class CustomFormatter(logging.Formatter):
 
 
 # ----------------------------------------------------------------------
-# JSON Formatter for structured logs (includes env and session_id if set)
+# Structured JSON formatter (includes env and session_id if set)
 # ----------------------------------------------------------------------
 class JSONFormatter(logging.Formatter):
     """
-    - Structured JSON formatter that emits one JSON object per line.
-    - Respects is_include_payloads() to optionally omit huge payload bodies.
-    - Uses narrow exception handling for serialization fallbacks.
+    Format log records as structured JSON.
 
-    Includes known extras: method, endpoint, status, duration, event, payload, env, session_id.
-    Skips nodeid/correlation_id when they are sentinel defaults to avoid noise.
+    Unlike the console formatter, this formatter is intended for tools
+    rather than people.
 
-    Error handling:
-      - Be explicit about exceptions when converting timestamp and when attempting json.dumps on values.
-      - For JSON serialization of additional fields, catch TypeError/ValueError (the common cases) and fall back to
-        str(val).
+    Each log message becomes one JSON object containing information such
+    as:
+
+    - timestamp
+    - log level
+    - test name
+    - correlation ID
+    - environment
+    - CI metadata
+
+    These logs are useful for CI pipelines, debugging and automated
+    analysis.
     """
 
     def __init__(
@@ -550,29 +578,28 @@ class JSONFormatter(logging.Formatter):
 
 
 # ==============================================================================================
-# Structured logging: per-team JSONL routing
+# Per-team structured logging
 # ==============================================================================================
 class TeamRoutingJSONLHandler(logging.Handler):
     """
-    Structured JSONL logging handler that routes log records into per-team files.
+    Write structured logs into team-specific files.
 
-    Design:
-      - Team is derived dynamically from record.nodeid
-      - One JSONL file per team per pytest run
-      - No hardcoded teams
-      - Parallel-safe (file-per-team)
+    Instead of sending every structured log to a single file, this handler
+    creates one JSONL file per team.
 
-    File layout:
-      reports/
-        <team>/
-          logs/
-            test/
-              test_debug_structured_<timestamp>.jsonl
+    Example:
 
-    Notes:
-      - Streams are opened lazily to avoid creating empty files when structured logging is disabled.
-      - LAST_STRUCTURED_LOG is set lazily when the first stream for a team is created.
-      - Handler.close() closes all open streams so long-running processes don't leak file handles.
+    reports/
+        customers/
+            local/
+                test_debug_structured_....
+
+        products/
+            local/
+                test_debug_structured_....
+
+    This keeps logs organised and allows teams to analyse only the
+    information relevant to them.
     """
 
     def __init__(self, base_dir: Path, formatter: logging.Formatter):
@@ -650,13 +677,15 @@ class TeamRoutingJSONLHandler(logging.Handler):
         """
         global LAST_STRUCTURED_LOG
 
+        env = get_config().ENV
+
         if team not in self._streams:
             logs_dir = (
                 self.base_dir
                 # / "logs"
                 / team
                 # / "logs"
-                / ENV  # ✅ dynamic environment folder
+                / env  # ✅ dynamic environment folder
             )
 
             # Ensure directory exists
@@ -724,14 +753,16 @@ class TeamRoutingJSONLHandler(logging.Handler):
 # ======================================================================================
 def _resolve_project_root() -> Path:
     """
-    Attempt to locate the repository/project root by searching upward for repo markers:
-    - .git
-    - pyproject_root.toml
-    - setup.cfg
-    - README.md
+    Locate the repository root.
 
-    If none found, fall back to a reasonably high parent (parents[3]) or Path.cwd().
-    This prevents basing paths under the EcommerceAPI package directory.
+    The framework searches parent directories until it finds a recognised
+    project marker such as:
+
+    - .git
+    - README.md
+    - setup.cfg
+
+    The returned path is used as the base directory for generated reports.
     """
     p = Path(__file__).resolve()
     for parent in p.parents:
@@ -754,18 +785,17 @@ def _resolve_project_root() -> Path:
 # ==============================================================================================
 def configure_logging() -> logging.Logger:
     """
-    Configure structured JSON logging and console formatting.
+    Configure the framework logging engine.
 
-    Behavior:
-    - Structured JSONL logging is enabled only when ENABLE_STRUCTURED_LOGS is truthy.
-    - Structured logs are routed PER-TEAM by TeamRoutingJSONLHandler.
-    - This function NEVER creates env- or team-specific directories.
-      Directory layout is owned exclusively by the handler.
-    - Function is idempotent and pytest-reuse safe.
-    - Console logging remains unchanged and human-readable.
+    This function prepares both logging outputs used by the framework:
 
-    Note: per-team JSON files are created lazily when the handler first writes for a team.
-    LAST_STRUCTURED_LOG is set at that time.
+    - human-readable console logging
+    - structured JSON logging
+
+    It is safe to call multiple times and creates only the logging
+    components required by the current configuration.
+
+    The pytest plugin calls this function during framework startup.
     """
     global LAST_STRUCTURED_LOG
 
@@ -833,8 +863,7 @@ def configure_logging() -> logging.Logger:
     # Structured JSONL logging (PER-TEAM routing only)
     # ==================================================================
     if enable_structured:
-        # Base directory MUST be the reports root.
-        # The handler is solely responsible for subdirectories.
+        # #The handler owns the directory structure below the reports folder.
         override = os.getenv("LOG_DIR")
         if override and override.strip():
             base_dir = Path(override).resolve()
@@ -857,8 +886,7 @@ def configure_logging() -> logging.Logger:
         handler.name = handler_name
         root.addHandler(handler)
 
-        # Backward-compat placeholder (intentionally unset here)
-        # Actual files are created lazily by the handler per team.
+        # Structured log files are created lazily when the first record for a team is written.
         LAST_STRUCTURED_LOG = None
     else:
         LAST_STRUCTURED_LOG = None

@@ -43,7 +43,9 @@ def pytest_runtest_makereport(item, call):
     try:
         import allure
         from EcommerceAPI.src.utils.team_discovery import extract_team_from_nodeid
-        from EcommerceAPI.src.configs.config_loader import ENV
+        from EcommerceAPI.src.configs.runtime_config import get_config
+
+        ENV = get_config().ENV
 
         team = extract_team_from_nodeid(item.nodeid)
         if team:

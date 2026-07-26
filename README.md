@@ -65,6 +65,50 @@ make run
 
 👉 That’s it. No manual setup required.
 
+The default execution environment is `API_ENV=test`, which runs the
+tests from the host machine against the Docker-based WordPress instance.
+---
+
+## 🌍 Selecting the Execution Environment
+
+The framework supports multiple execution environments through the
+`API_ENV` environment variable.
+
+| Environment | Typical use |
+|------------|-------------|
+| `test` | Local development (host → Docker WordPress) |
+| `docker` | Tests running inside Docker |
+| `ci` | GitHub Actions |
+| `dev` | Shared development server |
+| `staging` | Pre-production |
+| `prod` | Production |
+
+### Examples
+
+Run against the local Docker environment (default):
+
+```bash
+API_ENV=test pytest
+```
+
+Run against a staging server:
+
+```bash
+API_ENV=staging pytest
+```
+
+Run against a production environment:
+
+```bash
+API_ENV=prod pytest
+```
+
+The framework automatically resolves the correct API endpoint from the
+entity configuration.
+
+For more details, see the
+**Environment & Configuration Guide**.
+
 ---
 ## 🔄 CI/CD Workflow Architecture
 
@@ -379,7 +423,6 @@ API keys already exist — skipping
 ---
 
 # 🛠️ Future Enhancements
-- Multi-environment support (staging/prod)
 - Performance baselines & trend analysis
 - Load testing extensions
 

@@ -1,71 +1,49 @@
 # root/tests/conftest.py
 import os
-import importlib
+
 import pytest
 
 from pathlib import Path
+
+from EcommerceAPI.src.configs.config_loader import get_api_host
 
 
 @pytest.fixture(scope="session")
 def api_base_url() -> str:
     """
-    Global API shared URL resolver.
+    Return the API base URL for the current test session.
 
-    Controlled via:
-      SERVICE=customers|orders|products|...
-      API_ENV=test|staging|prod
+    The URL is resolved automatically from:
 
-    This fixture is responsible for:
-     - reading SERVICE
-     - reading API_ENV
-     - importing config_<entity>.py
-     - returning the correct URL from API_HOSTS
+    - the active service
+    - the current API_ENV
+
+    The returned value is shared by all tests in the session.
     """
 
-    service = os.getenv("SERVICE", "customers").lower()
-    env = os.getenv("API_ENV") or os.getenv("ENV", "test")
-    env = env.lower()
-
-    service_modules = {
-        "customers": "tests.customers.configs.config_customers",
-        "orders": "tests.orders.configs.config_orders",
-        "products": "tests.products.configs.config_products",
-        "coupons": "tests.coupons.configs.config_coupons",
-    }
-
-    if service not in service_modules:
-        raise RuntimeError(
-            f"Unknown SERVICE='{service}'. " f"Valid values: {list(service_modules)}"
-        )
-
-    module = importlib.import_module(service_modules[service])
-
-    try:
-        return module.API_HOSTS[env]
-    except KeyError:
-        raise RuntimeError(
-            f"ENV='{env}' not defined in {service} API_HOSTS. "
-            f"Available: {list(module.API_HOSTS.keys())}"
-        )
+    return get_api_host(os.getenv("SERVICE", "customers"))
 
 
 def pytest_collection_modifyitems(config, items):
     """
-    Automatically apply domain markers based on test folder.
+    Automatically assign entity markers to collected tests.
 
-    Because the tests are already organized by folder/domain pytest can automatically apply markers based on folder
-    path.This reduces duplication and prevents mistakes.
+    Tests are organised by directory, so the framework can determine the
+    appropriate marker without requiring every test file to declare it
+    manually.
 
-    If a test file is inside: tests/customers/ pytest automatically adds:
-        pytest.mark.customers
+    For example:
 
-    Example:
-        tests/customers/ → pytest.mark.customers
-        tests/orders/    → pytest.mark.orders
-        tests/shared/    → pytest.mark.shared
+        tests/customers/  → @pytest.mark.customers
+        tests/products/   → @pytest.mark.products
+        tests/orders/     → @pytest.mark.orders
+
+    This keeps the test suite consistent and avoids duplicated markers
+    throughout the project.
     """
 
     for item in items:
+        # Derive markers from the test's location in the repository.
         path = Path(str(item.fspath))
 
         parts = path.parts

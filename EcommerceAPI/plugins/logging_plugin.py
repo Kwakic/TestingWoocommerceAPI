@@ -1,14 +1,34 @@
 """
-Pytest logging plugin (pytest integration / orchestration)
+Integrate the framework's logging system into the pytest lifecycle.
 
-This plugin configures logging for pytest runs:
-- Installs a LogRecord factory that enriches records with ContextVar-based fields
-  (nodeid, test_name, correlation_id) and an `env` attribute.
-- Performs early redaction of rendered messages.
-- Coordinates console formatting (CustomFormatter) and optional structured JSONL output
-  (configured via configure_logging).
-- Collects session metadata (git/CI/session id) and exposes it via a fixture.
-- Ensures clean teardown by restoring original LogRecord factory and closing handlers.
+This plugin is responsible for configuring logging before any tests run
+and cleaning everything up when the test session finishes.
+
+Responsibilities:
+- Load logging-related configuration.
+- Install the custom LogRecord factory.
+- Configure console and structured JSON logging.
+- Populate logging ContextVars for each test.
+- Collect session metadata (environment, Git, CI).
+- Restore Python's logging state during pytest shutdown.
+
+This module acts as the bridge between pytest and the logging engine.
+
+Architecture:
+
+        pytest
+           │
+           ▼
+    logging_plugin.py
+           │
+           ▼
+     custom_logger.py
+           │
+           ▼
+    Console / JSONL logs
+
+The logging implementation lives in custom_logger.py.
+This plugin only coordinates when and how that implementation is used.
 
 """
 
@@ -24,7 +44,8 @@ from typing import Optional
 import pytest
 from dotenv import load_dotenv
 
-from EcommerceAPI.src.configs.config_loader import ENV
+from EcommerceAPI.src.configs.runtime_config import get_config
+
 from EcommerceAPI.src.utils import log_context
 from EcommerceAPI.src.utils.custom_logger import (
     is_redaction_enabled,
@@ -51,24 +72,31 @@ from EcommerceAPI.src.configs.runtime_metadata import SESSION_METADATA
 log = logging.getLogger(__name__)
 
 # --------------------------------------------------------------------------------------
-# Session metadata collection (git / CI info)
-# --------------------------------------------------------------------------------------
-
-# --------------------------------------------------------------------------------------
-# LogRecord factory capture and override
+# Preserve Python's original LogRecord factory
 # --------------------------------------------------------------------------------------
 _ORIGINAL_RECORD_FACTORY = logging.getLogRecordFactory()
 
 
 def _record_factory(*args, **kwargs):
     """
-    Custom LogRecord factory used for the pytest run.
+    Create enriched log records for every logging call.
 
-    - Delegates to the original factory
-    - Injects ContextVar-based fields when present (test_nodeid, correlation_id)
-    - Adds an `env` attribute to every record
-    - Performs EARLY redaction of the fully formatted message (record.getMessage())
-      to ensure sensitive data does not reach handlers.
+    Python normally creates a LogRecord whenever code calls
+    logger.info(), logger.error(), and similar methods.
+
+    This custom factory extends those records with additional
+    framework information, including:
+
+    - current test nodeid
+    - test name
+    - correlation ID
+    - active environment
+
+    It also performs early redaction of sensitive information
+    before any logging handler receives the message.
+
+    Every log message generated during a pytest session passes
+    through this function.
     """
     record = _ORIGINAL_RECORD_FACTORY(*args, **kwargs)
 
@@ -92,7 +120,7 @@ def _record_factory(*args, **kwargs):
         record.correlation_id = corr
 
     # environment tag for convenience in handlers/formatters
-    record.env = ENV
+    record.env = get_config(reload=True).ENV
 
     # Only catch narrow exceptions from formatting/stringification.
     if is_redaction_enabled():
@@ -112,12 +140,17 @@ def _record_factory(*args, **kwargs):
 
 
 # --------------------------------------------------------------------------------------
-# Utility: locate .env by walking upward from pytest root
+# Locate the project's .env file (walking upward from pytest root)
 # --------------------------------------------------------------------------------------
 def _locate_dotenv(start: Path) -> Optional[Path]:
     """
-    Search upward from `start` for the first .env file and return its Path, or None.
-    This helps make running pytest from different folders deterministic.
+    Locate the nearest .env file.
+
+    Starting from the pytest root directory, the framework walks
+    up the directory tree until it finds a .env file.
+
+    This allows pytest to be executed from different folders
+    without changing configuration behaviour.
     """
     for p in [start] + list(start.parents):
         candidate = p / ".env"
@@ -165,23 +198,27 @@ def pytest_addoption(parser):
 
 
 # ======================================================================================
-# PYTEST CONFIGURE — the canonical startup sequence (runs once at startup)
+# Configure logging before test collection starts (runs once at startup)
 # ======================================================================================
 @pytest.hookimpl(tryfirst=True)
 def pytest_configure(config):
     """
-    Pytest configure hook executed at startup.
+    Configure the framework's logging system before any tests run.
 
-    Sequence:
-      - Resolve pytest rootdir and load `.env` (if present). We do not override existing env vars
-        by default (load_dotenv override=False) to avoid surprising callers who set CI envs.
-      - Resolve CLI/env toggles (CLI takes precedence where applicable).
-      - Apply redaction and payload toggles so factory/formatters observe them.
-      - Install custom LogRecord factory.
-      - Apply CustomFormatter to console StreamHandlers.
-      - Call configure_logging() to add structured handlers if enabled.
-      - Attach GLOBAL_METADATA for structured logs.
-      - Optionally create an auto HTML report path.
+    This hook is executed once at the beginning of every pytest
+    session.
+
+    It prepares the complete logging environment by:
+
+    1. Loading environment configuration.
+    2. Applying logging options.
+    3. Installing the custom LogRecord factory.
+    4. Configuring console logging.
+    5. Enabling structured JSON logging when requested.
+    6. Registering session metadata.
+
+    After this hook finishes, every test uses the same logging
+    configuration.
     """
     # Resolve rootdir safely (fall back to cwd in odd contexts)
     try:
@@ -459,7 +496,7 @@ def pytest_configure(config):
     # 8) Attach GLOBAL_METADATA (git/CI/session) for structured logs; keep handling narrow for malformed metadata
     try:
         attach_global_logging_metadata(
-            env=ENV,
+            env=get_config(reload=True).ENV,
             session_id=SESSION_METADATA["session_id"],
             ci_info={
                 "ci_provider": SESSION_METADATA["ci"]["provider"],
@@ -484,7 +521,8 @@ def pytest_configure(config):
             exc_info=True,
         )
 
-    # Remove the temporary startup handler now that we've emitted the startup lines.
+    # Remove the temporary startup handler once framework initialization is complete.Keeping it would duplicate
+    # console output because the root logger already owns the permanent handlers.
     # NOTE!!! If you remove the block below, it will generate logs twice!!!
     try:
         if temp_startup_handler is not None:
@@ -498,14 +536,19 @@ def pytest_configure(config):
         )
 
 
-# ----------------------------
-# Pytest teardown / unconfigure
-# ----------------------------
+# -------------------------------------------------------------------------
+# Pytest teardown / unconfigure.Restore Python logging after pytest exits
+# -------------------------------------------------------------------------
 @pytest.hookimpl(tryfirst=True)
 def pytest_unconfigure(config):
     """
-    Restore logging state modified during pytest_configure to avoid leaking handles or
-    altering the shared logging behavior after pytest completes.
+    Restore Python's original logging configuration.
+
+    The plugin modifies Python's logging system while pytest
+    is running.
+
+    This hook restores the original state so subsequent Python
+    code is unaffected.
 
     - Restore the original LogRecord factory.
     - Remove any temporary startup handler that might remain.
@@ -573,7 +616,12 @@ def pytest_unconfigure(config):
 @pytest.hookimpl(tryfirst=True)
 def pytest_collection_modifyitems(session, config, items):
     """
-    Discover teams dynamically from collected test nodeids.
+    Assign each collected test to its owning team.
+
+    The team is derived automatically from the test's nodeid.
+
+    The information is later used by structured logging,
+    reporting and CI summaries.
 
     Effects:
       - Attaches `item.team`
@@ -596,18 +644,20 @@ def pytest_collection_modifyitems(session, config, items):
 @pytest.hookimpl(hookwrapper=True, tryfirst=True)
 def pytest_runtest_protocol(item):
     """
-    Ensure ContextVars are set as early as possible for the whole test lifecycle so
-    the record factory and formatters can see nodeid/correlation_id for any logs emitted
-    during setup/call/teardown.
+    Prepare logging context for a single test.
 
-    We set tokens here and reset them after the protocol completes.
+    Before pytest starts executing a test, this hook stores
+    information about that test in ContextVars.
 
-    Notes on exception handling:
-      - Reading a ContextVar may raise LookupError when it's not set for this context;
-        we catch LookupError only.
-      - Resetting a ContextVar with an invalid token raises ValueError; we catch ValueError
-        only and log a debug message so failures are visible for triage.
-      - We avoid broad except Exception: blocks to reduce masking real errors.
+    Those values are automatically attached to every log
+    message generated during the test, making it possible
+    to identify:
+
+    - which test produced the log
+    - the correlation ID
+    - the active nodeid
+
+    The ContextVars are cleared again when the test finishes.
     """
     # Defensive: re-apply CustomFormatter to StreamHandlers at test start.
     # This helps when pytest or other plugins add/replace handlers after pytest_configure.
@@ -676,8 +726,16 @@ def pytest_runtest_protocol(item):
 @pytest.fixture(scope="session")
 def session_metadata():
     """
-    Return a dictionary with session metadata (git commit, branch, CI provider, session id).
-    This fixture is session-scoped and intended for tests or reporting utils that need environment metadata.
+    Return metadata describing the current pytest session.
+
+    The returned dictionary contains information such as:
+
+    - session ID
+    - Git commit
+    - Git branch
+    - CI provider
+
+    Useful for reporting and diagnostics.
     """
     return SESSION_METADATA
 
@@ -688,13 +746,20 @@ def session_metadata():
 @pytest.hookimpl(tryfirst=True)
 def pytest_runtest_logreport(report):
     """
-    Called for each test report phase. For the 'call' phase:
-      - compute a robust duration_ms and attach it to the report object (when possible)
-      - emit one structured log record with event=test_result, outcome and duration_ms
-    Notes:
-      - Avoid passing keys in `extra` that collide with LogRecord attributes (e.g. 'test_name', 'nodeid',
-        'correlation_id', 'env', etc.) — logging.makeRecord will raise KeyError if you do.
-      - The LogRecord factory already populates record.nodeid and record.test_name for formatters to use.
+    Write the final structured log entry for each executed test.
+
+    When the test call phase finishes, the plugin records:
+
+    - outcome
+    - execution time
+    - event type
+
+    This creates one structured summary record per executed test.
+
+    Implementation note:
+    Avoid passing fields that already belong to Python's
+    LogRecord object, because the custom LogRecord factory
+    adds those automatically.
     """
     if report.when != "call":
         return

@@ -107,7 +107,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-ENV = os.getenv("ENV", "test").lower()
+ENV = (os.getenv("API_ENV") or os.getenv("ENV", "test")).lower()
 MACHINE = os.getenv("MACHINE", "machine1").lower()
 
 __all__ = ["ENV", "MACHINE"]
@@ -131,7 +131,9 @@ Example usage in a service helper:
 
 ```python
 from tests.customers.configs.config_customers import API_HOSTS
-from EcommerceAPI.src.configs import ENV
+from EcommerceAPI.src.configs.runtime_config import get_config
+
+ENV = get_config().ENV
 
 BASE_URL = API_HOSTS.get(ENV, "")
 ```

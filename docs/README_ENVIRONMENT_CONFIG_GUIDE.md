@@ -24,14 +24,42 @@ Configuration always follows this path:
 
 ```
 .env / CI / shell
-   ↓
-plugins/_config.py
-   ↓
-framework behavior
+        │
+        ▼
+runtime_config.py
+        │
+        ▼
+config_loader.py
+        │
+        ├── APIClient
+        ├── Logging
+        ├── Plugins
+        └── Tests
 ```
 
 **You do not access configuration programmatically via helper functions.**
 
+---
+
+## 📑 Configuration Responsibilities
+
+`runtime_config.py`
+    Owns framework runtime configuration.
+
+`config_loader.py`
+    Resolves entity configuration.
+
+`config_<entity>.py`
+    Stores public API endpoint mappings.
+
+`.env`
+    Stores secrets and environment-specific values.
+
+`runtime_metadata.py`
+    Stores runtime session information.
+
+`log_context.py`
+    Stores per-test logging context.
 ---
 
 ## 3️⃣ Programmatic Access (Correct Way)
@@ -48,17 +76,17 @@ These patterns are **invalid** and **intentionally unsupported**:
 
 ### ✅ Correct access pattern
 
-- **Plugins** import resolved constants directly from `_config.py`
+- **Plugins** import resolved constants directly from `runtime_config.py`
 - **Tests** rely on fixtures and plugin behavior
 
 **Example (plugin code):**
 
-```python
-from EcommerceAPI.plugins._config import FAIL_ON_EMPTY_LIST
+Plugins should use the framework configuration APIs or helper functions
+provided by the framework rather than reading environment variables
+directly.
 
-if FAIL_ON_EMPTY_LIST:
-    ...
-```
+Tests should rely on fixtures and plugin behaviour rather than accessing
+configuration themselves.
 
 **There is no reload.**
 **There is no mutation.**
@@ -95,15 +123,27 @@ echo $FAIL_ON_EMPTY_LIST
 
 Only useful to verify the shell, **not** framework behavior.
 
+```
+Framework configuration
+Environment information
+Session ID
+Logging configuration
+```
+
+If the banner differs from your expectation, the problem is almost always in the environment variables supplied before pytest started.
+
 ---
 
 ## 5️⃣ Runtime Metadata vs Configuration (Common Confusion)
 
-| Type | Example | Where it lives |
-|------|---------|----------------|
-| Configuration | `FAIL_ON_EMPTY_LIST` | `_config.py` |
-| Runtime metadata | session id | runtime metadata module |
-| Logging context | nodeid | `log_context.py` |
+
+| Type | Owner |
+| :--- | :--- |
+| Runtime configuration | runtime_config.py |
+| Service configuration | config_loader.py + config_\.py |
+| Runtime metadata | runtime_metadata.py |
+| Logging context | log_context.py |
+
 
 > **If it changes during execution → not config.**
 
@@ -137,7 +177,16 @@ The `configs/` folder may contain:
 | CI detection logic |
 | Behavior flags |
 
-**All of that belongs in `_config.py`.**
+**All of that belongs in `runtime_config.py`.**
+
+
+Only contains:
+
+- API_HOSTS
+- endpoint mappings
+- public constants
+
+> Environment variable parsing belongs in runtime_config.py, not in entity configuration files.
 
 ---
 
@@ -174,37 +223,24 @@ When a test creates an API client, the following sequence occurs:
 
 ```text
 pytest
-    ↓
-api_base_url fixture (conftest.py)
-    ↓
-Read API_ENV
-(or ENV for backward compatibility)
-    ↓
-Import config_<entity>.py
-(e.g. config_products.py)
-    ↓
-Lookup:
+    │
+    ▼
+runtime_config.py
+    │
+    ▼
+config_loader.py
+    │
+    ▼
+detect_service()
+    │
+    ▼
+load_service_config()
+    │
+    ▼
 API_HOSTS[API_ENV]
-    ↓
-Resolve base URL
-    ↓
-Instantiate APIClient(base_url)
-    ↓
-APIClient builds the final request URL
-
-Example:
-
-API_ENV=dev
-        ↓
-config_products.py
-        ↓
-API_HOSTS["dev"]
-        ↓
-http://host.docker.internal:8888/kwakiweb/wp-json/wc/v3/
-        ↓
-POST products
-        ↓
-http://host.docker.internal:8888/kwakiweb/wp-json/wc/v3/products
+    │
+    ▼
+APIClient(base_url)
 ```
 ---
 ### ➕ Adding a New Environment
@@ -285,6 +321,8 @@ The framework automatically imports the correct `config_<entity>.py` module, loo
 > `API_ENV` configuration across Smoke, Integration, Regression,
 > Performance, Contract, Security and Preflight workflows.
 >
+> The reusable configure-ci-env composite action is the single place where GitHub Actions sets framework-specific environment variables such as API_ENV. All workflows reuse this action to ensure consistent configuration.
+>
 > See **README_CI_ARCHITECTURE.md** for the complete CI workflow design.
 
 ---
@@ -306,6 +344,8 @@ API_HOSTS = {
     "ci": "http://localhost:8080/wp-json/wc/v3/",
 }
 ```
+
+> Each entity owns its own `config_<entity>.py` file, allowing services to evolve independently while using the same configuration load
 
 ---
 
@@ -438,7 +478,7 @@ AUTO_ALLURE_REPORT=true
 ## 8️⃣ CI Usage (Recap)
 
 1. **CI supplies environment variables**
-2. **`_config.py` resolves them once**
+2. **`runtime_config.py` resolves them once**
 3. **Plugins consume resolved values**
 4. **Logs show what was used**
 
@@ -458,10 +498,33 @@ AUTO_ALLURE_REPORT=true
 
 ## 🔟 Final Reminder
 
-> **Configuration is static and declarative.**
-> **Runtime state is dynamic and contextual.**
+Framework configuration is resolved once during startup.
 
-**Mixing them causes bugs — the framework prevents that by design.**
+After startup:
+
+✔ Configuration remains immutable.
+
+✔ Runtime metadata evolves during execution.
+
+✔ Logging context changes per test.
+
+Keeping these concerns separate makes the framework predictable,
+testable and easy to maintain.
+---
+
+##  ⚖️ Single Source of Truth
+
+`runtime_config.py`
+    Framework runtime configuration
+
+`config_loader.py`
+    Service configuration
+
+`config_<entity>.py`
+    Public endpoint mappings
+
+Everything else consumes these components rather than
+reading environment variables directly.
 
 ---
 

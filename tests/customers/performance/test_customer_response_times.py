@@ -46,7 +46,7 @@ import statistics
 
 import pytest
 
-from EcommerceAPI.src.configs.config_loader import ENV
+from EcommerceAPI.src.configs.runtime_config import get_config
 from EcommerceAPI.src.utils.performance_utils import measure_get_response_time
 
 logger = logging.getLogger(__name__)
@@ -54,6 +54,8 @@ logger = logging.getLogger(__name__)
 pytestmark = [
     pytest.mark.performance,
 ]
+
+ENV = get_config().ENV
 
 # ==============================================================================
 # Entity benchmark configuration.

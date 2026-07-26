@@ -1,6 +1,8 @@
 """
 Centralized framework runtime configuration.
 
+It owns runtime configuration.
+
 This module is the SINGLE source of truth for all framework behavior flags.
 
 Responsibilities:
@@ -46,6 +48,7 @@ class FrameworkConfig:
 
     # Runtime
     ENV: str
+    MACHINE: str
 
     # Authentication
     AUTH_TYPE: str
@@ -88,7 +91,17 @@ def config_to_safe_dict(cfg: FrameworkConfig) -> dict:
 
 
 # ============================================================================
-# 🔄 Internal config cache
+# 🔄 Configuration cache
+# ============================================================================
+# The framework reads environment variables only once at startup and stores
+# the resolved configuration here.
+#
+# Every subsequent call to get_config() returns the cached configuration
+# instead of reading the operating system environment again.
+#
+# This guarantees that every component in the framework uses exactly the
+# same configuration throughout the entire test session.
+# ============================================================================
 # ============================================================================
 _config_cache: Optional[FrameworkConfig] = None
 
@@ -98,15 +111,24 @@ _config_cache: Optional[FrameworkConfig] = None
 # ============================================================================
 def _load_config_from_env() -> FrameworkConfig:
     """
-    Resolve environment variables into a typed FrameworkConfig object.
+    Create the framework configuration from the current environment.
 
-    This is the ONLY place where os.getenv is allowed.
+    This is the only place in the framework that reads environment variables
+    directly.
+
+    Every configuration value (environment, logging options, authentication,
+    reporting, etc.) is collected here and converted into a strongly typed
+    FrameworkConfig object.
+
+    The resulting object becomes the single source of truth for the rest of
+    the framework.
     """
 
     ACTIVE_ENV = os.getenv("API_ENV") or os.getenv("ENV", "test")
 
     return FrameworkConfig(
         ENV=ACTIVE_ENV,
+        MACHINE=os.getenv("MACHINE", "machine1").lower(),
         # Authentication method used by APIClient. Supported: oauth1 | oauth2 | jwt | basic
         AUTH_TYPE=os.getenv("AUTH_TYPE", "oauth1").lower(),
         STRICT_ENTITY_DISCOVERY=env_bool("STRICT_ENTITY_DISCOVERY", False),
