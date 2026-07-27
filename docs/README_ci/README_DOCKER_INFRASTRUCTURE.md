@@ -1,767 +1,236 @@
-# 🔥 COMMANDS FOR DOCKER
+# 🐳 Docker Infrastructure — TestingWoocommerceAPI
+
+This document describes the Docker layer of the [TestingWoocommerceAPI](https://github.com/Kwakic/TestingWoocommerceAPI) framework: what it spins up, how it's orchestrated, and the commands you'll actually use day to day.
+
+> Framework docs live in `docs/` (CI/Allure guide, environment config guide). This file covers **infra only** — Docker, Compose, and the bootstrap process.
 
 ---
 
-## 📚 Common Columns in the Output
-When you run these commands, you will see a table with several key details for each container:
+## 🏛️ Architecture Diagram
+```
+   Developer
+       │
+       ▼
+    make run
+       │
+       ▼
+ Docker Compose
+  ┌────┼─────────┐
+  │    │         │
+  ▼    ▼         ▼
+DB  WordPress  WP-CLI
+       │
+       ▼
+ setup.sh
+       │
+       ▼
+ WooCommerce
+       │
+       ▼
+    pytest
+       │
+       ▼
+ API + DB Validation
+```
 
-* CONTAINER ID: A unique identifier for the container.
-* IMAGE: The image used to create the container.
-* COMMAND: The executable that ran when the container started.
-* STATUS: Whether the container is "Up" (running), "Exited" (stopped), or "Paused".
-* NAMES: The human-readable name assigned to the container.
+The same infrastructure is used locally and in GitHub Actions.
 
-To create:
-```Bash
+Running tests against the same Dockerized services
+helps ensure consistency between local development
+and CI execution.
+
+---
+
+## 1. What this infra provides
+
+The stack gives you a disposable, reproducible WooCommerce instance to run API + DB tests against:
+
+| Service  | Role                                    |
+|----------|------------------------------------------|
+| `db`     | MySQL — backing database for WordPress   |
+| `wordpress` | WordPress + WooCommerce application server, exposed on `http://localhost:8888` |
+| `wpcli`  | WP-CLI — runs one-off commands (install WP, install/activate WooCommerce, generate API keys) |
+
+This is orchestrated by `docker-compose.wp.yml` at the repo root, and bootstrapped by `scripts/setup.sh`.
+
+---
+## Why Docker?
+
+The framework intentionally runs against a real
+WooCommerce installation rather than mocked services.
+
+Benefits:
+
+*  reproducible environments
+*  isolated test execution
+*  realistic API behaviour
+*  database validation
+*  identical CI execution
+
+---
+
+## 2. Files involved
+
+```
+docker-compose.wp.yml   → defines db / wordpress / wpcli services
+Dockerfile               → builds a container image for running the test
+                            suite itself (used for API_ENV=docker and in CI),
+                            NOT for building WordPress/MySQL — those are
+                            pulled as prebuilt images
+scripts/setup.sh         → waits for containers, fixes permissions,
+                            installs WordPress + WooCommerce, generates
+                            API keys, writes .env
+Makefile                 → orchestrates the whole flow behind `make run`
+.env.example              → template for required environment variables
+.dockerignore             → excludes files from the build context when
+                            the Dockerfile image is built
+```
+
+**Correction vs. earlier notes:** this project *does* ship a `Dockerfile` and a `.dockerignore`. They aren't used to build WordPress or MySQL (those come from official prebuilt images), but they matter when you run tests in containerized mode (`API_ENV=docker`) or in CI, where the test runner itself is built as an image.
+
+---
+
+## 3. One-command bootstrap
+
+```bash
+git clone https://github.com/Kwakic/TestingWoocommerceAPI.git
+cd TestingWoocommerceAPI
+make run
+```
+
+`make run` chains together:
+
+```
+Makefile → docker compose up -d → scripts/setup.sh → pip install -e ./EcommerceAPI[dev] → pytest
+```
+
+Nothing needs to be run manually — no separate `docker compose up`, no manual WordPress install screen, no manually generated API keys.
+
+`make run` orchestrates the complete local setup, including infrastructure startup, environment bootstrap, framework installation and test execution.
+
+---
+
+## 4. What happens step by step
+
+### Step 1 — Docker boots the empty environment
+```bash
 docker compose -f docker-compose.wp.yml up -d
 ```
+Creates the `db`, `wordpress`, and `wpcli` containers. At this point:
+- ❌ WordPress is not installed yet
+- ❌ WooCommerce is not installed
+- ❌ No API keys exist
+
+### Step 2 — `scripts/setup.sh` configures the system
+Run automatically by `make run` (or manually, see below). It:
+1. Waits for `db` and `wordpress` to be reachable
+2. Fixes file permissions where needed
+3. Runs `wp core install` (WordPress)
+4. Runs `wp plugin install woocommerce --activate`
+5. Generates a `consumer_key` / `consumer_secret` pair via WP-CLI
+6. Writes/updates `.env` with the values the test framework needs
+
+This step is **idempotent** — rerunning `make run` skips anything already installed instead of failing or duplicating data.
+
+### Step 3 — Framework installs and tests run
+```bash
+python -m pip install -e "./EcommerceAPI[dev]"
+pytest
+```
+The framework talks to:
+- **API** → `http://localhost:8888/wp-json/wc/v3/`
+- **DB** → the `db` MySQL container, for direct state validation
 
 ---
 
-To clean it:
-```Bash
+## 5. Common Docker commands
+
+| Purpose | Command |
+|---|---|
+| Start the stack | `docker compose -f docker-compose.wp.yml up -d` |
+| Stop and remove containers + volumes | `docker compose -f docker-compose.wp.yml down -v` |
+| List running containers | `docker ps` |
+| List all containers (incl. stopped) | `docker ps -a` |
+| Show only container IDs (scripting) | `docker ps -q` |
+| Show container disk usage | `docker ps -s` |
+| Show most recently created container | `docker ps -l` |
+| Full, untruncated output | `docker ps --no-trunc` |
+| Custom column output | `docker ps --format "{{.Names}}"` |
+| Filter by status | `docker ps -f "status=exited"` |
+
+**Output columns** (`docker ps`): `CONTAINER ID`, `IMAGE`, `COMMAND`, `STATUS` (Up / Exited / Paused), `NAMES`.
+
+---
+
+## 6. Clean reset
+
+To fully tear down and start fresh:
+
+```bash
 docker compose -f docker-compose.wp.yml down -v
 ```
----
-List running containers ONLY:
-```Bash
-docker ps
-# OR
-docker container ls
-```
----
 
-Show only container IDs:
-```Bash
-docker ps -q
-```
-👉 useful for scripts
+This removes the containers **and** the named volumes (DB data, WordPress files), so the next `make run` performs a completely clean install.
+
+> ⚠️ Only delete local working files (e.g. a stray `wp-data/` directory or the `woocommerce/` plugin folder) if you've created them yourself outside of Docker's managed volumes. Docker Compose volumes are already handled by `down -v` — don't `rm -rf` paths you're not sure about.
 
 ---
 
-List ALL containers (running and stopped)
-```Bash
-docker ps -a
- # OR
-docker container ls -
-```
----
-Show file size of containers:
+## 7. Do you need to build anything yourself?
 
-```Bash
-docker ps -s
-```
-
----
-Show the latest created container:
-```Bash
-docker ps -l
-```
----
-
-## 🚀 Advanced Viewing Options
-If you need specific information, you can use these additional flags:
-
-* Prevent text truncation: Use `--no-trunc` to see the full, unshortened container IDs and commands.
-* Custom formatting: Use `--format` to only show specific columns, such as just the names:
-`docker ps --format "{{.Names}}"`.
-* Filtering results: Use -f to filter by specific criteria, such as status:
-`docker ps -f "status=exited"`.
----
-
-## 🧹 Clean reset (mandatory)
-
-
-```
-docker compose -f docker-compose.wp.yml down -v
-rm -rf wp-data
-```
-👉 This removes broken Docker volume + resets filesystem
+| Question | Answer |
+|---|---|
+| Does `docker compose up` build an image? | No — `db` and `wordpress` use official prebuilt images (`mysql`, `wordpress`) |
+| Is the `Dockerfile` required for local test runs? | No — by default, pytest runs on the host against the Dockerized WordPress instance (`API_ENV=test`) |
+| When *is* the `Dockerfile` used? | When running tests inside a container (`API_ENV=docker`) or in CI pipelines that containerize the test runner |
+| Do I need `.dockerignore` for local test runs? | No — only relevant when the `Dockerfile` image is actually built |
 
 ---
 
-```Bash
-rm -rf woocommerce
-```
-👉 This removes existing plugin cleanly
+## 8. Core Docker concepts (quick reference)
+
+- **Image** — a blueprint (e.g. `mysql:8`, `wordpress:latest`)
+- **Container** — a running instance of an image
+- **Dockerfile** — instructions for building a custom image (used here for the test-runner image, not for WordPress/MySQL)
+- **docker-compose** — orchestrates multiple containers as one stack
 
 ---
 
-## 🧠 Translation to real-world value
-
-What you just built is NOT:
-```
-"just Docker"
-```
-
-This is:
+## 9. Framework vs Infrastructure (Mental model)
 
 ```
-✔ Self-contained test environment
-✔ Fully reproducible system
-✔ Zero manual setup
-✔ API + DB + tests wired together
-```
-👉 This is enterprise-level QA setup
-
----
-## 🧩 The FULL FLOW (now real, not theoretical)
-### 1️⃣ make run
-```Bash
-make run
-```
-
-Triggers:
-```
-Makefile → docker-compose → setup.sh → pytest
-```
----
-### 2️⃣ Docker boots infra
-```
-wc-db  → MySQL
-wc-wp  → WordPress
-wc-cli → WP CLI executor
-```
-👉 This is your infra layer
-
----
-
-### 3️⃣ setup.sh configures system
-
-Step by step:
-```
-1. Wait for containers
-2. Fix permissions (critical for plugins)
-3. Install WordPress
-4. Install WooCommerce
-5. Activate plugin
-6. Generate API keys
-```
-👉 This is your environment bootstrap layer
-
----
-### 4️⃣ Your framework kicks in
-
-```
-pytest → fixtures → API clients → DB validators
-```
-Using:
-
-* your HTTPClient
-* your CustomersApi
-* your DB DAO
-* your validators
-
-👉 This is your test framework layer
-
----
-### 5️⃣ Tests run against REAL system
-```
-API → http://localhost:8888/wp-json/wc/v3/
-DB  → MySQL container
-```
-👉 This is true integration testing
-
----
-
-## 💼 Interview-level impact (this is important)
-
-What you now have is something you can say:
-
-`"I built a fully reproducible API testing framework with Dockerized infrastructure,
-automated environment provisioning, and DB-level validation."`
-
-
----
-
-# 🧠 What “infra” means in your case
-
-In your project, infra (infrastructure) = everything that makes your system run, but is NOT your test logic.
-
-In your repo, infra:
-
-```
-✔ docker-compose.wp.yml      → spins up DB + WordPress
-✔ scripts/setup.sh           → installs WP + WooCommerce
-✔ Makefile                   → orchestrates everything
-✔ .env                       → configuration
-✔ Dockerfile                 → environment definition
-```
-
-NOT infra (this is your framework):
-
-```
-✔ EcommerceAPI/
-✔ helpers / API / DAO / validators
-✔ pytest tests
-```
-
-### 👉 So clean separation is:
-
-```
-Framework → HOW to test
-Infra     → WHERE to test
+Framework (EcommerceAPI)  → HOW tests run
+Docker + WordPress         → WHERE tests run
+setup.sh                   → turns an empty Docker environment into a
+                              usable WooCommerce instance
+Makefile                   → single entrypoint tying it all together
 ```
 
 ---
 
-## 🧠 Big picture (your project in ONE sentence)
+## 10. Requirements
 
-```
-You built a testing ENGINE (framework) + a TEST ENVIRONMENT (Docker + WP)
-```
-👉 Those are two different things.
-
----
-
-## 🧩 Your repo = 2 systems working together
-### 1️⃣ The Framework (EcommerceAPI)
-
-From your docs:
-
-* layered architecture
-* API → helper → DAO → validation
-
-👉 This is:
-
-```
-HOW tests are executed
-```
----
-
-## 2️⃣ The Environment (Docker + WordPress)
-
-From your README:
-```
-Tests run against a local Dockerized WooCommerce instance :contentReference[oaicite:1]{index=1}
-```
-👉 This is:
-```
-WHERE tests are executed
-```
----
-
-## 🔥 This is the missing link you didn’t have
-
-Before:
-
-```
-You = developer
-Your machine = environment
-```
-So everything “just worked”.
-
----
-Now you want:
-
-```
-ANYONE → clone repo → run tests
-```
-👉 That requires:
-
-```
-Environment must be CREATED automatically
-```
-
----
-## ⚙️ So what is the flow REALLY?
-
-Let’s simulate a random user (this is key).
+- Docker
+- Docker Compose
+- Python 3.13+
+- Make (or Git Bash on Windows)
 
 ---
 
-## 🚀 🔁 FULL FLOW (REAL, step-by-step)
-
-👤 User clones your repo
-
-```bash
-git clone ...
-cd TestEcommerceAPI
-```
-### 🟡 Step 1 — Makefile (ENTRYPOINT)
-User runs:
-
-```bash
-make run
-```
-👉 This is just a shortcut:
-```
-run: up setup test
-```
-👉 So internally:
-
----
-
-### 🔵 Step 2 — Docker starts environment
-```bash
-docker compose up -d
-```
-👉 This creates:
-
-```
-✔ MySQL database
-✔ WordPress server
-✔ wp-cli container
-```
-At this moment:
-
-```
-❌ WordPress NOT installed yet
-❌ WooCommerce NOT installed
-❌ API NOT usable
-```
----
-### 🔴 Step 3 — setup.sh (THIS IS THE MAGIC)
-
-This is what you were missing before.
-```bash
-scripts/setup.sh
-```
-👉 It does:
-
-### 3.1 Install WordPress
-
-```
-wp core install
-```
-Now:
-```
-✔ WordPress exists
-❌ WooCommerce still missing
-```
----
-
-### 3.2 Install WooCommerce
-```bash
-wp plugin install woocommerce --activate
-
-# or
-
-wp plugin install woocommerce --version=9.1.4 --activate
-```
-Now:
-```
-✔ WooCommerce installed
-✔ REST API enabled
-```
----
-
-### 3.3 Create API keys
-
-```
-✔ consumer_key
-✔ consumer_secret
-```
-Now:
-```
-✔ API is usable
-```
-
----
-
-### 🟢 Step 4 — pytest runs
-
-```Bash
-pytest
-```
-Now your framework kicks in:
-
-From your architecture:
-```
-pytest
- ↓
-helpers
- ↓
-API client
- ↓
-WooCommerce API
- ↓
-DB validation
-```
-
----
-
-### 🟣 Step 5 — DB validation
-
-This is your special sauce:
-
-```
-✔ API response validated
-✔ DB state validated
-```
-
----
-
-## 🎯 Why setup.sh exists
-
-Without it:
-
-
-```
-Docker gives you EMPTY WordPress
-```
-👉 Tests fail:
-```
-401 / 403 / no data
-```
-With setup.sh:
-```
-Docker → fully configured WooCommerce
-```
-👉 Tests work
-
----
-
-## 🎯 Why Makefile exists
-
-Without Makefile:
-
-User must run:
-
-```Bash
-docker compose up -d
-bash scripts/setup.sh
-pytest
-```
-👉 That’s error-prone
-
----
-
-With Makefile:
-
-```Bash
-make run
-```
-👉 One command = clean UX
-
----
-
-## 🧠 Where your other files fit
-
----
-
-### 🟡 pyproject.toml
-
-From your doc:
-
-```
-Defines packaging + pytest config :contentReference[oaicite:3]{index=3}
-```
-👉 Used when:
-
-
-```Bash
-pytest
-pip install -e EcommerceAPI
-```
-
----
-
-### 🟡 pytest.ini
-
-👉 Controls:
-
-```
-✔ test discovery
-✔ markers
-✔ logging
-```
-
----
-### 🟡 .env
-
-👉 Used by:
-
-```
-✔ auth config
-✔ API URL
-✔ flags
-```
-
----
-
-## 🧠 Mental model you should keep
-Think like this:
-
-```
-Framework = brain
-Docker = body
-setup.sh = birth process
-Makefile = remote control
-```
-
----
-
-## 🔥 Final simplified flow
-
-```
-User
- ↓
-make run
- ↓
-Docker → creates empty system
- ↓
-setup.sh → configures system
- ↓
-pytest → runs your framework
- ↓
-API + DB validated
-```
-
----
-## You’ve built a complete test platform:
-```
-Docker infra
-   ↓
-Dynamic credential generation
-   ↓
-CI env injection (API + DB)
-   ↓
-pytest execution
-   ↓
-Allure report + history
-   ↓
-GitHub Pages dashboard
-```
-
----
-## 🧠 Big architectural insight
-
-You now clearly see separation:
-```
-setup.sh        → infrastructure
-Makefile        → orchestration
-pyproject.toml  → package definition
-pip install     → package activation
-pytest          → execution
-```
-
-
----
-
-## 🧠 Big picture (what you’ve built)
-
-You now have:
-```
-Infra layer     → Docker (WordPress + DB)
-Bootstrap       → setup.sh
-Framework       → API + validators + helpers
-Execution       → pytest
-Reporting       → Allure + logs
-CI              → GitHub Actions
-```
-
-
-👉 This is real SDET-level architecture
-
----
-
-## 🧠 Final architecture (now correct)
-```
-User
- → make run
-    → Docker (infra)
-    → setup.sh (bootstrap)
-    → pip install (framework)
-    → pytest (tests)
-    → Allure (report)
-```
-
----
-
-# 🐳 Your current architecture (important)
-
-From your README:
-
-* `docker-compose.wp.yml` spins:
-  * MySQL
-  * WordPress
-  * WP-CLI
-
-👉 This is already perfect for CI
-
----
-
-## ❌ Do you need a Dockerfile?
-### Answer: NO (for now)
-
-You only need a `Dockerfile` if:
-
-* you want to run tests inside a container
-* or build a custom test image
-
-👉 But you are doing:
-```
-GitHub runner (Ubuntu)
-    ↓
-runs docker-compose
-    ↓
-runs pytest locally
-```
- ✔️This is simpler
-
- ✔️This is standard
-
- ✔️This is what you want
-
----
-
-## ❌ Do you need .dockerignore?
-### Answer: NO (for CI step)
-
-Only needed if:
-
-* you build Docker images (docker build)
-
-👉 You are NOT building images → ignore it.
-
----
-
-## 🧱 Core Docker concepts (simple but precise)
-### 1. Image
-* blueprint (like a class)
-* e.g.:
-  * mysql:8
-  * wordpress:latest
----
-### 2. Container
-* running instance of an image (like an object)
-
----
-
-### 3. Dockerfile
-* how to build your own image
-
----
-
-### 4. docker-compose
-* orchestrates multiple containers
-
----
-
-## 🔍 What YOUR docker-compose.wp.yml is doing
-
-Most likely (based on your README):
-```
-services:
-  db:
-    image: mysql:8
-
-  wordpress:
-    image: wordpress:latest
-
-  wpcli:
-    image: wordpress:cli
-```
-👉 That means:
-
-| Component | Source         |
-| --------- | -------------- |
-| MySQL     | prebuilt image |
-| WordPress | prebuilt image |
-| WP-CLI    | prebuilt image |
-
-### ✅ So answer to your question:
-
-> Does it create an image?
-
-👉 ❌ No (in your case)
-
-👉 ✔ It pulls existing images and runs containers
-
----
-
-## 🧠 When DO you need a Dockerfile?
-
-You need it only if:
-
-### Case 1 — Custom test environment
-
-Example:
-```
-FROM python:3.13
-COPY . /app
-RUN pip install -r requirements.txt
-CMD ["pytest"]
-```
-👉 Then you run:
-
-```
-docker build -t test-runner .
-docker run test-runner
-```
-
----
-
-## Case 2 — Full isolation (advanced CI)
-
-Everything runs inside containers:
-
-```
-[ test container ]
-        ↓
-[ wordpress container ]
-        ↓
-[ mysql container ]
-```
-
----
-
-## ⚖️ Best Practice (for YOU)
-
-You are here:
-
-> QA / API testing / WooCommerce
-
-👉 Best practice:
-
-### ✅️ Use docker-compose for SYSTEM
-### ✅ Run pytest on host (CI runner)
-
----
-
-### 💡 Why this is better
-
-| Approach                  | Pros               | Cons                |
-| ------------------------- | ------------------ | ------------------- |
-| pytest on host (your way) | simple, debuggable | slight env coupling |
-| pytest in container       | reproducible       | harder debugging    |
-
-
-```
-
-```
-
-
-```
-
-```
-
-```
-
-```
-
-
-```
-
-```
-
-
-```
-
-```
-
-
-```
-
-```
-
-
-```
-
-```
-
-
-```
-
-```
+## 11. Troubleshooting
+
+| Symptom | Likely cause |
+|---|---|
+| Tests fail with `401` / `403` | `setup.sh` didn't complete — WooCommerce API keys weren't generated. Re-run `make run`. |
+| `docker compose up` hangs | A previous stack is still holding the ports/volumes. Run `down -v` first. |
+| WordPress reachable but empty (no WooCommerce) | `setup.sh` was skipped or failed partway — check its logs, rerun it manually: `bash scripts/setup.sh` |
+| Stale data after schema changes | Run `docker compose -f docker-compose.wp.yml down -v` for a full reset before `make run` |
+
+
+## Related Documentation
+
+- README_QA_DEVELOPER_ONBOARDING.md
+- README_ARCHITECTURE.md
+- README_ENVIRONMENT_CONFIG_GUIDE.md
+- README_CI_ARCHITECTURE.md
+- README_ALLURE.md

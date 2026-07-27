@@ -1,35 +1,36 @@
-# Git Workflow Guide for QA Engineers (Advanced)
+# Git Workflow Handbook for QA Engineers
+
+*Beginner-friendly by default (Sections 1–3), with advanced troubleshooting and CI/CD topics further down. New to Git? Start with Section 3 — it's a step-by-step, copy-pasteable walkthrough.*
 
 ---
 
 # 🚀 Overview
-This guide expands the standard Git workflow with:
+This guide covers:
 
-1.  Changing Remotes, Dual GitHub + GitLab setup
-2.  PyCharm-Only Workflow (No Terminal)
-3.  Git CLI Workflow Guide (Terminal) Beginner-Friendly
-4.  Troubleshooting: Rebase Pulling in Old
-5.  Protect main Branch (GitHub)
-6.  Continuous Integration (CI) with Pytest
-7.  Secrets Management
-8.  Clean Commit Strategy
-9.  Check history of commits
-10.  Git Shortcuts logs and prune
-11.  Rebase vs Merge
-12.  git cherry-pick
-13.  Switching Branches
-14.  Upstream Branch (Tracking)
-15.  Automating of the creation and tracking of remote branches
-16.  Automatically normalizing line endings
-17.  Configuration file .pre-commit-config.yaml
-18.  Git Fetch vs. Git Pull
+1. Changing Remotes, Dual GitHub + GitLab setup
+2. PyCharm-Only Workflow (No Terminal)
+3. Git CLI Workflow Guide (Terminal) — Beginner-Friendly
+4. Troubleshooting (6 common problems, with fixes)
+5. Protect `main` Branch (GitHub)
+6. Continuous Integration (CI) with Pytest
+7. Secrets Management
+8. Clean Commit Strategy
+9. Checking History & Debugging
+10. Git Shortcuts (aliases) for logs and prune
+11. Rebase vs Merge
+12. `git cherry-pick`
+13. Switching Branches
+14. Upstream Branch (Tracking)
+15. Automating Creation & Tracking of Remote Branches
+16. Automatically Normalizing Line Endings
+17. Configuration file `.pre-commit-config.yaml`
+18. `git fetch` vs `git pull`
 
-
---
+---
 
 # 🌐 1. Changing Remotes, Dual GitHub + GitLab setup
 
-##   🔄  Changing Remotes
+## 🔄 Changing Remotes
 
 To interact with a specific remote, include its name (e.g., origin or GitLab) in your command:
 
@@ -50,7 +51,7 @@ To interact with a specific remote, include its name (e.g., origin or GitLab) in
   * `git fetch GitLab` or `git fetch origin`
   * Get updates from all remotes at once: `git fetch --all`
 
-### Setting a Default Remote (Upstream)**
+### Setting a Default Remote (Upstream)
 
 If you want a branch to always use a specific remote by default (so you can just type `git push` or `git pull`),
 you can set the "**upstream**" tracking:
@@ -75,7 +76,7 @@ git remote set-url --add --push both <GitHub-URL>
 git remote set-url --add --push both <GitLab-URL>
 ```
 
-###  Push to both
+### Push to both
 
 ```bash
 git push both
@@ -110,7 +111,7 @@ git push both
 
 ---
 
-##  🔁 Standard Workflow
+## 🔁 Standard Workflow
 
 ```
 main → create branch → work on code → commit → push → PR → merge → delete branch
@@ -425,7 +426,7 @@ Recommended:
 ### 🌿 Delete remote branch (GitHub)
 * **Option 1:** Click "**Delete branch**" on GitHub side
 
-* **Option 2:**  in CLI run this command: `git push origin --delete fix/bug_ticket_1235`
+* **Option 2:** in CLI run this command: `git push origin --delete fix/bug_ticket_1235`
 
 
 ### 🌿 Delete local branch (Local Cleanup)
@@ -636,19 +637,6 @@ git push -u origin fix/xxx
 
 ---
 
-
-## 🎯 Key Takeaways
-
-- Always start from updated main
-- Use PRs for everything
-- Prefer rebase for clean history
-- Protect main branch
-- Keep commits clean and small
-- Use PyCharm UI for simplicity
-
-
----
-
 ## ✨ Golden Rule
 
 👉 Always sync with main before opening a PR
@@ -657,16 +645,16 @@ git push -u origin fix/xxx
 
 ---
 
-## 📌 Summary
+# ⚠️ 4. Troubleshooting
 
-You only delete the branch **after merge**.
+Six common problems covered below:
 
-Deleting earlier = losing your work.
-
-
----
-
-#  ⚠️ 4. Troubleshooting
+1. Rebase Pulling in Old (Unrelated) Commits
+2. Push Rejected After Rebase (Non-Fast-Forward Error)
+3. Detached HEAD (Committed on Wrong Branch)
+4. Local Main "Ahead" of Remote (Accidental Commits on Main)
+5. Warning: Deleting Branch "Not Yet Merged to HEAD"
+6. Merge Conflicts (Step-by-Step Resolution)
 
 ---
 
@@ -1350,7 +1338,7 @@ Main Branch:     [380efa8]  <-- This has the same CODE, but a different ID
 
 ---
 
-## 🔹 4. Merge Conflicts (Step-by-Step Resolution)
+## 🔹 6. Merge Conflicts (Step-by-Step Resolution)
 
 ### 🧠 Problem Summary
 
@@ -1636,7 +1624,7 @@ With these protections in place:
 
 ---
 
-##  ⚠️ PyCharm Warning for main
+## ⚠️ PyCharm Warning for main
 
 ### Enable confirmation:
 1. Go to Settings → Version Control → Git
@@ -1969,22 +1957,20 @@ git status
 
 ---
 
-### 🔎  See the actual code changes you staged (after running `git add .`):
+### 🔎 See the actual code changes you staged (after running `git add .`):
 ```
 git diff --cached
 ```
 
 ---
 
-### 🔎  To see your "Internal" history `git reflog`:
-`git reflog` is your local "undo history" for Git. While git log shows the commit history of a branch, `git reflog `
-`records every time your HEAD moves`—including actions that don't usually appear in your history, like switching
-branches, rebasing, or performing a hard reset.
+### 🔎 To see your "Internal" history `git reflog`:
+`git reflog` is your local "undo history" for Git. While `git log` shows the commit history of a branch, `git reflog` records every time your HEAD moves — including actions that don't usually appear in your history, like switching branches, rebasing, or performing a hard reset.
 
 
 ### 🔑 Key Features
 
-* T**he Safety Net**: It allows you to find and recover "lost" commits that are no longer reachable by any branch, such as those deleted during a git reset --hard.
+* **The Safety Net**: It allows you to find and recover "lost" commits that are no longer reachable by any branch, such as those deleted during a git reset --hard.
 * **Local Only**: This log is stored strictly on your machine. It is not pushed to remote servers like GitHub, so your teammates cannot see your local "reflog".
 * **Temporary:** By default, Git keeps these records for 90 days before automatically pruning them to save space.
 
@@ -2038,12 +2024,12 @@ git log main..feature/GitHub_CI --oneline
 ---
 
 ### ⚖️ Compare both branches directly
-What feature branch has that main doesn’t:
+What feature branch has that main doesn't (same command as above):
 ```
 git log main..feature/GitHub_CI --oneline
 ```
 
-What main has that feature branch doesn’t:
+What main has that the feature branch doesn't (the reverse):
 ```
 git log feature/GitHub_CI..main --oneline
 ```
@@ -2061,7 +2047,7 @@ git diff --name-only main..feature/GitHub_CI
 ```
 ---
 
-### 🔎   To see changes compared to main:
+### 🔎 To see changes compared to main:
 
 Since you just did a git fetch, you might want to see how your feature branch differs from the server's main:
 
@@ -2626,7 +2612,7 @@ To see exactly which line endings are currently in your index (i/) and your work
 
 ---
 
-# 17. 📚 Configuration file  .pre-commit-config.yaml
+# 17. 📚 Configuration file `.pre-commit-config.yaml`
 
 `.pre-commit-config.yaml` is the configuration file for pre-commit, a framework used to manage and maintain multi-language Git hooks.
 
@@ -2743,7 +2729,7 @@ trim trailing whitespace.................................................Failed
 
 ---
 
-# 17. 🔍 Git Fetch vs. Git Pull
+# 18. 🔍 Git Fetch vs. Git Pull
 In Git, `git fetch` is a "safe" command that downloads the latest changes (commits, files, and branches) from a remote repository
 (like GitHub) to your local machine without merging them into your actual work.
 
