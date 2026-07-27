@@ -43,7 +43,7 @@ from collections import defaultdict
 
 import pytest
 
-from EcommerceAPI.src.utils.team_discovery import extract_team_from_nodeid
+from EcommerceAPI.src.utils.entity_discovery import extract_entity_from_nodeid
 from EcommerceAPI.src.configs.runtime_config import get_config
 from EcommerceAPI.src.configs.runtime_config import SESSION_ID as FRAMEWORK_SESSION_ID
 from EcommerceAPI.src.configs.runtime_metadata import SESSION_METADATA
@@ -489,7 +489,7 @@ def pytest_runtest_call(item):
     """
 
     # Track executed teams for environment metadata
-    team = extract_team_from_nodeid(item.nodeid)
+    team = extract_entity_from_nodeid(item.nodeid)
     if team:
         _EXECUTED_TEAMS.add(team)
 
@@ -544,7 +544,7 @@ def pytest_runtest_logreport(report):
         _TEST_STATS["passed"] += 1
     elif report.failed:
         _TEST_STATS["failed"] += 1
-        team = extract_team_from_nodeid(report.nodeid)
+        team = extract_entity_from_nodeid(report.nodeid)
         _FAILED_BY_TEAM[team or "unknown"] += 1
     elif report.skipped:
         _TEST_STATS["skipped"] += 1

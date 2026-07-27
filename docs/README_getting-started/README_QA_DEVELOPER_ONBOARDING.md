@@ -284,7 +284,7 @@ Example matrix:
 
 Performance tests
 -----------------
-Provide lightweight baseline response time checks to detect regressions
+Validate entity-specific performance benchmarks to detect regressions
 in API responsiveness.
 
 ------------------------------------------------------------------

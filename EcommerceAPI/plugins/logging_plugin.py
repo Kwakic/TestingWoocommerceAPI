@@ -60,7 +60,7 @@ from EcommerceAPI.src.utils.custom_logger import (
 )
 
 from EcommerceAPI.src.utils.env_utils import env_bool
-from EcommerceAPI.src.utils.team_discovery import extract_team_from_nodeid
+from EcommerceAPI.src.utils.entity_discovery import extract_entity_from_nodeid
 
 # Use the single-session id from the framework config (single source of truth)
 from EcommerceAPI.src.configs.runtime_config import SESSION_ID
@@ -630,7 +630,7 @@ def pytest_collection_modifyitems(session, config, items):
     teams = set()
 
     for item in items:
-        team = extract_team_from_nodeid(item.nodeid)
+        team = extract_entity_from_nodeid(item.nodeid)
         item.team = team
         if team:
             teams.add(team)

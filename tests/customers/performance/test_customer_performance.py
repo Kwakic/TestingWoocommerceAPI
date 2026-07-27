@@ -1,10 +1,10 @@
 """
 ====================================================================================================
-🧪 Products Performance Test Suite
+🧪 Customers Performance Test Suite
 
 Purpose
 -------
-Validate the response time of the Products  API.
+Validate the response time of the Customers API.
 
 Unlike Contract, Security and Preflight, performance tests belong to each
 business entity.
@@ -47,7 +47,6 @@ import statistics
 import pytest
 
 from EcommerceAPI.src.configs.runtime_config import get_config
-
 from EcommerceAPI.src.utils.performance_utils import measure_get_response_time
 
 logger = logging.getLogger(__name__)
@@ -59,93 +58,79 @@ pytestmark = [
 ENV = get_config().ENV
 
 # ==============================================================================
-# Entity benchmark configuration.
+# Entity performance profile.
 #
-# Every entity owns its own benchmark profile.
+# Every business entity owns its benchmark configuration.
 #
-# As the framework grows these values can diverge significantly.
+# The shared framework is responsible only for measuring request duration.
+# Individual entities define:
 #
-# Customers
-#     per_page=100
-#
-# Orders
-#     status=processing
-#
-# Products
-#     orderby=price
-#
-# Coupons
-#     search=SUMMER
+# • endpoint under test
+# • benchmark request parameters
+# • performance thresholds
+# • default benchmark iterations
+
+# These values may evolve independently as each API grows.
 # ==============================================================================
 
-ENTITY = "products"
-
-ENDPOINT = "products"
-
-QUERY_PARAMS = {
-    "per_page": 100,
+PRODUCTS_PERFORMANCE = {
+    "endpoint": "products",
+    "params": {
+        "per_page": 100,
+    },
+    "max_avg_response": 4.20,
+    "max_p95_response": 4.50,
+    "iterations": 5,
 }
-
-#
-# Initial benchmark expectations.
-#
-# These values are intentionally conservative.
-# Every entity may later define its own SLA.
-#
-MAX_AVG_RESPONSE = 4.20
-MAX_P95_RESPONSE = 4.50
 
 
 def _resolve_iterations(pytestconfig) -> int:
     """
     Resolve the number of benchmark iterations.
 
-    Resolution order:
+    Resolution order
 
         1. --perf-iterations CLI option
         2. PERF_ITERATIONS environment variable
-        3. Default value (5)
+        3. Entity benchmark profile
     """
 
     option = getattr(pytestconfig, "option", None)
 
     if option and getattr(option, "perf_iterations", None):
-
         try:
             return int(option.perf_iterations)
         except ValueError:
             pass
 
     try:
-        return int(os.getenv("PERF_ITERATIONS", "5"))
+        return int(
+            os.getenv(
+                "PERF_ITERATIONS",
+                str(PRODUCTS_PERFORMANCE["iterations"]),
+            )
+        )
     except ValueError:
-        return 5
+        return PRODUCTS_PERFORMANCE["iterations"]
 
 
 @pytest.mark.performance
-def test_product_response_times(
+def test_customer_response_times(
     pytestconfig,
     api_client,
     session_metadata,
 ):
     """
-    Benchmark the Products endpoint.
+    Benchmark the Customers endpoint.
 
-    Workflow
-
-        1. Execute N GET requests.
-        2. Measure every response time.
-        3. Calculate summary statistics.
-        4. Validate benchmark expectations.
-        5. Emit concise CI-friendly logs.
+    The benchmark executes multiple requests, measures their response times,
+    calculates summary statistics, and validates the configured performance
+    thresholds.
     """
 
     iterations = _resolve_iterations(pytestconfig)
 
-    logger.info(
-        "🔁 Products benchmark (%d iterations)",
-        iterations,
-    )
+    logger.info("🔁 Customers benchmark (%d iterations)", iterations)
 
     response_times: list[float] = []
 
@@ -155,8 +140,8 @@ def test_product_response_times(
 
         duration, response = measure_get_response_time(
             api_client=api_client,
-            endpoint=ENDPOINT,
-            params=QUERY_PARAMS,
+            endpoint=PRODUCTS_PERFORMANCE["endpoint"],
+            params=PRODUCTS_PERFORMANCE["params"],
         )
 
         if response is None:
@@ -213,10 +198,12 @@ def test_product_response_times(
     # -------------------------------------------------------------------------
 
     assert (
-        average <= MAX_AVG_RESPONSE
+        average <= PRODUCTS_PERFORMANCE["max_avg_response"]
     ), f"Average response time exceeded threshold ({average:.3f}s)"
 
-    assert p95 <= MAX_P95_RESPONSE, f"P95 exceeded threshold ({p95:.3f}s)"
+    assert (
+        p95 <= PRODUCTS_PERFORMANCE["max_p95_response"]
+    ), f"P95 exceeded threshold ({p95:.3f}s)"
 
     # -------------------------------------------------------------------------
     # Human-readable summary
@@ -226,7 +213,7 @@ def test_product_response_times(
     ci = session_metadata.get("ci", {})
 
     logger.info("=" * 80)
-    logger.info("📊 PRODUCTS PERFORMANCE SUMMARY")
+    logger.info("📊 CUSTOMERS PERFORMANCE SUMMARY")
     logger.info("=" * 80)
 
     logger.info("Environment : %s", ENV.upper())

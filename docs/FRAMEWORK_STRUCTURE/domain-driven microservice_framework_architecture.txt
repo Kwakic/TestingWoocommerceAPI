@@ -57,6 +57,37 @@ TestEcommerceAPI (project suite/root)
 │     ├── README_TEST_WRITING_GUIDE.md
 │     └── README_VALIDATORS.md
 │
+├── getting-started/
+│     ├── README_FRAMEWORK_OVERVIEW.md
+│     ├── README_QA_DEVELOPER_ONBOARDING.md
+│     └── README_ARCHITECTURE_QUICK_START.md
+│
+├── development/
+│     ├── README_TEST_DEVELOPMENT_GUIDE.md    ⭐ Canonical guide
+│     ├── README_API_CLIENT.md
+│     ├── README_ARCHITECTURE.md
+│     ├── README_VALIDATORS.md
+│     └── TEAM_GUIDES/
+│       └── README_CUSTOMERS.md
+│
+├── framework/
+│     ├── README_PLUGINS_REFERENCE.md
+│     ├── README_ENVIRONMENT_CONFIG_GUIDE.md
+│     ├── README_CONFIG_CONTRACT.md
+│     ├── README_AUTHENTICATION.md
+│     ├── README_LOGGING.md
+│     └── README_TEAM_ENTITY_DISCOVER_GUIDE.md
+│
+├── ci/
+│     ├── README_CI_ARCHITECTURE.md
+│     ├── README_ALLURE.md
+│     └── README_ENV_AND_CI.md
+│
+├── contributing/
+│     ├── README_CONTRIBUTING.md│
+│     ├── README_CHANGELOG_GUIDELINES.md
+│     └── README_PYPROJECT.md
+│
 ├── EcommerceAPI (installable framework package)/    ← SHARED INSTALLABLE FRAMEWORK
 │     ├── ecommerceapitest.egg-info/..
 │     ├── plugins/
@@ -154,7 +185,7 @@ TestEcommerceAPI (project suite/root)
 │     │     │     ├── log_context.py
 │     │     │     ├── pagination_utils.py
 │     │     │     ├── performance_utils.py
-│     │     │     ├── team_discovery.py
+│     │     │     ├── entity_discovery.py
 │     │     │     └── truncate_logging_utils.py
 │     │     └── __init__.py
 │     │── __init__.py
@@ -232,7 +263,7 @@ TestEcommerceAPI (project suite/root)
 │     │     │     ├── test_update_customer.py
 │     │     │     └── __init__.py
 │     │     └── performance/
-│     │           ├── test_customer_response_times.py
+│     │           ├── test_customer_performance.py
 │     │           └── __init__.py
 │     ├── shared/
 │     │     ├── __init__.py
@@ -261,13 +292,16 @@ TestEcommerceAPI (project suite/root)
 │     │     ├── __init__.py
 │     │     ├── conftest.py
 │     │     ├── README.md
-│     │     └── api/
-│     │            ├── test_apply_valid_coupon_to_order.py
-│     │            ├── test_create_order_smoke.py
-│     │            ├── test_orders_param_inside_module.py
-│     │            ├── test_orders_params_using_json_file.py
-│     │            ├── test_update_order.py
-│     │            └── __init__.py
+│     │     │── api/
+│     │     │     ├── test_apply_valid_coupon_to_order.py
+│     │     │     ├── test_create_order_smoke.py
+│     │     │     ├── test_orders_param_inside_module.py
+│     │     │     ├── test_orders_params_using_json_file.py
+│     │     │     ├── test_update_order.py
+│     │     │     └── __init__.py
+│     │     └── performance/
+│     │           ├── test_order_performance.py
+│     │           └── __init__.py
 │     ├── coupons/..                               ← coupons-specific
 │     ├── products/..                              ← products-specific
 │     ├── __init__.py
@@ -288,5 +322,5 @@ TestEcommerceAPI (project suite/root)
 │─── conftest.py                                   ← shared
 │─── docker-compose.matrix.yml                     ← shared
 │─── Dockerfile                                    ← shared
-│─── README.md                                     ← shared
+│─── README.md                                     ← Documentation index / landing page
 └──  pytest.ini                                    ← shared

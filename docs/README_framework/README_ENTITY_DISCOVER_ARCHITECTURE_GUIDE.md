@@ -107,6 +107,70 @@ Each one answers a different architectural question.
 
 Although these mechanisms are independent, they all ultimately resolve to the same business entity.
 
+---
+
+### 🔎 Discovery Responsibilities
+
+Although the three discovery mechanisms are independent, they each have a
+single responsibility and collaborate to provide a complete testing
+architecture.
+
+```text
+                    entity_metadata.py
+                           │
+                           ▼
+             discover_framework_entities()
+                           │
+          ┌────────────────┼────────────────┐
+          ▼                ▼                ▼
+ GitHub Actions Matrix   Contract       Security
+          │
+          ▼
+ Automatic Pytest Markers
+
+
+                    entity_discovery.py
+                           │
+                           ▼
+          extract_entity_from_nodeid()
+                           │
+          ┌────────────────┼────────────────┐
+          ▼                ▼                ▼
+      Logging          Allure          Reporting
+                           │
+                           ▼
+ Automatic Pytest Markers
+
+
+                     plugins/entities.py
+                           │
+                           ▼
+                 discover_entities()
+                           │
+                           ▼
+                     Runtime Registry
+                           │
+          ┌────────────────┼────────────────┐
+          ▼                ▼                ▼
+     EntityBundle     Shared Fixtures   Cross-Entity Access
+```
+
+### Responsibilities
+
+| Component | Responsibility | Primary Consumers |
+|-----------|----------------|-------------------|
+| `entity_discovery.py` | Determines which business entity owns an individual test from its pytest nodeid. | Logging, Allure, Reporting, Automatic pytest marker assignment |
+| `entity_metadata.py` | Defines which business entities officially belong to the framework. | GitHub Actions Matrix, Contract, Security, Documentation, Automatic pytest marker validation |
+| `plugins/entities.py` | Builds executable runtime resources for implemented entities. | EntityBundle, Shared Fixtures, Cross-Entity Helpers, Automatic Cleanup |
+
+This separation follows the framework's **Single Responsibility Principle**:
+
+- **Entity Discovery** answers **"Who owns this test?"**
+- **Framework Entity Discovery** answers **"Which entities exist in this framework?"**
+- **Runtime Registry Discovery** answers **"Build the runtime resources for those entities."**
+
+Although these mechanisms are independent, they all ultimately resolve to the same business entity and work together during test execution.
+
 Example:
 
 ```text
@@ -123,49 +187,12 @@ represents:
 
 ---
 
-                         Test File
-                             │
-                             ▼
-              extract_entity_from_nodeid()
-                             │
-                             ▼
-                        customers
-                             │
-        ┌────────────────────┼────────────────────┐
-        ▼                    ▼                    ▼
-     Logging             Allure            Reporting
-
-
-                 FRAMEWORK_ENTITIES
-                             │
-                             ▼
-           discover_framework_entities()
-                             │
-        ┌────────────────────┼────────────────────┐
-        ▼                    ▼                    ▼
-        CI               Contract            Security
-
-
-                  discover_entities()
-                             │
-                             ▼
-                     Runtime Registry
-                             │
-                             ▼
-                        EntityBundle
-                             │
-        ┌────────────────────┼────────────────────┐
-        ▼                    ▼                    ▼
-     entity_helper()      entity_dao()      all_resources
-
-
----
 # 1. 🔍 Entity Discovery (Test Ownership)
 
 **Source**
 
 ```text
-src/utils/team_discovery.py
+src/utils/entity_discovery.py
 ```
 
 Entity Discovery determines **which business entity owns a test**.
@@ -540,7 +567,7 @@ Ownership Flow:
 ```text
 test_nodeid
      ↓
-team discovery
+entity discovery
      ↓
 entity ownership
      ↓

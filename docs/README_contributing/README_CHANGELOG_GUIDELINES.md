@@ -37,7 +37,7 @@ Minimal example
 
 What to write for each entry
 - Keep it short (one line) and specific.
-- Mention area/component (e.g., RequestUtility, CustomersHelper, CI).
+- Mention area/component (e.g., ApiClient, CustomersHelper, CI).
 - If behavior changed for users or CI, include one-line instructions or a link to the PR for details.
 
 Entry examples (concrete)

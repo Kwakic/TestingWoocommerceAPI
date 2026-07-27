@@ -23,46 +23,69 @@ It follows the unified test framework architecture, enables CI autodiscovery, an
 ├── tests/                                         ← The test suite root - Each team got its own file
 │     ├── customers/                               ← customers-specific
 │     │     ├── configs/
-│     │     │     └── config_customers.py          ← storing API_HOSTS
-│     │     │     └── README.py
-│     │     │     └── __init__.py
+│     │     │     ├── config_customers.py          ← storing API_HOSTS
+│     │     │     ├── __init__.py
+│     │     │     └── README.md
 │     │     ├── data/
+│     │     │     ├── __init__.py
 │     │     │     └── create_customer_payload.json
-│     │     ├── performance/
-│     │     │     └── test_customer_response_times.py
-│     │     │     └── __init__.py
 │     │     ├── __init__.py
 │     │     ├── conftest.py
 │     │     ├── README.md
-│     │     └── api/
-│     │           └── test_e2e_customer_lifecycle.py
-│     │           └── test_create_customer.py
-│     │           └── test_customer_deletion.py
-│     │           └── test_customer_filters.py
-│     │           └── test_get_all_customers.py
-│     │           └── test_get_customer.py
-│     │           └── test_soft_deleted_customer_handling.py
-│     │           └── test_update_custom
+│     │     ├── api/
+│     │     │     ├── test_create_customer.py
+│     │     │     ├── test_customer_deletion.py
+│     │     │     ├── test_customer_filters.py
+│     │     │     ├── test_e2e_customer_lifecycle.py
+│     │     │     ├── test_get_all_customers.py
+│     │     │     ├── test_get_customer.py
+│     │     │     ├── test_soft_deleted_customer_handling.py
+│     │     │     ├── test_update_customer.py
+│     │     │     └── __init__.py
+│     │     └── performance/
+│     │           ├── test_customer_performance.py
 │     │           └── __init__.py
 │     ├── shared/
+│     │     ├── __init__.py
+│     │     ├── contracts/                          ← JSON contract schemas (contract testing)
+│     │     │      ├──error_schema.py
+│     │     │      ├── test_response_format.py
+│     │     │      ├── test_api_connectivity.py
+│     │     │      └── __init__.py
 │     │     ├── security/
-│     │     │       ├── test_authentication_matrix.py
-│     │     │       └── test_authentication_success.py
-│     │     ├── contract/
-│     │     │       ├── error_schema.py
-│     │     │       ├── test_api_connectivy.py
-│     │     │       ├── test_response_format.py
-│     │     │       └── __init__.py
+│     │     │      ├── test_authentication_matrix.py
+│     │     │      ├── test_authentication_success.py
+│     │     │      └── __init__.py
 │     │     └── preflight/
-│     │             ├── test_logging_globals.py
-│     │             ├── __init__.py
-│     │             └── README_PREFLIGHT.md
+│     │            ├── test_logging_globals.py
+│     │            ├── __init__.py
+│     │            └── README_PREFLIGHT.md
 │     │
-│     ├── orders/..                                ← orders-specific
+│     ├── orders/                                 ← orders-specific
+│     │     ├── configs/
+│     │     │     ├── config_customers.py          ← storing API_HOSTS
+│     │     │     ├── __init__.py
+│     │     │     └── README.md
+│     │     ├── data/
+│     │     │     ├── __init__.py
+│     │     │     └── create_order_payload.json
+│     │     ├── __init__.py
+│     │     ├── conftest.py
+│     │     ├── README.md
+│     │     │── api/
+│     │     │     ├── test_apply_valid_coupon_to_order.py
+│     │     │     ├── test_create_order_smoke.py
+│     │     │     ├── test_orders_param_inside_module.py
+│     │     │     ├── test_orders_params_using_json_file.py
+│     │     │     ├── test_update_order.py
+│     │     │     └── __init__.py
+│     │     └── performance/
+│     │           ├── test_order_performance.py
+│     │           └── __init__.py
 │     ├── coupons/..                               ← coupons-specific
-│     └── products/..                              ← products-specific
-│
-└── conftest.py           # registers Customers-specific plugins
+│     ├── products/..                              ← products-specific
+│     ├── __init__.py
+│     └── conftest
 ```
 
 This folder is fully isolated, supporting clean per-domain plugins, independent reporting, and targeted CI runs.

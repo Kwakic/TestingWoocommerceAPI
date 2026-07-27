@@ -36,7 +36,7 @@ API_ENV=ci
 """
 
 API_HOSTS = {
-    # Local development (tests run on host, WordPress in Docker)
+    # Local README_development (tests run on host, WordPress in Docker)
     "test": "http://localhost:8888/kwakiweb/wp-json/wc/v3/",
     # Docker environment (tests run IN Docker, same network as WordPress)
     # ⚠️ CRITICAL: Use service name "wordpress", NOT "localhost"

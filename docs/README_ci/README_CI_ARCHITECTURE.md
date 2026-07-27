@@ -68,7 +68,7 @@ EcommerceAPI/
 └── plugins/
        entities.py
        entity_metadata.py
-       team_discovery.py
+       entity_discovery.py
 ```
 
 ---

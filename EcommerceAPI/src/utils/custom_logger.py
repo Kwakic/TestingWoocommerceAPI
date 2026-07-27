@@ -72,7 +72,7 @@ from typing import Any, Iterable, Optional, Dict, TextIO
 from EcommerceAPI.src.utils import log_context
 from EcommerceAPI.src.configs.runtime_config import get_config
 from EcommerceAPI.src.utils.date_timestamp_utils import to_iso_utc
-from EcommerceAPI.src.utils.team_discovery import extract_team_from_nodeid
+from EcommerceAPI.src.utils.entity_discovery import extract_entity_from_nodeid
 
 # Module logger — used for internal debug messages in this module.
 log = logging.getLogger(__name__)
@@ -626,7 +626,7 @@ class TeamRoutingJSONLHandler(logging.Handler):
             if not nodeid:
                 return
 
-            team = extract_team_from_nodeid(nodeid)
+            team = extract_entity_from_nodeid(nodeid)
             if not team:
                 return
 

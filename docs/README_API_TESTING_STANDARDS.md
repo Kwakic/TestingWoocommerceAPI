@@ -43,17 +43,6 @@ Test            → business validation
 ---
 
 
-# 🛠️Choosing the Right Tool
-
-| Scenario | Use |
-|---|---|
-| Happy path | Fixture |
-| Need status code / headers | Helper (`return_http_response=True`) |
-| Negative testing | Helper (`return_http_response=True`) |
-| Deep debugging | `request_raw()` |
-
----
-
 # 🟢 Positive Tests (Recommended)
 
 Use fixtures → clean, validated dict
@@ -196,6 +185,28 @@ Fixtures act as **Gatekeepers**:
 - Return a clean dict
 ---
 
+# 🔄 Structure Validation Update (Pydantic)
+
+The framework now uses **Pydantic models instead of JSON Schema**
+for response structure validation.
+
+Old pattern:
+
+validate_customer_response_schema(customer)
+
+New pattern:
+
+customer_model = CustomerModel(**customer)
+
+Advantages:
+
+- strict typing
+- clearer validation errors
+- easier debugging
+- better IDE support
+
+---
+
 # 🧠 Why this works
 
 - Separation of concerns
@@ -239,7 +250,7 @@ Use `request_raw()` only for debugging.
 
 ```
 HttpClient → raw
-RequestUtility → orchestrate
+ApiClient → orchestrate
 HttpResponse → safe
 Fixture → validated
 Test → assert
@@ -248,42 +259,6 @@ Test → assert
 ---
 
 **End of Document**
-
-
-
-------------------------------------------------------------------
-# 🔄 Structure Validation Update (Pydantic)
-
-The framework now uses **Pydantic models instead of JSON Schema**
-for response structure validation.
-
-Old pattern:
-
-validate_customer_response_schema(customer)
-
-New pattern:
-
-customer_model = CustomerModel(**customer)
-
-Advantages:
-
-- strict typing
-- clearer validation errors
-- easier debugging
-- better IDE support
-
-
-------------------------------------------------------------------
-# Updated Validation Order
-
-Always validate responses in this order:
-
-1. Transport status validation
-2. JSON extraction
-3. Structure validation (Pydantic)
-4. Business validation
-5. Database validation (if applicable)
-
 
 ------------------------------------------------------------------
 # 🧪 Shared Test Suites (Framework-Level Tests)
@@ -308,11 +283,9 @@ Consequently, CI reports identify them using
 
 Directory structure:
 
-tests/shared/
+`tests/shared/`
 
     preflight/
-        test_api_connectivity.py
-        test_response_format.py
         test_logging_globals.py
 
     security/
@@ -341,29 +314,50 @@ Examples:
 
 Security tests
 --------------
-Validate authentication and access control behavior.
+Security tests validate framework-level authentication behaviour.
 
-Example matrix:
+Coverage includes:
 
-4 entities
-× 4 HTTP methods
-× 3 invalid credential cases
-= 48 security tests
+- successful authentication
+- invalid OAuth credential rejection
+- authentication matrix across all framework entities
+- GET, POST, PUT and DELETE authentication validation
+- authentication error schema validation
+- authentication error responses
 
 ---
 
 Performance tests
 -----------------
-Provide lightweight baseline response time checks to detect regressions
-in API responsiveness.
+Performance tests are entity-specific benchmark tests.
+
+Each business entity owns:
+
+- benchmark scenarios
+- request parameters
+- performance thresholds
+- benchmark iterations
+
+The shared framework provides only reusable performance utilities.
 
 ---
 
 Contract tests
 -----------------
 
-Contract tests validate API contracts and response schemas independently for every discovered framework entity
+Contract tests validate API contracts and transport behaviour.
 
+Coverage includes:
+
+- API connectivity
+- HTTP status validation
+- response format validation
+- content-type validation
+- schema validation
+- serialization behaviour
+
+Framework entities are discovered automatically, so new entities
+are included without modifying the tests.
 ---
 
 

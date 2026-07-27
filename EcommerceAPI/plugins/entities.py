@@ -850,7 +850,7 @@ class AllResources:
         """
         Extend the default dir() with discovered entity keys (valid Python identifiers)
         to help IDE completion. Only the minimal, expected exceptions are caught so that
-        unrelated errors surface during development.
+        unrelated errors surface during README_development.
         """
         default_dir = set(super().__dir__())
 

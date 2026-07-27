@@ -69,6 +69,9 @@ The framework already provides helpers and validators to handle this.
 
 ❌ DO NOT reorganize by smoke/regression folders
 
+>Each business entity owns its smoke, integration, regression and performance tests. The shared directory is
+> reserved exclusively for framework-level test suites.
+
 ------------------------------------------------------------------------
 
 # 🏷️ Marker Strategy (STANDARDIZED)
@@ -338,12 +341,16 @@ Already included:
 
 # 🧪 Shared Test Suites
 
-    tests/shared/
-       preflight/
-       security/
-       performance/
-       contracts/
+```
+tests/shared/
+   preflight/
+   security/
+   contracts/
+```
+Performance tests are intentionally NOT located under `tests/shared/`.
+They belong to each business entity.
 
+---
 ### Preflight ⚡
 
 Framework-level validation only:
@@ -378,11 +385,52 @@ API contract and transport validation:
 
 ### Security 🔒
 
--   authentication matrix
+Framework-level authentication validation.
+
+Security tests verify that the framework correctly authenticates requests
+before business logic is executed.
+
+Coverage includes:
+
+- successful authentication using valid OAuth credentials
+- rejection of invalid OAuth credentials
+- authentication matrix across all supported framework entities
+- authentication validation for GET, POST, PUT and DELETE requests
+- authentication error schema validation
+- authentication error response validation (HTTP status, error code and message)
+
+The security suite automatically discovers all supported framework entities,
+so adding a new entity automatically extends the authentication coverage
+without modifying the tests.
 
 ---
 
 ### Performance ⏱️
+
+Entity-specific benchmark tests.
+
+Unlike Preflight, Contract and Security, performance tests belong to each
+business entity because every API has different performance expectations.
+
+Examples:
+
+```text
+tests/
+   customers/performance/
+   orders/performance/
+   products/performance/
+   coupons/performance/
+```
+
+Each entity owns:
+
+- benchmark scenarios
+- request parameters
+- performance thresholds
+- benchmark iterations
+
+The shared framework owns only the reusable performance utilities used to
+measure request duration and collect benchmark statistics.
 
 -   response time checks
 
@@ -390,15 +438,16 @@ API contract and transport validation:
 
 ## ✨ Test Architecture
 
-| Suite       | Responsibility                      |
-| ----------- | ----------------------------------- |
-| preflight   | framework sanity                    |
-| contract    | API contract + transport guarantees |
-| smoke       | critical business flow              |
-| regression  | broad coverage                      |
-| security    | auth/security behavior              |
-| performance | latency/perf                        |
-| integration | API + DB consistency                |
+| Suite         | Responsibility                                    |
+| ------------- | ------------------------------------------------- |
+| `preflight`   | Framework sanity                                  |
+| `contract`    | API contract + transport guarantees               |
+| `smoke`       | Critical business flow                            |
+| `regression`  | Broad coverage                                    |
+| `security`    | Framework security validation                     |
+| `performance` | Entity benchmark validation (per business domain) |
+| `integration` | API + DB consistency                              |
+
 
 
 ---

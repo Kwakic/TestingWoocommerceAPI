@@ -242,7 +242,7 @@ jobs:
       # - tests may be commented out
       # - tests may be deselected by markers
       # - tests may be skipped
-      # - tests may be under development
+      # - tests may be under README_development
       #
       # Pytest exit code semantics:
       #
@@ -258,7 +258,7 @@ jobs:
       # - entity contains active tests
       # - entity tests are temporarily disabled
       # - marker filtering excludes all tests
-      # - entity is under development
+      # - entity is under README_development
       #
       # In all cases, Exit Code 5 is treated as:
       #
@@ -278,7 +278,7 @@ jobs:
       # - Active smoke tests                -> Run
       # - Tests temporarily disabled        -> Skip
       # - Marker filtering excludes tests   -> Skip
-      # - Entity under development          -> Skip
+      # - Entity under README_development          -> Skip
       # - No tests yet                      -> Skip
       # - Test failures                     -> Fail
       # - Infrastructure failures           -> Fail
