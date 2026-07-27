@@ -10,24 +10,25 @@ A comprehensive guide for writing tests in the TestEcommerceAPI framework. Desig
 2. [Who This Guide Is For](#who-this-guide-is-for)
 3. [Testing Philosophy](#testing-philosophy)
 4. [Framework Architecture (High Level)](#framework-architecture-high-level)
-5. [Test Lifecycle](#test-lifecycle)
-6. [Test Structure & Organization](#test-structure--organization)
-7. [Marker Strategy (Standardized)](#marker-strategy-standardized)
-8. [Choosing the Right Abstraction](#choosing-the-right-abstraction)
-9. [Writing Happy-Path Tests](#writing-happy-path-tests)
-10. [Writing Negative Tests](#writing-negative-tests)
-11. [Validation Pipeline](#validation-pipeline)
-12. [Fixtures (Gatekeepers)](#fixtures-gatekeepers)
-13. [Helpers](#helpers)
-14. [Validators](#validators)
-15. [Integration Tests](#integration-tests)
-16. [Shared Framework Suites](#shared-framework-suites)
-17. [Performance Tests](#performance-tests)
-18. [CI Strategy](#ci-strategy)
-19. [Common Mistakes](#common-mistakes)
-20. [Best Practices](#best-practices)
-21. [Golden Rules](#golden-rules)
-22. [Quick Reference / Cheat Sheet](#quick-reference--cheat-sheet)
+5. [How a Request Flows Through the Framework](#how-a-request-flows-through-the-framework)
+6. [Test Lifecycle](#test-lifecycle)
+7. [Test Structure & Organization](#test-structure--organization)
+8. [Marker Strategy (Standardized)](#marker-strategy-standardized)
+9. [Choosing the Right Abstraction](#choosing-the-right-abstraction)
+10. [Writing Happy-Path Tests](#writing-happy-path-tests)
+11. [Writing Negative Tests](#writing-negative-tests)
+12. [Validation Pipeline](#validation-pipeline)
+13. [Fixtures (Gatekeepers)](#fixtures-gatekeepers)
+14. [Helpers](#helpers)
+15. [Validators](#validators)
+16. [Integration Tests](#integration-tests)
+17. [Shared Framework Suites](#shared-framework-suites)
+18. [Performance Tests](#performance-tests)
+19. [CI Strategy](#ci-strategy)
+20. [Common Mistakes](#common-mistakes)
+21. [Best Practices](#best-practices)
+22. [Golden Rules](#golden-rules)
+23. [Quick Reference / Cheat Sheet](#quick-reference--cheat-sheet)
 
 ---
 
@@ -53,7 +54,7 @@ This guide teaches you:
 |------|--------------|
 | **QA Engineers** | Domain-driven test organization, marker strategy, fixture patterns |
 | **Developers** | Integration testing, negative tests, validation pipeline |
-| **New Contributors** | Start with Section 9 (Happy-Path Tests), use fixtures by default |
+| **New Contributors** | Start with Section 10 (Happy-Path Tests), use fixtures by default |
 | **Tech Leads** | CI strategy, architecture layers, performance benchmarking |
 
 ---
@@ -96,6 +97,144 @@ HttpClient → APIClient → HttpResponse → API → Helpers → Validators →
 
 **Key Principle:** Transport layers do NOT validate. Validation happens in fixtures, validators, and tests.
 
+**Note:** This is a conceptual view only. Implementation details are documented in `README_API_CLIENT.md`. This guide focuses on **writing tests**, not framework internals.
+
+---
+
+## How a Request Flows Through the Framework
+
+Understanding the request flow helps you debug issues and write better tests.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                          TEST STARTS                             │
+│                    test_get_customer_by_id()                    │
+└────────────────────────────┬──────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    FIXTURE CREATES DATA                          │
+│              create_valid_customer() is called                  │
+│        - Calls helper to create customer on API                 │
+│        - Validates response (status 201)                        │
+│        - Extracts + validates JSON (Pydantic)                   │
+│        - Registers cleanup                                       │
+│        - Returns clean dict: {id, email, ...}                   │
+└────────────────────────────┬──────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    TEST CALLS HELPER                             │
+│         response = customer_helper.get_customer_by_id()         │
+│                helper._calls_api()                              │
+└────────────────────────────┬──────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     HELPER CALLS API                             │
+│            APIClient.get("/customers/{id}")                     │
+└────────────────────────────┬──────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   APICLIENT ORCHESTRATES                         │
+│        - Validates inputs                                        │
+│        - Logs request                                            │
+│        - Calls HttpClient                                        │
+│        - Implements retry logic                                  │
+└────────────────────────────┬──────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    HTTPCLIENT SENDS                              │
+│    - Establishes connection to WooCommerce API                  │
+│    - Sends HTTP GET request                                     │
+│    - Enforces timeout (default: 30s)                            │
+│    - Handles low-level HTTP concerns                            │
+└────────────────────────────┬──────────────────────────────────────┘
+                             │
+                             ▼
+         ╔════════════════════════════════════════════╗
+         ║     🌐 WooCommerce API Responds 🌐         ║
+         ║                                            ║
+         ║   HTTP 200                                 ║
+         ║   Content-Type: application/json           ║
+         ║                                            ║
+         ║   {                                        ║
+         ║     "id": 123,                             ║
+         ║     "email": "customer@example.com",       ║
+         ║     "created_at": "2024-01-01T...",       ║
+         ║     ...                                    ║
+         ║   }                                        ║
+         ╚════════════════════════════════════════════╝
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                  HTTPCLIENT RECEIVES                             │
+│      - Returns raw requests.Response                            │
+│      - Status code, headers, body                               │
+└────────────────────────────┬──────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                 APICLIENT NORMALIZES                             │
+│      - Wraps raw response in HttpResponse                       │
+│      - Parses JSON safely                                        │
+│      - Validates content-type                                   │
+│      - Returns: HttpResponse(status_code=200, json={...})      │
+└────────────────────────────┬──────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                  TEST RECEIVES RESPONSE                          │
+│              response = HttpResponse(...)                       │
+└────────────────────────────┬──────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   TEST VALIDATES (Layer 1)                       │
+│                   Transport Layer Validation                    │
+│                                                                  │
+│              assert response.status_code == 200                 │
+└────────────────────────────┬──────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   TEST VALIDATES (Layer 2)                       │
+│                   Schema Layer Validation                        │
+│                                                                  │
+│           customer_model = CustomerModel(**response.json)       │
+│         (Pydantic validates all fields exist + correct types)   │
+└────────────────────────────┬──────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   TEST VALIDATES (Layer 3)                       │
+│                   Business Logic Validation                      │
+│                                                                  │
+│              assert customer_model.email == expected_email      │
+│              assert customer_model.id is not None               │
+└────────────────────────────┬──────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    ✅ TEST PASSES                                │
+└────────────────────────────┬──────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    CLEANUP EXECUTES                              │
+│              Fixture cleanup code runs                          │
+│              - Calls customer_helper.delete_customer(id)        │
+│              - Data is removed from WooCommerce                 │
+│              - No leftover data                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Key Takeaway
+
+Each layer has a specific responsibility. Tests don't worry about HTTP details—the framework handles them. Tests only assert **business logic**.
+
 ---
 
 ## Test Lifecycle
@@ -110,6 +249,8 @@ Test Runs in CI (via marker filters)
 Fixture Creates Data (with validation)
     ↓
 Test Calls Helper or API
+    ↓
+Request Flows Through Framework (see above)
     ↓
 Response Validated (status → schema → business logic)
     ↓
@@ -158,6 +299,31 @@ Each business entity owns its own smoke, integration, regression, and performanc
 ## Marker Strategy (Standardized)
 
 Markers organize tests for selective execution. Use up to 3 markers per test (excluding domain).
+
+### Marker Hierarchy
+
+```
+customers/
+├── test_create.py
+│   └── @pytest.mark.smoke
+│   └── @pytest.mark.integration
+├── test_update.py
+│   └── @pytest.mark.regression
+└── performance/
+    └── test_retrieval_time.py
+        └── @pytest.mark.performance
+
+shared/
+├── preflight/
+│   └── test_logging.py
+│       └── @pytest.mark.preflight
+├── contract/
+│   └── test_schema.py
+│       └── @pytest.mark.contract
+└── security/
+    └── test_auth.py
+        └── @pytest.mark.security
+```
 
 ### 1. Domain Markers (Auto-Applied)
 
@@ -225,14 +391,8 @@ pytestmark = [
 
 def test_customer_created_in_database(customer_helper, create_valid_customer):
     """Verify customer appears in DB after API call."""
-    
-    # Arrange
     customer = create_valid_customer()
-    
-    # Act
     db_customer = get_customer_from_db(customer["id"])
-    
-    # Assert
     assert db_customer.email == customer["email"]
 ```
 
@@ -294,24 +454,15 @@ def test_get_customer_by_id(customer_helper, create_valid_customer):
     
     # Assert
     customer_model = assert_customer_retrieved_successfully(response)
-    
-    assert_customer_identity(
-        customer_model,
-        customer["id"],
-        customer["email"]
-    )
+    assert_customer_identity(customer_model, customer["id"], customer["email"])
 ```
 
 ### For Juniors: Start Simple
 
 ```python
-def test_customer_has_email():
+def test_customer_has_email(create_valid_customer):
     """Verify customer email is captured."""
-    
-    # Create data
     customer = create_valid_customer()
-    
-    # Check it
     assert customer["email"]
     assert "@" in customer["email"]
 ```
@@ -322,7 +473,6 @@ def test_customer_has_email():
 ✅ Test one business behavior per test
 ✅ Name tests with `test_<what_you_are_testing>`
 ✅ Add docstring explaining the intent
-✅ Use validators for complex assertions
 
 ---
 
@@ -335,16 +485,14 @@ Negative tests verify **error handling and boundary conditions**. They should be
 Always use `return_http_response=True` for negative tests:
 
 ```python
-def test_create_customer_with_invalid_email():
+def test_create_customer_with_invalid_email(customer_helper):
     """Verify API rejects invalid email."""
     
-    # Arrange & Act
     response = customer_helper.create_customer(
         payload={"email": "invalid"},
         return_http_response=True
     )
     
-    # Assert
     assert response.status_code == 400
     assert response.json["error"]["code"] == "INVALID_EMAIL"
 ```
@@ -368,44 +516,41 @@ def test_create_customer_with_invalid_email():
 Validation happens in **strict order**. Each layer builds on the previous.
 
 ```
-Transport Validation
-    ↓ (status_code OK?)
-Schema Validation
-    ↓ (JSON structure valid?)
-Business Validation
-    ↓ (business rules satisfied?)
-Database Validation
-    ↓ (data persisted correctly?)
+Transport Validation        (HTTP status code)
+    ↓
+Schema Validation           (JSON structure)
+    ↓
+Business Validation         (business rules)
+    ↓
+Database Validation         (data persistence)
 ```
 
 ### Layer 1: Transport Validation
 
 ```python
-assert response.status_code == 201  # HTTP level
+assert response.status_code == 201
 ```
 
 ### Layer 2: Schema Validation
 
 ```python
-# Using Pydantic models (strict typing)
 customer_model = CustomerModel(**response.json)
-
-# Or using validators
-assert_customer_response_schema(response.json)
 ```
 
 ### Layer 3: Business Validation
 
 ```python
 assert customer_model.email == expected_email
-assert customer_model.created_at > datetime.now()
 ```
 
 ### Layer 4: Database Validation
 
 ```python
-db_customer = get_customer_from_db(customer_model.id)
-assert db_customer.email == customer_model.email
+@pytest.mark.integration
+def test_customer_in_database(create_valid_customer):
+    customer = create_valid_customer()
+    db_customer = get_customer_from_db(customer["id"])
+    assert db_customer.email == customer["email"]
 ```
 
 ### ⚠️ Important
@@ -413,7 +558,6 @@ assert db_customer.email == customer_model.email
 - ✅ Validate in order
 - ✅ Fail fast (stop at first layer failure)
 - ❌ Never skip layers
-- ❌ Never validate manually (use validators or Pydantic)
 
 ---
 
@@ -437,12 +581,9 @@ Fixtures act as **gatekeepers**: they create valid data, validate it, clean it u
 ✅ **NEVER** return `HttpResponse`
 ✅ **NEVER** return invalid objects
 
-### Example: Good Fixture
+### Example: Fixture Template
 
 ```python
-import pytest
-from pydantic import ValidationError
-
 @pytest.fixture
 def create_valid_customer(customer_helper):
     """Factory fixture: creates and validates a customer."""
@@ -485,7 +626,6 @@ def create_valid_customer(customer_helper):
         # Register cleanup
         created_customers.append(customer_dict["id"])
         
-        # Return clean dict
         return customer_dict
     
     yield _create
@@ -493,7 +633,6 @@ def create_valid_customer(customer_helper):
     # Cleanup
     for customer_id in created_customers:
         customer_helper.delete_customer(customer_id)
-
 ```
 
 ### Usage in Tests
@@ -501,10 +640,7 @@ def create_valid_customer(customer_helper):
 ```python
 def test_customer_email_is_captured(create_valid_customer):
     """Verify customer email is saved."""
-    
     customer = create_valid_customer()
-    
-    # No HTTP noise, clean dict
     assert customer["email"] == "customer@example.com"
 ```
 
@@ -527,7 +663,7 @@ Helpers **orchestrate business logic** and bridge the gap between tests and the 
 ❌ DO NOT validate (that's the fixture's job)
 ❌ DO NOT return invalid data
 
-### Example: Good Helper
+### Example: Helper
 
 ```python
 class CustomerHelper:
@@ -550,21 +686,14 @@ class CustomerHelper:
         )
         
         if return_http_response:
-            return response  # HttpResponse object
-        
-        # Default: return parsed JSON
+            return response
         return response.json
     
     def get_customer_by_id(self, customer_id, return_http_response=False):
         """Retrieve a customer by ID."""
-        
-        response = APIClient.get(
-            endpoint=f"/customers/{customer_id}"
-        )
-        
+        response = APIClient.get(endpoint=f"/customers/{customer_id}")
         if return_http_response:
             return response
-        
         return response.json
 ```
 
@@ -573,7 +702,6 @@ class CustomerHelper:
 ✅ Retrieving data
 ✅ Creating data (fixtures use helpers)
 ✅ Multi-step workflows (login + create order + verify)
-✅ Complex setup (not suitable for fixtures)
 
 ---
 
@@ -586,70 +714,42 @@ Validators **assert structure and business logic** without fetching data.
 ✅ Validate schema (Pydantic models)
 ✅ Validate business logic
 ✅ Validate DB consistency
-✅ Provide clear error messages
 
 ### Validator Constraints
 
 ❌ DO NOT fetch data (pass it in)
 ❌ DO NOT call helpers
-❌ DO NOT have side effects
 
 ### Pattern: Fetch → Validate
 
 ```python
-# Fetch data
-customer_json = response.json
+# Fetch data (in fixture or test)
+response = customer_helper.create_customer(return_http_response=True)
 
 # Validate schema
-customer_model = CustomerModel(**customer_json)
+customer_model = CustomerModel(**response.json)
 
 # Validate business logic
-assert_customer_identity(
-    customer_model,
-    expected_id,
-    expected_email
-)
+assert_customer_identity(customer_model, expected_id, expected_email)
 ```
 
-### Example: Good Validator
+### Example Validators
 
 ```python
 def assert_customer_retrieved_successfully(response):
-    """Validate successful customer retrieval response.
+    """Validate successful retrieval response.
     
     Returns:
         CustomerModel: Validated customer object
-        
-    Raises:
-        AssertionError: If response is invalid
     """
-    
-    # Layer 1: Transport
-    assert response.status_code == 200, \
-        f"Expected 200, got {response.status_code}"
-    
-    # Layer 2: Schema
-    try:
-        customer_model = CustomerModel(**response.json)
-    except ValidationError as e:
-        raise AssertionError(f"Invalid customer schema: {e}")
-    
+    assert response.status_code == 200
+    customer_model = CustomerModel(**response.json)
     return customer_model
 
 def assert_customer_identity(customer_model, expected_id, expected_email):
-    """Validate customer identity (business logic).
-    
-    Args:
-        customer_model: CustomerModel instance
-        expected_id: Expected customer ID
-        expected_email: Expected customer email
-    """
-    
-    assert customer_model.id == expected_id, \
-        f"Expected ID {expected_id}, got {customer_model.id}"
-    
-    assert customer_model.email == expected_email, \
-        f"Expected email {expected_email}, got {customer_model.email}"
+    """Validate customer identity (business logic)."""
+    assert customer_model.id == expected_id
+    assert customer_model.email == expected_email
 ```
 
 ---
@@ -666,34 +766,23 @@ If a test uses a DAO (Data Access Object) to query the database:
 @pytest.mark.integration
 def test_customer_persisted_to_database(create_valid_customer):
     """Verify customer data is saved to database."""
-    
-    # Arrange
     customer = create_valid_customer()
-    
-    # Act
     db_customer = get_customer_from_db(customer["id"])
-    
-    # Assert
     assert db_customer.email == customer["email"]
-    assert db_customer.created_at is not None
 ```
 
-### Validation Pipeline for Integration Tests
+### When NOT to Mark as Integration
 
+If a test does **not** query persistent state (database, cache, message queue, etc.), it should generally **not** be marked as an integration test.
+
+```python
+# ❌ NOT integration (no DB query)
+@pytest.mark.smoke
+def test_customer_response_has_email(create_valid_customer):
+    """Verify response contains email."""
+    customer = create_valid_customer()
+    assert customer["email"]  # Only checks response, no DB query
 ```
-API Response Validation
-    ↓
-Database Query
-    ↓
-Database Consistency Check
-```
-
-### Tips
-
-✅ Use fixtures (they validate API response)
-✅ Query DB using DAO layer
-✅ Verify both API response AND database state
-✅ Mark as `@pytest.mark.integration`
 
 ---
 
@@ -721,51 +810,25 @@ tests/shared/
 
 **Framework-level validation only.** Verify the test environment and framework configuration.
 
-**Coverage:**
+**Coverage:** Logging configuration, pytest marker sanity, configuration parsing, framework bootstrap validation.
 
-- Logging configuration
-- Structured logging wiring
-- Pytest marker sanity
-- Configuration parsing
-- Framework bootstrap validation
-
-**Constraints:**
-
-❌ Must NOT call live APIs
-❌ Must NOT require Docker
-❌ Must NOT require OAuth
-❌ Must NOT require databases
-❌ Must NOT require WooCommerce
+**Constraints:** Must NOT call live APIs, require Docker, OAuth, databases, or WooCommerce.
 
 ### Contract 📋
 
 **API contract and transport validation.** Verify APIs respond correctly.
 
-**Coverage:**
+**Coverage:** API connectivity, HTTP status, response format, content-type, schema validation, serialization behavior.
 
-- API connectivity
-- HTTP status validation
-- Response format validation
-- Content-Type validation
-- Schema validation
-- Serialization behavior
-
-Framework entities are **discovered automatically**, so new entities are included without modifying tests.
+**Discovery:** Framework entities are discovered automatically.
 
 ### Security 🔒
 
 **Framework-level authentication validation.** Verify authentication works before business logic.
 
-**Coverage:**
+**Coverage:** Valid OAuth, invalid OAuth rejection, authentication matrix (all entities), GET/POST/PUT/DELETE validation, error schema validation.
 
-- Successful authentication (valid OAuth)
-- Invalid OAuth rejection
-- Authentication matrix (all entities)
-- GET, POST, PUT, DELETE validation
-- Error schema validation
-- Error response validation (status, code, message)
-
-Framework entities are **discovered automatically**.
+**Discovery:** Framework entities are discovered automatically.
 
 ### Performance (Entity-Specific)
 
@@ -778,26 +841,7 @@ tests/
 └── products/performance/
 ```
 
-Each entity owns:
-- Benchmark scenarios
-- Request parameters
-- Performance thresholds
-- Benchmark iterations
-
-The shared framework provides only reusable utilities for measuring request duration and collecting statistics.
-
-### Big Picture: Test Architecture
-
-| Suite | Responsibility | Scope | Entity-Specific |
-|-------|-----------------|-------|-----------------|
-| Preflight | Framework sanity | Framework | ❌ |
-| Contract | API contract | Framework | ❌ |
-| Security | Auth validation | Framework | ❌ |
-| Smoke | Critical flow | Entity | ✅ |
-| Sanity | Recent changes | Entity | ✅ |
-| Regression | Broad coverage | Entity | ✅ |
-| Performance | Benchmarking | Entity | ✅ |
-| Integration | API + DB | Entity | ✅ |
+Each entity owns benchmark scenarios, request parameters, performance thresholds, and benchmark iterations.
 
 ---
 
@@ -815,39 +859,23 @@ Performance tests live with their entity, NOT in `tests/shared/`:
 
 ```
 tests/customers/performance/test_customer_retrieval_time.py
-tests/orders/performance/test_bulk_order_export_time.py
 ```
 
-### Example: Simple Benchmark
+### Example
 
 ```python
-import pytest
-import time
-
 @pytest.mark.performance
-def test_customer_retrieval_under_100ms(customer_helper, create_valid_customer):
+def test_customer_retrieval_under_100ms(create_valid_customer):
     """Verify customer retrieval stays under 100ms."""
-    
-    # Arrange
     customer = create_valid_customer()
     
-    # Act
     start = time.perf_counter()
     response = customer_helper.get_customer_by_id(customer["id"])
     duration_ms = (time.perf_counter() - start) * 1000
     
-    # Assert
     assert response.status_code == 200
-    assert duration_ms < 100, \
-        f"Expected < 100ms, took {duration_ms:.2f}ms"
+    assert duration_ms < 100
 ```
-
-### Tips
-
-✅ Set realistic thresholds (test environment vs production)
-✅ Run multiple iterations (collect statistics)
-✅ Account for network latency
-✅ Mark as `@pytest.mark.performance`
 
 ---
 
@@ -855,69 +883,62 @@ def test_customer_retrieval_under_100ms(customer_helper, create_valid_customer):
 
 CI pipelines execute tests in **stages**, from fast feedback to comprehensive validation.
 
-### Fast Pipeline (PR / Commit)
+### Workflow Architecture
 
-**Goal:** Give feedback in < 5 minutes
-
-```bash
-pytest -m "smoke or sanity or preflight"
+```
+┌─────────────────────────────────────────────────┐
+│  GitHub Workflow: Fast Pipeline (PR Gate)       │
+│  ✓ Preflight                                    │
+│  ✓ Smoke                                        │
+│  ✓ Sanity                                       │
+│  ⏱️  ~ 5 minutes                                │
+│  🎯 If PASS → proceed to Full Validation        │
+└─────────────────────────────────────────────────┘
+                        │
+                        ▼
+┌─────────────────────────────────────────────────┐
+│  GitHub Workflow: Full Validation               │
+│  ✓ Contract                                     │
+│  ✓ Integration                                  │
+│  ✓ Regression                                   │
+│  ⏱️  ~ 15 minutes                               │
+│  🎯 If PASS → safe to merge                     │
+└─────────────────────────────────────────────────┘
+                        │
+                        ▼
+┌─────────────────────────────────────────────────┐
+│  GitHub Workflow: Nightly (Deep Coverage)       │
+│  ✓ Regression (comprehensive)                   │
+│  ⏱️  ~ 60 minutes                               │
+│  🎯 Catches edge cases                          │
+└─────────────────────────────────────────────────┘
+                        │
+                        ▼
+┌─────────────────────────────────────────────────┐
+│  GitHub Workflow: Security (Weekly)             │
+│  ✓ Security                                     │
+│  ⏱️  ~ 10 minutes                               │
+│  🎯 Auth validation                             │
+└─────────────────────────────────────────────────┘
+                        │
+                        ▼
+┌─────────────────────────────────────────────────┐
+│  GitHub Workflow: Performance (Scheduled)       │
+│  ✓ Performance                                  │
+│  ⏱️  ~ 30 minutes                               │
+│  🎯 Benchmarks + SLA checks                     │
+└─────────────────────────────────────────────────┘
 ```
 
-- Preflight (framework validation)
-- Smoke (critical flows)
-- Sanity (recent changes)
-
-**Pass = merge candidate**
-
-### Full Validation
-
-**Goal:** Comprehensive validation before merge
-
-```bash
-pytest -m "not performance and not security"
-```
-
-- All of Fast Pipeline
-- Plus regression tests
-- Plus integration tests
-- Excludes specialized suites
-
-**Pass = safe to merge**
-
-### Nightly
-
-**Goal:** Deep coverage after hours
-
-```bash
-pytest -m regression
-```
-
-- All regression tests
-- Catches edge cases
-- Can take 30–60 minutes
-
-### Scheduled (Weekly/Monthly)
-
-**Goal:** Specialized validations
-
-```bash
-pytest -m performance
-pytest -m security
-```
-
-- Performance benchmarks
-- Security audits
-- Runs at fixed times (e.g., Sunday 2 AM)
-
-### Marker-Based Filtering
+### Command Reference
 
 | Pipeline | Command | Time | Purpose |
 |----------|---------|------|---------|
-| PR Gate | `pytest -m "smoke or sanity or preflight"` | ~ 5 min | Fast feedback |
-| Full | `pytest -m "not performance and not security"` | ~ 15 min | Safe to merge |
-| Nightly | `pytest -m regression` | ~ 60 min | Deep coverage |
-| Weekly | `pytest -m security` | ~ 10 min | Auth validation |
-| Scheduled | `pytest -m performance` | ~ 30 min | Benchmarks |
+| **PR Gate** | `pytest -m "smoke or sanity or preflight"` | ~5 min | Fast feedback |
+| **Full** | `pytest -m "not performance and not security"` | ~15 min | Safe to merge |
+| **Nightly** | `pytest -m regression` | ~60 min | Deep coverage |
+| **Security** | `pytest -m security` | ~10 min | Auth validation |
+| **Performance** | `pytest -m performance` | ~30 min | Benchmarks |
 
 ---
 
@@ -926,9 +947,9 @@ pytest -m security
 ### ❌ Mistake 1: Mixing Abstraction Levels
 
 ```python
-# WRONG
+# WRONG: Fixtures return dict, not HttpResponse
 customer = create_valid_customer()
-assert customer.status_code == 201  # ← fixtures return dict, not HttpResponse
+assert customer.status_code == 201  # ← AttributeError
 ```
 
 **Fix:** Use helper for response metadata
@@ -944,69 +965,48 @@ assert response.status_code == 201
 ### ❌ Mistake 2: Validating in Helpers
 
 ```python
-# WRONG
+# WRONG: Helpers should not assert
 def create_customer(payload):
     response = APIClient.post("/customers", json=payload)
-    assert response.status_code == 201  # ← NO! This belongs in fixture
+    assert response.status_code == 201  # ← NO!
     return response.json
 ```
 
 **Fix:** Let fixtures validate
 
 ```python
-# RIGHT
+# RIGHT: Helpers just orchestrate
 def create_customer(payload):
     return APIClient.post("/customers", json=payload)
-
-@pytest.fixture
-def create_valid_customer(customer_helper):
-    def _create():
-        response = customer_helper.create_customer({"email": "test@example.com"})
-        assert response.status_code == 201  # ← Validation here
-        return response.json
-    return _create
 ```
 
 ---
 
 ### ❌ Mistake 3: Asserting Inside Helpers
 
-```python
-# WRONG
-def get_customer(customer_id):
-    response = APIClient.get(f"/customers/{customer_id}")
-    assert response.status_code == 200  # ← NO! Let tests assert
-    assert response.json["id"]  # ← NO!
-    return response.json
-```
+Let tests assert, not helpers.
 
-**Fix:** Return response, let test assert
+**Fix:** Return data, let test assert
 
 ```python
-# RIGHT
 def get_customer(customer_id):
     return APIClient.get(f"/customers/{customer_id}")
 
-def test_get_customer(customer_helper):
+def test_get_customer():
     response = customer_helper.get_customer("123")
-    assert response.status_code == 200  # ← Test asserts
-    assert response.json["id"]
+    assert response.status_code == 200
 ```
 
 ---
 
-### ❌ Mistake 4: Overusing Fixtures for Negative Tests
+### ❌ Mistake 4: Using Fixtures for Negative Tests
 
 ```python
-# WRONG
+# WRONG: Breaks fixture contract
 @pytest.fixture
-def create_invalid_customer(customer_helper):
-    # This breaks the fixture contract!
+def create_invalid_customer():
     response = customer_helper.create_customer({"email": "invalid"})
-    return response
-
-def test_invalid_email(create_invalid_customer):
-    assert create_invalid_customer.status_code == 400  # ← Confusing
+    return response  # ← Fixture returning HttpResponse!
 ```
 
 **Fix:** Use helper directly
@@ -1026,106 +1026,72 @@ def test_invalid_email(customer_helper):
 ### ❌ Mistake 5: Manual JSON Validation
 
 ```python
-# WRONG
-response = customer_helper.create_customer(...)
+# WRONG: Repeating schema checks
 json_data = response.json
-assert json_data["id"]  # ← Manual validation
+assert json_data["id"]
 assert json_data["email"]
-assert json_data["created_at"]
+assert isinstance(json_data["created_at"], str)
 ```
 
-**Fix:** Use Pydantic or validators
+**Fix:** Use Pydantic
 
 ```python
-# RIGHT
-response = customer_helper.create_customer(...)
-customer_model = CustomerModel(**response.json)  # Validates schema
-assert customer_model.id
-assert customer_model.email
-assert customer_model.created_at
+# RIGHT: One validation, all checked
+customer_model = CustomerModel(**response.json)
 ```
 
 ---
 
 ### ❌ Mistake 6: Using `request_raw()` in Normal Tests
 
-```python
-# WRONG
-def test_customer_creation(customer_helper):
-    resp, _ = APIClient.request_raw(
-        method="post",
-        endpoint="/customers",
-        payload={"email": "test@example.com"}
-    )
-    assert resp.status_code == 201  # ← Low-level, error-prone
-```
-
 **Fix:** Use helper
 
 ```python
-# RIGHT
-def test_customer_creation(customer_helper):
-    response = customer_helper.create_customer()
-    assert response.status_code == 201
+# ONLY for debugging:
+resp, _ = APIClient.request_raw(method="post", endpoint="/customers", payload={...})
+
+# Normal tests use helpers:
+response = customer_helper.create_customer()
 ```
 
 ---
 
 ### ❌ Mistake 7: Reorganizing Test Folders
 
-```
-# WRONG
-tests/
-├── smoke/
-│   ├── test_customer_smoke.py
-│   ├── test_order_smoke.py
-├── regression/
-│   ├── test_customer_regression.py
-│   ├── test_order_regression.py
-```
+Don't create smoke/regression/integration folders. Use markers instead.
 
 **Fix:** Domain-driven organization
 
 ```
-# RIGHT
-tests/
-├── customers/
-│   ├── test_create_customer.py
-│   ├── test_get_customer.py
-├── orders/
-│   ├── test_create_order.py
+tests/customers/
+├── test_create_customer.py
+│   └── @pytest.mark.smoke
+│   └── @pytest.mark.regression
+├── test_update_customer.py
+│   └── @pytest.mark.regression
+└── integration/
+    └── test_database_consistency.py
+        └── @pytest.mark.integration
 ```
-
-Markers (`@pytest.mark.smoke`, `@pytest.mark.regression`) handle tier separation.
 
 ---
 
 ### ❌ Mistake 8: Leaving Test Data Behind
 
-```python
-# WRONG
-def test_customer_creation(customer_helper):
-    response = customer_helper.create_customer()
-    # NO CLEANUP! Data left in database
-    assert response.status_code == 201
-```
-
 **Fix:** Use fixtures with cleanup
 
 ```python
-# RIGHT
 @pytest.fixture
 def create_valid_customer(customer_helper):
     created_ids = []
     
     def _create():
         response = customer_helper.create_customer()
-        created_ids.append(response.json["id"])
-        return response.json
+        created_ids.append(response["id"])
+        return response
     
     yield _create
     
-    # Cleanup
     for customer_id in created_ids:
         customer_helper.delete_customer(customer_id)
 ```
@@ -1136,22 +1102,20 @@ def create_valid_customer(customer_helper):
 
 ### 1. Start with Happy-Path Tests
 
-Write happy-path (positive) tests first. They should be ~80% of your suite.
+Write ~80% happy-path tests (positive cases).
 
 ```python
 def test_customer_can_be_created(create_valid_customer):
-    """Verify customer creation works."""
     customer = create_valid_customer()
     assert customer["id"]
 ```
 
 ### 2. Add Negative Tests for Error Cases
 
-Then add negative tests for error scenarios (~10-20%).
+Add ~10-20% negative tests (error scenarios).
 
 ```python
-def test_create_customer_rejects_invalid_email(customer_helper):
-    """Verify invalid email is rejected."""
+def test_invalid_email_rejected(customer_helper):
     response = customer_helper.create_customer(
         {"email": "invalid"},
         return_http_response=True
@@ -1161,26 +1125,19 @@ def test_create_customer_rejects_invalid_email(customer_helper):
 
 ### 3. Use Fixtures for Setup
 
-Fixtures are gatekeepers. Let them create and validate data.
-
 ```python
 customer = create_valid_customer()  # Clean, safe
 ```
 
-### 4. Use Helpers for Multi-Step Workflows
-
-Helpers orchestrate complex logic.
+### 4. Use Helpers for Workflows
 
 ```python
-# Login + create order + verify
 user = login_user(credentials)
 order = create_order_for_user(user)
 verify_order_in_database(order)
 ```
 
 ### 5. Use Validators for Assertions
-
-Validators check schema and business logic.
 
 ```python
 customer_model = assert_customer_retrieved_successfully(response)
@@ -1192,92 +1149,30 @@ assert_customer_has_valid_email(customer_model)
 One behavior per test.
 
 ```python
-# ❌ WRONG: Testing multiple behaviors
-def test_customer_workflow():
-    customer = create_valid_customer()
-    assert customer["email"]
-    updated = update_customer(customer["id"])
-    assert updated["first_name"]
-    deleted = delete_customer(customer["id"])
-    assert deleted is None
-
-# ✅ RIGHT: One behavior per test
+# ✅ RIGHT: Separate concerns
 def test_create_customer(create_valid_customer):
     customer = create_valid_customer()
     assert customer["email"]
 
-def test_update_customer(create_valid_customer, customer_helper):
+def test_update_customer_first_name(create_valid_customer):
     customer = create_valid_customer()
-    updated = customer_helper.update_customer(customer["id"])
-    assert updated["first_name"]
-
-def test_delete_customer(create_valid_customer, customer_helper):
-    customer = create_valid_customer()
-    result = customer_helper.delete_customer(customer["id"])
-    assert result is None
+    updated = customer_helper.update_customer(customer["id"], {"first_name": "Bob"})
+    assert updated["first_name"] == "Bob"
 ```
 
-### 7. Use Meaningful Test Names
-
-Test names should describe what's being tested.
+### 7. Use Meaningful Names
 
 ```python
-# ❌ NOT clear
-def test_customer():
-    pass
-
 # ✅ Clear
 def test_customer_email_is_required():
     pass
-
-def test_customer_created_with_valid_data():
-    pass
-
-def test_delete_customer_removes_from_database():
-    pass
 ```
 
-### 8. Add Docstrings to Complex Tests
-
-```python
-def test_customer_email_validation():
-    """Verify email validation works for both valid and invalid formats.
-    
-    This test checks:
-    - Valid emails are accepted
-    - Invalid emails are rejected
-    - Error message is clear
-    """
-    # Test code
-```
-
-### 9. Organize Imports
-
-```python
-# Standard library
-import pytest
-import time
-
-# Framework
-from framework.api_client import APIClient
-from framework.helpers import CustomerHelper
-from framework.validators import assert_customer_retrieved_successfully
-
-# Tests
-from tests.customers.conftest import create_valid_customer
-```
-
-### 10. Run Tests Locally Before Pushing
+### 8. Run Tests Locally
 
 ```bash
-# Run one test
-pytest tests/customers/test_create_customer.py::test_create_customer -v
-
-# Run with markers
+pytest tests/customers/test_create_customer.py -v
 pytest -m smoke -v
-
-# Run with coverage
-pytest --cov=tests/customers tests/customers/
 ```
 
 ---
@@ -1306,41 +1201,23 @@ pytest --cov=tests/customers tests/customers/
 | Create test data | Fixture | `customer = create_valid_customer()` |
 | Call API | Helper | `customer_helper.get_customer(id)` |
 | Validate schema | Pydantic | `CustomerModel(**response.json)` |
-| Validate logic | Validator | `assert_customer_has_valid_email(model)` |
 | Check status code | Helper + response mode | `response = helper.create(..., return_http_response=True)` |
 | Debug issue | `request_raw()` | `APIClient.request_raw(...)` |
 
 ### Marker Quick Reference
 
 ```python
-# Smoke test (critical, fast)
-@pytest.mark.smoke
-def test_customer_creation(): pass
-
-# Sanity test (focused, deep)
-@pytest.mark.sanity
-def test_recent_email_validation_fix(): pass
-
-# Regression test (comprehensive)
-@pytest.mark.regression
-def test_customer_with_special_characters(): pass
-
-# Integration test (API + DB)
-@pytest.mark.integration
-def test_customer_persisted_to_database(): pass
-
-# Negative test (error scenarios)
-@pytest.mark.negative
-def test_create_customer_with_duplicate_email(): pass
-
-# Performance test (timing)
-@pytest.mark.performance
-def test_customer_retrieval_under_100ms(): pass
+@pytest.mark.smoke  # Critical + fast
+@pytest.mark.sanity  # Recent changes
+@pytest.mark.regression  # Full coverage
+@pytest.mark.integration  # API + DB
+@pytest.mark.negative  # Error scenarios
+@pytest.mark.performance  # Timing checks
 ```
 
 ### Common Test Patterns
 
-#### Happy Path (Most Common)
+#### Happy Path
 
 ```python
 def test_customer_retrieval(create_valid_customer, customer_helper):
@@ -1353,10 +1230,7 @@ def test_customer_retrieval(create_valid_customer, customer_helper):
 
 ```python
 def test_invalid_email_rejected(customer_helper):
-    response = customer_helper.create_customer(
-        {"email": "invalid"},
-        return_http_response=True
-    )
+    response = customer_helper.create_customer({"email": "invalid"}, return_http_response=True)
     assert response.status_code == 400
 ```
 
@@ -1378,27 +1252,7 @@ def test_customer_retrieval_fast(create_valid_customer):
     customer = create_valid_customer()
     start = time.perf_counter()
     customer_helper.get_customer_by_id(customer["id"])
-    duration_ms = (time.perf_counter() - start) * 1000
-    assert duration_ms < 100
-```
-
-### CI Execution Commands
-
-```bash
-# Fast feedback (PR gate)
-pytest -m "smoke or sanity or preflight"
-
-# Full validation (before merge)
-pytest -m "not performance and not security"
-
-# Nightly (deep coverage)
-pytest -m regression
-
-# Performance benchmarks
-pytest -m performance
-
-# Security validation
-pytest -m security
+    assert (time.perf_counter() - start) * 1000 < 100
 ```
 
 ### Fixture Factory Template
@@ -1406,32 +1260,18 @@ pytest -m security
 ```python
 @pytest.fixture
 def create_valid_customer(customer_helper):
-    """Factory: create validated customer."""
     created_ids = []
     
     def _create(**overrides):
-        # Setup
         payload = {"email": "test@example.com", **overrides}
-        
-        # Execute
         response = customer_helper.create_customer(payload, return_http_response=True)
-        
-        # Validate
         assert response.status_code == 201
         customer_model = CustomerModel(**response.json)
-        
-        # Register cleanup
         created_ids.append(customer_model.id)
-        
-        # Return clean dict
-        return {
-            "id": customer_model.id,
-            "email": customer_model.email,
-        }
+        return {"id": customer_model.id, "email": customer_model.email}
     
     yield _create
     
-    # Cleanup
     for customer_id in created_ids:
         customer_helper.delete_customer(customer_id)
 ```
@@ -1447,7 +1287,7 @@ The TestEcommerceAPI framework is:
 ✅ **Cleanly designed** — clear separation of concerns
 ✅ **Beginner-friendly** — fixtures make simple tests simple
 
-**Your job:** Write tests that validate business behavior, not framework code.
+**Your job:** Write tests that validate business behavior.
 
 **The framework's job:** Handle transport, schema validation, retry logic, and cleanup.
 
