@@ -1,6 +1,30 @@
-# 🧪 Test Development Guide — TestEcommerceAPI (Enterprise)
+# 🧪 Test Development Guide — TestEcommerceAPI
 
 A comprehensive guide for writing tests in the TestEcommerceAPI framework. Designed for **QA engineers**, **developers**, and **new contributors**.
+
+---
+
+## Prerequisites
+
+Before reading this guide, you should already know:
+
+- **Basic Python** — variables, functions, classes, imports
+- **Basic pytest** — fixtures, markers, assertions, test discovery
+- **Basic REST APIs** — endpoints, requests, responses
+- **HTTP methods** — GET, POST, PUT, DELETE, status codes
+
+If you're new to pytest, the [pytest documentation](https://docs.pytest.org/) is an excellent resource.
+
+---
+
+## Related Documentation
+
+This guide is part of a larger documentation ecosystem:
+
+- **[README_FRAMEWORK_OVERVIEW.md](README_FRAMEWORK_OVERVIEW.md)** — High-level architecture and design principles
+- **[README_API_CLIENT.md](README_API_CLIENT.md)** — Implementation details of HttpClient, APIClient, and HttpResponse
+- **[README_QA_DEVELOPER_ONBOARDING.md](README_QA_DEVELOPER_ONBOARDING.md)** — Getting started as a QA engineer or developer
+- **[README_CI_ARCHITECTURE.md](README_CI_ARCHITECTURE.md)** — CI/CD pipeline design and execution
 
 ---
 
@@ -108,40 +132,40 @@ Understanding the request flow helps you debug issues and write better tests.
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                          TEST STARTS                             │
-│                    test_get_customer_by_id()                    │
+│                    test_get_product_by_id()                     │
 └────────────────────────────┬──────────────────────────────────────┘
                              │
                              ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                    FIXTURE CREATES DATA                          │
-│              create_valid_customer() is called                  │
-│        - Calls helper to create customer on API                 │
+│              create_valid_product() is called                   │
+│        - Calls helper to create product on API                  │
 │        - Validates response (status 201)                        │
 │        - Extracts + validates JSON (Pydantic)                   │
 │        - Registers cleanup                                       │
-│        - Returns clean dict: {id, email, ...}                   │
+│        - Returns clean dict: {id, name, price, ...}             │
 └────────────────────────────┬──────────────────────────────────────┘
                              │
                              ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                    TEST CALLS HELPER                             │
-│         response = customer_helper.get_customer_by_id()         │
+│         response = product_helper.get_product_by_id()           │
 │                helper._calls_api()                              │
 └────────────────────────────┬──────────────────────────────────────┘
                              │
                              ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                     HELPER CALLS API                             │
-│            APIClient.get("/customers/{id}")                     │
+│            APIClient.get("/products/{id}")                      │
 └────────────────────────────┬──────────────────────────────────────┘
                              │
                              ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                   APICLIENT ORCHESTRATES                         │
-│        - Validates inputs                                        │
-│        - Logs request                                            │
+│        - Prepares the request                                    │
+│        - Logs the request                                        │
+│        - Applies retry policy                                    │
 │        - Calls HttpClient                                        │
-│        - Implements retry logic                                  │
 └────────────────────────────┬──────────────────────────────────────┘
                              │
                              ▼
@@ -161,9 +185,9 @@ Understanding the request flow helps you debug issues and write better tests.
          ║   Content-Type: application/json           ║
          ║                                            ║
          ║   {                                        ║
-         ║     "id": 123,                             ║
-         ║     "email": "customer@example.com",       ║
-         ║     "created_at": "2024-01-01T...",       ║
+         ║     "id": 456,                             ║
+         ║     "name": "Test Product",                ║
+         ║     "price": "99.99",                      ║
          ║     ...                                    ║
          ║   }                                        ║
          ╚════════════════════════════════════════════╝
@@ -203,7 +227,7 @@ Understanding the request flow helps you debug issues and write better tests.
 │                   TEST VALIDATES (Layer 2)                       │
 │                   Schema Layer Validation                        │
 │                                                                  │
-│           customer_model = CustomerModel(**response.json)       │
+│           product_model = ProductModel(**response.json)         │
 │         (Pydantic validates all fields exist + correct types)   │
 └────────────────────────────┬──────────────────────────────────────┘
                              │
@@ -212,8 +236,8 @@ Understanding the request flow helps you debug issues and write better tests.
 │                   TEST VALIDATES (Layer 3)                       │
 │                   Business Logic Validation                      │
 │                                                                  │
-│              assert customer_model.email == expected_email      │
-│              assert customer_model.id is not None               │
+│              assert product_model.price > 0                     │
+│              assert product_model.name is not None              │
 └────────────────────────────┬──────────────────────────────────────┘
                              │
                              ▼
@@ -222,10 +246,10 @@ Understanding the request flow helps you debug issues and write better tests.
 └────────────────────────────┬──────────────────────────────────────┘
                              │
                              ▼
-┌─────────────────────────────────────────────────────────────────┐
+┌────────────���────────────────────────────────────────────────────┐
 │                    CLEANUP EXECUTES                              │
 │              Fixture cleanup code runs                          │
-│              - Calls customer_helper.delete_customer(id)        │
+│              - Calls product_helper.delete_product(id)          │
 │              - Data is removed from WooCommerce                 │
 │              - No leftover data                                 │
 └─────────────────────────────────────────────────────────────────┘
@@ -303,26 +327,20 @@ Markers organize tests for selective execution. Use up to 3 markers per test (ex
 ### Marker Hierarchy
 
 ```
-customers/
-├── test_create.py
-│   └── @pytest.mark.smoke
-│   └── @pytest.mark.integration
-├── test_update.py
+customers/                    orders/
+├── test_create.py           ├── test_create.py
+│   ├── @pytest.mark.smoke   │   ├── @pytest.mark.smoke
+│   ├── @pytest.mark.integration
 │   └── @pytest.mark.regression
-└── performance/
-    └── test_retrieval_time.py
-        └── @pytest.mark.performance
-
-shared/
-├── preflight/
-│   └── test_logging.py
-│       └── @pytest.mark.preflight
-├── contract/
-│   └── test_schema.py
-│       └── @pytest.mark.contract
-└── security/
-    └── test_auth.py
-        └── @pytest.mark.security
+├── performance/             ├── performance/
+│   └── @pytest.mark.performance
+│                            shared/
+                            ├── preflight/
+                            │   └── @pytest.mark.preflight
+                            ├── contract/
+                            │   └── @pytest.mark.contract
+                            └── security/
+                                └── @pytest.mark.security
 ```
 
 ### 1. Domain Markers (Auto-Applied)
@@ -389,11 +407,11 @@ pytestmark = [
     pytest.mark.regression
 ]
 
-def test_customer_created_in_database(customer_helper, create_valid_customer):
-    """Verify customer appears in DB after API call."""
-    customer = create_valid_customer()
-    db_customer = get_customer_from_db(customer["id"])
-    assert db_customer.email == customer["email"]
+def test_order_persisted_to_database(order_helper, create_valid_order):
+    """Verify order appears in DB after API call."""
+    order = create_valid_order()
+    db_order = get_order_from_db(order["id"])
+    assert db_order.total == order["total"]
 ```
 
 ---
@@ -406,9 +424,9 @@ One of the most important skills in this framework: **when to use what**.
 
 | Scenario | Use | Returns | Example |
 |----------|-----|---------|---------|
-| **Happy path** (normal operation) | Fixture | `dict` | `customer = create_valid_customer()` |
-| **Need status / headers** (debug) | Helper (response mode) | `HttpResponse` | `response = customer_helper.create_customer(return_http_response=True)` |
-| **Invalid input** (negative test) | Helper (response mode) | `HttpResponse` | `response = customer_helper.create_customer(email="invalid", return_http_response=True)` |
+| **Happy path** (normal operation) | Fixture | `dict` | `product = create_valid_product()` |
+| **Need status / headers** (debug) | Helper (response mode) | `HttpResponse` | `response = product_helper.create_product(return_http_response=True)` |
+| **Invalid input** (negative test) | Helper (response mode) | `HttpResponse` | `response = product_helper.create_product(price=-10, return_http_response=True)` |
 | **Deep debugging** (rare) | `request_raw()` | `requests.Response` | `resp, _ = APIClient.request_raw(...)` |
 
 ### Mental Model
@@ -423,11 +441,11 @@ request_raw()   → debugging only (low-level)
 
 ```python
 # ❌ WRONG: Fixture can't have status_code
-customer = create_valid_customer()
-assert customer.status_code == 201  # ERROR: dict has no status_code
+product = create_valid_product()
+assert product.status_code == 201  # ERROR: dict has no status_code
 
 # ✅ CORRECT: Use helper for response metadata
-response = customer_helper.create_customer(return_http_response=True)
+response = product_helper.create_product(return_http_response=True)
 assert response.status_code == 201
 ```
 
@@ -440,31 +458,31 @@ Happy-path tests verify normal, successful behavior. They should be **80% of you
 ### Pattern: Arrange → Act → Assert
 
 ```python
-def test_get_customer_by_id(customer_helper, create_valid_customer):
-    """Verify customer can be retrieved by ID."""
+def test_get_product_by_id(product_helper, create_valid_product):
+    """Verify product can be retrieved by ID."""
     
     # Arrange
-    customer = create_valid_customer()
+    product = create_valid_product()
     
     # Act
-    response = customer_helper.get_customer_by_id(
-        customer["id"],
+    response = product_helper.get_product_by_id(
+        product["id"],
         return_http_response=True
     )
     
     # Assert
-    customer_model = assert_customer_retrieved_successfully(response)
-    assert_customer_identity(customer_model, customer["id"], customer["email"])
+    product_model = assert_product_retrieved_successfully(response)
+    assert_product_identity(product_model, product["id"], product["name"])
 ```
 
 ### For Juniors: Start Simple
 
 ```python
-def test_customer_has_email(create_valid_customer):
-    """Verify customer email is captured."""
-    customer = create_valid_customer()
-    assert customer["email"]
-    assert "@" in customer["email"]
+def test_product_has_price(create_valid_product):
+    """Verify product price is captured."""
+    product = create_valid_product()
+    assert product["price"]
+    assert float(product["price"]) > 0
 ```
 
 ### Tips
@@ -485,23 +503,23 @@ Negative tests verify **error handling and boundary conditions**. They should be
 Always use `return_http_response=True` for negative tests:
 
 ```python
-def test_create_customer_with_invalid_email(customer_helper):
-    """Verify API rejects invalid email."""
+def test_create_coupon_with_invalid_discount(coupon_helper):
+    """Verify API rejects invalid discount percentage."""
     
-    response = customer_helper.create_customer(
-        payload={"email": "invalid"},
+    response = coupon_helper.create_coupon(
+        payload={"discount_percent": 150},  # Invalid: > 100%
         return_http_response=True
     )
     
     assert response.status_code == 400
-    assert response.json["error"]["code"] == "INVALID_EMAIL"
+    assert response.json["error"]["code"] == "INVALID_DISCOUNT"
 ```
 
 ### What to Validate
 
 ✅ HTTP status code (400, 401, 403, 404, 500, etc.)
 ✅ Error message structure (using validators)
-✅ Business rule enforcement (e.g., "email must be unique")
+✅ Business rule enforcement (e.g., "discount cannot exceed 100%")
 
 ### ❌ DO NOT
 
@@ -534,23 +552,23 @@ assert response.status_code == 201
 ### Layer 2: Schema Validation
 
 ```python
-customer_model = CustomerModel(**response.json)
+product_model = ProductModel(**response.json)
 ```
 
 ### Layer 3: Business Validation
 
 ```python
-assert customer_model.email == expected_email
+assert product_model.price > 0
 ```
 
 ### Layer 4: Database Validation
 
 ```python
 @pytest.mark.integration
-def test_customer_in_database(create_valid_customer):
-    customer = create_valid_customer()
-    db_customer = get_customer_from_db(customer["id"])
-    assert db_customer.email == customer["email"]
+def test_product_in_database(create_valid_product):
+    product = create_valid_product()
+    db_product = get_product_from_db(product["id"])
+    assert db_product.name == product["name"]
 ```
 
 ### ⚠️ Important
@@ -585,22 +603,21 @@ Fixtures act as **gatekeepers**: they create valid data, validate it, clean it u
 
 ```python
 @pytest.fixture
-def create_valid_customer(customer_helper):
-    """Factory fixture: creates and validates a customer."""
+def create_valid_order(order_helper):
+    """Factory fixture: creates and validates an order."""
     
-    created_customers = []
+    created_orders = []
     
     def _create(**overrides):
         # Arrange
         payload = {
-            "email": "customer@example.com",
-            "first_name": "Test",
-            "last_name": "User",
+            "customer_id": 123,
+            "total": "99.99",
             **overrides
         }
         
         # Act
-        response = customer_helper.create_customer(
+        response = order_helper.create_order(
             payload=payload,
             return_http_response=True
         )
@@ -611,37 +628,36 @@ def create_valid_customer(customer_helper):
         
         # Assert (Layer 2: Schema)
         try:
-            customer_model = CustomerModel(**response.json)
+            order_model = OrderModel(**response.json)
         except ValidationError as e:
             raise AssertionError(f"Invalid schema: {e}")
         
         # Extract clean dict
-        customer_dict = {
-            "id": customer_model.id,
-            "email": customer_model.email,
-            "first_name": customer_model.first_name,
-            "last_name": customer_model.last_name,
+        order_dict = {
+            "id": order_model.id,
+            "total": order_model.total,
+            "status": order_model.status,
         }
         
         # Register cleanup
-        created_customers.append(customer_dict["id"])
+        created_orders.append(order_dict["id"])
         
-        return customer_dict
+        return order_dict
     
     yield _create
     
     # Cleanup
-    for customer_id in created_customers:
-        customer_helper.delete_customer(customer_id)
+    for order_id in created_orders:
+        order_helper.delete_order(order_id)
 ```
 
 ### Usage in Tests
 
 ```python
-def test_customer_email_is_captured(create_valid_customer):
-    """Verify customer email is saved."""
-    customer = create_valid_customer()
-    assert customer["email"] == "customer@example.com"
+def test_order_total_is_captured(create_valid_order):
+    """Verify order total is saved."""
+    order = create_valid_order()
+    assert order["total"] == "99.99"
 ```
 
 ---
@@ -662,40 +678,6 @@ Helpers **orchestrate business logic** and bridge the gap between tests and the 
 ❌ DO NOT assert inside helpers
 ❌ DO NOT validate (that's the fixture's job)
 ❌ DO NOT return invalid data
-
-### Example: Helper
-
-```python
-class CustomerHelper:
-    """Orchestrates customer API operations."""
-    
-    def create_customer(self, payload=None, return_http_response=False):
-        """Create a customer and optionally return raw response."""
-        
-        default_payload = {
-            "email": "customer@example.com",
-            "first_name": "Test",
-            "last_name": "User"
-        }
-        
-        final_payload = {**default_payload, **(payload or {})}
-        
-        response = APIClient.post(
-            endpoint="/customers",
-            json=final_payload
-        )
-        
-        if return_http_response:
-            return response
-        return response.json
-    
-    def get_customer_by_id(self, customer_id, return_http_response=False):
-        """Retrieve a customer by ID."""
-        response = APIClient.get(endpoint=f"/customers/{customer_id}")
-        if return_http_response:
-            return response
-        return response.json
-```
 
 ### When to Use Helpers
 
@@ -724,32 +706,13 @@ Validators **assert structure and business logic** without fetching data.
 
 ```python
 # Fetch data (in fixture or test)
-response = customer_helper.create_customer(return_http_response=True)
+response = product_helper.get_product(return_http_response=True)
 
 # Validate schema
-customer_model = CustomerModel(**response.json)
+product_model = ProductModel(**response.json)
 
 # Validate business logic
-assert_customer_identity(customer_model, expected_id, expected_email)
-```
-
-### Example Validators
-
-```python
-def assert_customer_retrieved_successfully(response):
-    """Validate successful retrieval response.
-    
-    Returns:
-        CustomerModel: Validated customer object
-    """
-    assert response.status_code == 200
-    customer_model = CustomerModel(**response.json)
-    return customer_model
-
-def assert_customer_identity(customer_model, expected_id, expected_email):
-    """Validate customer identity (business logic)."""
-    assert customer_model.id == expected_id
-    assert customer_model.email == expected_email
+assert_product_has_valid_price(product_model)
 ```
 
 ---
@@ -764,11 +727,11 @@ If a test uses a DAO (Data Access Object) to query the database:
 
 ```python
 @pytest.mark.integration
-def test_customer_persisted_to_database(create_valid_customer):
-    """Verify customer data is saved to database."""
-    customer = create_valid_customer()
-    db_customer = get_customer_from_db(customer["id"])
-    assert db_customer.email == customer["email"]
+def test_order_persisted_to_database(create_valid_order):
+    """Verify order data is saved to database."""
+    order = create_valid_order()
+    db_order = get_order_from_db(order["id"])
+    assert db_order.total == order["total"]
 ```
 
 ### When NOT to Mark as Integration
@@ -778,10 +741,10 @@ If a test does **not** query persistent state (database, cache, message queue, e
 ```python
 # ❌ NOT integration (no DB query)
 @pytest.mark.smoke
-def test_customer_response_has_email(create_valid_customer):
-    """Verify response contains email."""
-    customer = create_valid_customer()
-    assert customer["email"]  # Only checks response, no DB query
+def test_order_response_has_total(create_valid_order):
+    """Verify response contains total."""
+    order = create_valid_order()
+    assert order["total"]  # Only checks response, no DB query
 ```
 
 ---
@@ -851,26 +814,26 @@ Performance tests verify **request timing and throughput** match expectations.
 
 ### Key Principle
 
-**Performance expectations vary by entity.** A customer lookup should be < 100ms, but a bulk report might need 30 seconds.
+**Performance expectations vary by entity.** A product lookup should be < 100ms, but a bulk export might need 30 seconds.
 
 ### Location
 
 Performance tests live with their entity, NOT in `tests/shared/`:
 
 ```
-tests/customers/performance/test_customer_retrieval_time.py
+tests/products/performance/test_product_retrieval_time.py
 ```
 
 ### Example
 
 ```python
 @pytest.mark.performance
-def test_customer_retrieval_under_100ms(create_valid_customer):
-    """Verify customer retrieval stays under 100ms."""
-    customer = create_valid_customer()
+def test_product_retrieval_under_100ms(create_valid_product):
+    """Verify product retrieval stays under 100ms."""
+    product = create_valid_product()
     
     start = time.perf_counter()
-    response = customer_helper.get_customer_by_id(customer["id"])
+    response = product_helper.get_product_by_id(product["id"])
     duration_ms = (time.perf_counter() - start) * 1000
     
     assert response.status_code == 200
@@ -948,15 +911,15 @@ CI pipelines execute tests in **stages**, from fast feedback to comprehensive va
 
 ```python
 # WRONG: Fixtures return dict, not HttpResponse
-customer = create_valid_customer()
-assert customer.status_code == 201  # ← AttributeError
+product = create_valid_product()
+assert product.status_code == 201  # ← AttributeError
 ```
 
 **Fix:** Use helper for response metadata
 
 ```python
 # RIGHT
-response = customer_helper.create_customer(return_http_response=True)
+response = product_helper.create_product(return_http_response=True)
 assert response.status_code == 201
 ```
 
@@ -966,8 +929,8 @@ assert response.status_code == 201
 
 ```python
 # WRONG: Helpers should not assert
-def create_customer(payload):
-    response = APIClient.post("/customers", json=payload)
+def create_product(payload):
+    response = APIClient.post("/products", json=payload)
     assert response.status_code == 201  # ← NO!
     return response.json
 ```
@@ -976,8 +939,8 @@ def create_customer(payload):
 
 ```python
 # RIGHT: Helpers just orchestrate
-def create_customer(payload):
-    return APIClient.post("/customers", json=payload)
+def create_product(payload):
+    return APIClient.post("/products", json=payload)
 ```
 
 ---
@@ -989,11 +952,11 @@ Let tests assert, not helpers.
 **Fix:** Return data, let test assert
 
 ```python
-def get_customer(customer_id):
-    return APIClient.get(f"/customers/{customer_id}")
+def get_product(product_id):
+    return APIClient.get(f"/products/{product_id}")
 
-def test_get_customer():
-    response = customer_helper.get_customer("123")
+def test_get_product():
+    response = product_helper.get_product("123")
     assert response.status_code == 200
 ```
 
@@ -1004,8 +967,8 @@ def test_get_customer():
 ```python
 # WRONG: Breaks fixture contract
 @pytest.fixture
-def create_invalid_customer():
-    response = customer_helper.create_customer({"email": "invalid"})
+def create_invalid_product():
+    response = product_helper.create_product({"price": -10})
     return response  # ← Fixture returning HttpResponse!
 ```
 
@@ -1013,9 +976,9 @@ def create_invalid_customer():
 
 ```python
 # RIGHT
-def test_invalid_email(customer_helper):
-    response = customer_helper.create_customer(
-        {"email": "invalid"},
+def test_invalid_price(product_helper):
+    response = product_helper.create_product(
+        {"price": -10},
         return_http_response=True
     )
     assert response.status_code == 400
@@ -1029,15 +992,15 @@ def test_invalid_email(customer_helper):
 # WRONG: Repeating schema checks
 json_data = response.json
 assert json_data["id"]
-assert json_data["email"]
-assert isinstance(json_data["created_at"], str)
+assert json_data["name"]
+assert isinstance(json_data["price"], str)
 ```
 
 **Fix:** Use Pydantic
 
 ```python
 # RIGHT: One validation, all checked
-customer_model = CustomerModel(**response.json)
+product_model = ProductModel(**response.json)
 ```
 
 ---
@@ -1048,10 +1011,10 @@ customer_model = CustomerModel(**response.json)
 
 ```python
 # ONLY for debugging:
-resp, _ = APIClient.request_raw(method="post", endpoint="/customers", payload={...})
+resp, _ = APIClient.request_raw(method="post", endpoint="/products", payload={...})
 
 # Normal tests use helpers:
-response = customer_helper.create_customer()
+response = product_helper.create_product()
 ```
 
 ---
@@ -1063,11 +1026,10 @@ Don't create smoke/regression/integration folders. Use markers instead.
 **Fix:** Domain-driven organization
 
 ```
-tests/customers/
-├── test_create_customer.py
+tests/products/
+├── test_create_product.py
 │   └── @pytest.mark.smoke
-│   └── @pytest.mark.regression
-├── test_update_customer.py
+├── test_update_product.py
 │   └── @pytest.mark.regression
 └── integration/
     └── test_database_consistency.py
@@ -1082,18 +1044,18 @@ tests/customers/
 
 ```python
 @pytest.fixture
-def create_valid_customer(customer_helper):
+def create_valid_product(product_helper):
     created_ids = []
     
     def _create():
-        response = customer_helper.create_customer()
+        response = product_helper.create_product()
         created_ids.append(response["id"])
         return response
     
     yield _create
     
-    for customer_id in created_ids:
-        customer_helper.delete_customer(customer_id)
+    for product_id in created_ids:
+        product_helper.delete_product(product_id)
 ```
 
 ---
@@ -1105,9 +1067,9 @@ def create_valid_customer(customer_helper):
 Write ~80% happy-path tests (positive cases).
 
 ```python
-def test_customer_can_be_created(create_valid_customer):
-    customer = create_valid_customer()
-    assert customer["id"]
+def test_product_can_be_created(create_valid_product):
+    product = create_valid_product()
+    assert product["id"]
 ```
 
 ### 2. Add Negative Tests for Error Cases
@@ -1115,9 +1077,9 @@ def test_customer_can_be_created(create_valid_customer):
 Add ~10-20% negative tests (error scenarios).
 
 ```python
-def test_invalid_email_rejected(customer_helper):
-    response = customer_helper.create_customer(
-        {"email": "invalid"},
+def test_invalid_price_rejected(product_helper):
+    response = product_helper.create_product(
+        {"price": -10},
         return_http_response=True
     )
     assert response.status_code == 400
@@ -1126,22 +1088,22 @@ def test_invalid_email_rejected(customer_helper):
 ### 3. Use Fixtures for Setup
 
 ```python
-customer = create_valid_customer()  # Clean, safe
+product = create_valid_product()  # Clean, safe
 ```
 
 ### 4. Use Helpers for Workflows
 
 ```python
-user = login_user(credentials)
-order = create_order_for_user(user)
+customer = login_customer(credentials)
+order = create_order_for_customer(customer)
 verify_order_in_database(order)
 ```
 
 ### 5. Use Validators for Assertions
 
 ```python
-customer_model = assert_customer_retrieved_successfully(response)
-assert_customer_has_valid_email(customer_model)
+product_model = assert_product_retrieved_successfully(response)
+assert_product_has_valid_price(product_model)
 ```
 
 ### 6. Keep Tests Focused
@@ -1150,28 +1112,28 @@ One behavior per test.
 
 ```python
 # ✅ RIGHT: Separate concerns
-def test_create_customer(create_valid_customer):
-    customer = create_valid_customer()
-    assert customer["email"]
+def test_create_product(create_valid_product):
+    product = create_valid_product()
+    assert product["name"]
 
-def test_update_customer_first_name(create_valid_customer):
-    customer = create_valid_customer()
-    updated = customer_helper.update_customer(customer["id"], {"first_name": "Bob"})
-    assert updated["first_name"] == "Bob"
+def test_update_product_name(create_valid_product):
+    product = create_valid_product()
+    updated = product_helper.update_product(product["id"], {"name": "New Name"})
+    assert updated["name"] == "New Name"
 ```
 
 ### 7. Use Meaningful Names
 
 ```python
 # ✅ Clear
-def test_customer_email_is_required():
+def test_product_name_is_required():
     pass
 ```
 
 ### 8. Run Tests Locally
 
 ```bash
-pytest tests/customers/test_create_customer.py -v
+pytest tests/products/test_create_product.py -v
 pytest -m smoke -v
 ```
 
@@ -1198,9 +1160,9 @@ pytest -m smoke -v
 
 | Need | Use | Example |
 |------|-----|---------|
-| Create test data | Fixture | `customer = create_valid_customer()` |
-| Call API | Helper | `customer_helper.get_customer(id)` |
-| Validate schema | Pydantic | `CustomerModel(**response.json)` |
+| Create test data | Fixture | `product = create_valid_product()` |
+| Call API | Helper | `product_helper.get_product(id)` |
+| Validate schema | Pydantic | `ProductModel(**response.json)` |
 | Check status code | Helper + response mode | `response = helper.create(..., return_http_response=True)` |
 | Debug issue | `request_raw()` | `APIClient.request_raw(...)` |
 
@@ -1220,17 +1182,17 @@ pytest -m smoke -v
 #### Happy Path
 
 ```python
-def test_customer_retrieval(create_valid_customer, customer_helper):
-    customer = create_valid_customer()
-    response = customer_helper.get_customer_by_id(customer["id"], return_http_response=True)
+def test_product_retrieval(create_valid_product, product_helper):
+    product = create_valid_product()
+    response = product_helper.get_product_by_id(product["id"], return_http_response=True)
     assert response.status_code == 200
 ```
 
 #### Negative Test
 
 ```python
-def test_invalid_email_rejected(customer_helper):
-    response = customer_helper.create_customer({"email": "invalid"}, return_http_response=True)
+def test_invalid_price_rejected(product_helper):
+    response = product_helper.create_product({"price": -10}, return_http_response=True)
     assert response.status_code == 400
 ```
 
@@ -1238,20 +1200,20 @@ def test_invalid_email_rejected(customer_helper):
 
 ```python
 @pytest.mark.integration
-def test_customer_in_database(create_valid_customer):
-    customer = create_valid_customer()
-    db_customer = get_customer_from_db(customer["id"])
-    assert db_customer.email == customer["email"]
+def test_product_in_database(create_valid_product):
+    product = create_valid_product()
+    db_product = get_product_from_db(product["id"])
+    assert db_product.name == product["name"]
 ```
 
 #### Performance Test
 
 ```python
 @pytest.mark.performance
-def test_customer_retrieval_fast(create_valid_customer):
-    customer = create_valid_customer()
+def test_product_retrieval_fast(create_valid_product):
+    product = create_valid_product()
     start = time.perf_counter()
-    customer_helper.get_customer_by_id(customer["id"])
+    product_helper.get_product_by_id(product["id"])
     assert (time.perf_counter() - start) * 1000 < 100
 ```
 
@@ -1259,21 +1221,21 @@ def test_customer_retrieval_fast(create_valid_customer):
 
 ```python
 @pytest.fixture
-def create_valid_customer(customer_helper):
+def create_valid_order(order_helper):
     created_ids = []
     
     def _create(**overrides):
-        payload = {"email": "test@example.com", **overrides}
-        response = customer_helper.create_customer(payload, return_http_response=True)
+        payload = {"customer_id": 123, "total": "99.99", **overrides}
+        response = order_helper.create_order(payload, return_http_response=True)
         assert response.status_code == 201
-        customer_model = CustomerModel(**response.json)
-        created_ids.append(customer_model.id)
-        return {"id": customer_model.id, "email": customer_model.email}
+        order_model = OrderModel(**response.json)
+        created_ids.append(order_model.id)
+        return {"id": order_model.id, "total": order_model.total}
     
     yield _create
     
-    for customer_id in created_ids:
-        customer_helper.delete_customer(customer_id)
+    for order_id in created_ids:
+        order_helper.delete_order(order_id)
 ```
 
 ---
