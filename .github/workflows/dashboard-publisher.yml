@@ -282,8 +282,6 @@ jobs:
               mkdir -p site
           fi
 
-          # Refresh the portal every deployment.
-          cp docs/portal/style.css site/style.css
           echo
           echo "===== Downloaded artifacts ====="
           find downloaded-reports
