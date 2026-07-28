@@ -75,7 +75,7 @@ name: Deploy GitHub Pages 🚀
 #Copy style.css into site/
 #↓
 #Generate index.html
-#    python .github/scripts/generate_portal.py
+#    python .github/portal/generate_portal.py
 #↓
 
 
@@ -336,7 +336,7 @@ jobs:
           echo
           echo "===== Generating QA Portal ====="
 
-          python .github/scripts/generate_portal.py
+          python .github/portal/generate_portal.py
 
           echo
           echo "===== Final site ====="

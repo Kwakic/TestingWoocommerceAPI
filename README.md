@@ -423,7 +423,6 @@ API keys already exist — skipping
 ---
 
 # 🛠️ Future Enhancements
-- Performance baselines & trend analysis
 - Load testing extensions
 
 ---

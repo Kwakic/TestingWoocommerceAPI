@@ -3,7 +3,9 @@ TestEcommerceAPI (project suite/root)
 ├──.git/
 ├──.github/
 │     ├── scripts
-│     │     ├── generate_matrix.py
+│     │     └──  generate_matrix.py
+│     ├── portal
+│     │     ├── style.css
 │     │     └── generate_portal.py
 │     ├── workflows/
 │     │     ├── contract.yml
@@ -28,10 +30,8 @@ TestEcommerceAPI (project suite/root)
 ├── .venv/...                                       ← shared virtual environment (optional)
 │
 ├── docs/...                                         ← shared
-│     ├── FRAMEWORK_STRUCTURE
-│     │     └── domain-driven microservice_framework_architecture.txt
-│     └── portal
-│           └── style.css
+│     └── FRAMEWORK_STRUCTURE
+│          └── domain-driven microservice_framework_architecture.txt
 │
 ├── getting-started/
 │     ├── README_FRAMEWORK_OVERVIEW.md
@@ -44,20 +44,22 @@ TestEcommerceAPI (project suite/root)
 │     ├── README_ARCHITECTURE.md
 │     ├── README_VALIDATORS.md
 │     └── TEAM_GUIDES/
-│       └── README_CUSTOMERS.md
+│           └── README_CUSTOMERS.md
 │
 ├── framework/
 │     ├── README_PLUGINS_REFERENCE.md
 │     ├── README_ENVIRONMENT_CONFIG_GUIDE.md
 │     ├── README_CONFIG_CONTRACT.md
 │     ├── README_AUTHENTICATION.md
-│     ├── README_LOGGING.md
-│     └── README_TEAM_ENTITY_DISCOVER_GUIDE.md
+│     ├── README_LOGGING_ARCHITECTURE.md
+│     └── README_ENTITY_DISCOVER_ARCHITECTURE_GUIDE.md
 │
 ├── ci/
 │     ├── README_CI_ARCHITECTURE.md
 │     ├── README_ALLURE.md
-│     └── README_ENV_AND_CI.md
+│     ├── README_ENV_AND_CI.md
+│     ├── README_DOCKER_INFRASTRUCTURE.md
+│     └── README_GIT_WORKFLOW_HANDBOOK.md
 │
 ├── contributing/
 │     ├── README_CONTRIBUTING.md│

@@ -55,6 +55,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 import html
+import shutil
 import sys
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -66,6 +67,7 @@ from EcommerceAPI.src.metadata.entity_metadata import (  # noqa: E402
 )
 
 SITE_ROOT = Path("site")
+PORTAL_ROOT = Path(__file__).parent
 
 # ---------------------------------------------------------------------------
 # Public report suites
@@ -334,6 +336,12 @@ def main() -> None:
     entities = discover_entities()
 
     SITE_ROOT.mkdir(parents=True, exist_ok=True)
+
+    # Copy the shared stylesheet
+    shutil.copy2(
+        PORTAL_ROOT / "style.css",
+        SITE_ROOT / "style.css",
+    )
 
     output = SITE_ROOT / "index.html"
     output.write_text(build_html(entities), encoding="utf-8")
