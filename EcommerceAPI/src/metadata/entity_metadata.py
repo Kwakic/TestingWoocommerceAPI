@@ -74,19 +74,19 @@ DEFAULT_ENTITY_METADATA = {
 ENTITY_METADATA = {
     # Critical customer-facing service.
     "customers": {
-        "tier": "critical",
+        "tier": "Tier: Critical",
         "team": "commerce team",
     },
     "orders": {
-        "tier": "critical",
+        "tier": "Tier: Critical",
         "team": "purchase team",
     },
     "coupons": {
-        "tier": "low",
+        "tier": "Tier: Low",
         "team": "promo team",
     },
     "products": {
-        "tier": "high",
+        "tier": "Tier: High",
         "team": "catalog team",
     },
 }

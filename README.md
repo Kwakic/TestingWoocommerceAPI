@@ -34,8 +34,8 @@ The **live QA Portal** is available at:
 The portal is generated automatically during deployment from the reports that
 are currently published to GitHub Pages.
 
-As additional framework entities publish Smoke, Integration, Regression or
-Performance reports, they automatically appear in the portal without requiring
+As additional framework entities publish **Smoke**, **Integration**, **Regression** or
+**Performance** reports, they automatically appear in the portal without requiring
 any HTML or README updates.
 
 > Contract, Security and Preflight intentionally publish CI artifacts only and are not displayed in the public QA Portal.
@@ -67,6 +67,7 @@ make run
 
 The default execution environment is `API_ENV=test`, which runs the
 tests from the host machine against the Docker-based WordPress instance.
+
 ---
 
 ## 🌍 Selecting the Execution Environment
@@ -83,7 +84,7 @@ The framework supports multiple execution environments through the
 | `staging` | Pre-production |
 | `prod` | Production |
 
-### Examples
+### Examples (for Linux/macOS and Git Bash)
 
 Run against the local Docker environment (default):
 
@@ -110,6 +111,7 @@ For more details, see the
 **Environment & Configuration Guide**.
 
 ---
+
 ## 🔄 CI/CD Workflow Architecture
 
 The project now uses a **fully segmented CI/CD architecture**.
@@ -141,12 +143,15 @@ Rather than maintaining a static landing page, the deployment workflow
 generates the QA Portal from the reports currently available in the published
 site. This allows newly implemented entities to appear automatically.
 
-👉 See [CI/CD Architecture Guide](./docs/README_CI_ALLURE_GUIDE.md)
-for enterprise workflow rationale, artifact strategy,
-Allure history management, and reporting architecture.
+👉 See the
+[CI/CD Architecture Guide](./ci/README_CI_ARCHITECTURE.md)
+for workflow design, artifact strategy, and deployment architecture.
 
+👉 See the
+[Allure Reporting Guide](./ci/README_ALLURE.md)
+for Allure history management, report generation, and GitHub Pages publishing.
 
----
+----
 
 ## 📊 CI/CD & Reporting
 
