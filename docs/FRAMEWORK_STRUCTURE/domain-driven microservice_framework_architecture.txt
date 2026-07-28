@@ -44,7 +44,10 @@ TestEcommerceAPI (project suite/root)
 │     ├── README_ARCHITECTURE.md
 │     ├── README_VALIDATORS.md
 │     └── TEAM_GUIDES/
-│           └── README_CUSTOMERS.md
+│            ├── README_CUSTOMERS.md
+│            ├── README_ORDERS.md
+│            ├── README_COUPONS.md
+│            └── README_PRODUCTS.md
 │
 ├── framework/
 │     ├── README_PLUGINS_REFERENCE.md
@@ -229,7 +232,6 @@ TestEcommerceAPI (project suite/root)
 │     │     │     └── create_customer_payload.json
 │     │     ├── __init__.py
 │     │     ├── conftest.py
-│     │     ├── README.md
 │     │     ├── api/
 │     │     │     ├── test_create_customer.py
 │     │     │     ├── test_customer_deletion.py
@@ -283,7 +285,8 @@ TestEcommerceAPI (project suite/root)
 │     ├── coupons/..                               ← coupons-specific
 │     ├── products/..                              ← products-specific
 │     ├── __init__.py
-│     └── conftest
+│     ├── conftest
+│     └── README.md
 │
 │─── scripts                                       ← shared
 │     └── setup.sh

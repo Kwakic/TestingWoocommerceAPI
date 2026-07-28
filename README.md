@@ -405,20 +405,27 @@ API keys already exist — skipping
 ## 🗂️ Test Suite Organization
 
 - **Microservice-aligned:** Each service (customers, orders, etc.) has its own test folder
-- [Customers Test Suite](./tests/customers/README.md) — detailed architecture & checklist
+- [Customers Test Suite](tests/README.md) — detailed architecture & checklist
 
 ---
 
 # ✅ Current Capabilities
 
-- ✔️ Segmented GitHub Actions CI/CD architecture
-- ✔️ Automatically generated GitHub Pages QA Portal
-- ✔️ Metadata-driven entity discovery
-- ✔️ Independent Smoke, Integration, Regression and Performance dashboards
-- ✔️ Allure history preservation
-- ✔️ Automated report publication to GitHub Pages
-- ✔️ Docker-based reproducible test execution
-- ✔️ API + Database validation
+✔️ Segmented GitHub Actions CI/CD architecture
+
+✔️ Automatically generated GitHub Pages QA Portal
+
+✔️ Metadata-driven entity discovery
+
+✔️ Independent Smoke, Integration, Regression and Performance dashboards
+
+✔️ Allure history preservation
+
+✔️ Automated report publication to GitHub Pages
+
+✔️ Docker-based reproducible test execution
+
+✔️ API + Database validation
 
 ---
 
@@ -432,7 +439,7 @@ API keys already exist — skipping
 |--------------------|---------------------------------------------------------------------------|
 | 📋 🌐 QA Portal    | [Live portal](https://kwakic.github.io/TestingWoocommerceAPI)             |
 | 🔧 CI Workflows    | [GitHub Actions](https://github.com/Kwakic/TestingWoocommerceAPI/actions) |
-| 📖 API Docs        | [Customers Tests](./tests/customers/README.md)                            |
+| 📖 API Docs        | [Customers Tests](tests/README.md)                            |
 | ⚙️ Config Guide    | [Environment Setup](./docs/ENVIRONMENT_CONFIG_GUIDE.md)                   |
 | 🚀 CI Architecture | [Enterprise Decisions](./docs/README_CI_ALLURE_GUIDE.md)                  |
 
