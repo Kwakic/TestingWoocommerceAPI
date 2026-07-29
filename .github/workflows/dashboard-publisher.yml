@@ -28,7 +28,7 @@ name: Deploy GitHub Pages 🚀
 # ==================================================
 # GitHub Pages Publisher
 #
-# Enterprise design principle:
+# Design principle:
 #
 # Test execution and report publication are
 # intentionally separated.

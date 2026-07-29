@@ -6,7 +6,7 @@ This framework provides a **clean, layered architecture** for API testing.
 
 Goals:
 - ✅ Junior-friendly
-- ✅ Enterprise-grade
+- ✅ Best practice -grade
 - ✅ Clear separation of concerns
 - ✅ Easy debugging & observability
 

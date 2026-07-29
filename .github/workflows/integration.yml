@@ -167,7 +167,7 @@ jobs:
 
     # ==================================================
     # Execute the Integration suite for every discovered
-    # entity using the shared enterprise test runner.
+    # entity using the shared test runner.
     #
     # Entity discovery remains framework-owned.
     # GitHub Actions only consumes the generated matrix.

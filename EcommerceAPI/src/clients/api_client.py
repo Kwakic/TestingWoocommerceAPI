@@ -186,7 +186,7 @@ def _mask_sensitive(payload: typing.Any) -> typing.Any:
 # -----------------------------------------
 class APIClient:
     """
-    Enterprise API client responsible for:
+    API client responsible for:
 
     - building full API URLs
     - orchestrating HTTP requests

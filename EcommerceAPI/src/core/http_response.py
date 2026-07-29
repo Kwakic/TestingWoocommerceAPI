@@ -132,7 +132,7 @@ class HttpResponse:
         ✔ Flexible validation
 
     ------------------------------------------------------------------------
-    🚀 WHY THIS MATTERS (ENTERPRISE)
+    🚀 WHY THIS MATTERS
     ------------------------------------------------------------------------
     This pattern is used in mature frameworks because it:
 

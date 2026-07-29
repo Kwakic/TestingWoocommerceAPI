@@ -304,7 +304,7 @@ def get_db_config() -> Dict[str, Any]:
 
     Instead, they are supplied through:
 
-    - .env for local README_development
+    - .env for local development
     - CI secrets for automated pipelines
 
     Only values that exist are returned.
@@ -375,7 +375,7 @@ def debug_print() -> None:
     Print the resolved configuration to the console.
 
     Useful when diagnosing configuration or environment issues during
-    local README_development.
+    local development.
 
     This function is intended for debugging only.
     """

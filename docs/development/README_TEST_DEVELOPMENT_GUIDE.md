@@ -492,7 +492,7 @@ Fixture      → validated
 Test         → assert
 ```
 
-This framework is enterprise-ready, scalable, and cleanly designed. Focus on writing tests, not refactoring the framework.
+This framework is ready, scalable, and cleanly designed. Focus on writing tests, not refactoring the framework.
 
 ---
 

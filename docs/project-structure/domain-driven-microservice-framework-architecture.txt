@@ -30,44 +30,44 @@ TestEcommerceAPI (project suite/root)
 ├── .venv/...                                       ← shared virtual environment (optional)
 │
 ├── docs/...                                         ← shared
-│     └── FRAMEWORK_STRUCTURE
-│          └── domain-driven microservice_framework_architecture.txt
-│
-├── getting-started/
-│     ├── README_FRAMEWORK_OVERVIEW.md
-│     ├── README_QA_DEVELOPER_ONBOARDING.md
-│     └── README_ARCHITECTURE_QUICK_START.md
-│
-├── development/
-│     ├── README_TEST_DEVELOPMENT_GUIDE.md    ⭐ Canonical guide
-│     ├── README_API_CLIENT.md
-│     ├── README_ARCHITECTURE.md
-│     ├── README_VALIDATORS.md
-│     └── TEAM_GUIDES/
-│            ├── README_CUSTOMERS.md
-│            ├── README_ORDERS.md
-│            ├── README_COUPONS.md
-│            └── README_PRODUCTS.md
-│
-├── framework/
-│     ├── README_PLUGINS_REFERENCE.md
-│     ├── README_ENVIRONMENT_CONFIG_GUIDE.md
-│     ├── README_CONFIG_CONTRACT.md
-│     ├── README_AUTHENTICATION.md
-│     ├── README_LOGGING_ARCHITECTURE.md
-│     └── README_ENTITY_DISCOVER_ARCHITECTURE_GUIDE.md
-│
-├── ci/
-│     ├── README_CI_ARCHITECTURE.md
-│     ├── README_ALLURE.md
-│     ├── README_ENV_AND_CI.md
-│     ├── README_DOCKER_INFRASTRUCTURE.md
-│     └── README_GIT_WORKFLOW_HANDBOOK.md
-│
-├── contributing/
-│     ├── README_CONTRIBUTING.md│
-│     ├── README_CHANGELOG_GUIDELINES.md
-│     └── README_PYPROJECT.md
+│     ├── project_structure
+│     │    └── domain-driven-microservice-framework-architecture.txt
+│     │
+│     ├── getting-started/
+│     │     ├── README_FRAMEWORK_OVERVIEW.md
+│     │     ├── README_QA_DEVELOPER_ONBOARDING.md
+│     │     └── README_ARCHITECTURE_QUICK_START.md
+│     │
+│     ├── development/
+│     │     ├── README_TEST_DEVELOPMENT_GUIDE.md    ⭐ Canonical guide
+│     │     ├── README_API_CLIENT.md
+│     │     ├── README_ARCHITECTURE.md
+│     │     ├── README_VALIDATORS.md
+│     │     └── TEAM_GUIDES/
+│     │            ├── README_CUSTOMERS.md
+│     │            ├── README_ORDERS.md
+│     │            ├── README_COUPONS.md
+│     │            └── README_PRODUCTS.md
+│     │
+│     ├── framework/
+│     │     ├── README_PLUGINS_REFERENCE.md
+│     │     ├── README_ENVIRONMENT_CONFIG_GUIDE.md
+│     │     ├── README_CONFIG_CONTRACT.md
+│     │     ├── README_AUTHENTICATION.md
+│     │     ├── README_LOGGING_ARCHITECTURE.md
+│     │     └── README_ENTITY_DISCOVER_ARCHITECTURE_GUIDE.md
+│     │
+│     ├── ci/
+│     │     ├── README_CI_ARCHITECTURE.md
+│     │     ├── README_ALLURE.md
+│     │     ├── README_ENV_AND_CI.md
+│     │     ├── README_DOCKER_INFRASTRUCTURE.md
+│     │     └── README_GIT_WORKFLOW_HANDBOOK.md
+│     │
+│     └── contributing/
+│            ├── README_CONTRIBUTING.md│
+│            ├── README_CHANGELOG_GUIDELINES.md
+│            └── README_PYPROJECT.md
 │
 ├── EcommerceAPI (installable framework package)/    ← SHARED INSTALLABLE FRAMEWORK
 │     ├── ecommerceapitest.egg-info/..

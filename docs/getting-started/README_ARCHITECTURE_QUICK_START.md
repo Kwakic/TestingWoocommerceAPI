@@ -20,7 +20,7 @@ For deeper explanations see:
 ------------------------------------------------------------------
 # 🧠 What This Framework Is
 
-TestEcommerceAPI is a **modular enterprise API testing framework** for validating:
+TestEcommerceAPI is a **modular API testing framework** for validating:
 
 - Customers API
 - Orders API
@@ -430,7 +430,7 @@ Assert behaviour | Tests |
 ------------------------------------------------------------------
 # 🚀 Final Takeaway
 
-The framework follows **enterprise QA architecture patterns** used by large engineering teams.
+The framework follows **QA architecture patterns** used by large engineering teams.
 
 Key goals:
 

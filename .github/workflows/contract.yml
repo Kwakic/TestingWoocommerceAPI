@@ -40,8 +40,7 @@ jobs:
   # ==================================================
   # 🧪 JOB 1 — EXECUTE CONTRACT TESTS
   #
-  # Delegates all shared CI logic to the reusable
-  # enterprise test runner workflow.
+  # Delegates all shared CI logic to the reusable test runner workflow.
   #
   # Shared responsibilities extracted:
   # - checkout

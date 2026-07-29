@@ -16,7 +16,7 @@
 # Avoid it if: You are working in a professional team; you should insist on a .gitattributes file to ensure the
 # repo stays clean for everyone
 
-# The best practice for modern README_development—especially in teams—is to use a
+# The best practice for modern development—especially in teams—is to use a
   #.gitattributes file
 # While git config --global core.autocrlf true was a standard recommendation for years, it has major drawbacks
 # compared to the file-based approach.

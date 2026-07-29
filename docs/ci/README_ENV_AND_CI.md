@@ -246,7 +246,7 @@ reports/allure-results/history
 
 This is required for Allure trend graphs and historical charts to function correctly across multiple executions.
 
-### Recommended enterprise reporting flow
+### Recommended reporting flow
 
 ```text
 pytest

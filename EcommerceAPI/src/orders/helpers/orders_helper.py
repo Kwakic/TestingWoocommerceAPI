@@ -75,7 +75,7 @@
 #                 "OrdersHelper requires a RequestUtility instance. "
 #                 "Pass `request_utility` from your conftest (session-scoped fixture)."
 #             )
-#         # optional: confirm type for clearer error messages during README_development
+#         # optional: confirm type for clearer error messages during development
 #         if not isinstance(request_utility, APIClient):
 #             raise TypeError("request_utility must be an instance of RequestUtility")
 #

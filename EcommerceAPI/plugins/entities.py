@@ -546,7 +546,7 @@ def build_entity_matrix() -> dict[str, list[dict[str, str]]]:
     Responsibilities
     ----------------
     • Discover framework entities dynamically.
-    • Apply enterprise metadata.
+    • Apply metadata.
     • Produce a GitHub Actions compatible matrix.
 
     The framework remains the Single Source of Truth.
@@ -558,7 +558,7 @@ def build_entity_matrix() -> dict[str, list[dict[str, str]]]:
 
     GitHub displays matrix values similar to:
     -----------------------------------------
-        test (customers, commerce, critical)
+        test (customers, commerce, tier:critical)
 
     where:
 
@@ -850,7 +850,7 @@ class AllResources:
         """
         Extend the default dir() with discovered entity keys (valid Python identifiers)
         to help IDE completion. Only the minimal, expected exceptions are caught so that
-        unrelated errors surface during README_development.
+        unrelated errors surface during development.
         """
         default_dir = set(super().__dir__())
 

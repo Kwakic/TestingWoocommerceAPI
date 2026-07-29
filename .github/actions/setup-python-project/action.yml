@@ -39,7 +39,7 @@ runs:
     # 3. Print environment diagnostics
     #
     # Extremely useful for CI debugging.
-    # Enterprise pipelines commonly expose:
+    # Pipelines commonly expose:
     # - Python version
     # - pytest version
     # - pip version

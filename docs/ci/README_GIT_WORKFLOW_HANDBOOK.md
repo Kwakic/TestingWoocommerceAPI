@@ -2684,14 +2684,14 @@ pre-commit run --all-files
 
  🔥 Why this is MUCH better than .git sample hook current script.
 
- | Feature         | Script       | Enterprise setup |
-| --------------- |--------------| ---------------- |
-| Whitespace fix  | ❌ warn only  | ✅ auto-fix       |
-| Formatting      | ❌ none       | ✅ black          |
-| Linting         | ❌ none       | ✅ flake8         |
-| Test control    | ❌ all tests  | ✅ smoke only     |
-| Team sharing    | ❌ local only | ✅ repo-wide      |
-| Maintainability | ❌ manual     | ✅ config-driven  |
+ | Feature         | Script       | Setup           |
+| --------------- |--------------|-----------------|
+| Whitespace fix  | ❌ warn only  | ✅ auto-fix      |
+| Formatting      | ❌ none       | ✅ black         |
+| Linting         | ❌ none       | ✅ flake8        |
+| Test control    | ❌ all tests  | ✅ smoke only    |
+| Team sharing    | ❌ local only | ✅ repo-wide     |
+| Maintainability | ❌ manual     | ✅ config-driven |
 
 
 ### ⚠️ TROUBLESHOOTING:

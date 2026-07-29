@@ -722,7 +722,7 @@ The framework automatically generates the CI matrix from the architectural regis
 
 ---
 
-# 🔮 Future Enterprise Evolution
+# 🔮 Future Evolution
 
 Potential future metadata:
 

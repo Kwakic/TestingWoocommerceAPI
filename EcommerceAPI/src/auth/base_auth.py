@@ -3,7 +3,7 @@ Authentication Strategy Interface - Base Class.
 
 This module defines the contract used by the framework to apply authentication to outgoing HTTP requests.
 
-Enterprise design principle:
+Design principle:
 ----------------------------
 Authentication must be PLUGGABLE and NOT embedded inside APIClient
 or HttpClient.

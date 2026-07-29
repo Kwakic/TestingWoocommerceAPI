@@ -181,7 +181,7 @@ independently publishes its own report.
 
 This keeps the CI architecture simple, reusable and easy to understand.
 
-Enterprise environments commonly publish reports to dedicated artifact
+Environments commonly publish reports to dedicated artifact
 repositories or static hosting platforms (Azure Storage, Amazon S3,
 Artifactory, Nexus, internal web servers, etc.), where this limitation
 does not exist.
@@ -1300,7 +1300,7 @@ on:
 
 # 19. Framework Maturity
 
-The framework is implementing enterprise-grade concepts:
+The framework is implementing best practice concepts:
 
 ✅ Full API + DB integration dashboards\
 ✅ Multi-dashboard GitHub Pages publishing\
@@ -1332,7 +1332,7 @@ The framework is implementing enterprise-grade concepts:
 **Note:** Your custom Allure integration demonstrates many practices commonly found in mature CI/CD environments,
 including reusable workflows, structured reporting, history preservation and metadata-driven execution.
 
-The framework adopts many enterprise CI/CD practices, including reusable workflows, framework - driven entity registry,
+The framework adopts many CI/CD practices, including reusable workflows, framework - driven entity registry,
 metadata-driven execution, structured reporting and GitHub Pages publication for public reports.
 
 ---
