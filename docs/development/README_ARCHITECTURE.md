@@ -1,4 +1,4 @@
-# TestEcommerceAPI – Unified API Automation Suite
+# TestEcommerceAPI Architecture – Unified API Automation Suite
 
 A unified, multi-team API automation platform for testing Customers, Orders, Coupons, Products, and other microservices in the Ecommerce ecosystem.
 

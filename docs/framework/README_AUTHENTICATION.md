@@ -1,4 +1,4 @@
-# Authentication System --- TestEcommerceAPI
+# Authentication System - TestEcommerceAPI
 
 ## Overview
 

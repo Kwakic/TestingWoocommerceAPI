@@ -80,31 +80,31 @@ any HTML or README updates.
 
 All in-depth guides live under [`docs/`](./docs). This README is the landing page — use the table below to jump straight to what you need.
 
-| Category | Guide | Description |
-|---|---|---|
-| **Getting Started** | [Framework Overview](./docs/getting-started/README_FRAMEWORK_OVERVIEW.md) | High-level tour of the framework |
-| | [QA Developer Onboarding](./docs/getting-started/README_QA_DEVELOPER_ONBOARDING.md) | Onboarding steps for new contributors |
-| | [Architecture Quick Start](./docs/getting-started/README_ARCHITECTURE_QUICK_START.md) | Fast-track architecture primer |
-| **Development** | [Test Development Guide](./docs/development/README_TEST_DEVELOPMENT_GUIDE.md) ⭐ | Canonical guide for writing tests |
-| | [API Client Guide](./docs/development/README_API_CLIENT.md) | How the API client layer works |
-| | [Architecture Guide](./docs/development/README_ARCHITECTURE.md) | Framework internals in depth |
-| | [Validators Guide](./docs/development/README_VALIDATORS.md) | Writing and using validators |
-| | [Team Guides](./docs/development/TEAM_GUIDES) | Per-entity guides (Customers, Orders, Coupons, Products) |
-| **Framework** | [Plugins Reference](./docs/framework/README_PLUGINS_REFERENCE.md) | Pytest plugin architecture |
-| | [Environment & Config Guide](./docs/framework/README_ENVIRONMENT_CONFIG_GUIDE.md) | `API_ENV` and configuration resolution |
-| | [Config Contract](./docs/framework/README_CONFIG_CONTRACT.md) | Configuration schema/contract |
-| | [Authentication Guide](./docs/framework/README_AUTHENTICATION.md) | OAuth1 credential handling |
-| | [Logging Architecture](./docs/framework/README_LOGGING_ARCHITECTURE.md) | Structured logging design |
-| | [Entity Discovery Guide](./docs/framework/README_ENTITY_DISCOVER_ARCHITECTURE_GUIDE.md) | Metadata-driven entity discovery |
-| **CI/CD** | [CI/CD Architecture Guide](./docs/ci/README_CI_ARCHITECTURE.md) | Workflow design & artifact strategy |
-| | [Allure Reporting Guide](./docs/ci/README_ALLURE.md) | Report generation & GitHub Pages publishing |
-| | [Environment & CI Guide](./docs/ci/README_ENV_AND_CI.md) | How environments map to pipelines |
-| | [Docker Infrastructure Guide](./docs/ci/README_DOCKER_INFRASTRUCTURE.md) | Container setup used in CI |
-| | [Git Workflow Handbook](./docs/ci/README_GIT_WORKFLOW_HANDBOOK.md) | Branching & PR conventions |
-| **Contributing** | [Contributing Guide](./docs/contributing/README_CONTRIBUTING.md) | How to contribute |
-| | [Changelog Guidelines](./docs/contributing/README_CHANGELOG_GUIDELINES.md) | Changelog conventions |
-| | [Pyproject Guide](./docs/contributing/README_PYPROJECT.md) | Packaging & dependency notes |
-| **Reference** | [Full Project Structure](./docs/project_structure/domain-driven-microservice-framework-architecture.txt) | Complete, unabridged directory tree |
+| Category | Guide                                                                                                    | Description |
+|---|----------------------------------------------------------------------------------------------------------|---|
+| **Getting Started** | [Framework Overview](./docs/getting-started/README_FRAMEWORK_OVERVIEW.md)                                | High-level tour of the framework |
+| | [QA Developer Onboarding](./docs/getting-started/README_QA_DEVELOPER_ONBOARDING.md)                      | Onboarding steps for new contributors |
+| | [Architecture Quick Start](./docs/getting-started/README_ARCHITECTURE_QUICK_START.md)                    | Fast-track architecture primer |
+| **Development** | [Test Development Guide](./docs/development/README_TEST_DEVELOPMENT_GUIDE.md) ⭐                          | Canonical guide for writing tests |
+| | [API Client Guide](./docs/development/README_API_CLIENT.md)                                              | How the API client layer works |
+| | [Architecture Guide](./docs/development/README_ARCHITECTURE.md)                                          | Framework internals in depth |
+| | [Validators Guide](./docs/development/README_VALIDATORS.md)                                              | Writing and using validators |
+| | [Team Guides](docs/development/team-guides)                                                            | Per-entity guides (Customers, Orders, Coupons, Products) |
+| **Framework** | [Plugins Reference](./docs/framework/README_PLUGINS_REFERENCE.md)                                        | Pytest plugin architecture |
+| | [Environment & Config Guide](./docs/framework/README_ENVIRONMENT_CONFIG_GUIDE.md)                        | `API_ENV` and configuration resolution |
+| | [Config Contract](./docs/framework/README_CONFIG_CONTRACT.md)                                            | Configuration schema/contract |
+| | [Authentication Guide](./docs/framework/README_AUTHENTICATION.md)                                        | OAuth1 credential handling |
+| | [Logging Architecture](./docs/framework/README_LOGGING_ARCHITECTURE.md)                                  | Structured logging design |
+| | [Entity Discovery Guide](./docs/framework/README_ENTITY_DISCOVER_ARCHITECTURE_GUIDE.md)                  | Metadata-driven entity discovery |
+| **CI/CD** | [CI/CD Architecture Guide](./docs/ci/README_CI_ARCHITECTURE.md)                                          | Workflow design & artifact strategy |
+| | [Allure Reporting Guide](./docs/ci/README_ALLURE.md)                                                     | Report generation & GitHub Pages publishing |
+| | [Environment & CI Guide](./docs/ci/README_ENV_AND_CI.md)                                                 | How environments map to pipelines |
+| | [Docker Infrastructure Guide](./docs/ci/README_DOCKER_INFRASTRUCTURE.md)                                 | Container setup used in CI |
+| | [Git Workflow Handbook](./docs/ci/README_GIT_WORKFLOW_HANDBOOK.md)                                       | Branching & PR conventions |
+| **Contributing** | [Contributing Guide](./docs/contributing/README_CONTRIBUTING.md)                                         | How to contribute |
+| | [Changelog Guidelines](./docs/contributing/README_CHANGELOG_GUIDELINES.md)                               | Changelog conventions |
+| | [Pyproject Guide](./docs/contributing/README_PYPROJECT.md)                                               | Packaging & dependency notes |
+| **Reference** | [Full Project Structure](./docs/project-structure/domain-driven-microservice-framework-architecture.txt) | Complete, unabridged directory tree |
 
 
 ---
@@ -354,7 +354,7 @@ TestEcommerceAPI/
 └── README.md                    ← you are here
 ```
 
-📚 **Related documentation:** [Full Project Structure](./docs/project_structure/domain-driven-microservice-framework-architecture.txt) for the complete, unabridged tree.
+📚 **Related documentation:** [Full Project Structure](./docs/project-structure/domain-driven-microservice-framework-architecture.txt) for the complete, unabridged tree.
 
 ---
 
@@ -442,10 +442,10 @@ API keys already exist — skipping
 
 **Microservice-aligned:** each service (customers, orders, coupons, products) has its own test folder with a dedicated team guide.
 
-* [Customers Test Suite](./docs/development/TEAM_GUIDES/README_CUSTOMERS.md) — detailed architecture & checklist
-* [Orders Test Suite](./docs/development/TEAM_GUIDES/README_ORDERS.md) — detailed architecture & checklist
-* [Coupons Test Suite](./docs/development/TEAM_GUIDES/README_COUPONS.md) — detailed architecture & checklist
-* [Products Test Suite](./docs/development/TEAM_GUIDES/README_PRODUCTS.md) — detailed architecture & checklist
+* [Customers Test Suite](./docs/development/team-guides/README_CUSTOMERS.md) — detailed architecture & checklist
+* [Orders Test Suite](./docs/development/team-guides/README_ORDERS.md) — detailed architecture & checklist
+* [Coupons Test Suite](./docs/development/team-guides/README_COUPONS.md) — detailed architecture & checklist
+* [Products Test Suite](./docs/development/team-guides/README_PRODUCTS.md) — detailed architecture & checklist
 
 ---
 

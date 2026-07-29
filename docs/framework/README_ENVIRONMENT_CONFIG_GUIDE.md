@@ -1,4 +1,5 @@
-# 🧭 Environment & Configuration Guide ("How does configuration work?")
+# 🧭 Environment & Configuration Guide
+## "How does configuration work?"
 
 **Practical guide for developers, QA, and CI users.**
 For authoritative rules, see `CONFIG_CONTRACT.md`.

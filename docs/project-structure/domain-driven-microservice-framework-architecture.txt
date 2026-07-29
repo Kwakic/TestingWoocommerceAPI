@@ -43,7 +43,7 @@ TestEcommerceAPI (project suite/root)
 │     │     ├── README_API_CLIENT.md
 │     │     ├── README_ARCHITECTURE.md
 │     │     ├── README_VALIDATORS.md
-│     │     └── TEAM_GUIDES/
+│     │     └── team-guides/
 │     │            ├── README_CUSTOMERS.md
 │     │            ├── README_ORDERS.md
 │     │            ├── README_COUPONS.md
