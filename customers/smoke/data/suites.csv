@@ -1,37 +1,5 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Wed Jul 29 13:38:39 UTC 2026","Wed Jul 29 13:38:40 UTC 2026","600","tests.customers.api","test_update_customer","","","","test_update_customer_first_name","
-Verify that a customers can be updated successfully.
-
-Validates that:
-    - PUT /customers/{id} returns a successful response
-    - Updated fields are reflected in the API response
-    - Returned customers structure is valid (Pydantic validation)
-
-Test flow:
-    1. Create customers via fixture
-    2. Update first_name and email
-    3. Validate response structure
-    4. Verify updated values
-"
-"passed","Wed Jul 29 13:38:38 UTC 2026","Wed Jul 29 13:38:39 UTC 2026","730","tests.customers.api","test_get_customer","","","","test_get_customer_by_id","
-Verify that a customers can be retrieved by ID.
-
-Endpoint tested:
-    GET /customers/{id}
-
-Fixture responsibilities:
-    - POST /customers
-    - response validation (Pydantic)
-    - cleanup registration
-
-Test flow:
-    1. Create customers
-    2. Retrieve customers by ID
-    3. Validate response structure
-    4. Verify returned customers identity
-    5. Verify API data matches database
-"
-"passed","Wed Jul 29 13:38:37 UTC 2026","Wed Jul 29 13:38:38 UTC 2026","987","tests.customers.api","test_get_customer","","","","test_get_customer_by_email","
+"passed","Wed Jul 29 15:55:19 UTC 2026","Wed Jul 29 15:55:20 UTC 2026","535","tests.customers.api","test_get_customer","","","","test_get_customer_by_email","
 Verify that a customers can be retrieved using the email filter.
 
 Endpoint tested:
@@ -49,7 +17,34 @@ Test flow:
     4. Verify returned customers identity
     5. Verify API data matches database
 "
-"passed","Wed Jul 29 13:38:33 UTC 2026","Wed Jul 29 13:38:35 UTC 2026","2181","tests.customers.api","test_create_customer","","","","test_create_single_customer_with_email_and_password_only","
+"passed","Wed Jul 29 15:55:19 UTC 2026","Wed Jul 29 15:55:19 UTC 2026","399","tests.customers.api","test_get_all_customers","","","","test_get_all_customers_list_not_empty_and_valid_schema","
+Smoke test for GET /customers endpoint.
+
+Validates that:
+    - API returns a non-empty list of customers
+    - Each returned customers has a valid structure (Pydantic validation)
+
+Test flow:
+    1. Create customer for test
+    2. Call GET /customers
+    3. Ensure response contains customers
+    4. Validate structure of each customers
+"
+"passed","Wed Jul 29 15:55:21 UTC 2026","Wed Jul 29 15:55:21 UTC 2026","328","tests.customers.api","test_update_customer","","","","test_update_customer_first_name","
+Verify that a customers can be updated successfully.
+
+Validates that:
+    - PUT /customers/{id} returns a successful response
+    - Updated fields are reflected in the API response
+    - Returned customers structure is valid (Pydantic validation)
+
+Test flow:
+    1. Create customers via fixture
+    2. Update first_name and email
+    3. Validate response structure
+    4. Verify updated values
+"
+"passed","Wed Jul 29 15:55:18 UTC 2026","Wed Jul 29 15:55:19 UTC 2026","632","tests.customers.api","test_create_customer","","","","test_create_single_customer_with_email_and_password_only","
 Create a customers using the minimum valid payload.
 
 The fixture `create_valid_customer` already performs:
@@ -63,16 +58,21 @@ Test flow:
     2. Fetch customers via API
     3. Verify API data matches database record
 "
-"passed","Wed Jul 29 13:38:36 UTC 2026","Wed Jul 29 13:38:37 UTC 2026","1458","tests.customers.api","test_get_all_customers","","","","test_get_all_customers_list_not_empty_and_valid_schema","
-Smoke test for GET /customers endpoint.
+"passed","Wed Jul 29 15:55:20 UTC 2026","Wed Jul 29 15:55:20 UTC 2026","515","tests.customers.api","test_get_customer","","","","test_get_customer_by_id","
+Verify that a customers can be retrieved by ID.
 
-Validates that:
-    - API returns a non-empty list of customers
-    - Each returned customers has a valid structure (Pydantic validation)
+Endpoint tested:
+    GET /customers/{id}
+
+Fixture responsibilities:
+    - POST /customers
+    - response validation (Pydantic)
+    - cleanup registration
 
 Test flow:
-    1. Create customer for test
-    2. Call GET /customers
-    3. Ensure response contains customers
-    4. Validate structure of each customers
+    1. Create customers
+    2. Retrieve customers by ID
+    3. Validate response structure
+    4. Verify returned customers identity
+    5. Verify API data matches database
 "
