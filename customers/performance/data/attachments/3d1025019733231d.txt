@@ -1,0 +1,28 @@
+INFO     EcommerceAPI.plugins.allure_autogen:allure_autogen.py:520 📎 Framework configuration attached to Allure
+INFO     tests.customers.performance.test_customer_performance:test_customer_performance.py:133 🔁 Customers benchmark (5 iterations)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.260s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.261s
+DEBUG    tests.customers.performance.test_customer_performance:test_customer_performance.py:157 Run 01 → 0.261s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.103s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.104s
+DEBUG    tests.customers.performance.test_customer_performance:test_customer_performance.py:157 Run 02 → 0.104s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.099s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.099s
+DEBUG    tests.customers.performance.test_customer_performance:test_customer_performance.py:157 Run 03 → 0.099s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.108s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.109s
+DEBUG    tests.customers.performance.test_customer_performance:test_customer_performance.py:157 Run 04 → 0.109s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.100s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.101s
+DEBUG    tests.customers.performance.test_customer_performance:test_customer_performance.py:157 Run 05 → 0.101s
+INFO     tests.customers.performance.test_customer_performance:test_customer_performance.py:215 ================================================================================
+INFO     tests.customers.performance.test_customer_performance:test_customer_performance.py:216 📊 CUSTOMERS PERFORMANCE SUMMARY
+INFO     tests.customers.performance.test_customer_performance:test_customer_performance.py:217 ================================================================================
+INFO     tests.customers.performance.test_customer_performance:test_customer_performance.py:219 Environment : CI
+INFO     tests.customers.performance.test_customer_performance:test_customer_performance.py:222 CI          : github_actions (30736107341)
+INFO     tests.customers.performance.test_customer_performance:test_customer_performance.py:229 Git         : 94e5a5a (main)
+INFO     tests.customers.performance.test_customer_performance:test_customer_performance.py:235 Average     : 0.135s
+INFO     tests.customers.performance.test_customer_performance:test_customer_performance.py:236 P95         : 0.367s
+INFO     tests.customers.performance.test_customer_performance:test_customer_performance.py:237 Minimum     : 0.099s
+INFO     tests.customers.performance.test_customer_performance:test_customer_performance.py:238 Maximum     : 0.261s
+INFO     tests.customers.performance.test_customer_performance:test_customer_performance.py:240 ================================================================================

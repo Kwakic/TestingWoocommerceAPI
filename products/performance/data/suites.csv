@@ -1,12 +1,8 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Sun Jul 26 06:38:34 UTC 2026","Sun Jul 26 06:38:34 UTC 2026","514","tests.products.performance","test_product_response_times","","","","test_product_response_times","
+"passed","Sun Aug 02 06:34:24 UTC 2026","Sun Aug 02 06:34:24 UTC 2026","611","tests.products.performance","test_product_performance","","","","test_product_response_times","
 Benchmark the Products endpoint.
 
-Workflow
-
-    1. Execute N GET requests.
-    2. Measure every response time.
-    3. Calculate summary statistics.
-    4. Validate benchmark expectations.
-    5. Emit concise CI-friendly logs.
+The benchmark executes multiple requests, measures their response times,
+calculates summary statistics, and validates the configured performance
+thresholds.
 "
