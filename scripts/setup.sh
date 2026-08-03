@@ -187,9 +187,11 @@ $wpdb->insert(
 // the repository .env file.
 // ---------------------------------------------------------------
 
-echo "WC_API_URL=http://localhost:8080/wp-json/wc/v3/";
-echo "WC_CONSUMER_KEY=$key";
-echo "WC_CONSUMER_SECRET=$secret";
+printf(
+    "WC_API_URL=http://localhost:8080/wp-json/wc/v3/\nWC_CONSUMER_KEY=%s\nWC_CONSUMER_SECRET=%s\n",
+    $key,
+    $secret
+);
 ' --allow-root
 )
 

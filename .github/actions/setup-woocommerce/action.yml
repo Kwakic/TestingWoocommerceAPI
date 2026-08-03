@@ -101,11 +101,15 @@ runs:
 
         echo "$OUTPUT"
 
-        WC_KEY=$(echo "$OUTPUT" | grep "CONSUMER KEY" | awk '{print $3}')
-        WC_SECRET=$(echo "$OUTPUT" | grep "CONSUMER SECRET" | awk '{print $3}')
+        if [[ ! -f .env ]]; then
+            echo "❌ setup.sh did not generate .env"
+            exit 1
+        fi
 
-        echo "WC_KEY=$WC_KEY" >> $GITHUB_ENV
-        echo "WC_SECRET=$WC_SECRET" >> $GITHUB_ENV
+        source .env
+
+        echo "WC_KEY=$WC_CONSUMER_KEY" >> "$GITHUB_ENV"
+        echo "WC_SECRET=$WC_CONSUMER_SECRET" >> "$GITHUB_ENV"
 
         echo "✅ WooCommerce credentials captured"
 
