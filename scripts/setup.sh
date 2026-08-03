@@ -188,7 +188,7 @@ $wpdb->insert(
 // ---------------------------------------------------------------
 
 printf(
-    "WC_API_URL=http://localhost:8080/wp-json/wc/v3/\nWC_CONSUMER_KEY=%s\nWC_CONSUMER_SECRET=%s\n",
+    "WC_API_URL=http://localhost:8080/wp-json/wc/v3/\nWC_KEY=%s\nWC_SECRET=%s\n",
     $key,
     $secret
 );
@@ -196,14 +196,35 @@ printf(
 )
 
 # ------------------------------------------------------------------
-# STEP 3.1 — Generate Repository Environment File
+# STEP 3.1 — Prepare Repository Environment
 #
-# Persist the credentials emitted by WP-CLI to the repository.
-# The .env file intentionally lives on the host machine because
-# it is consumed by the Python framework rather than WordPress.
+# Bootstrap the repository .env from .env.example on first run.
+# Existing configuration is preserved across executions.
 # ------------------------------------------------------------------
 
-echo "$CREDENTIALS" | grep '^WC_' > .env
+if [[ ! -f .env ]]; then
+    echo "📄 Creating repository .env from template..."
+    cp .env.example .env
+fi
+
+# ------------------------------------------------------------------
+# Update only the generated WooCommerce credentials.
+#
+# All remaining framework configuration (database, logging,
+# environment, etc.) is preserved from the template.
+# ------------------------------------------------------------------
+
+while IFS='=' read -r key value; do
+    case "$key" in
+        WC_API_URL|WC_KEY|WC_SECRET)
+            if grep -q "^${key}=" .env; then
+                sed -i "s|^${key}=.*|${key}=${value}|" .env
+            else
+                echo "${key}=${value}" >> .env
+            fi
+            ;;
+    esac
+done <<< "$CREDENTIALS"
 
 # ------------------------------------------------------------------
 # STEP 3.2 — Validate Environment
@@ -222,8 +243,8 @@ source .env
 
 if [[ \
     -z "$WC_API_URL" || \
-    -z "$WC_CONSUMER_KEY" || \
-    -z "$WC_CONSUMER_SECRET" \
+    -z "$WC_KEY" || \
+    -z "$WC_SECRET" \
 ]]
 then
     echo "❌ Generated .env is incomplete"

@@ -10,32 +10,13 @@ class MissingCredentialsError(Exception):
 
 
 def get_wc_api_keys():
-    """
-    Retrieve WooCommerce API credentials.
-
-    Preferred environment variables:
-        WC_CONSUMER_KEY
-        WC_CONSUMER_SECRET
-
-    Legacy variables supported for backward compatibility:
-        WC_KEY
-        WC_SECRET
-    """
-
-    wc_key = os.environ.get("WC_CONSUMER_KEY") or os.environ.get("WC_KEY")
-
-    wc_secret = os.environ.get("WC_CONSUMER_SECRET") or os.environ.get("WC_SECRET")
-
+    wc_key = os.environ.get("WC_KEY")
+    wc_secret = os.environ.get("WC_SECRET")
     if not wc_key or not wc_secret:
         raise MissingCredentialsError(
-            "Set WC_CONSUMER_KEY/WC_CONSUMER_SECRET "
-            "or the legacy WC_KEY/WC_SECRET environment variables."
+            "Set WC_KEY and WC_SECRET in environment or .env file."
         )
-
-    return {
-        "wc_key": wc_key,
-        "wc_secret": wc_secret,
-    }
+    return {"wc_key": wc_key, "wc_secret": wc_secret}
 
 
 def get_db_credentials():
