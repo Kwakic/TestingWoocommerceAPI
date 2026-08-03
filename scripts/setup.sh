@@ -198,8 +198,11 @@ printf(
 # ------------------------------------------------------------------
 # STEP 3.1 — Prepare Repository Environment
 #
-# Bootstrap the repository .env from .env.example on first run.
-# Existing configuration is preserved across executions.
+# On the first execution, bootstrap the repository .env from
+# .env.example.
+#
+# On subsequent executions, preserve the existing .env and update
+# only the generated WooCommerce API credentials.
 # ------------------------------------------------------------------
 
 if [[ ! -f .env ]]; then
