@@ -1901,10 +1901,11 @@ load_dotenv()
 
 ### 🌳 Branch Naming Convention
 
-- feature/... → new features
-- fix/... → bug fixes
-- refactor/... → refactoring
+- feature/login-api → new features
+- bugfix/ci-failure → bug fixes
+- refactor/api-helper → refactoring
 - test/... → test improvements
+- docs/readme-update → update readme
 
 ### Examples
 
@@ -1958,8 +1959,13 @@ git status
 ---
 
 ### 🔎 See the actual code changes you staged (after running `git add .`):
+
+This lets you verify exactly what you're about to commit.
 ```
 git diff --cached
+# or
+git diff
+
 ```
 
 ---

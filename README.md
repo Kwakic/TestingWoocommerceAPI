@@ -370,11 +370,12 @@ TestEcommerceAPI/
 
 ## 🔁 Idempotent Setup
 
-`make run` is safe to run multiple times. The system will:
+`make run` is idempotent. Re-running it in the same project will:
 
+* reuse the existing Docker environment
 * skip already-installed components
-* avoid duplicate data
-* reuse the existing database
+* avoid creating duplicate data
+* preserve the existing database
 
 ---
 
@@ -478,6 +479,50 @@ API keys already exist — skipping
 | ⚙️ Config Guide | [Environment & Config Guide](./docs/framework/README_ENVIRONMENT_CONFIG_GUIDE.md) |
 | 🚀 CI Architecture | [CI/CD Architecture Guide](./docs/ci/README_CI_ARCHITECTURE.md) |
 | 📊 Allure Guide | [Allure Reporting Guide](./docs/ci/README_ALLURE.md) |
+
+---
+
+## 🔧 Troubleshooting
+
+### `make: command not found`
+
+GNU Make is not installed or your terminal needs to be restarted after installation.
+
+See the **Prerequisites** section above.
+
+---
+
+### Docker reports `Virtualization support not detected`
+
+Ensure hardware virtualization is enabled in your BIOS/UEFI.
+
+Verify with:
+
+```powershell
+systeminfo
+```
+
+The output should include:
+
+```text
+Virtualization Enabled In Firmware: Yes
+```
+
+---
+
+### `Conflict. The container name "/wc-db" is already in use`
+
+Another WooCommerce test environment is already using the fixed Docker containers (`wc-db`, `wc-wp`, `wc-cli`).
+
+If you no longer need that environment:
+
+```bash
+docker rm -f wc-db wc-wp wc-cli
+make run
+```
+
+> The framework uses fixed container names, so only one local instance can run at a time.
+
 
 ---
 
