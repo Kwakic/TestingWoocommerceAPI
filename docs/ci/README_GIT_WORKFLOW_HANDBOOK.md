@@ -1901,11 +1901,12 @@ load_dotenv()
 
 ### 🌳 Branch Naming Convention
 
-- feature/login-api → new features
-- bugfix/ci-failure → bug fixes
-- refactor/api-helper → refactoring
-- test/... → test improvements
-- docs/readme-update → update readme
+- feature/login-api → Introduces a brand new feature.
+- fix/ci-failure → bug fixes
+- refactor/api-helper → Alters production code without fixing a bug or adding a feature.
+- test/... → test improvements ( Adds or repairs test suites.)
+- docs/readme-update → Modifies documentation files only.
+- chore/.. Updates build tasks, local dependencies, or tools
 
 ### Examples
 

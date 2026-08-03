@@ -2,6 +2,19 @@
 
 set -e
 
+# ------------------------------------------------------------------
+# Local development configuration.
+#
+# Centralising these values avoids repeating literals throughout the
+# setup script and makes future configuration changes trivial.
+# ------------------------------------------------------------------
+
+WP_URL="http://localhost:8080"
+WP_TITLE="Test Shop"
+WP_ADMIN_USER="admin"
+WP_ADMIN_PASSWORD="admin"
+WP_ADMIN_EMAIL="test@test.com"
+
 echo "⏳ Waiting for WordPress container..."
 until curl -s http://localhost:8080/wp-json > /dev/null; do
   sleep 5
@@ -27,12 +40,12 @@ if docker compose -f docker-compose.wp.yml run --rm wpcli wp core is-installed -
 else
   echo "🚀 Installing WordPress..."
   docker compose -f docker-compose.wp.yml run --rm wpcli \
-    wp core install \
-    --url="http://localhost:8080" \
-    --title="Test Shop" \
-    --admin_user="admin" \
-    --admin_password="admin" \
-    --admin_email="test@test.com" \
+wp core install \
+    --url="$WP_URL" \
+    --title="$WP_TITLE" \
+    --admin_user="$WP_ADMIN_USER" \
+    --admin_password="$WP_ADMIN_PASSWORD" \
+    --admin_email="$WP_ADMIN_EMAIL" \
     --allow-root
 fi
 
@@ -87,47 +100,134 @@ done
 echo "✅ WooCommerce REST API is ready"
 
 # ------------------------------------------------------------------
-# STEP 3 — Create API keys (idempotent-safe)
+# STEP 3 — Provision WooCommerce API Credentials
+#
+# This step reconciles the local development environment into a
+# known-good authentication state.
+#
+# Design principles:
+#
+# • The repository .env file is the source of truth consumed by
+#   the Python test framework.
+#
+# • WooCommerce stores the consumer key as a one-way hash, making
+#   existing credentials impossible to recover.
+#
+# • Rather than attempting recovery, the setup provisions a fresh
+#   credential pair on every execution.
+#
+# • The repository .env is generated on the host machine rather
+#   than inside the temporary wpcli container.
+#
+# This guarantees that every successful execution of `make run`
+# leaves the project in a fully usable state.
 # ------------------------------------------------------------------
-echo "🔑 Creating API keys..."
 
+echo "🔑 Provisioning WooCommerce API credentials..."
+
+CREDENTIALS=$(
 docker compose -f docker-compose.wp.yml run --rm wpcli \
-  wp eval '
-$user_id = 1;
+wp eval '
 global $wpdb;
 
-// Avoid duplicate keys on rerun
-$existing = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}woocommerce_api_keys");
-if ($existing > 0) {
-    echo "API keys already exist — skipping\n";
-    return;
+// ---------------------------------------------------------------
+// Resolve the administrator account.
+//
+// Avoid assuming the administrator always has user ID 1.
+// Instead, locate the administrator configured by the setup
+// script so the implementation remains resilient to future
+// configuration changes.
+// ---------------------------------------------------------------
+
+$admin = get_user_by("login", "admin");
+
+if (!$admin) {
+    fwrite(STDERR, "Administrator account not found.\n");
+    exit(1);
 }
+
+$user_id = $admin->ID;
+
+// ---------------------------------------------------------------
+// Remove previously generated API credentials.
+//
+// The consumer key cannot be reconstructed because WooCommerce
+// stores only its hash. Regenerating credentials is therefore
+// deterministic, inexpensive and keeps the local environment
+// consistent.
+// ---------------------------------------------------------------
+
+$wpdb->query(
+    "DELETE FROM {$wpdb->prefix}woocommerce_api_keys"
+);
+
+// ---------------------------------------------------------------
+// Generate a fresh credential pair.
+// ---------------------------------------------------------------
 
 $key = wc_rand_hash();
 $secret = wc_rand_hash();
 
-$wpdb->insert("{$wpdb->prefix}woocommerce_api_keys", [
-  "user_id" => $user_id,
-  "description" => "CI Key",
-  "permissions" => "read_write",
-  "consumer_key" => wc_api_hash($key),
-  "consumer_secret" => $secret,
-  "truncated_key" => substr($key, -7)
-]);
-
-// 👇 WRITE TO .env FILE (AUTO-WIRING)
-file_put_contents(".env",
-"WC_API_URL=http://localhost:8080/wp-json/wc/v3/\n" .
-"WC_CONSUMER_KEY=$key\n" .
-"WC_CONSUMER_SECRET=$secret\n"
+$wpdb->insert(
+    "{$wpdb->prefix}woocommerce_api_keys",
+    [
+        "user_id"         => $user_id,
+        "description"     => "Local Development",
+        "permissions"     => "read_write",
+        "consumer_key"    => wc_api_hash($key),
+        "consumer_secret" => $secret,
+        "truncated_key"   => substr($key, -7),
+    ]
 );
 
-echo "=====================================\n";
-echo "CONSUMER KEY: $key\n";
-echo "CONSUMER SECRET: $secret\n";
-echo "=====================================\n";
-echo "✅ .env file generated automatically\n";
+// ---------------------------------------------------------------
+// Emit credentials for the host setup script.
+//
+// The surrounding Bash script captures this output and creates
+// the repository .env file.
+// ---------------------------------------------------------------
 
+echo "WC_API_URL=http://localhost:8080/wp-json/wc/v3/";
+echo "WC_CONSUMER_KEY=$key";
+echo "WC_CONSUMER_SECRET=$secret";
 ' --allow-root
+)
 
+# ------------------------------------------------------------------
+# STEP 3.1 — Generate Repository Environment File
+#
+# Persist the credentials emitted by WP-CLI to the repository.
+# The .env file intentionally lives on the host machine because
+# it is consumed by the Python framework rather than WordPress.
+# ------------------------------------------------------------------
+
+echo "$CREDENTIALS" | grep '^WC_' > .env
+
+# ------------------------------------------------------------------
+# STEP 3.2 — Validate Environment
+#
+# Fail fast if credential provisioning did not complete
+# successfully. This avoids obscure pytest failures later in
+# the workflow.
+# ------------------------------------------------------------------
+
+if [[ ! -f .env ]]; then
+    echo "❌ Failed to generate repository .env"
+    exit 1
+fi
+
+source .env
+
+if [[ \
+    -z "$WC_API_URL" || \
+    -z "$WC_CONSUMER_KEY" || \
+    -z "$WC_CONSUMER_SECRET" \
+]]
+then
+    echo "❌ Generated .env is incomplete"
+    exit 1
+fi
+
+echo "✅ Repository .env generated successfully"
+echo "🔐 WooCommerce API credentials provisioned"
 echo "🎉 Setup complete!"
