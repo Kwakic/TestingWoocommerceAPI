@@ -1,5 +1,26 @@
 #!/bin/bash
 
+
+# --------------------------------------------------
+# Bootstrap a local WooCommerce development instance.
+#
+# Responsibilities
+# ----------------
+# • Install/configure WordPress
+# • Install WooCommerce
+# • Configure permalinks
+# • Generate fresh WooCommerce API credentials
+#
+# This script intentionally DOES NOT:
+#
+# • create .env
+# • modify repository configuration
+#
+# Generated credentials are written to stdout in
+# machine-readable KEY=VALUE format so callers
+# (Makefile or CI) decide what to do with them.
+# --------------------------------------------------
+
 set -e
 
 # ------------------------------------------------------------------
@@ -15,6 +36,31 @@ WP_ADMIN_USER="admin"
 WP_ADMIN_PASSWORD="admin"
 WP_ADMIN_EMAIL="test@test.com"
 
+# ------------------------------------------------------------------
+# Stdout / stderr split.
+#
+# This script has exactly one job: bootstrap WordPress + WooCommerce
+# and hand back fresh API credentials. It does NOT know (and should
+# not need to know) whether the caller wants those written to a local
+# .env file, exported into $GITHUB_ENV, or something else entirely —
+# that decision belongs to the caller (Makefile locally, action.yml
+# in CI). Making that possible cleanly:
+#
+#   - fd 3 is saved as a copy of the *real* stdout
+#   - fd 1 (stdout) is redirected to stderr for the rest of the
+#     script, so every progress message below — including WP-CLI's
+#     own output — stays visible on the terminal but is invisible to
+#     anything that captures this script's stdout
+#   - the final credentials block is written explicitly to fd 3
+#
+# Result: `bash scripts/setup.sh` still shows full progress as
+# before. `OUTPUT=$(bash scripts/setup.sh)` captures ONLY the three
+# WC_API_URL / WC_KEY / WC_SECRET lines — nothing else. No .env
+# handling and no log-grepping required by the caller.
+# ------------------------------------------------------------------
+exec 3>&1
+exec 1>&2
+
 echo "⏳ Waiting for WordPress container..."
 until curl -s http://localhost:8080/wp-json > /dev/null; do
   sleep 5
@@ -25,7 +71,9 @@ done
 # ------------------------------------------------------------------
 echo "🔧 Ensuring WordPress writable folders..."
 
-docker exec wc-wp bash -c "
+# -T disables TTY allocation — required for this to work non-interactively
+# (CI, or anywhere stdout is being captured/piped rather than a live shell).
+docker compose -f docker-compose.wp.yml exec -T wordpress bash -c "
 mkdir -p /var/www/html/wp-content/uploads &&
 chmod -R 777 /var/www/html/wp-content
 "
@@ -59,7 +107,7 @@ if docker compose -f docker-compose.wp.yml run --rm wpcli wp plugin is-installed
 else
   echo "🚀 Installing WooCommerce (manual workaround)..."
 
-  docker exec wc-wp bash -c "
+  docker compose -f docker-compose.wp.yml exec -T wordpress bash -c "
   apt update &&
   apt install -y unzip curl &&
   cd /var/www/html/wp-content/plugins &&
@@ -102,25 +150,16 @@ echo "✅ WooCommerce REST API is ready"
 # ------------------------------------------------------------------
 # STEP 3 — Provision WooCommerce API Credentials
 #
-# This step reconciles the local development environment into a
-# known-good authentication state.
-#
-# Design principles:
-#
-# • The repository .env file is the source of truth consumed by
-#   the Python test framework.
+# This step's responsibility ends the moment credentials exist. It
+# does NOT decide where they get stored — that belongs to whoever
+# called this script.
 #
 # • WooCommerce stores the consumer key as a one-way hash, making
 #   existing credentials impossible to recover.
 #
-# • Rather than attempting recovery, the setup provisions a fresh
-#   credential pair on every execution.
-#
-# • The repository .env is generated on the host machine rather
-#   than inside the temporary wpcli container.
-#
-# This guarantees that every successful execution of `make run`
-# leaves the project in a fully usable state.
+# • Rather than attempting recovery, this provisions a fresh
+#   credential pair on every execution — deterministic, cheap, and
+#   idempotent from the caller's point of view.
 # ------------------------------------------------------------------
 
 echo "🔑 Provisioning WooCommerce API credentials..."
@@ -181,10 +220,11 @@ $wpdb->insert(
 );
 
 // ---------------------------------------------------------------
-// Emit credentials for the host setup script.
+// Emit credentials for the caller.
 //
-// The surrounding Bash script captures this output and creates
-// the repository .env file.
+// This is the ONLY output this script produces on its real stdout
+// (fd 3) — see the stdout/stderr split note near the top of the
+// file.
 // ---------------------------------------------------------------
 
 printf(
@@ -196,64 +236,31 @@ printf(
 )
 
 # ------------------------------------------------------------------
-# STEP 3.1 — Prepare Repository Environment
+# STEP 3.1 — Validate credentials (in-memory, no file involved)
 #
-# On the first execution, bootstrap the repository .env from
-# .env.example.
-#
-# On subsequent executions, preserve the existing .env and update
-# only the generated WooCommerce API credentials.
+# Fail fast if provisioning did not complete successfully, before
+# handing anything back to the caller. This avoids obscure pytest
+# failures later in the workflow, and avoids ever handing back a
+# partial/broken credential set.
 # ------------------------------------------------------------------
 
-if [[ ! -f .env ]]; then
-    echo "📄 Creating repository .env from template..."
-    cp .env.example .env
-fi
-
-# ------------------------------------------------------------------
-# Update only the generated WooCommerce credentials.
-#
-# All remaining framework configuration (database, logging,
-# environment, etc.) is preserved from the template.
-# ------------------------------------------------------------------
-
-while IFS='=' read -r key value; do
-    case "$key" in
-        WC_API_URL|WC_KEY|WC_SECRET)
-            if grep -q "^${key}=" .env; then
-                sed -i "s|^${key}=.*|${key}=${value}|" .env
-            else
-                echo "${key}=${value}" >> .env
-            fi
-            ;;
-    esac
-done <<< "$CREDENTIALS"
-
-# ------------------------------------------------------------------
-# STEP 3.2 — Validate Environment
-#
-# Fail fast if credential provisioning did not complete
-# successfully. This avoids obscure pytest failures later in
-# the workflow.
-# ------------------------------------------------------------------
-
-if [[ ! -f .env ]]; then
-    echo "❌ Failed to generate repository .env"
+if ! grep -q '^WC_API_URL=' <<< "$CREDENTIALS" || \
+   ! grep -q '^WC_KEY='     <<< "$CREDENTIALS" || \
+   ! grep -q '^WC_SECRET='  <<< "$CREDENTIALS"; then
+    echo "❌ WooCommerce credential generation returned incomplete output"
     exit 1
 fi
 
-source .env
-
-if [[ \
-    -z "$WC_API_URL" || \
-    -z "$WC_KEY" || \
-    -z "$WC_SECRET" \
-]]
-then
-    echo "❌ Generated .env is incomplete"
-    exit 1
-fi
-
-echo "✅ Repository .env generated successfully"
 echo "🔐 WooCommerce API credentials provisioned"
 echo "🎉 Setup complete!"
+
+# ------------------------------------------------------------------
+# Hand credentials back to the caller on the real stdout (fd 3).
+#
+# Local dev: Makefile's `setup` target pipes this into
+#            scripts/write_env_credentials.sh, which merges it into
+#            .env.
+# CI:        action.yml captures this directly into $GITHUB_ENV —
+#            no .env file involved at all.
+# ------------------------------------------------------------------
+echo "$CREDENTIALS" >&3

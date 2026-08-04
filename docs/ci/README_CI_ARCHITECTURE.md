@@ -89,6 +89,28 @@ The framework supports multiple execution environments. The selected environment
 
 ---
 
+
+## 🌐 Local Bootstrap Responsibilities
+
+The local bootstrap process intentionally separates responsibilities:
+
+**• Makefile**
+  - orchestrates the complete workflow
+  - creates .env from .env.example when required
+
+**• setup.sh**
+  - provisions WordPress
+  - provisions WooCommerce
+  - emits machine-readable credentials
+
+**• write_env_credentials.sh**
+  - updates only the WooCommerce entries inside .env
+
+This separation keeps each component focused on a single responsibility while allowing the same setup.sh script to be reused unchanged by local development and GitHub Actions.
+
+---
+
+
 ## 👉 Recommended Usage
 
 | Where | `API_ENV` |

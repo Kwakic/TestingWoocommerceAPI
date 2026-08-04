@@ -24,6 +24,24 @@ This document explains local `.env` usage, Allure reporting, Docker test image b
     ```
 - The logging plugin walks upward from the pytest root and uses python-dotenv to load `.env` (with `override=False`), so existing shell env vars are preserved.
 
+---
+
+
+### Automatic .env creation
+
+For local development, `make run` automatically creates `.env`
+from `.env.example` the first time it is executed.
+
+WooCommerce credentials are then generated during the bootstrap
+process and merged into `.env` automatically.
+
+GitHub Actions does not use a repository `.env` file.
+Instead, the generated credentials are exported directly into
+the workflow environment.
+
+---
+
+
 ### Run pytest (Allure results)
 - Run full suite and write Allure results (repo root):
 ```bash

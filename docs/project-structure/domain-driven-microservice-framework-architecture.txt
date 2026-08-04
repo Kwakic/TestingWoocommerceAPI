@@ -301,7 +301,7 @@ TestEcommerceAPI (project suite/root)
 │─── .pre-commit-config.yaml                       ← shared
 │─── CHANGELOG.md                                  ← shared
 │─── conftest.py                                   ← shared
-│─── docker-compose.matrix.yml                     ← shared
+│─── docker-compose.matrix.yml                     ← owns the Docker configuration
 │─── Dockerfile                                    ← shared
 │─── README.md                                     ← Documentation index / landing page
 └──  pytest.ini                                    ← shared

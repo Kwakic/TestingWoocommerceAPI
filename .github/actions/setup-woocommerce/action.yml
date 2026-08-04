@@ -74,19 +74,20 @@ runs:
     # - creates API credentials
     # - prepares test environment
     #
-    # Captures:
-    # - WC_KEY
-    # - WC_SECRET
+    # scripts/setup.sh prints ONLY the WC_API_URL / WC_KEY / WC_SECRET
+    # lines on its stdout (everything else — progress, WP-CLI chatter —
+    # goes to stderr, so it still streams live in this step's log).
+    # CI never touches a .env file: the credential lines go straight
+    # into $GITHUB_ENV, since GITHUB_ENV already accepts KEY=VALUE
+    # lines in exactly that format.
     # --------------------------------------------------
     - name: Bootstrap WooCommerce and capture credentials
       shell: bash
       run: |
         set -e
 
-        if ! OUTPUT=$(bash scripts/setup.sh); then
+        if ! CREDENTIALS=$(bash scripts/setup.sh); then
           echo "❌ WooCommerce bootstrap failed"
-
-          echo "$OUTPUT"
 
           echo
           echo "===== WordPress logs ====="
@@ -99,19 +100,15 @@ runs:
           exit 1
         fi
 
-        echo "$OUTPUT"
-
-        if [[ ! -f .env ]]; then
-            echo "❌ setup.sh did not generate .env"
-            exit 1
+        if [[ -z "$CREDENTIALS" ]]; then
+          echo "❌ setup.sh produced no credentials"
+          exit 1
         fi
 
-        source .env
+        echo "$CREDENTIALS" >> "$GITHUB_ENV"
 
-        echo "WC_KEY=$WC_KEY" >> "$GITHUB_ENV"
-        echo "WC_SECRET=$WC_SECRET" >> "$GITHUB_ENV"
+        echo "✅ WooCommerce credentials loaded"
 
-        echo "✅ WooCommerce credentials loaded from .env"
     # --------------------------------------------------
     # 4. Configure database connection
     #

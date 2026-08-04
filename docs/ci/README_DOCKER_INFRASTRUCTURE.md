@@ -8,29 +8,25 @@ This document describes the Docker layer of the [TestingWoocommerceAPI](https://
 
 ## 🏛️ Architecture Diagram
 ```
-   Developer
-       │
-       ▼
-    make run
-       │
-       ▼
- Docker Compose
-  ┌────┼─────────┐
-  │    │         │
-  ▼    ▼         ▼
-DB  WordPress  WP-CLI
-       │
-       ▼
- setup.sh
-       │
-       ▼
- WooCommerce
-       │
-       ▼
-    pytest
-       │
-       ▼
- API + DB Validation
+Developer
+      │
+      ▼
+make run
+      │
+      ▼
+ensure-env
+      │
+      ▼
+Docker Compose
+      │
+      ▼
+setup.sh
+      │
+      ▼
+write_env_credentials.sh
+      │
+      ▼
+pytest
 ```
 
 The same infrastructure is used locally and in GitHub Actions.
@@ -72,17 +68,19 @@ Benefits:
 ## 2. Files involved
 
 ```
-docker-compose.wp.yml   → defines db / wordpress / wpcli services
+docker-compose.wp.yml    → defines db / wordpress / wpcli services
 Dockerfile               → builds a container image for running the test
                             suite itself (used for API_ENV=docker and in CI),
                             NOT for building WordPress/MySQL — those are
                             pulled as prebuilt images
 scripts/setup.sh         → waits for containers, fixes permissions,
                             installs WordPress + WooCommerce, generates
-                            API keys, writes .env
+                            API keys, generates WooCommerce credentials.
+write_env_credentials.sh → merges credentials into .env
+
 Makefile                 → orchestrates the whole flow behind `make run`
-.env.example              → template for required environment variables
-.dockerignore             → excludes files from the build context when
+.env.example             → template for required environment variables
+.dockerignore            → excludes files from the build context when
                             the Dockerfile image is built
 ```
 
@@ -223,7 +221,7 @@ Makefile                   → single entrypoint tying it all together
 |---|---|
 | Tests fail with `401` / `403` | `setup.sh` didn't complete — WooCommerce API keys weren't generated. Re-run `make run`. |
 | `docker compose up` hangs | A previous stack is still holding the ports/volumes. Run `down -v` first. |
-| WordPress reachable but empty (no WooCommerce) | `setup.sh` was skipped or failed partway — check its logs, rerun it manually: `bash scripts/setup.sh` |
+| WordPress reachable but empty (no WooCommerce) | `setup.sh` was skipped or failed partway — check its logs, rerun it manually: `make setup` |
 | Stale data after schema changes | Run `docker compose -f docker-compose.wp.yml down -v` for a full reset before `make run` |
 
 

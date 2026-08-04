@@ -257,13 +257,17 @@ Running `make run` automatically performs:
    * WordPress
    * WP-CLI
 
-2. **⚙️ Bootstraps the environment**
-   * Installs WordPress and WooCommerce
-   * Generates API credentials
-   * Auto-generates `.env`
+2. ⚙️ Bootstraps the environment
 
-3. **📦 Installs the testing framework** (editable mode), making it importable as a proper Python package and keeping local runs consistent with CI:
+   • Installs WordPress
+   • Installs WooCommerce
+   • Generates WooCommerce API credentials
 
+3. 🔐 Updates local configuration
+
+   • Creates .env from .env.example (first run only)
+   • Writes generated WooCommerce credentials
+4.
    ```bash
    # From repo root (recommended)
    source .venv/Scripts/activate

@@ -1,8 +1,35 @@
+# ============================================================================
+# docker-compose.wp.yml
+# WooCommerce test stack: MySQL + WordPress + WP-CLI
+#
+# No `container_name:` on any service, on purpose. Docker enforces
+# container-name uniqueness ENGINE-WIDE, not per Compose project — so a
+# fixed name like "wc-db" can collide with a completely unrelated project
+# on the same machine that happens to use the same name, and there's no
+# way to tell the two apart. A naive fix (force-removing a container by
+# that fixed name before `up`) would nuke that *other* project's
+# container too, which is worse than the original problem.
+#
+# Without `container_name:`, Compose names each container
+# <project>-<service>-<index> (e.g. wc-testing-woocommerce-api-db-1),
+# scoped to the project below — so collisions with anything outside this
+# project are structurally impossible instead of something to defend
+# against.
+#
+# `name:` pins that project name so it stays stable regardless of which
+# folder path this file is run from (a fresh clone, a CI runner's
+# checkout dir, etc.) — `up` and `down` always agree on what they own.
+#
+# Consequence: anything that used to reach into a container by its fixed
+# name (`docker exec wc-wp ...`) now has to go through Compose instead
+# (`docker compose exec -T wordpress ...`) — see scripts/setup.sh.
+# ============================================================================
+name: wc-testing-woocommerce-api
+
 services:
 
   db:
     image: mysql:8.0
-    container_name: wc-db
     restart: always
     command: --default-authentication-plugin=mysql_native_password --ssl=0
 
@@ -24,7 +51,6 @@ services:
 
   wordpress:
     image: wordpress:6.8-php8.2-apache
-    container_name: wc-wp
     restart: always
 
     depends_on:
@@ -41,6 +67,10 @@ services:
       - "8080:80"   # 🔥 API exposed to CI
 
     volumes:
+      # ⚠️ BIND MOUNT, not a named volume. `docker compose down -v` only
+      # removes named/anonymous Docker volumes — it will NOT clear this
+      # folder. For a truly clean reset you also need: rm -rf wp-data
+      # (the Makefile's `make clean` target does this for you).
       - ./wp-data:/var/www/html   # ✅ CRITICAL (persistent WP state)
 
     healthcheck:
@@ -52,7 +82,6 @@ services:
 
   wpcli:
     image: wordpress:cli
-    container_name: wc-cli
 
     depends_on:
       - wordpress
