@@ -85,9 +85,31 @@ test-ci:
 	pytest --clean-alluredir --alluredir=reports/allure-results -v
 
 # --------------------------------------------------
-# Full execution (what users run)
+# Full local developer workflow.
+#
+# This is the primary entry point for contributors.
+# It prepares a complete local development environment:
+#
+#   • creates .env (if missing)
+#   • starts the Docker infrastructure
+#   • bootstraps WordPress + WooCommerce
+#   • installs the Python framework
+#   • runs the test suite
+#
+# Equivalent to:
+#
+#   make up
+#   make setup
+#   make install
+#   make test
+#
+# Most contributors only need:
+#
+#   make run
 # --------------------------------------------------
 run: ensure-env up setup install test
+
+#run: up setup install test -->It's functionally equivalent, avoids declaring the same dependency twice, and expresses the orchestration more cleanly.
 
 # --------------------------------------------------
 # Stop infrastructure and remove everything Docker manages

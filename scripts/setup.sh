@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# ------------------------------------------------------------------
+# Bootstrap starts here
+# ------------------------------------------------------------------
+echo
+echo "═══════════════════════════════════════════════════════════════"
+echo "🚀 Bootstrapping local WooCommerce environment"
+echo "═══════════════════════════════════════════════════════════════"
+echo
 
 # --------------------------------------------------
 # Bootstrap a local WooCommerce development instance.
@@ -10,15 +18,16 @@
 # • Install WooCommerce
 # • Configure permalinks
 # • Generate fresh WooCommerce API credentials
+
+
+# This script intentionally does NOT:
 #
-# This script intentionally DOES NOT:
+# • create or modify .env
+# • export environment variables
+# • make CI-specific decisions
 #
-# • create .env
-# • modify repository configuration
-#
-# Generated credentials are written to stdout in
-# machine-readable KEY=VALUE format so callers
-# (Makefile or CI) decide what to do with them.
+# Its only responsibility is provisioning WordPress/WooCommerce
+# and returning fresh API credentials.
 # --------------------------------------------------
 
 set -e
@@ -37,7 +46,7 @@ WP_ADMIN_PASSWORD="admin"
 WP_ADMIN_EMAIL="test@test.com"
 
 # ------------------------------------------------------------------
-# Stdout / stderr split.
+# Stdout / stderr split - human vs machine output (Machine-readable output contract).
 #
 # This script has exactly one job: bootstrap WordPress + WooCommerce
 # and hand back fresh API credentials. It does NOT know (and should
@@ -115,12 +124,12 @@ then
     echo "🚀 Installing WooCommerce..."
 
     docker compose -f docker-compose.wp.yml exec -T wordpress bash -c "
-        apt update &&
-        apt install -y unzip curl &&
+        apt-get update -qq &&
+        apt-get install -y -qq unzip curl &&
         cd /var/www/html/wp-content/plugins &&
         rm -rf woocommerce woocommerce.zip &&
-        curl -L -o woocommerce.zip https://downloads.wordpress.org/plugin/woocommerce.9.1.4.zip &&
-        unzip -o woocommerce.zip &&
+        curl -fsSL -o woocommerce.zip https://downloads.wordpress.org/plugin/woocommerce.9.1.4.zip &&
+        unzip -oq woocommerce.zip &&
         rm -f woocommerce.zip &&
         chown -R www-data:www-data woocommerce
     "
@@ -149,19 +158,24 @@ docker compose -f docker-compose.wp.yml run --rm wpcli \
 
 # ------------------------------------------------------------------
 # STEP 2.6 — 🔥 Wait for WooCommerce REST API
+#
+# WordPress may report the WooCommerce plugin as active before the
+# REST API routes have finished registering. Poll the endpoint until
+# it becomes available before provisioning API credentials.
 # ------------------------------------------------------------------
-echo "⏳ Waiting for WooCommerce REST API..."
+echo -n "⏳ Waiting for WooCommerce REST API"
 
-until curl -s http://localhost:8080/wp-json/wc/v3 > /dev/null; do
-  echo "Waiting for WooCommerce API..."
-  sleep 3
+until curl -fsS http://localhost:8080/wp-json/wc/v3 > /dev/null; do
+    echo -n "."
+    sleep 3
 done
 
+echo
 echo "✅ WooCommerce REST API is ready"
 
 
 # ------------------------------------------------------------------
-# STEP 3 — Provision WooCommerce API Credentials
+# STEP 3 — Generate fresh WooCommerce API credentials
 #
 # This step's responsibility ends the moment credentials exist. It
 # does NOT decide where they get stored — that belongs to whoever
@@ -264,8 +278,19 @@ if ! grep -q '^WC_API_URL=' <<< "$CREDENTIALS" || \
     exit 1
 fi
 
-echo "🔐 WooCommerce API credentials provisioned"
-echo "🎉 Setup complete!"
+echo
+echo "═══════════════════════════════════════════════════════════════"
+echo "✅ WordPress installed"
+echo "✅ WooCommerce installed"
+echo "✅ REST API available"
+echo "✅ API credentials generated"
+echo
+echo "🚀 Local WooCommerce environment is ready."
+echo
+echo "Next steps:"
+echo "    make test"
+echo
+echo "═══════════════════════════════════════════════════════════════"
 
 # ------------------------------------------------------------------
 # Hand credentials back to the caller on the real stdout (fd 3).
@@ -276,4 +301,12 @@ echo "🎉 Setup complete!"
 # CI:        action.yml captures this directly into $GITHUB_ENV —
 #            no .env file involved at all.
 # ------------------------------------------------------------------
+
+# IMPORTANT
+#
+# This is intentionally the ONLY data emitted on the script's real
+# stdout. Everything else is progress information written to stderr.
+#
+# This guarantees that callers (Makefile, GitHub Actions, CI, etc.)
+# always receive a clean machine-readable stream without parsing logs.
 echo "$CREDENTIALS" >&3
