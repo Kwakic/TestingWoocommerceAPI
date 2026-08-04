@@ -98,32 +98,44 @@ wp core install \
 fi
 
 # ------------------------------------------------------------------
-# STEP 2 — Install WooCommerce (FINAL FIX)
+# STEP 2 — Ensure WooCommerce is installed and active.
+#
+# Installation and activation are two independent states.
+# The plugin files may already exist while the plugin itself
+# is inactive (for example after restoring wp-content).
+#
+# Always ensure the plugin is active before continuing.
 # ------------------------------------------------------------------
+
 echo "📦 Checking WooCommerce plugin..."
 
-if docker compose -f docker-compose.wp.yml run --rm wpcli wp plugin is-installed woocommerce --allow-root; then
-  echo "✅ WooCommerce already installed — skipping"
-else
-  echo "🚀 Installing WooCommerce (manual workaround)..."
+if ! docker compose -f docker-compose.wp.yml run --rm wpcli \
+    wp plugin is-installed woocommerce --allow-root
+then
+    echo "🚀 Installing WooCommerce..."
 
-  docker compose -f docker-compose.wp.yml exec -T wordpress bash -c "
-  apt update &&
-  apt install -y unzip curl &&
-  cd /var/www/html/wp-content/plugins &&
-  rm -rf woocommerce woocommerce.zip &&
-  curl -L -o woocommerce.zip https://downloads.wordpress.org/plugin/woocommerce.9.1.4.zip &&
-  unzip -o woocommerce.zip &&
-  rm -f woocommerce.zip &&
-  chown -R www-data:www-data woocommerce
-  "
-
-  echo "🔌 Activating WooCommerce..."
-
-  docker compose -f docker-compose.wp.yml run --rm wpcli \
-    wp plugin activate woocommerce --allow-root
+    docker compose -f docker-compose.wp.yml exec -T wordpress bash -c "
+        apt update &&
+        apt install -y unzip curl &&
+        cd /var/www/html/wp-content/plugins &&
+        rm -rf woocommerce woocommerce.zip &&
+        curl -L -o woocommerce.zip https://downloads.wordpress.org/plugin/woocommerce.9.1.4.zip &&
+        unzip -o woocommerce.zip &&
+        rm -f woocommerce.zip &&
+        chown -R www-data:www-data woocommerce
+    "
 fi
 
+if ! docker compose -f docker-compose.wp.yml run --rm wpcli \
+    wp plugin is-active woocommerce --allow-root
+then
+    echo "🔌 Activating WooCommerce..."
+
+    docker compose -f docker-compose.wp.yml run --rm wpcli \
+        wp plugin activate woocommerce --allow-root
+else
+    echo "✅ WooCommerce already active"
+fi
 # ------------------------------------------------------------------
 # STEP 2.5 — 🔥 CRITICAL FIX: Permalinks (REST API routing)
 # ------------------------------------------------------------------
@@ -146,6 +158,7 @@ until curl -s http://localhost:8080/wp-json/wc/v3 > /dev/null; do
 done
 
 echo "✅ WooCommerce REST API is ready"
+
 
 # ------------------------------------------------------------------
 # STEP 3 — Provision WooCommerce API Credentials
