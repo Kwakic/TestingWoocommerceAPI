@@ -40,6 +40,7 @@ set -e
 # ------------------------------------------------------------------
 
 WP_URL="http://localhost:8080"
+WP_HTTP_HOST="localhost:8080"
 WP_TITLE="Test Shop"
 WP_ADMIN_USER="admin"
 WP_ADMIN_PASSWORD="admin"
@@ -92,12 +93,15 @@ chmod -R 777 /var/www/html/wp-content
 # ------------------------------------------------------------------
 echo "🔧 Checking if WordPress is installed..."
 
-if docker compose -f docker-compose.wp.yml run --rm wpcli wp core is-installed --allow-root; then
+if docker compose -f docker-compose.wp.yml run --rm \
+    -e HTTP_HOST="$WP_HTTP_HOST" \
+    wpcli wp core is-installed --allow-root; then
   echo "✅ WordPress already installed — skipping"
 else
   echo "🚀 Installing WordPress..."
-  docker compose -f docker-compose.wp.yml run --rm wpcli \
-wp core install \
+  docker compose -f docker-compose.wp.yml run --rm \
+    -e HTTP_HOST="$WP_HTTP_HOST" \
+    wpcli wp core install \
     --url="$WP_URL" \
     --title="$WP_TITLE" \
     --admin_user="$WP_ADMIN_USER" \
@@ -118,8 +122,9 @@ fi
 
 echo "📦 Checking WooCommerce plugin..."
 
-if ! docker compose -f docker-compose.wp.yml run --rm wpcli \
-    wp plugin is-installed woocommerce --allow-root
+if ! docker compose -f docker-compose.wp.yml run --rm \
+    -e HTTP_HOST="$WP_HTTP_HOST"\
+    wpcli wp plugin is-installed woocommerce --allow-root
 then
     echo "🚀 Installing WooCommerce..."
 
@@ -135,13 +140,15 @@ then
     "
 fi
 
-if ! docker compose -f docker-compose.wp.yml run --rm wpcli \
-    wp plugin is-active woocommerce --allow-root
+if ! docker compose -f docker-compose.wp.yml run --rm \
+    -e HTTP_HOST="$WP_HTTP_HOST" \
+    wpcli wp plugin is-active woocommerce --allow-root
 then
     echo "🔌 Activating WooCommerce..."
 
-    docker compose -f docker-compose.wp.yml run --rm wpcli \
-        wp plugin activate woocommerce --allow-root
+    docker compose -f docker-compose.wp.yml run --rm \
+    -e HTTP_HOST="$WP_HTTP_HOST" \
+    wpcli wp plugin activate woocommerce --allow-root
 else
     echo "✅ WooCommerce already active"
 fi
@@ -150,11 +157,13 @@ fi
 # ------------------------------------------------------------------
 echo "🔧 Configuring permalinks..."
 
-docker compose -f docker-compose.wp.yml run --rm wpcli \
-  wp rewrite structure '/%postname%/' --allow-root
+docker compose -f docker-compose.wp.yml run --rm \
+    -e HTTP_HOST="$WP_HTTP_HOST" \
+    wpcli wp rewrite structure '/%postname%/' --allow-root
 
-docker compose -f docker-compose.wp.yml run --rm wpcli \
-  wp rewrite flush --allow-root
+docker compose -f docker-compose.wp.yml run --rm \
+    -e HTTP_HOST="$WP_HTTP_HOST" \
+    wpcli wp rewrite flush --allow-root
 
 # ------------------------------------------------------------------
 # STEP 2.6 — 🔥 Wait for WooCommerce REST API
@@ -192,8 +201,9 @@ echo "✅ WooCommerce REST API is ready"
 echo "🔑 Provisioning WooCommerce API credentials..."
 
 CREDENTIALS=$(
-docker compose -f docker-compose.wp.yml run --rm wpcli \
-wp eval '
+docker compose -f docker-compose.wp.yml run --rm \
+    -e HTTP_HOST="$WP_HTTP_HOST" \
+    wpcli wp eval '
 global $wpdb;
 
 // ---------------------------------------------------------------
@@ -278,12 +288,13 @@ if ! grep -q '^WC_API_URL=' <<< "$CREDENTIALS" || \
     exit 1
 fi
 
+{
 echo
 echo "═══════════════════════════════════════════════════════════════"
 echo "✅ WordPress installed"
 echo "✅ WooCommerce installed"
 echo "✅ REST API available"
-echo "✅ API credentials generated"
+echo "✅ WooCommerce API credentials generated"
 echo
 echo "🚀 Local WooCommerce environment is ready."
 echo
@@ -291,7 +302,7 @@ echo "Next steps:"
 echo "    make test"
 echo
 echo "═══════════════════════════════════════════════════════════════"
-
+} >&2
 # ------------------------------------------------------------------
 # Hand credentials back to the caller on the real stdout (fd 3).
 #

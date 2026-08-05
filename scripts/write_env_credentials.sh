@@ -70,4 +70,4 @@ if [[ "$UPDATED" -eq 0 ]]; then
     exit 1
 fi
 
-echo "✅ .env updated with WooCommerce credentials ($UPDATED value(s))" >&2
+echo "💾 Updated .env with fresh WooCommerce credentials." >&2
