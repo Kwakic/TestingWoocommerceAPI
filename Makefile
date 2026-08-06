@@ -22,6 +22,21 @@
 .PHONY: up setup install test test-ci run down clean ensure-env
 
 # --------------------------------------------------
+# Force recipes to run through bash, not cmd.exe.
+#
+# On Windows, `make` defaults to cmd.exe for running recipe lines
+# unless told otherwise. cmd.exe decodes the command line using the
+# Windows ANSI/OEM codepage instead of UTF-8, which mangles every
+# emoji/em-dash in the echo strings above into mojibake (e.g. "âœ…"
+# instead of "✅") even though this file itself is valid UTF-8.
+#
+# Forcing bash here routes recipes through Git Bash instead, which
+# passes UTF-8 straight through with no codepage translation. Safe
+# on Linux/macOS too, since bash is standard there.
+# --------------------------------------------------
+SHELL := bash
+
+# --------------------------------------------------
 # Ensure a local .env exists before anything else runs
 #
 # Deleting .env used to break `make run` completely, because setup.sh was
@@ -51,11 +66,6 @@ up: ensure-env
 	@echo "📁 Ensuring WordPress data directory exists..."
 	@mkdir -p wp-data
 	@echo "🐳 Starting Docker infrastructure..."
-	# Start the Docker infrastructure before running the bootstrap.
-	# This is required because the setup step uses transient WP-CLI
-	# containers that depend on the WordPress and MySQL services
-	# already being available. Starting Docker here also prevents
-	# accidental reuse of stale containers during a fresh clone.
 	docker compose -f docker-compose.wp.yml up -d
 # --------------------------------------------------
 # Bootstrap WordPress + WooCommerce, then merge the fresh WooCommerce
