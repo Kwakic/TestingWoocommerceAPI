@@ -102,7 +102,6 @@ mkdir -p /var/www/html/wp-content/uploads &&
 chmod -R 777 /var/www/html/wp-content
 "
 
-# ------------------------------------------------------------------
 # STEP 1 — Install WordPress
 # ------------------------------------------------------------------
 echo "🔧 Checking if WordPress is installed..."

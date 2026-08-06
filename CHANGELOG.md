@@ -8,15 +8,25 @@ This project follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
--
+
+- Automatic creation of the `wp-data` directory during local environment setup.
+- One-command onboarding for fresh clones using `make run`, including Docker startup, WordPress provisioning, WooCommerce installation, and automatic REST API credential generation.
 
 ### Changed
--
+
+- Updated the local bootstrap workflow to always start the Docker infrastructure before executing the WordPress/WooCommerce bootstrap process.
+- Improved the reliability of the local development environment by ensuring the bootstrap process runs against a freshly started Docker stack.
 
 ### Fixed
--
+
+- Fixed `make run` failing on fresh repository clones due to the Docker infrastructure not being started before the bootstrap process.
+- Fixed the local WooCommerce bootstrap sequence so WordPress installation, WooCommerce installation, and REST API credential generation complete successfully on a clean checkout.
+- Removed an unintended stray character from `scripts/setup.sh` that could interrupt the bootstrap process.
+- Fixed the developer onboarding experience so a fresh clone can be fully provisioned with a single command (`make run`).
 
 ### Removed
+
+-
 -
 
 ---

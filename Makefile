@@ -51,6 +51,12 @@ up: ensure-env
 	@echo "📁 Ensuring WordPress data directory exists..."
 	@mkdir -p wp-data
 	@echo "🐳 Starting Docker infrastructure..."
+	# Start the Docker infrastructure before running the bootstrap.
+	# This is required because the setup step uses transient WP-CLI
+	# containers that depend on the WordPress and MySQL services
+	# already being available. Starting Docker here also prevents
+	# accidental reuse of stale containers during a fresh clone.
+	docker compose -f docker-compose.wp.yml up -d
 # --------------------------------------------------
 # Bootstrap WordPress + WooCommerce, then merge the fresh WooCommerce
 # credentials into .env.
