@@ -56,7 +56,7 @@ WP_ADMIN_EMAIL="test@test.com"
 #
 # Result: `bash scripts/setup.sh` still shows full progress as
 # before. `OUTPUT=$(bash scripts/setup.sh)` captures ONLY the three
-# WC_API_URL / WC_KEY / WC_SECRET lines — nothing else. No .env
+# WC_KEY / WC_SECRET lines — nothing else. No .env
 # handling and no log-grepping required by the caller.
 # ------------------------------------------------------------------
 exec 3>&1
@@ -282,9 +282,8 @@ printf(
 # partial/broken credential set.
 # ------------------------------------------------------------------
 
-if ! grep -q '^WC_API_URL=' <<< "$CREDENTIALS" || \
-   ! grep -q '^WC_KEY='     <<< "$CREDENTIALS" || \
-   ! grep -q '^WC_SECRET='  <<< "$CREDENTIALS"; then
+if ! grep -q '^WC_KEY=' <<< "$CREDENTIALS" || \
+   ! grep -q '^WC_SECRET=' <<< "$CREDENTIALS"; then
     echo "❌ WooCommerce credential generation returned incomplete output"
     exit 1
 fi

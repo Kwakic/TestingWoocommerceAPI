@@ -74,7 +74,7 @@ runs:
     # - creates API credentials
     # - prepares test environment
     #
-    # scripts/setup.sh prints ONLY the WC_API_URL / WC_KEY / WC_SECRET
+    # scripts/setup.sh prints ONLY the WC_KEY / WC_SECRET
     # lines on its stdout (everything else — progress, WP-CLI chatter —
     # goes to stderr, so it still streams live in this step's log).
     # CI never touches a .env file: the credential lines go straight

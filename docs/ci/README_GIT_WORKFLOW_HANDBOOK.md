@@ -1782,7 +1782,6 @@ Instead, use GitHub Actions **Secrets** to securely manage credentials.
 4. Add your keys (example):
 
 ```text
-WC_API_URL
 WC_CONSUMER_KEY
 WC_CONSUMER_SECRET
 ```
@@ -1796,7 +1795,6 @@ Update your workflow:
 ```yaml
 - name: Run pytest
   env:
-    WC_API_URL: ${{ secrets.WC_API_URL }}
     WC_CONSUMER_KEY: ${{ secrets.WC_CONSUMER_KEY }}
     WC_CONSUMER_SECRET: ${{ secrets.WC_CONSUMER_SECRET }}
   run: |
@@ -1812,7 +1810,7 @@ Use environment variables in your code:
 ```python
 import os
 
-BASE_URL = os.getenv("WC_API_URL")
+BASE_URL = os.getenv("API_URL")
 CONSUMER_KEY = os.getenv("WC_CONSUMER_KEY")
 CONSUMER_SECRET = os.getenv("WC_CONSUMER_SECRET")
 ```
@@ -1829,7 +1827,7 @@ import os
 
 @dataclass
 class Settings:
-    base_url: str = os.getenv("WC_API_URL")
+    base_url: str = os.getenv("API_URL")
     consumer_key: str = os.getenv("WC_CONSUMER_KEY")
     consumer_secret: str = os.getenv("WC_CONSUMER_SECRET")
 
@@ -1843,7 +1841,6 @@ settings = Settings()
 For local testing, use a `.env` file (NOT committed):
 
 ```text
-WC_API_URL=https://example.com
 WC_CONSUMER_KEY=ck_xxx
 WC_CONSUMER_SECRET=cs_xxx
 ```

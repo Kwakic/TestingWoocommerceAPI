@@ -11,7 +11,6 @@
 # ------
 # Updates only the dynamic WooCommerce entries:
 #
-#   WC_API_URL
 #   WC_KEY
 #   WC_SECRET
 #
@@ -26,7 +25,7 @@
 
 # write_env_credentials.sh
 #
-# Single responsibility: read WC_API_URL / WC_KEY / WC_SECRET lines
+# Single responsibility: read WC_KEY / WC_SECRET lines
 # from stdin and merge them into the local .env file — updating
 # existing keys in place, appending any that are missing, and
 # leaving every other line in .env completely untouched.

@@ -55,8 +55,7 @@ up: ensure-env
 # Bootstrap WordPress + WooCommerce, then merge the fresh WooCommerce
 # credentials into .env.
 #
-# setup.sh's only output on stdout is the WC_API_URL / WC_KEY /
-# WC_SECRET lines — everything else it prints (progress, WP-CLI
+# setup.sh's only output on stdout is the WC_KEY / WC_SECRET lines — everything else it prints (progress, WP-CLI
 # chatter) goes to stderr, so you still see full output on the
 # terminal. write_env_credentials.sh is the only thing in the whole
 # project that writes those values into .env, and it never touches
