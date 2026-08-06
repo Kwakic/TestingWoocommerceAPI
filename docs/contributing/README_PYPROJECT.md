@@ -78,6 +78,21 @@ Docker / CI notes
 - GitHub Actions matrix: discovery must emit a valid JSON array of quoted service names (e.g. `["customers","orders"]`) to use `fromJson()` correctly.
 - GitLab dynamic pipelines: the discover job generates a `matrix.yml` artifact at runtime — that artifact is referenced in `artifacts: paths: - matrix.yml`.
 
+> 💡 **Configuration note**
+>
+> The framework resolves API endpoints dynamically from `API_ENV`
+> using the entity configuration files (`config_<entity>.py`).
+>
+> During the bootstrap process, WooCommerce generates a fresh pair of
+> REST API credentials, which are injected separately into the runtime
+> environment (or local `.env` during `make run`).
+>
+> As a result, endpoint URLs are **not** stored in `.env`.
+> This separation keeps authentication independent from environment
+> selection and ensures the same configuration model is used for local
+> development, Docker, and GitHub Actions.
+
+
 Troubleshooting — “0 tests collected” checklist 🧰
 1. Don’t use filters while debugging (avoid `-m`, `-k`, `-q`).
    Run:

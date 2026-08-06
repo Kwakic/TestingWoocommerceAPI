@@ -8,25 +8,38 @@ This document describes the Docker layer of the [TestingWoocommerceAPI](https://
 
 ## 🏛️ Architecture Diagram
 ```
-Developer
-      │
-      ▼
-make run
-      │
-      ▼
-ensure-env
-      │
-      ▼
-Docker Compose
-      │
-      ▼
-setup.sh
-      │
-      ▼
-write_env_credentials.sh
-      │
-      ▼
-pytest
+                Developer
+                    │
+                    ▼
+               make run
+                    │
+        ┌───────────┴───────────┐
+        │                       │
+        ▼                       ▼
+  ensure-env              docker compose up
+(create .env if needed)        │
+        │                      ▼
+        │              WordPress + MySQL
+        │                      │
+        └──────────────┬───────┘
+                       ▼
+                scripts/setup.sh
+                       │
+        ┌──────────────┼─────────────────┐
+        │              │                 │
+        ▼              ▼                 ▼
+ Install WP     Install WooCommerce   Generate API Keys
+                       │
+                       ▼
+      write_env_credentials.sh
+                       │
+      updates only WC_KEY / WC_SECRET
+                       │
+                       ▼
+          pip install -e "./EcommerceAPI[dev]"
+                       │
+                       ▼
+                    pytest
 ```
 
 The same infrastructure is used locally and in GitHub Actions.
@@ -50,7 +63,7 @@ The stack gives you a disposable, reproducible WooCommerce instance to run API +
 This is orchestrated by `docker-compose.wp.yml` at the repo root, and bootstrapped by `scripts/setup.sh`.
 
 ---
-## Why Docker?
+## 🐳 Why Docker?
 
 The framework intentionally runs against a real
 WooCommerce installation rather than mocked services.
@@ -88,7 +101,7 @@ Makefile                 → orchestrates the whole flow behind `make run`
 
 ---
 
-## 3. One-command bootstrap
+## 3. </> One-command bootstrap
 
 ```bash
 git clone https://github.com/Kwakic/TestingWoocommerceAPI.git
@@ -108,7 +121,24 @@ Nothing needs to be run manually — no separate `docker compose up`, no manual 
 
 ---
 
-## 4. What happens step by step
+## 3.5 🔑 Bootstrap responsibilities
+
+The local bootstrap process intentionally separates responsibilities across multiple components.
+
+| Component | Responsibility |
+|-----------|----------------|
+| Makefile | Orchestrates the complete local workflow. |
+| docker-compose.wp.yml | Starts the Docker infrastructure. |
+| setup.sh | Installs and configures WordPress and WooCommerce. |
+| write_env_credentials.sh | Updates only the generated WooCommerce credentials inside `.env`. |
+| EcommerceAPI | Executes the test suite. |
+
+Following the Single Responsibility Principle (SRP), each component owns one specific task. This keeps the bootstrap
+process reusable, easier to maintain, and allows the same `setup.sh` script to be used unchanged by both local development and GitHub Actions.
+
+---
+
+## 4. 💫 What happens step by step
 
 ### Step 1 — Docker boots the empty environment
 ```bash
@@ -119,14 +149,20 @@ Creates the `db`, `wordpress`, and `wpcli` containers. At this point:
 - ❌ WooCommerce is not installed
 - ❌ No API keys exist
 
-### Step 2 — `scripts/setup.sh` configures the system
-Run automatically by `make run` (or manually, see below). It:
-1. Waits for `db` and `wordpress` to be reachable
-2. Fixes file permissions where needed
-3. Runs `wp core install` (WordPress)
-4. Runs `wp plugin install woocommerce --activate`
-5. Generates a `consumer_key` / `consumer_secret` pair via WP-CLI
-6. Writes/updates `.env` with the values the test framework needs
+### Step 2 — `scripts/setup.sh` provisions WooCommerce
+
+The setup script is intentionally idempotent and can safely be executed multiple times.
+
+During the bootstrap it:
+
+1. Waits for the infrastructure to become healthy.
+2. Installs WordPress (if needed).
+3. Installs WooCommerce (if needed).
+4. Configures permalinks.
+5. Waits for the REST API to become available.
+6. Generates a fresh WooCommerce API key pair.
+7. Emits the generated credentials to stdout in a machine-readable format.
+8. Delegates `.env` updates to `write_env_credentials.sh`.
 
 This step is **idempotent** — rerunning `make run` skips anything already installed instead of failing or duplicating data.
 
@@ -215,20 +251,55 @@ Makefile                   → single entrypoint tying it all together
 
 ---
 
-## 11. Troubleshooting
+## 11. 🛠️ Troubleshooting
 
-| Symptom | Likely cause |
-|---|---|
-| Tests fail with `401` / `403` | `setup.sh` didn't complete — WooCommerce API keys weren't generated. Re-run `make run`. |
-| `docker compose up` hangs | A previous stack is still holding the ports/volumes. Run `down -v` first. |
-| WordPress reachable but empty (no WooCommerce) | `setup.sh` was skipped or failed partway — check its logs, rerun it manually: `make setup` |
-| Stale data after schema changes | Run `docker compose -f docker-compose.wp.yml down -v` for a full reset before `make run` |
+| Symptom | Possible cause | Solution |
+|---------|----------------|----------|
+| 401 Unauthorized | Stale WooCommerce credentials | Re-run `make run` to regenerate credentials. |
+| Tests target the wrong URL | `WC_API_URL` exists in `.env` | Remove `WC_API_URL`. The framework resolves URLs from `API_ENV`. |
+| WordPress installation missing | Bootstrap interrupted | Run `make setup`. |
+| WordPress files missing | `wp-data` bind mount missing | Create `wp-data/` and rerun `make run`. |
+| Git Bash converts `/var/www/html` into `C:\Program Files\Git\...` | MSYS path conversion | Use `MSYS_NO_PATHCONV=1`. |
 
-
-## Related Documentation
+## 🔗 Related Documentation
 
 - README_QA_DEVELOPER_ONBOARDING.md
 - README_ARCHITECTURE.md
 - README_ENVIRONMENT_CONFIG_GUIDE.md
 - README_CI_ARCHITECTURE.md
 - README_ALLURE.md
+
+
+---
+
+## ⚠️ API Endpoint Resolution
+
+The bootstrap process generates only authentication credentials.
+
+It intentionally does **not** generate or overwrite `WC_API_URL`.
+
+The framework resolves the API endpoint from the selected execution environment (`API_ENV`) using the entity configuration files.
+
+For example:
+
+- API_ENV=test
+- API_ENV=ci
+- API_ENV=docker
+
+all resolve their own URLs through the framework configuration.
+
+This prevents stale `.env` values from overriding the intended execution environment.
+
+---
+
+## 🎯 Design Principles
+
+The Docker infrastructure follows several design principles.
+
+- Infrastructure is disposable.
+- Local development mirrors CI.
+- Bootstrap is idempotent.
+- Credentials are generated automatically.
+- Environment selection belongs to the framework, not `.env`.
+- Components follow the Single Responsibility Principle.
+- Developers should only need one command (`make run`) to obtain a fully working test environment.

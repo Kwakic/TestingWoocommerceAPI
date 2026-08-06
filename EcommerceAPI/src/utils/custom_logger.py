@@ -759,7 +759,7 @@ def _resolve_project_root() -> Path:
     project marker such as:
 
     - .git
-    - README.md
+    - Entity_Configuration_Guide.md
     - setup.cfg
 
     The returned path is used as the base directory for generated reports.
@@ -770,7 +770,7 @@ def _resolve_project_root() -> Path:
             (parent / ".git").exists()
             or (parent / "pyproject_root.toml").exists()
             or (parent / "setup.cfg").exists()
-            or (parent / "README.md").exists()
+            or (parent / "Entity_Configuration_Guide.md").exists()
         ):
             return parent
     # fallback: try to move up 3 levels (typical layout: <repo>/EcommerceAPI/src/utils/...)

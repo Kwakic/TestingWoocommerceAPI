@@ -20,24 +20,30 @@ If this document conflicts with any README or comment, **this document wins**.
 
 ```
 ┌─────────────────────────────┐
-│ Environment / CI / CLI      │
-└──────────────┬──────────────┘
-               ↓
-┌─────────────────────────────┐
-│ config_pytest.py            │  ← config resolution
-└──────────────┬──────────────┘
-               ↓
-┌─────────────────────────────┐
-│ src/configs/runtime_*       │  ← session metadata
-└──────────────┬──────────────┘
-               ↓
-┌─────────────────────────────┐
-│ plugins/*                   │  ← consumers only
-└──────────────┬──────────────┘
-               ↓
-┌─────────────────────────────┐
-│ tests                        │
-└─────────────────────────────┘
+Environment / CI / CLI
+            │
+            ▼
+     config_pytest.py
+            │
+            ▼
+      runtime_config
+            │
+            ▼
+   ┌─────────────────────────────┐
+   │     Framework Plugins       │
+   │                             │
+   │ logging_plugin              │
+   │ allure_autogen              │
+   │ reporting                   │
+   │ entity_metadata             │
+   │ entities                    │
+   │ api/shared                  │
+   │ api/<entity>                │
+   │ db_fixtures                 │
+   └─────────────────────────────┘
+            │
+            ▼
+          pytest
 ```
 
 ---
@@ -89,6 +95,98 @@ This is the **only place** allowed to read env vars.
 **Guarantees**
 - Never fails pytest
 - Safe in CI and local runs
+
+---
+
+### api/shared.py
+
+**Responsibilities**
+
+- Provide the shared `api_client` fixture.
+- Create framework-level HTTP infrastructure.
+- Expose common API utilities used by entity plugins.
+
+**Forbidden**
+
+- Entity-specific fixtures.
+- Business logic.
+- Reading environment variables.
+
+
+---
+
+### api/<entity>.py
+
+**Responsibilities**
+
+- Register entity-specific pytest fixtures.
+- Create valid test data factories.
+- Expose helpers for the owning business domain.
+
+Examples:
+
+- customers.py
+- orders.py
+- products.py
+- coupons.py
+
+**Forbidden**
+
+- HTTP implementation.
+- Runtime configuration.
+- Cross-entity imports.
+
+---
+
+### entities.py
+
+**Responsibilities**
+
+- Build the runtime entity registry.
+- Discover implemented runtime resources.
+- Create EntityBundle objects.
+- Provide unified access to helpers, APIs and DAOs.
+
+See:
+
+README_ENTITY_DISCOVER_ARCHITECTURE_GUIDE.md
+
+---
+
+### entity_metadata.py
+
+**Responsibilities**
+
+- Define the framework's architectural entity registry.
+- Provide metadata used by CI, documentation and reporting.
+- Act as the single source of truth for supported business domains.
+
+This module defines framework architecture rather than runtime resources.
+
+---
+
+### reporting.py
+
+**Responsibilities**
+
+- Collect execution metadata.
+- Build report summaries.
+- Integrate with Allure and CI reporting.
+
+This plugin consumes runtime metadata but does not perform test execution.
+
+---
+
+### db_fixtures.py
+
+**Responsibilities**
+
+- Register shared database fixtures.
+- Provide reusable DAO access.
+- Support integration and cleanup workflows.
+
+Database fixtures must remain infrastructure-focused and contain no business logic.
+
 
 ---
 

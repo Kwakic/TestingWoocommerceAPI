@@ -1,5 +1,8 @@
 # 🧭 Environment & Configuration Guide
-## "How does configuration work?"
+
+>Teach developers how the configuration system works.
+
+### "How does configuration work?"
 
 **Practical guide for developers, QA, and CI users.**
 For authoritative rules, see `CONFIG_CONTRACT.md`.
@@ -476,7 +479,24 @@ AUTO_ALLURE_REPORT=true
 
 ---
 
-## 8️⃣ CI Usage (Recap)
+## 9️⃣ REQUIRE_ENV strict mode
+
+- Local: leave `REQUIRE_ENV=false` (or unset) for developer convenience. The logging plugin loads `.env` permissively.
+- CI: set `REQUIRE_ENV=true` to fail fast when required config is missing.
+
+Example:
+```bash
+# locally (dev)
+export REQUIRE_ENV=false
+pytest ...
+
+# CI (recommended)
+export REQUIRE_ENV=true
+```
+
+---
+
+## 🔟  CI Usage (Recap)
 
 1. **CI supplies environment variables**
 2. **`runtime_config.py` resolves them once**
@@ -487,7 +507,7 @@ AUTO_ALLURE_REPORT=true
 
 ---
 
-## 9️⃣ Troubleshooting Checklist
+## 1️⃣️1️⃣Troubleshooting Checklist
 
 | Issue | Solution |
 |-------|----------|
@@ -497,7 +517,7 @@ AUTO_ALLURE_REPORT=true
 
 ---
 
-## 🔟 Final Reminder
+## 1️⃣2️⃣. Final Reminder
 
 Framework configuration is resolved once during startup.
 
@@ -526,6 +546,32 @@ testable and easy to maintain.
 
 Everything else consumes these components rather than
 reading environment variables directly.
+
+---
+
+# 🖥️ Windows (Git Bash) Notes
+
+When running the Docker-based WooCommerce environment from **Git Bash on Windows**, Git Bash automatically rewrites Unix-style paths before invoking Docker.
+
+For example:
+
+`/var/www/html`
+
+may become:
+
+`C:/Program Files/Git/var/www/html`
+
+This causes WP-CLI commands executed inside Docker containers to fail with messages such as:
+
+`Error: This does not seem to be a WordPress installation.`
+
+The framework automatically disables Git Bash path conversion by setting:
+
+`MSYS_NO_PATHCONV=1`
+
+before executing Docker Compose commands.
+
+This setting has no effect on Linux, macOS or GitHub Actions but ensures consistent behaviour for Windows developers.
 
 ---
 

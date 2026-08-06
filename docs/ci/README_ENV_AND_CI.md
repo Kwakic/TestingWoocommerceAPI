@@ -1,11 +1,28 @@
-# Environment & CI Notes — local & CI runbook 🧭
+# 🚀 Environment & CI Runbook
 
-## Operational guide ("How do I run this?")
+> **Operational guide for local development and Continuous Integration.**
 
-This document explains local `.env` usage, Allure reporting, Docker test image behavior, and CI best practices (GitHub Actions / GitLab). It also includes small helper snippets and tips to make running and debugging easier.
+This document explains how to **run**, **debug**, and **operate** the framework during everyday development and CI execution.
 
-> Summary: keep secrets in CI, use editable installs for local dev, write Allure results with `--alluredir`, and generate HTML in CI or via the helper script locally.
+Typical topics include:
 
+- 🧪 Local development workflow
+- 🔐 `.env` usage
+- 📊 Allure reporting
+- 🐳 Docker execution
+- ⚙️ GitHub Actions / CI configuration
+- 🛠️ Operational troubleshooting
+
+---
+
+> 💡 **Looking for the configuration architecture?**
+>
+> This document intentionally focuses on **operations**, not framework internals.
+>
+> For the complete configuration architecture, environment resolution and runtime design, see:
+>
+> - `docs/framework/README_ENVIRONMENT_CONFIG_GUIDE.md`
+> - `docs/framework/README_CONFIG_CONTRACT.md`
 ---
 
 ## Local development
@@ -26,18 +43,75 @@ This document explains local `.env` usage, Allure reporting, Docker test image b
 
 ---
 
+## 🛠 Typical Development Workflow
 
-### Automatic .env creation
+A typical development session looks like this:
+
+```text
+git pull
+    ↓
+make run
+    ↓
+Implement changes
+    ↓
+pytest
+    ↓
+Review Allure report
+    ↓
+Commit
+    ↓
+Push
+    ↓
+GitHub Actions
+```
+
+The same workflow is used by all entity teams
+(customers, products, orders and coupons).
+
+---
+
+### 🦾 Automatic `.env` creation
 
 For local development, `make run` automatically creates `.env`
 from `.env.example` the first time it is executed.
 
-WooCommerce credentials are then generated during the bootstrap
-process and merged into `.env` automatically.
+During the bootstrap process, WooCommerce automatically generates
+a fresh pair of REST API credentials for the newly provisioned
+WordPress installation. These credentials are then merged into
+`.env` by `write_env_credentials.sh`.
 
-GitHub Actions does not use a repository `.env` file.
-Instead, the generated credentials are exported directly into
-the workflow environment.
+Only the authentication credentials are updated:
+
+- `WC_KEY`
+- `WC_SECRET`
+
+All other developer-specific settings remain unchanged.
+
+### Endpoint configuration
+
+Unlike previous framework versions, the framework no longer stores
+API endpoint URLs inside `.env`.
+
+Instead, the active endpoint is resolved dynamically from
+`API_ENV` using the entity configuration files
+(`config_customers.py`, `config_products.py`, etc.).
+
+This separation provides several advantages:
+
+- 🔐 Authentication and infrastructure remain independent
+- 🌍 Switching environments only requires changing `API_ENV`
+- 🐳 Docker, local development and CI use the same configuration model
+- 🧩 Entity teams own their endpoint mappings without modifying `.env`
+
+GitHub Actions follows the same architecture. Instead of writing
+a repository `.env` file, the bootstrap process generates fresh
+WooCommerce credentials and exports them directly into the workflow
+environment.
+
+> 📖 For the complete environment architecture and endpoint resolution
+> process, see:
+>
+> `docs/framework/README_ENVIRONMENT_CONFIG_GUIDE.md`
 
 ---
 
@@ -187,23 +261,6 @@ artifacts:
 
 ---
 
-## REQUIRE_ENV strict mode
-
-- Local: leave `REQUIRE_ENV=false` (or unset) for developer convenience. The logging plugin loads `.env` permissively.
-- CI: set `REQUIRE_ENV=true` to fail fast when required config is missing.
-
-Example:
-```bash
-# locally (dev)
-export REQUIRE_ENV=false
-pytest ...
-
-# CI (recommended)
-export REQUIRE_ENV=true
-```
-
-
----
 
 ## Persistent Allure History (GitHub Pages)
 

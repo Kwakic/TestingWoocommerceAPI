@@ -38,10 +38,22 @@ This project demonstrates real-world API testing practices:
 ## ✨ What makes this framework architecturally interesting
 
 - 🏗️ **Domain-Driven Architecture** — Organizes the framework into independent business entities (Customers, Orders, Products, Coupons), each with its own API layer, DAO, validators, models, helpers, and tests.
-- 🐳 **Reproducible Test Environment** — Spins up a complete WordPress + WooCommerce stack using Docker, providing consistent local and CI execution with one-command setup.
-- 🧩 **Metadata-Driven Framework** — Automatically discovers entities, registers pytest plugins, and scales as new domains are added with minimal configuration.
-- 🔄 **Segmented CI/CD Pipelines** — Independent Smoke, Integration, Regression, Performance, Contract, Security, and Preflight workflows produce isolated artifacts and reports.
-- 📊 **Automated QA Reporting** — Generates interactive Allure reports and publishes a dynamic GitHub Pages QA Portal that grows automatically as new entity reports become available.
+
+- 🐳 **Reproducible Test Environment** — Spins up a complete WordPress + WooCommerce stack using Docker, providing identical local and CI environments through a one-command bootstrap (`make run`).
+
+- 🌍 **Environment-Aware Configuration** — Uses `API_ENV` together with entity configuration files to resolve endpoints dynamically, completely separating environment selection from authentication.
+
+- 🧩 **Metadata-Driven Framework** — Automatically discovers entities, registers pytest plugins, generates CI matrices, and scales as new business domains are added with minimal configuration.
+
+- 📝 **Structured Logging Architecture** — Implements a dual-layer logging system with developer-friendly console output and optional structured JSONL artifacts enriched with test context, correlation IDs, Git metadata, CI metadata, request details, and automatic payload redaction. :contentReference[oaicite:1]{index=1} :contentReference[oaicite:2]{index=2}
+
+- 🔄 **Segmented CI/CD Pipelines** — Independent Smoke, Integration, Regression, Performance, Contract, Security, and Preflight workflows execute in isolation, publish dedicated artifacts, and scale independently.
+
+- 📊 **Automated QA Reporting** — Generates interactive Allure reports and publishes a dynamic GitHub Pages QA Portal that automatically grows as new entity reports become available.
+
+- 🧱 **Enterprise-Oriented Framework Design** — Follows clear separation of concerns, reusable pytest plugins, dependency injection, layered architecture, comprehensive documentation, and configuration contracts to support long-term maintainability.
+
+- 🔐 **Automatic Authentication Provisioning** — Provisions WooCommerce REST API credentials during bootstrap, injects them into the local environment automatically, and keeps authentication independent from endpoint configuration.
 
 ---
 
@@ -177,13 +189,20 @@ git clone https://github.com/Kwakic/TestingWoocommerceAPI.git && cd TestingWooco
 
 👉 That's it — no manual setup required.
 
-### 💡 What this automatically does for you:
-* Downloads the project files to your computer.
-* Moves your terminal inside the project folder.
-* Launches the test servers and runs the test suite automatically.
+### 💡 What this automatically does
 
-The default execution environment is `API_ENV=test`, which runs tests from the host machine against the Docker-based WordPress instance.
+- 📁 Creates `.env` from `.env.example` (first run only)
+- 🐳 Starts the Docker infrastructure
+- 🌐 Installs WordPress
+- 🛒 Installs WooCommerce
+- 🔑 Generates fresh WooCommerce REST API credentials
+- ⚙️ Configures the local test environment
 
+After the bootstrap completes, simply run:
+
+```bash
+make test
+```
 ---
 
 
@@ -257,43 +276,49 @@ View the live portal: [kwakic.github.io/TestingWoocommerceAPI](https://kwakic.gi
 
 ## 🧠 What Happens Behind the Scenes
 
-Running `make run` automatically performs:
+Running `make run` performs the following workflow:
 
-1. **🐳 Starts Docker containers**
-   * MySQL (database)
-   * WordPress
-   * WP-CLI
+```text
+Create .env (if required)
+        │
+        ▼
+Start Docker
+        │
+        ▼
+Bootstrap WordPress
+        │
+        ▼
+Install WooCommerce
+        │
+        ▼
+Generate REST API credentials
+        │
+        ▼
+Update .env
+        │
+        ▼
+Local environment ready
+```
 
-2. ⚙️ Bootstraps the environment
+The framework intentionally separates:
 
-   • Installs WordPress
-   • Installs WooCommerce
-   • Generates WooCommerce API credentials
+- 🔐 authentication (`WC_KEY`, `WC_SECRET`)
+- 🌍 environment selection (`API_ENV`)
+- ⚙️ endpoint resolution (`config_<entity>.py`)
 
-3. 🔐 Updates local configuration
-
-   • Creates .env from .env.example (first run only)
-   • Writes generated WooCommerce credentials
-4.
-   ```bash
-   # From repo root (recommended)
-   source .venv/Scripts/activate
-
-   # Upgrade packaging tooling
-   python -m pip install --upgrade pip setuptools wheel
-
-   # Install framework + dev dependencies
-   python -m pip install -e "./EcommerceAPI[dev]"
-   ```
-
-4. **🧪 Executes the test suite** — pytest runs the API + DB validation tests
-
+This allows the same framework to run unchanged in local development,
+Docker and GitHub Actions.
 ---
 
 ## 🏗️ Architecture Overview
 
+
 ```mermaid
 flowchart TD
+
+    %% --------------------------------------------------
+    %% Infrastructure
+    %% --------------------------------------------------
 
     A[User] -->|make run| B[Makefile]
     B --> C[Docker Compose]
@@ -302,16 +327,27 @@ flowchart TD
     C --> E[WordPress + WooCommerce]
     C --> F[WP-CLI]
 
-    F -->|setup.sh| E
-    F -->|create API keys| D
+    F -->|Bootstrap WordPress| E
+    F -->|Generate REST API credentials| D
 
-    G[Pytest Framework] --> H[API Clients]
+    %% --------------------------------------------------
+    %% Framework
+    %% --------------------------------------------------
+
+    G[Pytest Framework] --> N[API_ENV]
+    N --> O[config_<entity>.py]
+    O --> H[API Clients]
+
     G --> I[Helpers]
     G --> J[Validators]
     G --> K[DAO Layer]
 
     H -->|HTTP| E
     K -->|SQL| D
+
+    %% --------------------------------------------------
+    %% Tests & Reporting
+    %% --------------------------------------------------
 
     G --> L[Test Suite]
     L --> M[Allure Reports]
@@ -346,6 +382,12 @@ TestEcommerceAPI/
 ├── docs/                        ← documentation hub (see above)
 ├── EcommerceAPI/                ← installable framework package
 │   ├── plugins/                 ← pytest plugins & fixtures
+│       ├──  api/
+│       ├── shared.py
+│       ├── customers.py
+│       ├── orders.py
+│       ├── products.py
+│       └── coupons.py
 │   └── src/
 │       ├── metadata/ configs/ auth/ core/ clients/    ← shared framework layers
 │       ├── customers/ orders/ coupons/ products/      ← per-entity: dao/ api/ validators/ models/ helpers/
@@ -387,12 +429,22 @@ TestEcommerceAPI/
 * skip already-installed components
 * avoid creating duplicate data
 * preserve the existing database
+* regenerate WooCommerce REST API credentials whenever a fresh WordPress installation is created
 
 ---
 
 ## 🧪 Running Tests Manually
 
 If you want to run tests without `make run`:
+
+
+For normal development use:
+
+```bash
+make test
+```
+
+Manual pytest execution is primarily intended for framework development.
 
 ```bash
 pip install -e "./EcommerceAPI[dev]"
@@ -534,6 +586,22 @@ make run
 
 > The framework uses fixed container names, so only one local instance can run at a time.
 
+---
+
+### Git Bash rewrites Docker paths
+
+Git Bash may automatically rewrite Unix paths passed to Docker.
+
+The framework disables this behavior automatically using
+
+```
+MSYS_NO_PATHCONV=1
+```
+
+when invoking WP-CLI commands.
+
+If you execute Docker Compose commands manually, remember to
+set this variable as well.
 
 ---
 

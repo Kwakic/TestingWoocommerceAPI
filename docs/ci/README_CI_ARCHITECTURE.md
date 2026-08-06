@@ -87,29 +87,127 @@ The framework supports multiple execution environments. The selected environment
 | Staging | `staging` | Pre-production environment |
 | Production | `prod` | Production environment |
 
----
+All GitHub Actions workflows obtain their environment
+configuration exclusively through the reusable
+configure-ci-env composite action.
 
-
-## 🌐 Local Bootstrap Responsibilities
-
-The local bootstrap process intentionally separates responsibilities:
-
-**• Makefile**
-  - orchestrates the complete workflow
-  - creates .env from .env.example when required
-
-**• setup.sh**
-  - provisions WordPress
-  - provisions WooCommerce
-  - emits machine-readable credentials
-
-**• write_env_credentials.sh**
-  - updates only the WooCommerce entries inside .env
-
-This separation keeps each component focused on a single responsibility while allowing the same setup.sh script to be reused unchanged by local development and GitHub Actions.
+This guarantees consistent `API_ENV` selection across
+Smoke, Integration, Regression, Performance,
+Contract, Security and Preflight workflows.
 
 ---
 
+### Why `.env` no longer contains `WC_API_URL`
+
+Previous framework versions stored the API endpoint in `.env`.
+
+The framework now resolves the endpoint dynamically from
+`API_ENV` and the entity configuration (`config_<entity>.py`).
+
+As a result:
+
+- `.env` stores credentials only.
+- Entity configuration owns endpoint mappings.
+- Changing environments requires only changing `API_ENV`.
+
+This removes duplicated configuration and keeps infrastructure
+selection independent from authentication.
+
+---
+
+
+## 🌱 Local Bootstrap Architecture
+
+The framework automatically provisions a complete WooCommerce testing
+environment for local development.
+
+The bootstrap process intentionally separates responsibilities so that
+each component has a single, well-defined purpose.
+
+### Bootstrap flow
+
+```text
+make run
+    │
+    ▼
+Create .env (if missing)
+    │
+    ▼
+Start Docker services
+    │
+    ▼
+Bootstrap WordPress
+    │
+    ▼
+Install WooCommerce
+    │
+    ▼
+Generate fresh REST API credentials
+    │
+    ▼
+write_env_credentials.sh
+    │
+    ▼
+Update .env
+    │
+    ▼
+pytest
+```
+
+### Component responsibilities
+
+**Makefile**
+
+- Creates `.env` from `.env.example` when necessary
+- Starts Docker
+- Orchestrates the complete bootstrap process
+
+**setup.sh**
+
+- Installs WordPress
+- Installs WooCommerce
+- Generates fresh WooCommerce REST API credentials
+- Outputs credentials in a machine-readable format
+
+**write_env_credentials.sh**
+
+- Updates only `WC_KEY` and `WC_SECRET`
+- Preserves all existing developer configuration
+- Never modifies endpoint configuration
+
+This separation allows the same bootstrap script to be reused unchanged by both local development and GitHub Actions.
+
+---
+
+### 🖥️ Windows (Git Bash)
+
+Git Bash automatically rewrites Unix paths passed to Docker.
+
+For WP-CLI commands this may transform
+
+```
+/var/www/html
+```
+
+into
+
+```
+C:/Program Files/Git/var/www/html
+```
+
+causing WordPress bootstrap to fail.
+
+The framework automatically disables path conversion by setting
+
+```
+MSYS_NO_PATHCONV=1
+```
+
+before executing Docker Compose commands.
+
+Linux, macOS and GitHub Actions are unaffected.
+
+---
 
 ## 👉 Recommended Usage
 
@@ -189,7 +287,7 @@ This mirrors the framework's domain-driven architecture, allowing each microserv
 
 ---
 
-## GitHub Pages limitation
+## 🤖 GitHub Pages limitation
 
 GitHub Pages accepts only one deployment at a time.
 
@@ -221,6 +319,18 @@ customers/
     regression/
     performance/
 ```
+
+GitHub Pages deployments are serialized by GitHub.
+
+If multiple workflows finish simultaneously,
+one deployment may remain queued or be cancelled.
+
+The generated artifacts are still preserved and
+rerunning the workflow republishes the report.
+
+This is a GitHub Pages limitation rather than
+a framework limitation.
+
 ---
 ## 🎨 Design principles
 

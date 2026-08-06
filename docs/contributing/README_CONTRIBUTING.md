@@ -7,7 +7,8 @@ Quick workflow
    ```bash
    git checkout -b fix/some-descriptive-name
    ```
-2. Follow the developer setup in `DEV_SETUP.md` to run tests locally.
+Follow the onboarding guide:
+`docs/getting-started/README_QA_DEVELOPER_ONBOARDING.md` to run tests locally.
 3. Make the change and run tests relevant to your change:
    ```bash
    # run the single test file you touched
@@ -159,8 +160,8 @@ You **must** update documentation if your PR:
 
 ### Relevant docs:
 
-- `CONFIG_CONTRACT.md` (authoritative)
-- `ENVIRONMENT_CONFIG_GUIDE.md` (practical)
+- `docs/framework/README_CONFIG_CONTRACT.md` (authoritative)
+- `docs/framework/README_ENVIRONMENT_CONFIG_GUIDE.md` (practical)
 - `.env.example` (developer-facing)
 
 > **Docs are not optional for framework changes.**

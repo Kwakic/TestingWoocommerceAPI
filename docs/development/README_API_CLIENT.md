@@ -76,6 +76,33 @@ response = APIClient.get("customers")
 
 ---
 
+### 🌍 Endpoint Resolution
+
+`APIClient` does not hardcode API URLs.
+
+Instead, it receives the active base URL from the framework's
+environment configuration.
+
+The endpoint is resolved dynamically using:
+
+```
+    API_ENV
+        ↓
+config_<entity>.py
+        ↓
+    APIClient
+```
+
+This keeps authentication, infrastructure selection and request
+execution cleanly separated.
+
+For more information see:
+
+`docs/framework/README_ENVIRONMENT_CONFIG_GUIDE.md`
+
+
+---
+
 # 🔹 3. HttpResponse (Abstraction Layer)
 
 ### 🎯 Responsibility

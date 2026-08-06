@@ -297,6 +297,21 @@ The framework uses **pytest plugins** located in:
 
 ```
 EcommerceAPI/plugins/
+
+api/
+    shared.py
+    customers.py
+    orders.py
+    products.py
+    coupons.py
+
+config_pytest.py
+logging_plugin.py
+entities.py
+entity_metadata.py
+reporting.py
+allure_autogen.py
+db_fixtures.py
 ```
 
 Examples:
@@ -353,12 +368,19 @@ These logs are useful for:
 Configuration follows a **single source of truth**.
 
 ```
-.env / CI variables
-       ↓
-plugins/_config.py
-       ↓
-framework runtime behavior
+    API_ENV
+      │
+      ▼
+config_<entity>.py
+      │
+      ▼
+   API_HOSTS
+      │
+      ▼
+   APIClient
 ```
+
+>Authentication credentials (WC_KEY / WC_SECRET) are generated independently during the bootstrap process and are intentionally kept separate from endpoint selection.
 
 Rules:
 

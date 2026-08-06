@@ -226,7 +226,7 @@ TestEcommerceAPI (project suite/root)
 │     │     ├── configs/
 │     │     │     ├── config_customers.py          ← storing API_HOSTS
 │     │     │     ├── __init__.py
-│     │     │     └── README.md
+│     │     │     └── Entity_Configuration_Guide.md.md
 │     │     ├── data/
 │     │     │     ├── __init__.py
 │     │     │     └── create_customer_payload.json
@@ -265,7 +265,7 @@ TestEcommerceAPI (project suite/root)
 │     │     ├── configs/
 │     │     │     ├── config_customers.py          ← storing API_HOSTS
 │     │     │     ├── __init__.py
-│     │     │     └── README.md
+│     │     │     └── Entity_Configuration_Guide.md
 │     │     ├── data/
 │     │     │     ├── __init__.py
 │     │     │     └── create_order_payload.json

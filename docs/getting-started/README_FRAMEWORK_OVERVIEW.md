@@ -18,24 +18,51 @@ Who should read this
 
 ---
 
-## Quick start (1–2 minute checklist)
-1. Clone and create a branch:
-   ```bash
-   git clone git@github.com:org/TestEcommerceAPI.git
-   cd TestEcommerceAPI
-   git checkout -b feat/my-change
-   ```
-2. Create & activate venv:
-   - macOS / Linux:
-     ```bash
-     python -m venv .venv
-     source .venv/bin/activate
-     ```
-   - Windows (PowerShell):
-     ```powershell
-     python -m venv .venv
-     . .venv/Scripts/Activate.ps1
-     ```
+## 🚀 Quick Start (Recommended)
+
+### Option 1 — Docker (Recommended)
+
+For most contributors, the quickest way to get started is:
+
+```bash
+git clone git@github.com:org/TestEcommerceAPI.git
+cd TestEcommerceAPI
+
+make run
+```
+
+The bootstrap process automatically:
+
+- 🐳 Starts the Docker environment
+- 🌐 Installs WordPress
+- 🛒 Installs WooCommerce
+- 🔑 Generates fresh WooCommerce REST API credentials
+- 📝 Creates `.env` (if it does not already exist)
+- ⚙️ Configures the local testing environment
+
+Run the test suite:
+
+```bash
+make test
+```
+
+---
+
+### Option 2 — Framework Development (Without Docker)
+
+If you are developing the framework itself or running against an existing
+environment, follow the complete onboarding guide:
+
+`README_QA_DEVELOPER_ONBOARDING.md`
+
+It explains:
+
+- Creating a virtual environment
+- Installing the framework in editable mode
+- Running pytest directly
+- Debugging
+- Docker workflows
+- CI development
 3. Install editable package + dev extras:
    ```bash
    pip install --upgrade pip setuptools wheel
@@ -93,7 +120,7 @@ For full developer setup and step-by-step onboarding, see: `DEVELOPER_ONBOARDING
 ## Where to find deeper docs
 
 - Developer onboarding and CLI commands:
-  - `DEVELOPER_ONBOARDING.md` — full developer setup & troubleshooting
+  - `README_QA_DEVELOPER_ONBOARDING.md` — full developer setup & troubleshooting
 - Architecture and internals:
   - `README_ARCHITECTURE.md` — design overview and component responsibilities
 - Schema & validation:

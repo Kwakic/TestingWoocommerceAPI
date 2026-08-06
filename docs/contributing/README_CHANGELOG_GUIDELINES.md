@@ -1,4 +1,4 @@
-# Changelog Guidelines
+# 📙 Changelog Guidelines
 
 A short, practical guide for maintaining the repository changelog. Use this to keep release notes clear, consistent, and useful for developers, QA, and stakeholders.
 

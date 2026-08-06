@@ -10,6 +10,17 @@ This guide replaces two overlapping documents (`README_API_TESTING_STANDARDS.md`
 
 ---
 
+> 💡 **Need to understand environment configuration?**
+>
+> This guide focuses on writing tests.
+> For environment selection (`API_ENV`), endpoint resolution,
+> and entity configuration files (`config_<entity>.py`),
+> see:
+>
+> `docs/framework/README_ENVIRONMENT_CONFIG_GUIDE.md`
+
+---
+
 ## 📋 Contents
 
 1. Quick Start (for new contributors)
@@ -392,6 +403,10 @@ pytestmark = [
     pytest.mark.regression
 ]
 ```
+
+GitHub Actions executes these marker groups through dedicated
+workflows (Smoke, Integration, Regression, Performance,
+Contract, Security and Preflight).
 
 **Big picture:**
 - Domain → `customers`, `orders`, etc.

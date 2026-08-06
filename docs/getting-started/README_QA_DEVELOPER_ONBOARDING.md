@@ -87,15 +87,36 @@ Expected: path inside your repository (editable install).
 
 ---
 
-## Configure environment variables
-Copy and edit environment example:
-```bash
-cp .env.example .env
-# edit .env (or set shell env vars)
-```
-Typical vars: `BASE_URL`, `CUSTOMERS_BASE_URL`, `ORDERS_BASE_URL`, `AUTH_USERNAME`, `AUTH_PASSWORD`, DB connection vars if needed.
+## 🌱 Environment Configuration
 
-> Do not commit secrets — use CI secrets for pipelines.
+For local development, simply run:
+
+```bash
+make run
+```
+
+The bootstrap process automatically:
+
+- creates `.env` from `.env.example` (if needed)
+- starts Docker
+- installs WordPress
+- installs WooCommerce
+- generates REST API credentials
+- writes `WC_KEY` and `WC_SECRET` into `.env`
+
+Developers should not manually edit endpoint URLs.
+
+Environment selection is controlled by:
+
+```
+API_ENV
+```
+
+Entity configuration files resolve the correct API endpoint dynamically.
+
+For details see:
+
+docs/framework/README_ENVIRONMENT_CONFIG_GUIDE.md
 
 ---
 
@@ -152,19 +173,57 @@ pytest --collect-only -vv tests/
 
 ---
 
-## Run tests in Docker (matrix)
-- Build test image:
+## 🐳 Running with Docker
+
+For most developers, the Makefile provides the recommended interface.
+
+### Start the local environment
+
+```bash
+make run
+```
+
+This command automatically:
+
+- Creates `.env` (if required)
+- Starts Docker
+- Provisions WordPress
+- Installs WooCommerce
+- Generates REST API credentials
+- Prepares the local test environment
+
+### Execute the test suite
+
+```bash
+make test
+```
+
+### Stop the environment
+
+```bash
+make down
+```
+
+---
+
+### Advanced Docker usage
+
+Direct Docker Compose commands remain available for advanced
+development, debugging, or CI troubleshooting.
+
+For example:
+
 ```bash
 docker compose -f docker-compose.matrix.yml build
+
+docker compose -f docker-compose.matrix.yml \
+    --profile customers up \
+    --abort-on-container-exit \
+    --remove-orphans
 ```
-- Run a single profile locally:
-```bash
-docker compose -f docker-compose.matrix.yml --profile customers up --abort-on-container-exit --remove-orphans
-```
-Notes:
-- `./tests` is mounted read-only inside the container; `./reports` collects outputs.
-- Dockerfile installs the package editable during the build stage using `.[dev]`.
-- Allure CLI is **not** included in the image (CI installs it when generating HTML).
+
+These commands are primarily intended for framework development and
+pipeline debugging rather than day-to-day testing.
 
 ---
 

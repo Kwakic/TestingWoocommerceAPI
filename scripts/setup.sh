@@ -23,6 +23,19 @@
 
 set -e
 
+
+# ------------------------------------------------------------------
+# Git Bash on Windows automatically rewrites Unix-style paths (e.g.
+# /var/www/html) into Windows paths (e.g.
+# C:/Program Files/Git/var/www/html) before invoking Docker.
+#
+# WP-CLI commands executed inside Docker containers expect Linux
+# paths, so disable MSYS path conversion when running under Git Bash.
+#
+# This has no effect on Linux, macOS or GitHub Actions.
+# ------------------------------------------------------------------
+export MSYS_NO_PATHCONV=1
+
 # ------------------------------------------------------------------
 # Local development configuration.
 #

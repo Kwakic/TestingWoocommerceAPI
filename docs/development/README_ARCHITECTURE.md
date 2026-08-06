@@ -42,6 +42,10 @@ TestEcommerceAPI/
 │   ├── coupons/
 │   ├── products/
 │   └── shared/
+│          preflight/
+│          contracts/
+│          security/
+│
 ├── docker-compose.matrix.yml
 ├── Dockerfile
 ├── conftest.py                    ← top-level pytest loader that sets pytest_plugins
@@ -129,6 +133,46 @@ General recommendations and examples.
 
 ---
 
+### 🪟 Windows (Git Bash) Compatibility
+
+When using **Git Bash** on Windows, Unix-style paths passed to Docker
+Compose commands may be rewritten automatically by the shell.
+
+For example:
+
+```text
+/var/www/html
+```
+
+may become:
+
+```text
+C:/Program Files/Git/var/www/html
+```
+
+This causes WP-CLI to fail with an error similar to:
+
+```text
+Error: This does not seem to be a WordPress installation.
+```
+
+To prevent this, the framework disables Git Bash path conversion by
+setting:
+
+```text
+MSYS_NO_PATHCONV=1
+```
+
+before executing Docker Compose commands that invoke WP-CLI.
+
+> **Note**
+>
+> This behavior is specific to Git Bash on Windows.
+> Linux, macOS and GitHub Actions are not affected.
+
+
+---
+
 ## CI (GitHub Actions & GitLab)
 
 - The project keeps matrix testing (one job per microservice). Benefits:
@@ -150,30 +194,57 @@ General recommendations and examples.
 
 ---
 
-## Environment & configuration
+## 🌍 Environment & Configuration
 
-- Use `.env` for local convenience; do NOT commit secrets.
-- CI: store secrets in your provider (GitHub Secrets / GitLab CI variables / cloud secret manager).
-- `REQUIRE_ENV`:
-  - Locally: keep `REQUIRE_ENV=false` (or unset).
-  - CI: set `REQUIRE_ENV=true` to fail early on missing configuration.
+The framework intentionally separates **environment selection** from
+**authentication**.
 
-- Key env vars used by plugins/CI:
-  - `AUTO_ALLURE_REPORT` — set to `"true"` / `"1"` / `"yes"` to enable auto-generation of HTML (CI should install Allure).
-  - `ENABLE_STRUCTURED_LOGS`, `ENABLE_JSON_PRETTY`, `KEEP_STRUCTURED_LOGS`, `LOG_DIR` — control structured logging behavior.
+### Local development
+
+- `.env` is used for local convenience only.
+- Never commit secrets to the repository.
+- During `make run`, WooCommerce automatically generates a fresh pair of
+  REST API credentials (`WC_KEY` / `WC_SECRET`), which are merged into
+  the local `.env`.
+
+### Continuous Integration
+
+GitHub Actions does not use the repository `.env` file.
+
+Instead, each workflow provisions a fresh WooCommerce environment,
+generates new REST API credentials, and injects them directly into the
+workflow environment.
+
+### Runtime configuration
+
+The framework resolves the active API endpoint dynamically using:
+
+```text
+API_ENV
+    ↓
+config_<entity>.py
+    ↓
+API_HOSTS
+    ↓
+APIClient
+```
+
+This means:
+
+- `.env` stores authentication credentials only.
+- `API_ENV` selects the active environment.
+- Entity configuration files own endpoint mappings.
+- The same configuration model is used for local development, Docker,
+  and GitHub Actions.
+
+For a complete explanation of the configuration architecture, see:
+
+👉 `docs/framework/README_ENVIRONMENT_CONFIG_GUIDE.md`
+
+This document is the canonical reference for environment selection,
+endpoint resolution and runtime configuration.
 
 ---
-
-## API Base URL Resolution (Environment-Driven)
-
-The framework resolves API base URLs dynamically using environment configuration
-(`API_ENV` → `API_HOSTS` mapping).
-
-See:
-👉 docs/README_ENVIRONMENT_CONFIG_GUIDE.md
-
----
-
 
 ## Reports & logs layout
 

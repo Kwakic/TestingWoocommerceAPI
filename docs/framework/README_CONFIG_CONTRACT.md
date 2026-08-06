@@ -1,5 +1,7 @@
 # 📘 Configuration Contract
 
+>Defines the framework rules.
+
 **Authoritative and normative definition of configuration behavior in the EcommerceAPI test framework.**
 
 This document defines **what** configuration is, **where** it lives, **who** owns it, and **how** it may be consumed.
