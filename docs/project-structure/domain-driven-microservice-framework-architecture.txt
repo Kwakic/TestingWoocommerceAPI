@@ -289,7 +289,8 @@ TestEcommerceAPI (project suite/root)
 │     └── README.md
 │
 │─── scripts                                       ← shared
-│     └── setup.sh
+│     ├── setup.sh
+│     └── write_env_credentials.sh
 │─── wp-data/...
 │─── Makefile                                      ← shared (Makefile = orchestrates project execution)
 │─── .dockerignore                                 ← shared

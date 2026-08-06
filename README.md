@@ -165,15 +165,22 @@ It demonstrates:
 
 ---
 
-## 🚀 Quick Start (One Command)
+## 🚀  Quick Start (One-Command Setup)
+
+Make sure you have **Docker Desktop** running on your computer first.
+
+Then, copy and paste this entire block below as single command into your terminal and press Enter:
 
 ```bash
-git clone https://github.com/Kwakic/TestingWoocommerceAPI.git
-cd TestingWoocommerceAPI
-make run
+git clone https://github.com/Kwakic/TestingWoocommerceAPI.git && cd TestingWoocommerceAPI && make run
 ```
 
 👉 That's it — no manual setup required.
+
+### 💡 What this automatically does for you:
+* Downloads the project files to your computer.
+* Moves your terminal inside the project folder.
+* Launches the test servers and runs the test suite automatically.
 
 The default execution environment is `API_ENV=test`, which runs tests from the host machine against the Docker-based WordPress instance.
 

@@ -1,4 +1,4 @@
-# Configuration System Overview
+# ⚙️ Configuration System Overview
 
 This README explains how the project manages environments and configuration when each microservice owns its own API host configuration, while still using a single shared config loader and shared utilities (logging, reporting, api_client).
 
@@ -30,9 +30,10 @@ Example `.env`:
 API_ENV=test
 MACHINE=machine1
 
-# --- WooCommerce credentials ---
-WC_KEY=ck_********
-WC_SECRET=cs_********
+# --- WooCommerce API credentials ---
+# Generated automatically by `make setup`.
+WC_KEY=********
+WC_SECRET=********
 
 # --- Database credentials (if used) ---
 DB_USER=my_user
@@ -44,10 +45,16 @@ KEEP_STRUCTURED_LOGS=3
 KEEP_HTML_REPORTS=3
 ```
 
-Purpose
-- Selects the active environment (test, dev, prod)
-- Selects the active machine (machine1, docker, etc.)
-- Stores only sensitive values (never committed)
+### 🎯 Purpose
+
+- Selects the active execution environment (`API_ENV`)
+- Selects the active machine (`MACHINE`) when applicable
+- Stores only sensitive runtime data
+- Never stores API endpoint URLs
+
+The active API endpoint is NOT configured in `.env`.
+Instead, it is resolved from the service-specific `API_HOSTS`
+dictionary using the selected `API_ENV`.
 
 ---
 
@@ -76,10 +83,13 @@ Example: `config_customers.py`
 # Public, non‑sensitive API endpoints for Customers service
 
 API_HOSTS = {
-    "test":    "http://localhost:8888/wp-json/wc/v3/customers",
-    "staging": "https://staging.example.com/customers",
-    "dev":     "https://dev.example.com/customers",
-    "prod":    "https://api.example.com/customers",
+    "test": "http://localhost:8080/wp-json/wc/v3/",
+    "docker": "http://wordpress/wp-json/wc/v3/",
+    "local": "http://localhost:8888/kwakiweb/wp-json/wc/v3/",
+    "dev": "...",
+    "staging": "...",
+    "prod": "...",
+    "ci": "http://localhost:8080/wp-json/wc/v3/",
 }
 ```
 
@@ -90,12 +100,18 @@ Each service:
 
 ---
 
-## 3. Shared `config_loader.py` (Service‑Agnostic)
+## 3. 🔗 Shared `config_loader.py` (Service‑Agnostic)
 
 The shared config loader:
 - Loads `.env`
 - Exposes only environment selectors
 - Does not import any service config
+
+The shared loader intentionally exposes only environment selectors
+(e.g. ENV, MACHINE). It never resolves API endpoints itself.
+
+Endpoint resolution is delegated to each service configuration,
+keeping shared code completely service-agnostic.
 
 Example `config_loader.py`:
 
@@ -120,7 +136,7 @@ Why this is important
 
 ---
 
-## 4. How the Correct Service Is Selected (Key Concept)
+## 4. 🛠️ How the Correct Service Is Selected (Key Concept)
 
 Shared utilities never decide the service. Instead, the service context is established higher up, typically via:
 - `all_resources` fixture
@@ -138,6 +154,26 @@ ENV = get_config().ENV
 BASE_URL = API_HOSTS.get(ENV, "")
 ```
 
+### ⚠️ Important
+
+`API_ENV` does not contain the endpoint URL.
+
+Instead, it acts as a selector:
+
+```
+API_ENV=test
+        │
+        ▼
+API_HOSTS["test"]
+        │
+        ▼
+http://localhost:8080/wp-json/wc/v3/
+```
+
+This means changing `API_ENV` changes the selected endpoint.
+The endpoint itself is defined only inside the service's
+`config_<service>.py`.
+
 That helper:
 - Imports its own `config_<service>.API_HOSTS`
 - Uses `ENV` from the shared loader
@@ -147,7 +183,7 @@ This keeps ownership local and shared code generic.
 
 ---
 
-## 5. APIClient Usage (No Hardcoding)
+## 5. 💡 APIClient Usage (No Hardcoding)
 
 `APIClient` does not know about services. Helpers inject the correct base URL:
 
@@ -162,7 +198,7 @@ Benefits:
 
 ---
 
-## 6. Logging & Reporting Compatibility
+## 6. 🧾 Logging & Reporting Compatibility
 
 Logging and reporting rely only on:
 - `ENV`
@@ -179,7 +215,7 @@ reports/
 
 ---
 
-## 7. Recommended Pattern Summary
+## 7. 📌 Recommended Pattern Summary
 
 Layer | Responsibility | Service‑Aware | Notes
 --- | ---: | :---: | ---
@@ -192,36 +228,33 @@ Logging / Reporting | Observability | ❌ | Fully generic
 
 ---
 
-## 8. Configuration Flow Diagram
+## 8. 📊 Configuration Flow Diagram
 
 ```
- ┌──────────────┐
- │    .env      │  (ENV, MACHINE, secrets)
- └──────┬───────┘
-        │
-        ▼
- ┌──────────────────┐
- │ config_loader.py │  → ENV, MACHINE
- └──────┬───────────┘
-        │
-        ▼
- ┌───────────────────────────────┐
- │ Service Helper / DAO           │
- │ (customers / orders / etc.)   │
- │  - imports its own API_HOSTS  │
- │  - selects API_HOSTS[ENV]     │
- └──────┬────────────────────────┘
-        │ base_url injected
-        ▼
- ┌───────────────────────────────┐
- │ APIClient / Logger /     │
- │ Reporting (service‑agnostic)  │
- └───────────────────────────────┘
+                .env
+      (API_ENV, MACHINE, secrets)
+                    │
+                    ▼
+           config_loader.py
+          (ENV, MACHINE only)
+                    │
+                    ▼
+        Service Helper / DAO
+                    │
+      imports API_HOSTS
+                    │
+                    ▼
+        API_HOSTS[ENV]
+                    │
+        selected endpoint
+                    │
+                    ▼
+              APIClient
 ```
 
 ---
 
-## 9. Key Benefits
+## 9. 🌟 Key Benefits
 
 - Zero hardcoded service names in shared code
 - Clear ownership boundaries (service owns endpoints, shared code owns environment selectors)
@@ -237,3 +270,28 @@ If you add a new microservice:
 3. Inject `BASE_URL` into `APIClient` and use shared logging/reporting as‑is.
 
 This pattern keeps shared utilities generic, service ownership clear, and secrets out of the repository.
+
+---
+
+# 10. 🛑 Common Misconceptions
+
+### Does `.env` define the API endpoint?
+
+No.
+
+`.env` only selects the active execution environment (`API_ENV`).
+
+The endpoint is resolved from the service's `API_HOSTS`
+dictionary using that environment.
+
+### Where do WooCommerce API credentials come from?
+
+`make setup` provisions fresh WooCommerce API credentials and
+stores them in `.env`.
+
+The framework then combines:
+
+- the endpoint from `API_HOSTS`
+- the credentials from `.env`
+
+to communicate with the selected WooCommerce instance.

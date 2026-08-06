@@ -54,7 +54,7 @@ while IFS='=' read -r key value; do
     [[ -z "$key" ]] && continue
 
     case "$key" in
-        WC_API_URL|WC_KEY|WC_SECRET)
+        WC_KEY|WC_SECRET)
             if grep -q "^${key}=" .env; then
                 sed -i "s|^${key}=.*|${key}=${value}|" .env
             else
@@ -66,7 +66,7 @@ while IFS='=' read -r key value; do
 done
 
 if [[ "$UPDATED" -eq 0 ]]; then
-    echo "❌ No WC_API_URL / WC_KEY / WC_SECRET lines received on stdin — nothing to write" >&2
+    echo "❌ No WC_KEY / WC_SECRET lines received on stdin — nothing to write" >&2
     exit 1
 fi
 

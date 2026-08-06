@@ -48,8 +48,9 @@ ensure-env:
 # docker-compose.wp.yml for the full reasoning.
 # --------------------------------------------------
 up: ensure-env
+	@echo "📁 Ensuring WordPress data directory exists..."
+	@mkdir -p wp-data
 	@echo "🐳 Starting Docker infrastructure..."
-	@docker compose -f docker-compose.wp.yml up -d
 # --------------------------------------------------
 # Bootstrap WordPress + WooCommerce, then merge the fresh WooCommerce
 # credentials into .env.

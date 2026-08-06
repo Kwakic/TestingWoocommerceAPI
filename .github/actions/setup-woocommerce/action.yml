@@ -107,7 +107,7 @@ runs:
 
         echo "$CREDENTIALS" >> "$GITHUB_ENV"
 
-        echo "✅ WooCommerce credentials loaded"
+        echo "✅ Fresh WooCommerce API credentials generated"
 
     # --------------------------------------------------
     # 4. Configure database connection

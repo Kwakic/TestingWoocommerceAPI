@@ -1,56 +1,144 @@
 """
-Environment-specific API endpoints for the Customer service.
+Environment-specific API endpoints for the Customers service.
 
-This module contains the public API base URLs used to communicate with
-the Customers service in different execution environments.
+This module defines the base URL used by the Customers API client for each
+supported execution environment.
 
-The shared configuration loader imports this module automatically after
-detecting the active service.
+---------------------------------------------------------------------------
+Architecture
+---------------------------------------------------------------------------
 
-Only public endpoint URLs belong here.
+The framework separates configuration into two categories:
 
-Do NOT store:
-- usernames
-- passwords
-- API keys
-- database credentials
+1. Static configuration (this file)
+   - API endpoint URLs
+   - One URL per execution environment
+   - Version-controlled with the repository
 
-Those values are loaded separately from environment variables.
+2. Dynamic configuration (.env)
+   - WooCommerce API credentials (WC_KEY / WC_SECRET)
+   - Database credentials
+   - Logging configuration
+   - Environment selection (API_ENV)
 
-Environment selection is controlled by API_ENV.
+Only PUBLIC endpoint URLs belong in this file.
 
+Never store:
+    - usernames
+    - passwords
+    - API keys
+    - database credentials
+    - secrets of any kind
 
-Typical execution environments:
+Those values belong in .env and are loaded separately.
+
+---------------------------------------------------------------------------
+How endpoint resolution works
+---------------------------------------------------------------------------
+
+The framework does NOT read WC_API_URL from .env.
+
+Instead, the active endpoint is determined exclusively by API_ENV:
+
+    API_ENV
+        ↓
+    API_HOSTS
+        ↓
+    Selected base URL
+        ↓
+    APIClient
+
+This guarantees that every developer, Docker container and CI runner
+uses a predictable endpoint without hidden overrides.
+
+---------------------------------------------------------------------------
+Typical execution environments
+---------------------------------------------------------------------------
 
 API_ENV=local
-    Tests run locally against a locally hosted application.
+    Tests run on the developer machine against a legacy local
+    WordPress installation (for example XAMPP or WAMP).
 
 API_ENV=test
-    Tests run on the host while the application runs in Docker.
+    Tests run on the developer machine while WordPress and
+    WooCommerce run inside the local Docker environment.
 
 API_ENV=docker
-    Tests execute inside Docker and communicate over the Docker network.
+    Tests themselves run inside Docker containers.
+    Communication happens over the Docker network using service names
+    instead of localhost.
 
 API_ENV=ci
-    GitHub Actions runner communicates with Docker services exposed on localhost.
+    Tests run on a GitHub Actions runner.
+    WordPress runs inside Docker services started by the workflow and
+    is exposed on localhost.
+
+This separation allows each execution environment to evolve
+independently, even if two environments currently happen to use
+the same endpoint.
 """
 
 API_HOSTS = {
-    # Local development (tests run on host, WordPress in Docker)
-    "test": "http://localhost:8888/kwakiweb/wp-json/wc/v3/",
-    # Docker environment (tests run IN Docker, same network as WordPress)
-    # ⚠️ CRITICAL: Use service name "wordpress", NOT "localhost"
-    # Containers communicate through the Docker network,so the Docker service name is used instead of localhost.
-    "docker": "http://wordpress/wp-json/wc/v3/",  # ✅ For GitLab CI (uses docker-compose)
-    # Local without Docker
-    "local": "http://localhost:8888/kwakiweb/wp-json/wc/v3/",  # ✅ For local dev (no Docker)
-    # Development server
-    "dev": "http://host.docker.internal:8888/kwakiweb/wp-json/wc/v3/",  # ✅ For local Docker → local WordPress
-    # Staging environment (real server)
+    # ------------------------------------------------------------------
+    # Local Docker development
+    #
+    # This is the environment most contributors will use.
+    #
+    # pytest:
+    #     Runs directly on the host machine.
+    #
+    # WordPress:
+    #     Runs inside Docker and exposes port 8080 to the host.
+    #
+    # Communication therefore happens through localhost.
+    # ------------------------------------------------------------------
+    "test": "http://localhost:8080/wp-json/wc/v3/",
+    # ------------------------------------------------------------------
+    # Docker-to-Docker communication
+    #
+    # Both pytest and WordPress run inside the same Docker network.
+    #
+    # Containers never use localhost to communicate with each other.
+    # Instead they communicate using Docker service names.
+    # ------------------------------------------------------------------
+    "docker": "http://wordpress/wp-json/wc/v3/",
+    # ------------------------------------------------------------------
+    # Legacy local development
+    #
+    # Used when running against an existing WordPress installation
+    # outside Docker (for example XAMPP or WAMP).
+    # ------------------------------------------------------------------
+    "local": "http://localhost:8888/kwakiweb/wp-json/wc/v3/",
+    # ------------------------------------------------------------------
+    # Shared development environment
+    #
+    # Useful when developers need to connect from Docker to a
+    # WordPress instance running on the host machine.
+    # ------------------------------------------------------------------
+    "dev": "http://host.docker.internal:8888/kwakiweb/wp-json/wc/v3/",
+    # ------------------------------------------------------------------
+    # Shared staging server
+    # ------------------------------------------------------------------
     "staging": "https://staging.example.com/wp-json/wc/v3/",
-    # Production (real server)
+    # ------------------------------------------------------------------
+    # Production
+    # ------------------------------------------------------------------
     "prod": "https://api.example.com/wp-json/wc/v3/",
-    # CI-You run pytest on host.
-    # GitHub Actions runner communicates with the Docker services exposed on localhost:8080.
+    # ------------------------------------------------------------------
+    # GitHub Actions
+    #
+    # Although this currently resolves to the same endpoint as "test",
+    # it intentionally remains a separate environment.
+    #
+    # Why?
+    #
+    # They represent different execution contexts:
+    #
+    #   test -> developer workstation
+    #   ci   -> GitHub Actions runner
+    #
+    # Keeping them separate allows CI infrastructure to change in the
+    # future without affecting local development.
+    # ------------------------------------------------------------------
     "ci": "http://localhost:8080/wp-json/wc/v3/",
 }

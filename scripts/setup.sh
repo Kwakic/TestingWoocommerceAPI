@@ -266,7 +266,7 @@ $wpdb->insert(
 // ---------------------------------------------------------------
 
 printf(
-    "WC_API_URL=http://localhost:8080/wp-json/wc/v3/\nWC_KEY=%s\nWC_SECRET=%s\n",
+    "WC_KEY=%s\nWC_SECRET=%s\n",
     $key,
     $secret
 );
