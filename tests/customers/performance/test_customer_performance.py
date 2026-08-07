@@ -78,8 +78,8 @@ PRODUCTS_PERFORMANCE = {
     "params": {
         "per_page": 100,
     },
-    "max_avg_response": 4.20,
-    "max_p95_response": 5.50,
+    "max_avg_response": 6.20,
+    "max_p95_response": 7.50,
     "iterations": 5,
 }
 

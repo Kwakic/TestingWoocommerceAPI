@@ -162,6 +162,7 @@ sudo apt install make
 ```bash
 xcode-select --install
 ```
+
 ---
 
 ## 💡 Why This Project Matters

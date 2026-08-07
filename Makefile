@@ -22,21 +22,6 @@
 .PHONY: up setup install test test-ci run down clean ensure-env
 
 # --------------------------------------------------
-# Force recipes to run through bash, not cmd.exe.
-#
-# On Windows, `make` defaults to cmd.exe for running recipe lines
-# unless told otherwise. cmd.exe decodes the command line using the
-# Windows ANSI/OEM codepage instead of UTF-8, which mangles every
-# emoji/em-dash in the echo strings above into mojibake (e.g. "âœ…"
-# instead of "✅") even though this file itself is valid UTF-8.
-#
-# Forcing bash here routes recipes through Git Bash instead, which
-# passes UTF-8 straight through with no codepage translation. Safe
-# on Linux/macOS too, since bash is standard there.
-# --------------------------------------------------
-SHELL := bash
-
-# --------------------------------------------------
 # Ensure a local .env exists before anything else runs
 #
 # Deleting .env used to break `make run` completely, because setup.sh was
@@ -47,10 +32,10 @@ SHELL := bash
 # --------------------------------------------------
 ensure-env:
 	@if [ ! -f .env ]; then \
-		echo "📄 .env not found — creating from .env.example"; \
+		echo "[INFO] .env not found — creating from .env.example"; \
 		cp .env.example .env; \
 	else \
-		echo "✅ .env already exists — leaving it untouched"; \
+		echo "[OK] .env already exists — leaving it untouched"; \
 	fi
 
 # --------------------------------------------------
@@ -63,9 +48,9 @@ ensure-env:
 # docker-compose.wp.yml for the full reasoning.
 # --------------------------------------------------
 up: ensure-env
-	@echo "📁 Ensuring WordPress data directory exists..."
+	@echo "[OK] Ensuring WordPress data directory exists..."
 	@mkdir -p wp-data
-	@echo "🐳 Starting Docker infrastructure..."
+	@echo "[DOCKER]  Starting Docker infrastructure..."
 	docker compose -f docker-compose.wp.yml up -d
 # --------------------------------------------------
 # Bootstrap WordPress + WooCommerce, then merge the fresh WooCommerce
@@ -78,14 +63,14 @@ up: ensure-env
 # anything else in that file.
 # --------------------------------------------------
 setup: ensure-env
-	@echo "🔧 Bootstrapping WooCommerce..."
+	@echo "[SETUP] Bootstrapping WooCommerce..."
 	@bash scripts/setup.sh | bash scripts/write_env_credentials.sh
 
 # --------------------------------------------------
 # Install Python framework (editable mode)
 # --------------------------------------------------
 install:
-	@echo "📦 Installing EcommerceAPI framework..."
+	@echo "[INSTALL] Installing EcommerceAPI framework..."
 	pip install -e "./EcommerceAPI[dev]"
 
 # --------------------------------------------------
