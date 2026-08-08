@@ -298,8 +298,11 @@ By breaking these apart, you gain more control:
 ```
 git fetch origin
 
-# check for possible changes made in main branch
+# check for possible changes made in main branch ("What does remote have that I don’t?")
 git log HEAD..origin/main --oneline
+
+# or check for: "What do I have that remote doesn’t?
+git log origin/main..HEAD --oneline
 
 git merge origin/main
 ```
@@ -2736,6 +2739,8 @@ trim trailing whitespace.................................................Failed
 # 18. 🔍 Git Fetch vs. Git Pull
 In Git, `git fetch` is a "safe" command that downloads the latest changes (commits, files, and branches) from a remote repository
 (like GitHub) to your local machine without merging them into your actual work.
+This allows you to see if new commits or changes have been made by your teammate without merging them into your local branch ( main ) right away.
+
 
 Think of `git fetch` as checking the mail and git pull as opening the mail and acting on it.
 
