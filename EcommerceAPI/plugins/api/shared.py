@@ -3,6 +3,10 @@ import pytest
 
 from EcommerceAPI.src.shared.helpers.cleanup_helpers import set_default_api_client
 from EcommerceAPI.src.clients.api_client import APIClient
+from EcommerceAPI.src.utils.credentials_utility import (
+    get_wc_api_keys,
+    MissingCredentialsError,
+)
 
 log = logging.getLogger(__name__)
 
@@ -63,13 +67,62 @@ def api_client(api_base_url: str):
 
     import requests  # local import to avoid unnecessary dependency at module load
 
+    # ------------------------------------------------------------------
+    # 🔐 CREDENTIAL VALIDATION (RUN FIRST — BEFORE ANYTHING)
+    # ------------------------------------------------------------------
+    try:
+        wc_key, wc_secret = get_wc_api_keys()
+    except MissingCredentialsError as exc:
+        pytest.exit(
+            "\n"
+            "🚨 ENVIRONMENT GATE FAILED — NOT A TEST FAILURE\n\n"
+            f"API URL: {api_base_url}\n"
+            "Error: Missing WooCommerce credentials\n\n"
+            "Detected issue:\n"
+            f"- {exc}\n\n"
+            "Expected configuration:\n"
+            "- WC_KEY=<your_consumer_key>\n"
+            "- WC_SECRET=<your_consumer_secret>\n\n"
+            "Possible causes:\n"
+            "- .env file not loaded\n"
+            "- Environment variables not exported\n"
+            "- Typo in variable names (WC_KEY / WC_SECRET)\n"
+            "- Running outside configured environment\n",
+            returncode=10,
+        )
+
+    if not wc_key.strip() or not wc_secret.strip():
+        pytest.exit(
+            "\n"
+            "🚨 ENVIRONMENT GATE FAILED — NOT A TEST FAILURE\n\n"
+            f"API URL: {api_base_url}\n"
+            "Error: WooCommerce credentials are EMPTY\n\n"
+            "Detected issue:\n"
+            f"- WC_KEY={'<empty>' if not wc_key.strip() else '<set>'}\n"
+            f"- WC_SECRET={'<empty>' if not wc_secret.strip() else '<set>'}\n\n"
+            "Expected configuration:\n"
+            "- WC_KEY=<your_consumer_key>\n"
+            "- WC_SECRET=<your_consumer_secret>\n\n"
+            "Possible causes:\n"
+            "- WC_KEY=\n"
+            "- WC_SECRET=\n"
+            "- Incorrect .env formatting (missing values)\n"
+            "- Quoted empty values in environment\n",
+            returncode=10,
+        )
+
+    # ------------------------------------------------------------------
+    # 🚀 ONLY NOW create API client
+    # ------------------------------------------------------------------
     api_client = APIClient(base_url=api_base_url)
 
     # ------------------------------------------------------------------
     # 🔥 ENVIRONMENT VALIDATION GATE (runs once per session)
     # ------------------------------------------------------------------
     try:
-        resp = api_client.get("system_status")
+        resp = api_client.get(
+            "system_status"
+        )  # system_status" is a real, valid WooCommerce REST API endpoint
     except (requests.RequestException, RuntimeError) as exc:
         pytest.exit(
             "\n"
