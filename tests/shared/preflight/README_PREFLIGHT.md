@@ -1,5 +1,5 @@
 ## Overview
-The **Preflight Test Suite** performs *framework-level and environment diagnostics*
+The **Preflight Test Suite (framework sanity)** performs *framework-level and environment diagnostics*
 **before any environment-dependent or business-level tests are executed**.
 
 Preflight is intentionally **lightweight and non-invasive**.

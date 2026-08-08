@@ -1,4 +1,4 @@
-# PREFLIGHT TEST
+# PREFLIGHT TEST (framework sanity)
 
 """
 Tests for structured logging metadata and LAST_STRUCTURED_LOG exposure.

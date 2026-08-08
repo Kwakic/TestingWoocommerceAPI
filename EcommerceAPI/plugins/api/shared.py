@@ -1,41 +1,7 @@
-"""
-Plugin: shared API infrastructure fixtures (service-agnostic).
-
-This module provides foundational API fixtures used across all entity domains
-(customers, products, orders, etc.).
-
-Fixtures
---------
-- api_client (session):
-    Constructs a shared APIClient instance using a service-specific base URL
-    provided by the test layer.
-
-    Design notes:
-    * This plugin is completely service-agnostic.
-    * The API base URL is injected via the `api_base_url` fixture,
-      which must be defined at the test layer (e.g. tests/customers/conftest.py).
-    * This avoids hardcoding service names or relying on brittle path-based logic.
-    * The client acts as the transport/orchestration layer for all API interactions.
-
-    Responsibilities:
-    * Centralized HTTP communication
-    * Reusable across all entity domains
-    * Acts as a dependency for domain-specific fixtures (customers, products, etc.)
-
-Notes
------
-- This plugin contains NO domain logic (no customers/products/etc.).
-- Domain-specific behavior must live in dedicated plugins (e.g. api/customers.py).
-- Designed to be stable, minimal, and reusable across all services.
-- Can be extended in the future with cross-cutting concerns
-  (auth, retries, headers, tracing, etc.).
-"""
-
 import logging
 import pytest
 
 from EcommerceAPI.src.shared.helpers.cleanup_helpers import set_default_api_client
-
 from EcommerceAPI.src.clients.api_client import APIClient
 
 log = logging.getLogger(__name__)
@@ -52,17 +18,121 @@ def api_client(api_base_url: str):
     Parameters
     ----------
     api_base_url : str
-        Service-specific API shared URL injected from the test layer
-        (e.g. tests/customers/conftest.py).
+        Service-specific API base URL injected from the test layer.
 
     What it does:
     --------
-    - Fails fast with a clear error if APIClient cannot be imported.
+    - Constructs a shared APIClient instance.
+    - Performs a ONE-TIME environment validation (fail-fast gate).
+    - Ensures API is reachable and credentials are valid BEFORE any test runs.
+    - Prevents cascading failures (pagination loops, retry storms, noisy test runs).
     - Wires the instance into legacy cleanup helpers (best-effort).
+
+    🔥 Environment Gate (critical behavior):
+    --------------------------------------
+    This fixture acts as a SESSION-LEVEL ENVIRONMENT VALIDATION GATE.
+
+    It executes a lightweight, service-agnostic API call (`system_status`)
+    to verify:
+        - API is reachable
+        - Authentication is valid
+        - Service is operational
+
+    If validation fails:
+        → pytest.exit() is called immediately
+        → test session is aborted
+        → NO further tests are executed
+
+    Design rationale:
+    ----------------
+    - Fail-safe by default (cannot be bypassed by tests or fixtures)
+    - Runs once per session (efficient and deterministic)
+    - Prevents N× repeated failures across test suite
+    - Avoids CI duplication (no separate environment stage required)
+    - Keeps preflight tests pure (they do not request api_client)
+
+    Notes:
+    ------
+    - This is NOT a business logic check.
+    - This is NOT a contract test.
+    - This is infrastructure / environment validation.
+    - The fixture intentionally controls global test execution flow.
+    - Preflight tests remain unaffected (they do not request api_client).
+
     """
+
+    import requests  # local import to avoid unnecessary dependency at module load
+
     api_client = APIClient(base_url=api_base_url)
 
+    # ------------------------------------------------------------------
+    # 🔥 ENVIRONMENT VALIDATION GATE (runs once per session)
+    # ------------------------------------------------------------------
+    try:
+        resp = api_client.get("system_status")
+    except (requests.RequestException, RuntimeError) as exc:
+        pytest.exit(
+            "\n"
+            "🚨 ENVIRONMENT GATE FAILED — NOT A TEST FAILURE\n\n"
+            f"API URL: {api_base_url}\n"
+            f"Error: Unable to reach API ({exc})\n\n"
+            "Possible causes:\n"
+            "- API service is down\n"
+            "- Incorrect API_BASE_URL\n"
+            "- Network/DNS issues\n",
+            returncode=10,
+        )
+
+    # ------------------------------------------------------------------
+    # Explicit status validation (fail by inclusion, not exclusion)
+    # ------------------------------------------------------------------
+    if resp.status_code == 401:
+        pytest.exit(
+            "\n"
+            "🚨 ENVIRONMENT GATE FAILED — NOT A TEST FAILURE\n\n"
+            f"API URL: {api_base_url}\n"
+            "Error: Authentication failed (401 Unauthorized)\n\n"
+            "Possible causes:\n"
+            "- Missing or invalid WC_KEY / WC_SECRET\n"
+            "- Incorrect environment configuration (.env)\n\n"
+            f"Response:\n{resp.text}\n",
+            returncode=10,
+        )
+
+    elif resp.status_code >= 500:
+        pytest.exit(
+            "\n"
+            "🚨 ENVIRONMENT GATE FAILED — NOT A TEST FAILURE\n\n"
+            f"API URL: {api_base_url}\n"
+            f"Error: Server returned {resp.status_code}\n\n"
+            "Possible causes:\n"
+            "- WooCommerce is not fully initialized\n"
+            "- Backend service failure\n\n"
+            f"Response:\n{resp.text}\n",
+            returncode=10,
+        )
+
+    elif resp.status_code != 200:
+        pytest.exit(
+            "\n"
+            "🚨 ENVIRONMENT GATE FAILED — NOT A TEST FAILURE\n\n"
+            f"API URL: {api_base_url}\n"
+            f"Error: Unexpected status {resp.status_code} on system_status check\n\n"
+            "Possible causes:\n"
+            "- system_status endpoint not available in this environment\n"
+            "- Wrong API_ENV or base URL misconfiguration\n\n"
+            f"Response:\n{resp.text}\n",
+            returncode=10,
+        )
+
+    log.info(
+        "✅ Environment validation passed (API reachable, auth OK). Base URL: %s",
+        api_base_url,
+    )
+
+    # ------------------------------------------------------------------
     # Best-effort wiring into legacy cleanup helpers.
+    # ------------------------------------------------------------------
     if callable(set_default_api_client):
         try:
             set_default_api_client(api_client)

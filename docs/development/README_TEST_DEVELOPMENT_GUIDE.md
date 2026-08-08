@@ -122,6 +122,49 @@ And a matching rule for the layers underneath tests:
 
 ---
 
+
+## 2.5🚨 Environment Gate (Session-Level Safety Check)
+
+The framework includes a **session-scoped environment validation gate**
+implemented in the shared `api_client` fixture.
+
+This gate runs **once per test session** and ensures:
+
+- API is reachable
+- Authentication is valid
+- The target environment is correctly configured
+
+If validation fails, the test session is **terminated immediately** using `pytest.exit()`.
+
+#### ⚠️ Important
+
+- This is **NOT a test failure**
+- This is an **infrastructure failure**
+- No tests are executed after this point
+
+#### 💡 Why this exists
+
+Without this gate:
+- All tests would fail with the same error (e.g. 401)
+- Test output becomes noisy and misleading
+- Debugging becomes harder
+- e.g. missing credentials → tests keep running → pagination loops → massive output
+
+#### 👉 Example output
+🚨 ENVIRONMENT GATE FAILED — NOT A TEST FAILURE
+
+API rejected credentials (401)
+Check WC_KEY / WC_SECRET in .env
+
+
+#### Design principle
+
+- Fail fast
+- Fail once
+- Fail clearly
+
+---
+
 ## 3. 🧱 Architecture & Layer Responsibilities
 
 ```

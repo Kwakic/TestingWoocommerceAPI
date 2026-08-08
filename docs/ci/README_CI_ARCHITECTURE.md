@@ -30,6 +30,41 @@ Your pipelines should answer **one specific question each**:
 | **performance.yml** | Is the system getting slower? | Latency tracking; SLA validation |
 | **security.yml** | Are auth/permission rules still safe? | Auth boundaries; internal audit |
 
+
+
+## 🚨 Environment Gate (Runtime Validation)
+
+All test workflows that use the API rely on a shared **environment validation gate** implemented in the `api_client` fixture.
+
+This gate runs at the start of each pytest session (only when a test requires the `api_client` fixture):
+
+- API is reachable
+- Credentials are valid
+- Environment is correctly configured
+
+If validation fails:
+
+- The job exits immediately
+- No tests are executed
+- Exit code `10` is used to distinguish infra failures from test failures
+
+### Why this design
+
+- Avoids adding a dedicated CI stage
+- Eliminates redundant checks
+- Reduces CI runtime cost
+- Prevents noisy test failures
+
+### CI Observability
+
+CI systems can detect environment failures via exit code:
+
+```bash
+if [ $? -eq 10 ]; then
+  echo "🚨 Environment failure"
+fi
+```
+
 ### Why Segmentation Matters
 
 Splitting pipelines by intent because:
@@ -443,7 +478,7 @@ disappear without requiring workflow changes.
 ## 2.1 preflight.yml ⚡
 
 ### Purpose
-Ultra-fast validation before expensive infrastructure tests.
+Ultra-fast validation before expensive infrastructure tests (it checks framework sanity).
 
 ### What It Tests
 - Framework imports & boot

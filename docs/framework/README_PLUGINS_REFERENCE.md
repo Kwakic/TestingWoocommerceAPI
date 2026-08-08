@@ -6,7 +6,7 @@ If this document conflicts with any README or comment, **this document wins**.
 
 ---
 
-## 🎯 Core Principles
+# 🎯 Core Principles
 
 1. Plugins are isolated units
 2. Plugins must never import each other
@@ -16,7 +16,7 @@ If this document conflicts with any README or comment, **this document wins**.
 
 ---
 
-## 🏛️ Architecture Layers
+# 🏛️ Architecture Layers
 
 ```
 ┌─────────────────────────────┐
@@ -48,9 +48,9 @@ Environment / CI / CLI
 
 ---
 
-## 📋 Plugin Contracts
+# 📋 Plugin Contracts
 
-### logging_plugin.py
+## logging_plugin.py
 
 **Responsibilities**
 - Configure logging
@@ -70,7 +70,7 @@ Environment / CI / CLI
 
 ---
 
-### config_pytest.py
+## config_pytest.py
 
 **Responsibilities**
 - Read environment variables
@@ -84,7 +84,7 @@ This is the **only place** allowed to read env vars.
 
 ---
 
-### allure_autogen.py
+## allure_autogen.py
 
 **Responsibilities**
 - Allure lifecycle management
@@ -98,13 +98,14 @@ This is the **only place** allowed to read env vars.
 
 ---
 
-### api/shared.py
+## api/shared.py
 
 **Responsibilities**
 
 - Provide the shared `api_client` fixture.
 - Create framework-level HTTP infrastructure.
 - Expose common API utilities used by entity plugins.
+- Perform session-level environment validation (fail-fast gate)
 
 **Forbidden**
 
@@ -112,10 +113,25 @@ This is the **only place** allowed to read env vars.
 - Business logic.
 - Reading environment variables.
 
+### 🚨 Environment Gate Rule
+
+The shared `api_client` fixture is responsible for validating:
+
+- API connectivity
+- Authentication correctness
+- Environment configuration
+
+This validation must:
+
+- Run once per session
+- Terminate execution on failure (`pytest.exit`)
+- Produce a clear, non-test failure message
+
+This prevents cascading failures across all tests.
 
 ---
 
-### api/<entity>.py
+## api/<entity>.py
 
 **Responsibilities**
 
@@ -138,7 +154,7 @@ Examples:
 
 ---
 
-### entities.py
+## entities.py
 
 **Responsibilities**
 
@@ -153,7 +169,7 @@ README_ENTITY_DISCOVER_ARCHITECTURE_GUIDE.md
 
 ---
 
-### entity_metadata.py
+## entity_metadata.py
 
 **Responsibilities**
 
@@ -165,7 +181,7 @@ This module defines framework architecture rather than runtime resources.
 
 ---
 
-### reporting.py
+## reporting.py
 
 **Responsibilities**
 
@@ -177,7 +193,7 @@ This plugin consumes runtime metadata but does not perform test execution.
 
 ---
 
-### db_fixtures.py
+## db_fixtures.py
 
 **Responsibilities**
 
@@ -190,7 +206,7 @@ Database fixtures must remain infrastructure-focused and contain no business log
 
 ---
 
-## 🚫 Forbidden Patterns (Hard Rules)
+# 🚫 Forbidden Patterns (Hard Rules)
 
 ❌ Plugin importing plugin
 
@@ -204,7 +220,7 @@ Database fixtures must remain infrastructure-focused and contain no business log
 
 ---
 
-## 💡 Why This Matters
+# 💡 Why This Matters
 
 Breaking these rules causes:
 - Pytest rewrite warnings
@@ -216,7 +232,7 @@ Breaking these rules causes:
 This architecture exists to prevent exactly those failures.
 
 ---
-## ⚠️ Important Note:
+# ⚠️ Important Note:
 
 fixtures are not auto-discovered across arbitrary nested folders unless they’re exposed via conftest.py or registered
 plugins.
@@ -225,7 +241,7 @@ So putting api_fixtures.py under tests/customers/plugins/ and expecting global a
 
 ---
 
-## 🏁 Final Rule
+# 🏁 Final Rule
 
 If you are unsure where something belongs:
 

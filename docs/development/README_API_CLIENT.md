@@ -242,6 +242,17 @@ TEST ASSERTIONS ✅
 ```
 
 ---
+
+## 🚨 Environment Validation (Framework-Level)
+
+The API client is used by a session-scoped pytest fixture
+that performs a one-time environment validation before tests run.
+
+This is not part of the request lifecycle itself, but a framework-level
+safety mechanism to prevent invalid test execution.
+
+
+---
 # 🧪 Validation Layer
 
 After the API client returns an HttpResponse, validation happens in
