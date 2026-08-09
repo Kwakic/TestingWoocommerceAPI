@@ -75,6 +75,26 @@ WP_ADMIN_EMAIL="test@test.com"
 exec 3>&1
 exec 1>&2
 
+# ------------------------------------------------------------------
+# Retry helper for transient failures (network, apt, downloads)
+# Usage: retry <max_attempts> <command...>
+# ------------------------------------------------------------------
+retry() {
+  local -r max="$1"; shift
+  local -i i=0
+
+  until "$@"; do
+    i=$((i+1))
+
+    if [ "$i" -ge "$max" ]; then
+      echo "❌ Command failed after $max attempts: $*" >&2
+      return 1
+    fi
+
+    echo "⚠️ Retry #$i for: $*" >&2
+    sleep $((5 * i))
+  done
+}
 
 # ------------------------------------------------------------------
 # Bootstrap starts here
@@ -86,8 +106,10 @@ echo "════════════════════════�
 echo
 
 echo "⏳ Waiting for WordPress container..."
-until curl -s http://localhost:8080/wp-json > /dev/null; do
-  sleep 5
+# Use a slightly stricter probe to fail fast on network issues but loop until ready.
+until curl -fsS --max-time 5 http://localhost:8080/wp-json > /dev/null; do
+  echo "Waiting for WordPress..."
+  sleep 3
 done
 
 # ------------------------------------------------------------------
@@ -141,15 +163,30 @@ if ! docker compose -f docker-compose.wp.yml run --rm \
 then
     echo "🚀 Installing WooCommerce..."
 
-    docker compose -f docker-compose.wp.yml exec -T wordpress bash -c "
-        apt-get update -qq &&
-        apt-get install -y -qq unzip curl &&
-        cd /var/www/html/wp-content/plugins &&
-        rm -rf woocommerce woocommerce.zip &&
-        curl -fsSL -o woocommerce.zip https://downloads.wordpress.org/plugin/woocommerce.9.1.4.zip &&
-        unzip -oq woocommerce.zip &&
-        rm -f woocommerce.zip &&
-        chown -R www-data:www-data woocommerce
+     Run the install inside the container but wrap the host-side call in retries.
+    # Use DEBIAN_FRONTEND=noninteractive inside the container to avoid debconf TTY issues.
+    retry 5 docker compose -f docker-compose.wp.yml exec -T wordpress bash -c "
+      set -e
+      export DEBIAN_FRONTEND=noninteractive
+      apt-get update -qq &&
+      apt-get install -y -qq unzip curl || true
+
+      cd /var/www/html/wp-content/plugins || exit 1
+
+      rm -rf woocommerce woocommerce.zip || true
+
+      curl --fail -L \
+       --retry 5 \
+       --retry-connrefused \
+       --retry-delay 5 \
+       --connect-timeout 10 \
+       --max-time 120 \
+       -o woocommerce.zip \
+       https://downloads.wordpress.org/plugin/woocommerce.9.1.4.zip
+
+      unzip -oq woocommerce.zip && \
+      rm -f woocommerce.zip && \
+      chown -R www-data:www-data woocommerce
     "
 fi
 
@@ -187,7 +224,7 @@ docker compose -f docker-compose.wp.yml run --rm \
 # ------------------------------------------------------------------
 echo -n "⏳ Waiting for WooCommerce REST API"
 
-until curl -fsS http://localhost:8080/wp-json/wc/v3 > /dev/null; do
+until curl -fsS --max-time 5 http://localhost:8080/wp-json/wc/v3 > /dev/null; do
     echo -n "."
     sleep 3
 done

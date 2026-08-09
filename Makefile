@@ -32,10 +32,10 @@
 # --------------------------------------------------
 ensure-env:
 	@if [ ! -f .env ]; then \
-		echo "[INFO] .env not found — creating from .env.example"; \
+		echo "[INFO] .env not found - creating from .env.example"; \
 		cp .env.example .env; \
 	else \
-		echo "[OK] .env already exists — leaving it untouched"; \
+		echo "[OK] .env already exists - leaving it untouched"; \
 	fi
 
 # --------------------------------------------------

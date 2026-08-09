@@ -67,47 +67,84 @@ runs:
         echo "✅ MySQL is ready"
 
     # --------------------------------------------------
-    # 3. Bootstrap WooCommerce
+    # 3. Bootstrap WooCommerce (with retries)
     #
-    # Executes custom setup script which:
-    # - installs/configures WooCommerce
-    # - creates API credentials
-    # - prepares test environment
+    # Executes scripts/setup.sh in a retry loop to tolerate
+    # transient CI/network failures (e.g. WordPress downloads).
     #
-    # scripts/setup.sh prints ONLY the WC_KEY / WC_SECRET
-    # lines on its stdout (everything else — progress, WP-CLI chatter —
-    # goes to stderr, so it still streams live in this step's log).
-    # CI never touches a .env file: the credential lines go straight
-    # into $GITHUB_ENV, since GITHUB_ENV already accepts KEY=VALUE
-    # lines in exactly that format.
+    # Key behavior:
+    # - Retries the full bootstrap up to N attempts
+    # - Captures stdout (credentials) separately from stderr (logs)
+    # - Prints stderr tail on failure for fast debugging
+    #
+    # Contract with setup.sh:
+    # - setup.sh prints ONLY WC_KEY / WC_SECRET to stdout
+    # - all logs (progress, WP-CLI, curl, etc.) go to stderr
+    #
+    # CI responsibility:
+    # - Validates that both WC_KEY and WC_SECRET exist
+    # - Writes them directly into $GITHUB_ENV
+    # - Never touches a .env file
+    #
+    # This preserves a clean separation:
+    # - setup.sh = environment bootstrap (pure, reusable)
+    # - CI        = orchestration, retries, observability
+    #
+    # - Fails only after all retry attempts are exhausted
     # --------------------------------------------------
-    - name: Bootstrap WooCommerce and capture credentials
+    - name: Bootstrap WooCommerce and capture credentials (with retries)
       shell: bash
       run: |
-        set -e
+        set -euo pipefail
 
-        if ! CREDENTIALS=$(bash scripts/setup.sh); then
-          echo "❌ WooCommerce bootstrap failed"
+        MAX_ATTEMPTS=3
+        RETRY_DELAY=20
 
-          echo
-          echo "===== WordPress logs ====="
-          docker compose -f docker-compose.wp.yml logs wordpress
+        for ATTEMPT in $(seq 1 $MAX_ATTEMPTS); do
+          echo "Bootstrap attempt $ATTEMPT/$MAX_ATTEMPTS"
 
-          echo
-          echo "===== MySQL logs ====="
-          docker compose -f docker-compose.wp.yml logs db
+          set +e
+          TMP_ERR=$(mktemp)
+          TMP_OUT=$(mktemp)
 
-          exit 1
-        fi
+          bash scripts/setup.sh >"$TMP_OUT" 2>"$TMP_ERR"
+          RC=$?
 
-        if [[ -z "$CREDENTIALS" ]]; then
-          echo "❌ setup.sh produced no credentials"
-          exit 1
-        fi
+          set -e
 
-        echo "$CREDENTIALS" >> "$GITHUB_ENV"
+          CREDENTIALS=$(tr -d '\r' < "$TMP_OUT")
 
-        echo "✅ Fresh WooCommerce API credentials generated"
+          if [ $RC -eq 0 ] && \
+             grep -q '^WC_KEY=' <<< "$CREDENTIALS" && \
+             grep -q '^WC_SECRET=' <<< "$CREDENTIALS"; then
+
+            echo "$CREDENTIALS" >> "$GITHUB_ENV"
+            echo "✅ Fresh WooCommerce API credentials generated"
+
+            rm -f "$TMP_ERR" "$TMP_OUT"
+            exit 0
+          fi
+
+          echo "❌ setup.sh failed (attempt $ATTEMPT/$MAX_ATTEMPTS). RC=$RC"
+
+          echo "----- Tail of setup.sh stderr -----"
+          tail -n 200 "$TMP_ERR" || true
+          echo "-----------------------------------"
+
+          rm -f "$TMP_ERR" "$TMP_OUT"
+
+          if [ $ATTEMPT -lt $MAX_ATTEMPTS ]; then
+            echo "Retrying in $RETRY_DELAY seconds..."
+            sleep $RETRY_DELAY
+          fi
+        done
+
+        echo "❌ WooCommerce bootstrap failed after $MAX_ATTEMPTS attempts"
+
+        docker compose -f docker-compose.wp.yml logs wordpress || true
+        docker compose -f docker-compose.wp.yml logs db || true
+
+        exit 1
 
     # --------------------------------------------------
     # 4. Configure database connection
