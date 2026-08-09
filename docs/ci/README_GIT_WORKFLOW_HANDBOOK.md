@@ -1556,6 +1556,184 @@ git add <file>
 
 ---
 
+## 🔹 7. Local `main` Behind Remote + Uncommitted Changes (VERY COMMON)
+
+Working locally on the main branch meantime someone commit changes on main.
+
+---
+
+### 🧠 Problem Summary
+
+You are on `main` and run:
+
+```bash
+git fetch
+```
+
+and then
+
+```bash
+git status
+```
+
+Output:
+
+```text
+On branch main
+Your branch is behind 'origin/main' by X commit(s), and can be fast-forwarded.
+
+Changes to be committed:
+  modified: ...
+  new file: ...
+```
+
+👉 This means:
+
+- Remote `main` has new commits ✅
+- Your local `main` is outdated ❗
+- You ALSO have staged or uncommitted changes ❌
+
+---
+
+### ❗ Why This Is Dangerous
+
+If you run:
+
+```bash
+git pull
+```
+
+Git will try to:
+
+```
+Merge remote changes + your local uncommitted changes
+```
+
+This can lead to:
+
+- ❌ Merge conflicts
+- ❌ Accidental commits directly into `main`
+- ❌ Corrupted history
+- ❌ Hard-to-debug state
+
+---
+
+### 🚨 Root Cause
+
+You started working directly on `main` instead of a feature branch.
+
+---
+
+### ✅ Correct Solution (Step-by-Step)
+
+#### 🔵 Step 1 — Move your work to a feature branch
+
+```bash
+git switch -c feature/my-work
+```
+
+---
+
+#### 🔵 Step 2 — Commit your work (CRITICAL STEP)
+
+```bash
+git add .
+git commit -m "your message"
+```
+
+---
+
+#### 🔵 Step 3 — Switch back to `main`
+
+```bash
+git switch main
+git status
+```
+
+Expected:
+
+```
+working tree clean
+```
+
+---
+
+#### 🔵 Step 4 — Update `main`
+
+```bash
+git pull origin main
+```
+
+---
+
+#### 🔵 Step 5 — Sync your feature branch with updated `main`
+
+```bash
+git switch feature/my-work
+git fetch origin
+git rebase origin/main
+```
+
+---
+
+#### 🔵 Step 6 — Push your branch
+
+```bash
+git push -u origin feature/my-work
+```
+
+---
+
+### 🧠 Final Result
+
+```
+main:
+  clean + synced with origin
+
+feature/my-work:
+  contains your commits
+  rebased on latest main
+```
+
+---
+
+### ❌ What NOT to Do
+
+```bash
+git pull
+```
+
+---
+
+### 💡 Key Concept
+
+```
+Uncommitted changes belong to your working directory,
+NOT to a branch.
+```
+
+---
+
+### 🧠 Pro Tip
+
+Always run before pulling:
+
+```bash
+git status
+```
+
+If you see changes → STOP and fix your state first.
+
+---
+
+### 🏁 Summary
+
+| Situation | Action |
+|----------|--------|
+| main behind remote + dirty | create branch → commit → update main |
+| clean main | safe to pull |
+| working on main | move to feature branch immediately |
+
 
 ---
 # 🔒 5. Protect `main` Branch (GitHub)
