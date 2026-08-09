@@ -163,31 +163,31 @@ if ! docker compose -f docker-compose.wp.yml run --rm \
 then
     echo "🚀 Installing WooCommerce..."
 
-     Run the install inside the container but wrap the host-side call in retries.
-    # Use DEBIAN_FRONTEND=noninteractive inside the container to avoid debconf TTY issues.
-    retry 5 docker compose -f docker-compose.wp.yml exec -T wordpress bash -c "
-      set -e
-      export DEBIAN_FRONTEND=noninteractive
-      apt-get update -qq &&
-      apt-get install -y -qq unzip curl || true
+# Run the install inside the container but wrap the host-side call in retries.
+# Use DEBIAN_FRONTEND=noninteractive inside the container to avoid debconf TTY issues.
+retry 5 docker compose -f docker-compose.wp.yml exec -T wordpress bash -c "
+  set -e
+  export DEBIAN_FRONTEND=noninteractive
+  apt-get update -qq &&
+  apt-get install -y -qq unzip curl || true
 
-      cd /var/www/html/wp-content/plugins || exit 1
+  cd /var/www/html/wp-content/plugins || exit 1
 
-      rm -rf woocommerce woocommerce.zip || true
+  rm -rf woocommerce woocommerce.zip || true
 
-      curl --fail -L \
-       --retry 5 \
-       --retry-connrefused \
-       --retry-delay 5 \
-       --connect-timeout 10 \
-       --max-time 120 \
-       -o woocommerce.zip \
-       https://downloads.wordpress.org/plugin/woocommerce.9.1.4.zip
+  curl --fail -L \
+    --retry 5 \
+    --retry-connrefused \
+    --retry-delay 5 \
+    --connect-timeout 10 \
+    --max-time 120 \
+    -o woocommerce.zip \
+    https://downloads.wordpress.org/plugin/woocommerce.9.1.4.zip
 
-      unzip -oq woocommerce.zip && \
-      rm -f woocommerce.zip && \
-      chown -R www-data:www-data woocommerce
-    "
+  unzip -oq woocommerce.zip && \
+  rm -f woocommerce.zip && \
+  chown -R www-data:www-data woocommerce
+"
 fi
 
 if ! docker compose -f docker-compose.wp.yml run --rm \
