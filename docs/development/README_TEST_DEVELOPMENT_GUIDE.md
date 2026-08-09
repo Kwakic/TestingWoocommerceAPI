@@ -163,6 +163,12 @@ Check WC_KEY / WC_SECRET in .env
 - Fail once
 - Fail clearly
 
+
+**💡 Note:**
+
+Pagination is additionally protected at runtime to prevent incomplete datasets.
+See `README_ARCHITECTURE.md` → *Failure Handling & Data Integrity Layers*.
+
 ---
 
 ## 3. 🧱 Architecture & Layer Responsibilities

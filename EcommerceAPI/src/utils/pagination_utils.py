@@ -9,18 +9,46 @@ import logging
 import time
 from copy import deepcopy
 
+from EcommerceAPI.src.utils.exceptions import UnexpectedStatusCodeError
+
 logger = logging.getLogger(__name__)
+
+# Status codes that should stop pagination immediately — retrying won't help.
+# All 4xx EXCEPT 429: client errors (400, 401, 403, 404, 422, ...) are deterministic,
+# so retrying the same request just wastes time. 429 (rate limit) is left out on
+# purpose — APIClient already backs off on it, and a bit more waiting can still help.
+DEFAULT_FAIL_FAST_STATUSES = frozenset(range(400, 500)) - {429}
+
+
+class PaginationAbortedError(UnexpectedStatusCodeError):
+    """
+    Raised when pagination is stopped early due to an unrecoverable API error
+    (fail-fast status, or a page that failed every retry).
+
+    Inherits from UnexpectedStatusCodeError, so `response` / `response_json`
+    are available for debugging — consistent with the rest of the framework.
+    """
 
 
 def paginate_all_results(
-    api_client, endpoint, params=None, max_pages=1000, retries=3, retry_delay=1.0
+    api_client,
+    endpoint,
+    params=None,
+    max_pages=1000,
+    retries=3,
+    retry_delay=1.0,
+    fail_fast_statuses=DEFAULT_FAIL_FAST_STATUSES,
 ):
     """
-        Generic pagination handler for WooCommerce-style endpoints with simple retry logic.
+    Generic pagination handler for WooCommerce-style endpoints with retry logic.
 
-    🔧 ADDED:
-        - Added retry logic per page fetch (retries=3, delay=1.0s).
-        - Keeps logic explicit (no recursion or decorators) for readability.
+    🔧 Behavior:
+        - Retries transient failures (network errors, 5xx, bad payloads) up to `retries` times per page.
+        - Immediately aborts (no retries) on `fail_fast_statuses` (default: all 4xx except 429) —
+          deterministic client errors (auth, permissions, bad params, not found, etc.) that a retry
+          will never fix. 429 is excluded on purpose since it's a "try again later" signal.
+        - Aborts pagination entirely if a page still fails after all retries are exhausted, instead of
+          silently skipping to the next page.
 
     Args:
         api_client (APIClient): Utility class to perform authenticated requests.
@@ -29,9 +57,15 @@ def paginate_all_results(
         max_pages (int): Maximum number of pages to fetch.
         retries (int): How many times to retry a failed page request.
         retry_delay (float): Delay (seconds) between retries.
+        fail_fast_statuses (set[int]): HTTP status codes that abort pagination immediately
+            instead of retrying. Defaults to all 4xx except 429.
 
     Returns:
         list: Aggregated list of all items fetched from the endpoint.
+
+    Raises:
+        PaginationAbortedError: If a fail-fast status is returned, or if a page still fails
+            after all retries are exhausted.
     """
     logger.debug(f"🧰 Starting paginated fetch for '{endpoint}'")
     all_items = []
@@ -43,6 +77,7 @@ def paginate_all_results(
         attempt = 0
         success = False
         response = None
+        http_response = None
 
         while attempt < retries and not success:
             try:
@@ -50,38 +85,56 @@ def paginate_all_results(
                     f"📦 Fetching {endpoint} page {i} (attempt {attempt + 1}/{retries})"
                 )
                 http_response = api_client.get(endpoint, params=params)
+                status_code = http_response.status_code
 
-                # ✅ Validate status code for pagination calls
-                assert http_response.status_code == 200, (
-                    f"❌ Pagination request failed for {endpoint} page={i}. "
-                    f"Expected status 200, got {http_response.status_code}"
-                )
+                # 🚨 Fail fast on deterministic client errors — retrying won't fix these
+                if status_code in fail_fast_statuses:
+                    raise PaginationAbortedError(
+                        f"🚨 Pagination aborted for '{endpoint}' page={i}: "
+                        f"got status {status_code}. This is a client error (4xx) — "
+                        f"check credentials, permissions, or request params.",
+                        response=http_response,
+                        response_json=http_response.json,
+                    )
+
+                # ✅ Validate status code for pagination calls.
+                # Explicit check, not `assert` — asserts get stripped under `python -O`
+                # and raise a non-semantic AssertionError.
+                if status_code != 200:
+                    raise UnexpectedStatusCodeError(
+                        f"❌ Pagination request failed for {endpoint} page={i}. "
+                        f"Expected status 200, got {status_code}",
+                        response=http_response,
+                        response_json=http_response.json,
+                    )
 
                 logger.debug(
                     "📄 Pagination request OK: endpoint=%s page=%s status=%s",
                     endpoint,
                     i,
-                    http_response.status_code,
+                    status_code,
                 )
 
                 response = http_response.json
 
-                # Safety: ensure response is an iterable list. Stop pagination if no response or empty list is returned
+                # Safety: stop pagination cleanly when the API reports no more results
                 if not response:
-                    total_pages = i - 1
                     logger.info(f"⛔ Stop pagination (no more results at page {i})")
-                    logger.info(f"📊 Total pages fetched: {total_pages}")
+                    logger.info(f"📊 Total pages fetched: {i - 1}")
                     return all_items
-
-                items_count = len(response)
-                logger.info(f"➡️ Page {i} → {items_count} items")
 
                 if not isinstance(response, list):
                     raise TypeError(
                         f"Expected list response for pagination, got {type(response)}"
                     )
 
+                items_count = len(response)
+                logger.info(f"➡️ Page {i} → {items_count} items")
+
                 success = True
+            except PaginationAbortedError:
+                # 🚫 Don't retry fail-fast errors — propagate immediately
+                raise
             except Exception as e:
                 attempt += 1
                 logger.warning(
@@ -93,85 +146,19 @@ def paginate_all_results(
                     logger.error(
                         f"❌ Giving up on page {i} after {retries} failed attempts."
                     )
-                    break
 
-        if success and response:
-            all_items.extend(response)
+        if not success:
+            # 🚫 Don't silently move on to the next page — a failed page means the dataset is incomplete
+            raise PaginationAbortedError(
+                f"🚨 Pagination aborted for '{endpoint}': page {i} failed after {retries} attempts.",
+                response=http_response,
+                response_json=http_response.json if http_response is not None else None,
+            )
+
+        all_items.extend(response)
 
     logger.info(f"📊 Total items fetched: {len(all_items)}")
     logger.debug(
         f"✅ Completed paginated fetch for '{endpoint}' — Total items: {len(all_items)}"
     )
     return all_items
-
-
-# NOTE: You can to make this retry logic configurable via environment variable (e.g. PAGINATION_RETRY_COUNT)?
-# That’s sometimes handy when you run tests on unstable remote WooCommerce hosts.
-
-
-# Looking at the pagination_utils.py you provided, I can see it needs refactoring to match the customers_helper pattern. The current version has some issues:
-#
-#     ❌ Uses low-level api_client.get() directly
-#     ❌ Has retry logic (should be in APIClient, not pagination)
-#     ❌ Manual page looping (not consistent with customers approach)
-#     ❌ Uses http_response.json directly (should use .json attribute)
-#
-# Here's the refactored pagination_utils.py that matches the customers_helper approach:Perfect! I've refactored pagination_utils.py to be fully consistent with the customers_helper architecture. Here's what changed:
-# ✅ Key Refactoring Changes:
-# From Old Pattern:
-# Python
-#
-# # ❌ Manual retry logic (duplicated)
-# while attempt < retries and not success:
-#     try:
-#         http_response = api_client.get(...)
-#         # retry handling, sleep, etc.
-#     except:
-#         attempt += 1
-#         if attempt < retries:
-#             time.sleep(retry_delay)
-#
-# # ❌ Mixed concerns (pagination + retry)
-# # ❌ Hard to read and maintain
-#
-# To New Pattern:
-# Python
-#
-# # ✅ Clean, simple pagination loop
-# for page_num in range(1, max_pages + 1):
-#     params["page"] = page_num
-#
-#     try:
-#         # ✅ APIClient.get() handles ALL retry logic internally
-#         http_response = api_client.get(endpoint, params=params)
-#
-#         # ✅ Just check status and process response
-#         if http_response.status_code != 200:
-#             break
-#
-#         response_data = http_response.json
-#
-#         if not response_data:  # Empty page = done
-#             break
-#
-#         all_items.extend(response_data)
-#     except Exception as e:
-#         logger.error(...)
-#         break
-#
-# ✅ What This Aligns With:
-# Aspect	Old	New	Customers Pattern
-# Retry logic	❌ Manual (in pagination)	✅ Delegated to APIClient	✅ APIClient handles it
-# HTTP calls	api_client.get()	api_client.get()	✅ Same
-# Response handling	http_response.json	http_response.json	✅ Same
-# Error handling	Manual try/except + retry	Simple try/except	✅ Clean
-# Logging	Basic debug logs	Structured emoji logs	✅ Consistent
-# Concerns	Pagination + Retry mixed	Pagination only	✅ Separated
-# ✅ Benefits:
-#
-# ✅ Single Responsibility — pagination only, no retry logic
-# ✅ DRY — retry logic lives once in APIClient, not duplicated
-# ✅ Maintainable — easy to read and understand
-# ✅ Consistent — same pattern as customers_helper
-# ✅ Debuggable — cleaner logs, fewer nested try/except blocks
-# ✅ Reliable — APIClient's retry logic is battle-tested

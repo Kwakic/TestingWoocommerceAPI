@@ -781,15 +781,15 @@ TestEcommerceAPI (project suite/root)
 │     ├── setup.sh                                   ← Project setup script
 │     └── write_env_credentials.sh                   ← Environment credential setup
 │
-│─── wp-data/...
+│─── wp-data/...                                     ← Persistent storage for local WordPress and database data
 │─── Makefile                                        ← Orchestrates common tasks (make run, make test, etc.)
-│─── .dockerignore                                   ←
+│─── .dockerignore                                   ← Specifies files to exclude from Docker build context
 │─── .env                                            ← Local environment variables & credentials
 │─── .env.example                                    ← Template for .env file
-│─── .gitattributes                                  ←
-│─── .gitignore                                      ←
-│─── .gitlab-ci.yml                                  ←
-│─── .pre-commit-config.yaml                         ←
+│─── .gitattributes                                  ← Configures file attributes like line endings and LFS
+│─── .gitignore                                      ← Specifies untracked files that Git should ignore
+│─── .gitlab-ci.yml                                  ← Defines the GitLab CI/CD pipeline automation workflows
+│─── .pre-commit-config.yaml                         ← Configures Git hooks to run automated code checks before commits
 │─── CHANGELOG.md                                    ← Project changelog
 │─── conftest.py                                     ← Shared root-level fixtures & hooks
 │─── docker-compose.matrix.yml                       ← Multi-container setup (WordPress, WooCommerce, MySQL)

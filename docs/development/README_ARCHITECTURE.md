@@ -5,58 +5,154 @@ A unified, multi-team API automation platform for testing Customers, Orders, Cou
 This README reflects the current repository layout and recent changes:
 - Reporting moved to Allure (pytest writes Allure results; CI generates HTML).
 - Plugins are modular and live under the shared framework package.
-- CI keeps matrix testing (one job per microservice) and installs Allure at job runtime.
+- CI uses segmented workflows (preflight, smoke, regression, etc.)
+  combined with matrix execution (one job per microservice where applicable).
 - Runtime Docker images are kept small and do not include Allure by default.
 
 ---
 
-## Repository layout (important parts)
+## 🗃️ Repository layout (important parts)
 
 Top-level (trimmed):
 
 ```
-TestEcommerceAPI/
-├── .github/workflows/ci.yaml
-├── .gitlab/ci.yaml
-├── EcommerceAPI/                 ← SHARED installable framework (package root)
-│   ├── plugins/                  ← shared pytest plugins (only plugins here)
-│   │   ├── __init__.py
-│   │   ├── _config.py
-│   │   ├── logging_plugin.py
-│   │   ├── reporting.py
-│   │   ├── allure_autogen.py     ← Allure lifecycle + optional auto-generation
-│   │   ├── api_fixtures.py
-│   │   ├── db_fixtures.py
-│   │   └── entities.py
-│   ├── src/                      ← reusable utilities, configs, helpers
-│   ├── pyproject.toml
-│   └── cli.py
-├── reports/                      ← host-mounted test output (Allure + logs)
-│   ├── allure-report/            ← generated HTML (CI/host)
-│   ├── allure-results/           ← Allure raw results (json/xml/attachments)
-│   └── logs/
-│       └── <team>/<env>/...jsonl  ← structured JSONL logs per-team / env
-├── tests/
-│   ├── customers/
-│   ├── orders/
-│   ├── coupons/
-│   ├── products/
-│   └── shared/
-│          preflight/
-│          contracts/
-│          security/
+.
+├── EcommerceAPI/              # installable framework
+│   └── plugins/
+│       ├── config_pytest.py
+│       ├── logging_plugin.py
+│       ├── entity_metadata.py
+│       ├── entities.py
+│       ├── api/
+│       │   ├── shared.py
+│       │   ├── customers.py
+│       │   ├── products.py
+│       │   ├── orders.py
+│       │   └── coupons.py
 │
-├── docker-compose.matrix.yml
-├── Dockerfile
-├── conftest.py                    ← top-level pytest loader that sets pytest_plugins
-└── pytest.ini
+├── tests/                     # test suites (by entity)
+├── docs/                      # framework + CI + guides
+├── scripts/                   # setup + CI helpers
+├── .github/workflows/         # CI pipelines
+├── Makefile                   # orchestration
+├── docker-compose.wp.yml
+├── .env.example
+├── .env                       # local only
+├── pyproject.toml             # repo-level config
+```
+
+👉 For a full breakdown of the structure, responsibilities, and where to extend the framework:
+
+📚 [Full Project Structure](./docs/project-structure/README_project_navigation.md)
+
+
+---
+
+# ⚙️ Execution Model (How tests actually run)
+
+The framework is designed to be executed through a **controlled orchestration layer**, not by calling `pytest` directly.
+
+👉 The canonical entrypoint is:
+
+```bash
+make run
+```
+
+## 🧩 What make run does
+
+`make run` orchestrates the full lifecycle:
+
+**1. 🐳 Spin up environment**
+* Docker Compose starts WordPress + WooCommerce
+
+**2. 🔑 Provision credentials**
+* WooCommerce generates WC_KEY / WC_SECRET
+* Credentials are injected into runtime environment
+
+**3. ⚙️ Configure framework**
+* Environment variables resolved
+* API client configured dynamically
+
+**4. 🧪 Execute tests**
+* pytest runs with proper environment
+* Allure results are generated
+
+**5. 📦 Collect artifacts**
+* Reports (Allure)
+* Structured logs
+
+**6. 🧹 Tear down (optional)**
+* Containers stopped/cleaned
+
+---
+
+## ❗ Why NOT run pytest directly?
+
+Running pytest manually bypasses:
+
+* ❌ Environment provisioning
+* ❌ Credential generation
+* ❌ Proper configuration
+* ❌ Docker isolation
+
+---
+
+### 🧠 Correct mental model
+
+pytest is the execution engine, but it must run within a correctly
+provisioned environment (Docker + credentials).
+
+- Use `make run` for full orchestration
+- Use `pytest` directly only when the environment is already prepared
+
+This can lead to:
+
+* authentication failures
+* inconsistent environments
+* misleading test results
+
+---
+
+## 🧠 Design Principle
+
+👉 pytest is the execution engine,
+👉 make run is the system orchestrator
+
+```
+make run
+   ↓
+Docker + setup
+   ↓
+pytest
+   ↓
+plugins
+   ↓
+fixtures (api/)
+   ↓
+helpers
+   ↓
+API / DB
 ```
 
 ---
 
-## Shared framework package (EcommerceAPI)
+## 🧠 Architecture Style
 
-- This folder is a pip-installable package: use `pip install -e EcommerceAPI` for local development.
+The framework follows a layered architecture:
+
+- Orchestration layer (Makefile / Docker)
+- Execution layer (pytest)
+- Plugin layer (shared behavior)
+- Fixture layer (entity-scoped setup)
+- Helper layer (business logic)
+- API/DB layer (system under test)
+
+
+---
+
+## 🧩 Shared framework package (EcommerceAPI)
+
+- This folder is a pip-installable package: use `pip install -e './EcommerceAPI[dev]'` for local development.
 - Only *shared* pytest plugins belong in `EcommerceAPI/plugins/`. They are global to all test suites.
 - `EcommerceAPI/src/` contains universal utilities used by all microservices (logging, request helpers, env utils, etc.).
 
@@ -64,7 +160,7 @@ Key shared plugins:
 - `logging_plugin.py` — logging setup, ContextVar injection, early redaction, structured JSONL output, and session metadata.
 - `reporting.py` — Allure labels + attach structured JSONL logs on failed tests.
 - `allure_autogen.py` — ensures results directory lifecycle and optionally generates Allure HTML at session finish if `AUTO_ALLURE_REPORT` is enabled.
-- `api_fixtures.py`, `db_fixtures.py`, `entities.py`, `_config.py` — other shared fixtures/config.
+- `api_fixtures.py`, `db_fixtures.py`, `entities.py`, `config_pytest.py` — other shared fixtures/config.
 
 ---
 
@@ -74,45 +170,109 @@ Top-level `conftest.py` uses:
 
 ```python
 pytest_plugins = [
-    "EcommerceAPI.plugins.logging",        # MUST load first
-    "EcommerceAPI.plugins._config",
+    "EcommerceAPI.plugins.logging_plugin",        # MUST load first
+    "EcommerceAPI.plugins.config_pytest",
     "EcommerceAPI.plugins.reporting",
     "EcommerceAPI.plugins.allure_autogen", # manage Allure lifecycle
     "EcommerceAPI.plugins.entities",
     "EcommerceAPI.plugins.db_fixtures",
     "EcommerceAPI.plugins.api_fixtures",
+    "EcommerceAPI.plugins.entity_metadata",
+    # -----------------------
+    # API Layer (split by domain) This layer provides entity-scoped pytest fixtures and acts as the bridge between pytest and the helper/API layers.
+    # -----------------------
+    "EcommerceAPI.plugins.api.shared",
+    "EcommerceAPI.plugins.api.customers",
+    "EcommerceAPI.plugins.api.products",
+    "EcommerceAPI.plugins.api.orders",
+    "EcommerceAPI.plugins.api.coupons",
 ]
+
 ```
 
 Order matters: logging must load first so all log records are created with the custom factory and redaction rules.
 
+
+
+### 🧩 API Fixture Layer (plugins/api/)
+
+This layer provides **entity-scoped pytest fixtures** and is responsible for:
+
+- Creating domain-specific test data (e.g. `create_valid_customer`)
+- Providing helpers (`customers_helper`, `products_helper`)
+- Abstracting API interactions from test code
+
+It acts as the bridge between:
+
+pytest → fixtures → helpers → API client
+
+This design ensures:
+- Tests remain clean and declarative
+- Business logic stays in helpers
+- API details are fully encapsulated
+
+
+
 ---
 
-## Running tests (local & CI)
+## 🧪 Running tests (advanced / internal)
 
-General recommendations and examples.
+⚠️ This is **not the recommended way** to run the framework.
 
-- Run full test suite and produce Allure results:
+👉 Use `make run` unless you explicitly need low-level control.
 
-  ```bash
-  pytest tests --alluredir=reports/allure-results
-  ```
+---
 
-- Run a single microservice (e.g. `customers`) and write results to per-service folder:
+### 🔧 When to use this
 
-  ```bash
-  pytest tests/customers --alluredir=reports/customers/allure-results
-  ```
+Direct `pytest` execution is useful for:
 
-- CI & matrix jobs: each matrix job should run only one service and write results to `reports/<service>/allure-results`.
+- debugging a specific test
+- developing locally with an already running environment
+- CI internal steps (inside jobs)
 
-- To generate HTML (Allure):
-  - CI: install Allure CLI in the job and run:
-    ```bash
-    allure generate reports/<service>/allure-results -o reports/<service>/allure-report --clean
-    ```
-    The `allure_autogen` plugin can also attempt generation automatically when `AUTO_ALLURE_REPORT=true` and `allure` is present.
-  - Local: install Allure CLI (Homebrew or manual tarball) and run the command above.
+---
+
+### 🧪 Examples
+
+Run full test suite:
+
+```bash
+pytest tests --alluredir=reports/allure-results
+```
+
+Run a single microservice:
+
+
+```
+pytest tests/customers --alluredir=reports/customers/allure-results
+```
+
+---
+
+### ❗ Requirements
+
+This assumes:
+
+* environment is already running (Docker)
+* credentials are already valid
+* configuration is already resolved
+
+Otherwise results will be unreliable.
+
+---
+
+# 🧠 Why this matters
+
+Right now your doc says:
+
+> “Here’s how to run tests”
+
+But in reality:
+
+> “Here’s how to bypass the system safely (if you know what you're doing)”
+
+That’s a **big difference in architecture maturity**.
 
 ---
 
@@ -173,25 +333,38 @@ before executing Docker Compose commands that invoke WP-CLI.
 
 ---
 
-## CI (GitHub Actions & GitLab)
+## 🛠️ CI/CD Architecture
 
-- The project keeps matrix testing (one job per microservice). Benefits:
-  - Parallel runs → faster feedback
-  - Failure isolation per team/service
+The framework uses **segmented GitHub Actions workflows**, not a single monolithic pipeline.
 
-- Recommended CI behavior:
-  - Install project dependencies (`pip install -e .[test]`).
-  - Run pytest for the single service in the job with `--alluredir=reports/<service>/allure-results`.
-  - If `AUTO_ALLURE_REPORT=true`, install Allure CLI in the job and generate HTML only if results exist.
-  - Upload artifacts:
-    - `reports/<service>/allure-report/**` (HTML)
-    - `reports/<service>/allure-results/**` (raw results)
-    - `EcommerceAPI/tests/api/logs/<service>/**/*.jsonl` (structured logs)
+Each workflow answers a specific question:
 
-- Running a single-service pipeline:
-  - GitHub: set the `SERVICE` env (or add `workflow_dispatch` input) to run only that service in discovery step.
-  - GitLab: set the `SERVICE` CI variable to limit the child pipeline to the specified service.
+- preflight → can the framework run?
+- smoke → are critical flows working?
+- contract → did the schema change?
+- integration → API ↔ DB consistency
+- regression → full coverage
+- performance → latency + SLA
+- security → auth & permissions
 
+This design provides:
+
+- Faster feedback
+- Clear failure ownership
+- Independent execution
+- Better reporting (Allure per suite)
+
+---
+
+## 🚀 CI Platform
+
+The framework is designed for **GitHub Actions**.
+
+Previous references to GitLab CI are legacy and no longer supported.
+
+Key integrations:
+- GitHub Actions (execution)
+- GitHub Pages (Allure reports)
 ---
 
 ## 🌍 Environment & Configuration
@@ -246,6 +419,93 @@ endpoint resolution and runtime configuration.
 
 ---
 
+# 🧩 Failure Handling & Data Integrity Layers
+
+The framework enforces reliability and correctness through **three complementary layers**:
+
+| Layer | Responsibility |
+|------|----------------|
+| 🚪 Env Gate (`api_client` fixture) | Validate environment once (fail fast before any test runs) |
+| 🔁 APIClient | Retry transient issues (5xx, 429) |
+| 📦 Pagination | Ensure **data integrity + fail-fast correctness** |
+
+---
+
+## 🚪 1. Environment Gate (Session-Level)
+
+- Runs **once per pytest session**
+- Calls `system_status`
+- Aborts execution using `pytest.exit()` if:
+  - credentials are missing
+  - authentication fails (401)
+  - API is unreachable
+
+👉 Prevents:
+- noisy test runs
+- repeated failures
+- infinite pagination loops caused by invalid environment
+
+---
+
+## 🔁 2. APIClient (Retry Layer)
+
+Handles **transient failures only**:
+
+- Retries:
+  - `429` (rate limiting)
+  - `5xx` (server errors)
+  - connection issues
+
+- Does **NOT**:
+  - raise on 4xx
+  - enforce business correctness
+
+👉 Responsibility:
+"Try again if it *might* succeed."
+
+---
+
+## 📦 3. Pagination (Data Integrity Layer)
+
+Pagination is responsible for **correctness of aggregated data**, not transport.
+
+### Key guarantees:
+
+- 🚨 Fail-fast on deterministic errors (all 4xx except 429)
+- 🛑 Abort pagination if a page fails after retries
+- ❌ Never silently skip pages
+- 📊 Never return partial datasets
+
+### Why this exists:
+
+The environment gate only validates **once at session start**.
+
+Failures can still occur:
+- mid-test
+- per-endpoint (permissions)
+- due to bad parameters
+
+👉 Pagination enforces correctness **at the point of data aggregation**
+
+---
+
+## 🧠 Design Principle
+
+Each layer handles a different failure moment:
+
+| When | Who handles it |
+|------|----------------|
+| Before tests start | 🚪 Env Gate |
+| During request (transient) | 🔁 APIClient |
+| During data aggregation | 📦 Pagination |
+
+This avoids:
+- duplicated logic
+- hidden failures
+- inconsistent datasets
+
+---
+
 ## Reports & logs layout
 
 Examples (host `./reports/`):
@@ -283,7 +543,7 @@ reports/
 - Structured logs missing:
   - Is `ENABLE_STRUCTURED_LOGS=true`? Is `LOG_DIR` writable?
 - Duplicate or missing logging fields:
-  - Ensure `EcommerceAPI.plugins.logging` loads first (conftest order) — it installs the LogRecord factory.
+  - Ensure `EcommerceAPI.plugins.logging_plugin` loads first (conftest order) — it installs the LogRecord factory.
 
 ---
 
@@ -291,7 +551,7 @@ reports/
 
 - Install framework locally:
   ```bash
-  pip install -e EcommerceAPI
+  pip install -e './EcommerceAPI[dev]'
   ```
 
 - Run customers tests and write Allure results:
