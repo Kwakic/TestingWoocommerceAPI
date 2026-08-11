@@ -232,6 +232,98 @@ done
 echo
 echo "✅ WooCommerce REST API is ready"
 
+# ------------------------------------------------------------------
+# STEP 2.7 — Ensure GraphQL plugins are installed and active
+#
+# WPGraphQL provides the GraphQL engine.
+# WPGraphQL for WooCommerce exposes WooCommerce data through GraphQL.
+#
+# Both plugins are provisioned here so the same environment can be
+# reproduced locally and in CI.
+# ------------------------------------------------------------------
+
+echo "📦 Checking WPGraphQL plugin..."
+
+if ! docker compose -f docker-compose.wp.yml run --rm \
+    -e HTTP_HOST="$WP_HTTP_HOST" \
+    wpcli wp plugin is-installed wp-graphql --allow-root
+then
+    echo "🚀 Installing WPGraphQL..."
+
+    retry 5 docker compose -f docker-compose.wp.yml run --rm \
+        -e HTTP_HOST="$WP_HTTP_HOST" \
+        wpcli wp plugin install wp-graphql --activate --allow-root
+else
+    echo "✅ WPGraphQL already installed"
+fi
+
+if ! docker compose -f docker-compose.wp.yml run --rm \
+    -e HTTP_HOST="$WP_HTTP_HOST" \
+    wpcli wp plugin is-active wp-graphql --allow-root
+then
+    echo "🔌 Activating WPGraphQL..."
+
+    docker compose -f docker-compose.wp.yml run --rm \
+        -e HTTP_HOST="$WP_HTTP_HOST" \
+        wpcli wp plugin activate wp-graphql --allow-root
+else
+    echo "✅ WPGraphQL already active"
+fi
+
+
+echo "📦 Checking WPGraphQL for WooCommerce plugin..."
+
+if ! docker compose -f docker-compose.wp.yml run --rm \
+    -e HTTP_HOST="$WP_HTTP_HOST" \
+    wpcli wp plugin is-installed wp-graphql-woocommerce --allow-root
+then
+    echo "🚀 Installing WPGraphQL for WooCommerce..."
+
+    retry 5 docker compose -f docker-compose.wp.yml run --rm \
+        -e HTTP_HOST="$WP_HTTP_HOST" \
+        wpcli wp plugin install \
+        https://github.com/wp-graphql/wp-graphql-woocommerce/releases/latest/download/wp-graphql-woocommerce.zip \
+        --activate \
+        --allow-root
+else
+    echo "✅ WPGraphQL for WooCommerce already installed"
+fi
+
+if ! docker compose -f docker-compose.wp.yml run --rm \
+    -e HTTP_HOST="$WP_HTTP_HOST" \
+    wpcli wp plugin is-active wp-graphql-woocommerce --allow-root
+then
+    echo "🔌 Activating WPGraphQL for WooCommerce..."
+
+    docker compose -f docker-compose.wp.yml run --rm \
+        -e HTTP_HOST="$WP_HTTP_HOST" \
+        wpcli wp plugin activate wp-graphql-woocommerce --allow-root
+else
+    echo "✅ WPGraphQL for WooCommerce already active"
+fi
+
+
+# ------------------------------------------------------------------
+# STEP 2.8 — Wait for GraphQL API
+#
+# WordPress may report the plugins as active before the GraphQL
+# endpoint is ready to accept requests.
+# ------------------------------------------------------------------
+
+echo -n "⏳ Waiting for GraphQL API"
+
+until curl -fsS --max-time 5 \
+    -H "Content-Type: application/json" \
+    -X POST \
+    -d '{"query":"{ __typename }"}' \
+    http://localhost:8080/graphql > /dev/null
+do
+    echo -n "."
+    sleep 3
+done
+
+echo
+echo "✅ GraphQL API is ready"
 
 # ------------------------------------------------------------------
 # STEP 3 — Generate fresh WooCommerce API credentials

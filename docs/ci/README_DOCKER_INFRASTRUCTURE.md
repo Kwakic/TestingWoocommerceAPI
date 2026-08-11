@@ -57,7 +57,7 @@ The stack gives you a disposable, reproducible WooCommerce instance to run API +
 | Service  | Role                                    |
 |----------|------------------------------------------|
 | `db`     | MySQL — backing database for WordPress   |
-| `wordpress` | WordPress + WooCommerce application server, exposed on `http://localhost:8888` |
+| `wordpress` | WordPress + WooCommerce application server, exposed on http://localhost:8080 |
 | `wpcli`  | WP-CLI — runs one-off commands (install WP, install/activate WooCommerce, generate API keys) |
 
 This is orchestrated by `docker-compose.wp.yml` at the repo root, and bootstrapped by `scripts/setup.sh`.
@@ -172,7 +172,7 @@ python -m pip install -e "./EcommerceAPI[dev]"
 pytest
 ```
 The framework talks to:
-- **API** → `http://localhost:8888/wp-json/wc/v3/`
+- **API** → `http://localhost:8080/wp-json/wc/v3/`
 - **DB** → the `db` MySQL container, for direct state validation
 
 ---

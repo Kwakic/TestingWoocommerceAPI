@@ -129,6 +129,7 @@ class HttpClient:
             and prevents test suites from hanging indefinitely.
         """
         # Persistent session improves performance via connection reuse
+        # The session automatically stores cookies and handles connections
         self.session = requests.Session()
 
         # Default request timeout

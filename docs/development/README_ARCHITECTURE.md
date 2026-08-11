@@ -181,7 +181,7 @@ pytest_plugins = [
     # -----------------------
     # API Layer (split by domain) This layer provides entity-scoped pytest fixtures and acts as the bridge between pytest and the helper/API layers.
     # -----------------------
-    "EcommerceAPI.plugins.api.shared",
+    "EcommerceAPI.plugins.api.shared_api",
     "EcommerceAPI.plugins.api.customers",
     "EcommerceAPI.plugins.api.products",
     "EcommerceAPI.plugins.api.orders",

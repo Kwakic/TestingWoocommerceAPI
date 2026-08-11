@@ -24,7 +24,7 @@ pytest_plugins = [
     # -----------------------
     # API Layer (split by domain)
     # -----------------------
-    "EcommerceAPI.plugins.api.shared",
+    "EcommerceAPI.plugins.api.shared_api",
     "EcommerceAPI.plugins.api.customers",
     "EcommerceAPI.plugins.api.products",
     "EcommerceAPI.plugins.api.orders",

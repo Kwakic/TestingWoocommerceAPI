@@ -118,7 +118,49 @@ For details see:
 
 docs/framework/README_ENVIRONMENT_CONFIG_GUIDE.md
 
+
 ---
+
+## 🧭 Local Development Environment
+
+For normal local development, pytest runs on the host against the
+Dockerized WordPress + WooCommerce environment.
+
+The local Docker environment uses:
+
+```text
+API_ENV=test
+```
+
+With `API_ENV=test:`
+
+* pytest runs on the host
+* WordPress + WooCommerce run in Docker
+* the framework resolves the API endpoint for the Dockerized environment
+
+This is the recommended setup for local framework development.
+
+Use `make run `to provision the complete local Docker environment. It:
+
+* creates .env if needed
+* starts Docker
+* provisions WordPress and WooCommerce
+* generates WooCommerce API credentials
+* updates WC_KEY and WC_SECRET
+* runs the test suite
+
+>Important: .env contains environment-specific credentials anddatabase settings. Do not reuse credentials or database configurationfrom one environment against another.
+
+For environment resolution details, see:
+
+[Environment & Config Guide](./docs/framework/README_ENVIRONMENT_CONFIG_GUIDE.md)
+
+
+
+
+
+---
+
 
 ## Running tests (recommended commands)
 
