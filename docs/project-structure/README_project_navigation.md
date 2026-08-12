@@ -66,7 +66,8 @@ EcommerceAPI/
 │
 ├── plugins/                          ← pytest plugin system
 │   ├── api/
-│   │   ├── shared.py                 ← API client infrastructure
+│   │   ├── shared_api.py             ← Shared REST API fixtures
+│   │   ├── shared_graphql.py         ← Shared GraphQL fixtures
 │   │   ├── customers.py              ← @pytest.fixture for customers
 │   │   ├── products.py               ← @pytest.fixture for products
 │   │   ├── coupons.py                ← @pytest.fixture for coupons
@@ -89,8 +90,10 @@ EcommerceAPI/
 │   │   └── __init__.py
 │   │
 │   ├── configs/
-│   │   ├── config_loader.py          ← Load environment configs
-│   │   ├── runtime_config.py         ← Runtime configuration
+│   │   ├── config_qraphql.py         ← GraphQL endpoint configuration by environment
+│   │   ├── config_loader.py          ← Load environment and service configuration
+│   │   ├── runtime_config.py         ← Framework runtime configuration
+│   │   ├── runtime_metadata.py       ← Runtime session metadata (shared, plugin-agnostic)
 │   │   ├── README.md                 ← Configuration guide
 │   │   └── __init__.py
 │   │
@@ -104,14 +107,16 @@ EcommerceAPI/
 │   │   ├── auth_resolver.py          ← Auth resolution logic
 │   │   └── __init__.py
 │   │
-│   ├── core/                         ← HTTP transport layer
-│   │   ├── http_client.py            ← Low-level requests wrapper
-│   │   ├── http_response.py          ← Response object model
+│   ├── core/                         ← Core HTTP transport and response models
+│   │   ├── http_client.py            ← Low-level HTTP transport wrapper
+│   │   ├── graphql_response.py       ← GraphQL response and error model
+│   │   ├── http_response.py          ← Generic HTTP response object model
 │   │   ├── request_context.py        ← Request context tracking
 │   │   └── __init__.py
 │   │
 │   ├── clients/                      ← High-level API orchestration
-│   │   ├── api_client.py             ← Main API client (uses http_client)
+│   │   ├── api_client.py             ← Main REST API client (uses http_client)
+│   │   ├── graphql_client.py         ← Main GraphQL API client (uses http_client)
 │   │   └── __init__.py
 │   │
 │   ├── customers/                    ← Domain: Customers
@@ -565,6 +570,7 @@ TestEcommerceAPI (project suite/root)
 │     ├── framework/
 │     │     ├── README_PLUGINS_REFERENCE.md          ← Pytest plugin architecture
 │     │     ├── README_ENVIRONMENT_CONFIG_GUIDE.md   ← API_ENV and configuration resolution
+│     │     ├── README_GRAPHQL.md                    ← GraphQL architecture and usage guide
 │     │     ├── README_CONFIG_CONTRACT.md            ← Configuration schema/contract
 │     │     ├── README_AUTHENTICATION.md             ← Credential handling
 │     │     ├── README_LOGGING_ARCHITECTURE.md       ← Structured logging design
@@ -586,7 +592,8 @@ TestEcommerceAPI (project suite/root)
 │     ├── ecommerceapitest.egg-info/..
 │     ├── plugins/                                   ← pytest plugin system
 │     │     ├── api/
-│     │     │     ├── shared.py                      ← api_client-infrastructure (API client, auth, etc.)
+│     │     │     ├── shared_api.py                  ← Shared REST API fixtures
+│     │     │     ├── shared_graphql.py              ← Shared GraphQL fixtures
 │     │     │     ├── customers.py                   ← @pytest.fixture for customers
 │     │     │     ├── products.py                    ← @pytest.fixture for products
 │     │     │     ├── coupons.py                     ← @pytest.fixture for coupons
@@ -611,8 +618,10 @@ TestEcommerceAPI (project suite/root)
 │     │     └── __init__.py
 │     │
 │     ├── configs/
-│     │   ├── config_loader.py                       ← Load environment configs
-│     │   ├── runtime_config.py                      ← Runtime configuration
+│     │   ├── config_graphql.py                      ← GraphQL endpoint configuration by environment
+│     │   ├── config_loader.py                       ← Load environment and service configuration
+│     │   ├── runtime_config.py                      ← Framework runtime configuration
+│     │   ├── runtime_metadata.py                    ← Runtime session metadata (shared, plugin-agnostic)
 │     │   ├── README.md                              ← Configuration guide
 │     │   └── __init__.py
 │     │
@@ -626,14 +635,16 @@ TestEcommerceAPI (project suite/root)
 │     │   ├── auth_resolver.py                       ← Auth resolution logic
 │     │   └── __init__.py
 │     │
-│     ├── core/                                      ← HTTP transport layer
-│     │   ├── http_client.py                         ← Low-level requests wrapper
-│     │   ├── http_response.py                       ← Response object model
+│     ├── core/                                      ← Core HTTP transport and response models
+│     │   ├── http_client.py                         ← Low-level HTTP transport wrapper
+│     │   ├── http_response.py                       ← Generic HTTP response object model
+│     │   ├── graphql_response.py                    ← GraphQL response and error model
 │     │   ├── request_context.py                     ← Request context tracking
 │     │   └── __init__.py
 │     │
 │     ├── clients/                                   ← High-level API orchestration
-│     │   ├── api_client.py                          ← Main API client (uses http_client)
+│     │   ├── api_client.py                          ← Main REST API client (uses http_client)
+│     │   ├── graphql_client.py                      ← Main GraphQL API client (uses http_client)
 │     │   └── __init__.py
 │     │
 │     ├── customers/                                 ← Domain: Customers

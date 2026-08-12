@@ -121,6 +121,41 @@ Nothing needs to be run manually — no separate `docker compose up`, no manual 
 
 ---
 
+### ⚠️ Running multiple local environments
+
+`make run` is idempotent when used with the same project environment.
+You do **not** need to run `make down` before every `make run`.
+
+However, this project uses fixed host ports for its Docker services
+(WordPress: `8080`, MySQL: `3306`). Therefore, two separate
+TestEcommerceAPI environments cannot normally run simultaneously on the
+same machine.
+
+For example, if you have both a development checkout and a separate
+public/clean checkout using the same Docker Compose configuration, make
+sure only one environment is running at a time:
+
+```bash
+make down
+```
+
+Then, from the environment you want to use:
+
+```bash
+make run
+```
+
+This avoids port conflicts and prevents commands from one repository
+from accidentally interacting with containers belonging to another
+checkout.
+
+> ⚠️ Important: `make down` is a precaution when switching between
+separate local environments. It is not required before every
+make run.
+
+
+---
+
 ## 3.5 🔑 Bootstrap responsibilities
 
 The local bootstrap process intentionally separates responsibilities across multiple components.

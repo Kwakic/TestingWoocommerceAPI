@@ -234,6 +234,23 @@ This command automatically:
 - Generates REST API credentials
 - Prepares the local test environment
 
+
+> **⚠️ Running multiple local environments**
+>
+> `make run` is idempotent when used with the same project environment, so `make down` is **not required before every `make run`**.
+>
+> However, the Docker environment uses fixed host ports. If you have another TestEcommerceAPI checkout running on the same machine (for example, a development checkout and a separate clean/public checkout), stop the other environment first:
+>
+> ```bash
+> make down
+> ```
+>
+> Then run `make run` from the environment you want to use.
+>
+> This prevents port conflicts and ensures that Docker commands are operating on the intended project environment.
+
+
+
 ### Execute the test suite
 
 ```bash

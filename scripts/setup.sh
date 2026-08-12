@@ -50,6 +50,10 @@ WP_ADMIN_USER="admin"
 WP_ADMIN_PASSWORD="admin"
 WP_ADMIN_EMAIL="test@test.com"
 
+WOOCOMMERCE_VERSION="9.1.4"
+WPGRAPHQL_VERSION="2.19.0"
+WPGRAPHQL_WOOCOMMERCE_VERSION="1.0.3"
+
 # ------------------------------------------------------------------
 # Stdout / stderr split - human vs machine output (Machine-readable output contract).
 #
@@ -182,7 +186,7 @@ retry 5 docker compose -f docker-compose.wp.yml exec -T wordpress bash -c "
     --connect-timeout 10 \
     --max-time 120 \
     -o woocommerce.zip \
-    https://downloads.wordpress.org/plugin/woocommerce.9.1.4.zip
+    "https://downloads.wordpress.org/plugin/woocommerce.${WOOCOMMERCE_VERSION}.zip"
 
   unzip -oq woocommerce.zip && \
   rm -f woocommerce.zip && \
@@ -239,7 +243,8 @@ echo "✅ WooCommerce REST API is ready"
 # WPGraphQL for WooCommerce exposes WooCommerce data through GraphQL.
 #
 # Both plugins are provisioned here so the same environment can be
-# reproduced locally and in CI.
+# reproduced locally and in CI. Versions are pinned above rather than
+# installing "latest", so every environment gets the same combination.
 # ------------------------------------------------------------------
 
 echo "📦 Checking WPGraphQL plugin..."
@@ -248,11 +253,12 @@ if ! docker compose -f docker-compose.wp.yml run --rm \
     -e HTTP_HOST="$WP_HTTP_HOST" \
     wpcli wp plugin is-installed wp-graphql --allow-root
 then
-    echo "🚀 Installing WPGraphQL..."
+    echo "🚀 Installing WPGraphQL (pinned to $WPGRAPHQL_VERSION)..."
 
+    # Pinned via WPGRAPHQL_VERSION — see version block above STEP 2.7.
     retry 5 docker compose -f docker-compose.wp.yml run --rm \
         -e HTTP_HOST="$WP_HTTP_HOST" \
-        wpcli wp plugin install wp-graphql --activate --allow-root
+        wpcli wp plugin install wp-graphql --version="$WPGRAPHQL_VERSION" --activate --allow-root
 else
     echo "✅ WPGraphQL already installed"
 fi
@@ -277,12 +283,18 @@ if ! docker compose -f docker-compose.wp.yml run --rm \
     -e HTTP_HOST="$WP_HTTP_HOST" \
     wpcli wp plugin is-installed wp-graphql-woocommerce --allow-root
 then
-    echo "🚀 Installing WPGraphQL for WooCommerce..."
+    echo "🚀 Installing WPGraphQL for WooCommerce (pinned to $WPGRAPHQL_WOOCOMMERCE_VERSION)..."
 
+    # Pinned via WPGRAPHQL_WOOCOMMERCE_VERSION — see version block above STEP 2.7.
+    # This follows GitHub's standard release-asset URL pattern
+    # (releases/download/<tag>/<asset>), the same asset filename that
+    # releases/latest/download/... already resolved to in a verified run.
+    # Worth a manual sanity check after a version bump, since GitHub's
+    # asset naming isn't guaranteed to stay identical across releases.
     retry 5 docker compose -f docker-compose.wp.yml run --rm \
         -e HTTP_HOST="$WP_HTTP_HOST" \
         wpcli wp plugin install \
-        https://github.com/wp-graphql/wp-graphql-woocommerce/releases/latest/download/wp-graphql-woocommerce.zip \
+        "https://github.com/wp-graphql/wp-graphql-woocommerce/releases/download/v${WPGRAPHQL_WOOCOMMERCE_VERSION}/wp-graphql-woocommerce.zip" \
         --activate \
         --allow-root
 else
@@ -308,15 +320,35 @@ fi
 #
 # WordPress may report the plugins as active before the GraphQL
 # endpoint is ready to accept requests.
+#
+# This deliberately waits indefinitely, same as the WordPress and
+# WooCommerce REST readiness checks above — no arbitrary attempt
+# ceiling. The script waits until the service is genuinely ready,
+# not until a guess about how long that "should" take.
+#
+# GraphQL's HTTP 200 does NOT necessarily mean success (see
+# graphql_response.py's contract) — a 200 response can still carry
+# an errors[] payload. So this probe sends a real query
+# ({ __typename }) and checks the response body, not just the HTTP
+# status:
+#   - must contain "__typename"  -> GraphQL actually answered
+#   - must NOT contain "errors"  -> not a GraphQL-level failure
+#
+# curl runs with -s (silent, no -S) and stderr redirected to
+# /dev/null, so the connection-refused/timeout attempts that are
+# normal during WordPress startup don't spam the console — only the
+# final "ready" state gets printed.
 # ------------------------------------------------------------------
 
 echo -n "⏳ Waiting for GraphQL API"
 
-until curl -fsS --max-time 5 \
+until RESPONSE=$(curl -s --max-time 5 \
     -H "Content-Type: application/json" \
     -X POST \
     -d '{"query":"{ __typename }"}' \
-    http://localhost:8080/graphql > /dev/null
+    http://localhost:8080/graphql 2>/dev/null) &&
+    grep -q '"__typename"' <<< "$RESPONSE" &&
+    ! grep -q '"errors"' <<< "$RESPONSE"
 do
     echo -n "."
     sleep 3
