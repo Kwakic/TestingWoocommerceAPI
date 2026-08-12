@@ -212,7 +212,7 @@ tests/
 │   │   └── create_customer_payload.json ← Test payloads
 │   ├── __init__.py
 │   ├── conftest.py                  ← Domain-specific fixtures
-│   ├── api/
+│   ├── api/                         ← REST API tests for this business entity
 │   │   ├── test_create_customer.py
 │   │   ├── test_customer_deletion.py
 │   │   ├── test_customer_filters.py
@@ -221,6 +221,9 @@ tests/
 │   │   ├── test_get_customer.py
 │   │   ├── test_soft_deleted_customer_handling.py
 │   │   ├── test_update_customer.py
+│   │   └── __init__.py
+│   ├── graphql/                       ← GraphQL queries/mutations
+│   │   ├── test_customer_queries.py
 │   │   └── __init__.py
 │   └── performance/
 │       ├── test_customer_performance.py
@@ -240,6 +243,9 @@ tests/
 │   ├── security/                     ← Security & auth validation
 │   │   ├── test_authentication_matrix.py ← Auth scheme matrix
 │   │   ├── test_authentication_success.py ← Successful auth scenarios
+│   │   └── __init__.py
+│   ├── graphQL/                               ← GraphQL framework-level tests
+│   │   ├── test_graphql_smoke.py
 │   │   └── __init__.py
 │   └── preflight/                    ← Pre-test checks
 │       ├── test_logging_globals.py   ← Logging validation
@@ -750,7 +756,7 @@ TestEcommerceAPI (project suite/root)
 │     │   │   └── create_customer_payload.json       ← Test payloads
 │     │   ├── __init__.py
 │     │   ├── conftest.py                            ← Domain-specific fixtures
-│     │   ├── api/
+│     │   ├── api/                                   ← REST API tests for this business entity
 │     │   │   ├── test_create_customer.py
 │     │   │   ├── test_customer_deletion.py
 │     │   │   ├── test_customer_filters.py
@@ -759,6 +765,9 @@ TestEcommerceAPI (project suite/root)
 │     │   │   ├── test_get_customer.py
 │     │   │   ├── test_soft_deleted_customer_handling.py
 │     │   │   ├── test_update_customer.py
+│     │   │   └── __init__.py
+│     │   ├── graphql/                               ← GraphQL queries/mutations for this business entity
+│     │   │   ├── test_customer_queries.py
 │     │   │   └── __init__.py
 │     │   └── performance/
 │     │       ├── test_customer_performance.py
@@ -778,6 +787,9 @@ TestEcommerceAPI (project suite/root)
 │     │   ├── security/                              ← Security & auth validation
 │     │   │   ├── test_authentication_matrix.py      ← Auth scheme matrix
 │     │   │   ├── test_authentication_success.py     ← Successful auth scenarios
+│     │   │   └── __init__.py
+│     │   ├── graphQL/                               ← GraphQL framework-level tests
+│     │   │   ├── test_graphql_smoke.py
 │     │   │   └── __init__.py
 │     │   └── preflight/                             ← Pre-test checks
 │     │       ├── test_logging_globals.py            ← Logging validation
