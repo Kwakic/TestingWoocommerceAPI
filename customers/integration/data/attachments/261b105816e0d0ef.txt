@@ -1,0 +1,84 @@
+INFO     root:bulk_ops.py:34 🧪 Starting bulk create+validate for 3 customers(s)
+INFO     root:bulk_ops.py:43 ➕ Creating customers 1/3
+DEBUG    EcommerceAPI.src.utils.generic_utilities:generic_utilities.py:32 📝 Generating random email and password.
+DEBUG    EcommerceAPI.src.utils.generic_utilities:generic_utilities.py:49 📝 Generated credentials email and password=***'email': 'testuser_lnqityohvh@supersqa.com', 'password': '***'}
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:179 ⚙️ Creating customers with payload keys: ['email', 'password', 'billing', 'shipping']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password', 'billing', 'shipping']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.199s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=3, email=testuser_lnqityohvh@supersqa.com
+DEBUG    EcommerceAPI.plugins.api.customers:customers.py:219 ℹ️ Registered customers with ID: 3 for cleanup.
+INFO     root:bulk_ops.py:43 ➕ Creating customers 2/3
+DEBUG    EcommerceAPI.src.utils.generic_utilities:generic_utilities.py:32 📝 Generating random email and password.
+DEBUG    EcommerceAPI.src.utils.generic_utilities:generic_utilities.py:49 📝 Generated credentials email and password=***'email': 'testuser_glibgqthij@supersqa.com', 'password': '***'}
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:179 ⚙️ Creating customers with payload keys: ['email', 'password', 'billing', 'shipping']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password', 'billing', 'shipping']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.195s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=4, email=testuser_glibgqthij@supersqa.com
+DEBUG    EcommerceAPI.plugins.api.customers:customers.py:219 ℹ️ Registered customers with ID: 4 for cleanup.
+INFO     root:bulk_ops.py:43 ➕ Creating customers 3/3
+DEBUG    EcommerceAPI.src.utils.generic_utilities:generic_utilities.py:32 📝 Generating random email and password.
+DEBUG    EcommerceAPI.src.utils.generic_utilities:generic_utilities.py:49 📝 Generated credentials email and password=***'email': 'testuser_audzapecha@supersqa.com', 'password': '***'}
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:179 ⚙️ Creating customers with payload keys: ['email', 'password', 'billing', 'shipping']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password', 'billing', 'shipping']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.207s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=5, email=testuser_audzapecha@supersqa.com
+DEBUG    EcommerceAPI.plugins.api.customers:customers.py:219 ℹ️ Registered customers with ID: 5 for cleanup.
+INFO     root:bulk_ops.py:59 🔍 Validating 3 created customers(s)
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:554 🔎 Validating customers integrity for email=testuser_lnqityohvh@supersqa.com
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:401 ⚙️ Calling 'List All Customers' via pagination utility
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:70 🧰 Starting paginated fetch for '/customers'
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:84 📦 Fetching /customers page 1 (attempt 1/3)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/customers?per_page=100&email=testuser_lnqityohvh%40supersqa.com&page=1 → Status code: 200 (completed in 0.074s)
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:111 📄 Pagination request OK: endpoint=/customers page=1 status=200
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:132 ➡️ Page 1 → 1 items
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:84 📦 Fetching /customers page 2 (attempt 1/3)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/customers?per_page=100&email=testuser_lnqityohvh%40supersqa.com&page=2 → Status code: 200 (completed in 0.071s)
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:111 📄 Pagination request OK: endpoint=/customers page=2 status=200
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:122 ⛔ Stop pagination (no more results at page 2)
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:123 📊 Total pages fetched: 1
+DEBUG    EcommerceAPI.src.customers.dao.customers_dao:customers_dao.py:66 ℹ️ Found customers for email 'testuser_lnqityohvh@supersqa.com': {'ID': 3, 'user_login': 'testuser_lnqityohvh', 'user_pass': '***', 'user_nicename': 'testuser_lnqityohvh', 'user_email': 'testuser_lnqityohvh@supersqa.com', 'user_url': '', 'user_registered': datetime.datetime(2026, 8, 12, 13, 29, 14), 'user_activation_key': '1786541354:$generic$6vJ2chbgvhMxRxWAvFtKFiGGvpFOfxUMD7xfNTzE', 'user_status': 0, 'display_name': 'testuser_lnqityohvh'}
+DEBUG    EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:294 ⚙️ Validating existence of customers by email: testuser_lnqityohvh@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=3, email=testuser_lnqityohvh@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:141 ✅ Customer found in dataset: id=3 email=testuser_lnqityohvh@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:302 ✅ Customer found in API response (id=3, email=testuser_lnqityohvh@supersqa.com)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:314 ✅ Customer matches database record (ID=3)
+INFO     EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:571 ✅ Customer validated against API and DB (email=testuser_lnqityohvh@supersqa.com)
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:554 🔎 Validating customers integrity for email=testuser_glibgqthij@supersqa.com
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:401 ⚙️ Calling 'List All Customers' via pagination utility
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:70 🧰 Starting paginated fetch for '/customers'
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:84 📦 Fetching /customers page 1 (attempt 1/3)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/customers?per_page=100&email=testuser_glibgqthij%40supersqa.com&page=1 → Status code: 200 (completed in 0.073s)
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:111 📄 Pagination request OK: endpoint=/customers page=1 status=200
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:132 ➡️ Page 1 → 1 items
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:84 📦 Fetching /customers page 2 (attempt 1/3)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/customers?per_page=100&email=testuser_glibgqthij%40supersqa.com&page=2 → Status code: 200 (completed in 0.072s)
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:111 📄 Pagination request OK: endpoint=/customers page=2 status=200
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:122 ⛔ Stop pagination (no more results at page 2)
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:123 📊 Total pages fetched: 1
+DEBUG    EcommerceAPI.src.customers.dao.customers_dao:customers_dao.py:66 ℹ️ Found customers for email 'testuser_glibgqthij@supersqa.com': {'ID': 4, 'user_login': 'testuser_glibgqthij', 'user_pass': '***', 'user_nicename': 'testuser_glibgqthij', 'user_email': 'testuser_glibgqthij@supersqa.com', 'user_url': '', 'user_registered': datetime.datetime(2026, 8, 12, 13, 29, 14), 'user_activation_key': '1786541354:$generic$0Bcq3TmPuPthmQ9okjDY_VeeXFhQI_coraePGP-E', 'user_status': 0, 'display_name': 'testuser_glibgqthij'}
+DEBUG    EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:294 ⚙️ Validating existence of customers by email: testuser_glibgqthij@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=4, email=testuser_glibgqthij@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:141 ✅ Customer found in dataset: id=4 email=testuser_glibgqthij@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:302 ✅ Customer found in API response (id=4, email=testuser_glibgqthij@supersqa.com)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:314 ✅ Customer matches database record (ID=4)
+INFO     EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:571 ✅ Customer validated against API and DB (email=testuser_glibgqthij@supersqa.com)
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:554 🔎 Validating customers integrity for email=testuser_audzapecha@supersqa.com
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:401 ⚙️ Calling 'List All Customers' via pagination utility
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:70 🧰 Starting paginated fetch for '/customers'
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:84 📦 Fetching /customers page 1 (attempt 1/3)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/customers?per_page=100&email=testuser_audzapecha%40supersqa.com&page=1 → Status code: 200 (completed in 0.084s)
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:111 📄 Pagination request OK: endpoint=/customers page=1 status=200
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:132 ➡️ Page 1 → 1 items
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:84 📦 Fetching /customers page 2 (attempt 1/3)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/customers?per_page=100&email=testuser_audzapecha%40supersqa.com&page=2 → Status code: 200 (completed in 0.084s)
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:111 📄 Pagination request OK: endpoint=/customers page=2 status=200
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:122 ⛔ Stop pagination (no more results at page 2)
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:123 📊 Total pages fetched: 1
+DEBUG    EcommerceAPI.src.customers.dao.customers_dao:customers_dao.py:66 ℹ️ Found customers for email 'testuser_audzapecha@supersqa.com': {'ID': 5, 'user_login': 'testuser_audzapecha', 'user_pass': '***', 'user_nicename': 'testuser_audzapecha', 'user_email': 'testuser_audzapecha@supersqa.com', 'user_url': '', 'user_registered': datetime.datetime(2026, 8, 12, 13, 29, 14), 'user_activation_key': '1786541354:$generic$pntiLbs84d5_Zzqm82yfQXFSn6p4IaKIvuewhmge', 'user_status': 0, 'display_name': 'testuser_audzapecha'}
+DEBUG    EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:294 ⚙️ Validating existence of customers by email: testuser_audzapecha@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:98 ✅ Customer structure valid: id=5, email=testuser_audzapecha@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:141 ✅ Customer found in dataset: id=5 email=testuser_audzapecha@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:302 ✅ Customer found in API response (id=5, email=testuser_audzapecha@supersqa.com)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:314 ✅ Customer matches database record (ID=5)
+INFO     EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:571 ✅ Customer validated against API and DB (email=testuser_audzapecha@supersqa.com)
+INFO     root:bulk_ops.py:77 ✅ All 3 customers(s) created and validated successfully
