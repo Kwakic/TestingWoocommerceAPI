@@ -1,4 +1,8 @@
 def test_graphql_returns_errors_for_invalid_field(graphql_client):
+    """
+    GraphQL can return HTTP 200 while containing GraphQL errors
+    """
+
     query = """
     {
         products(first: 1) {

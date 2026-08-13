@@ -27,6 +27,10 @@ real database record
 
 
 def test_create_product(graphql_client):
+    """
+    Authenticated GraphQL mutation creates a real product
+    """
+
     query = """
     mutation {
         createProduct(
