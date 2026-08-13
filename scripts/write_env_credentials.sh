@@ -9,32 +9,35 @@
 #
 # OUTPUT
 # ------
-# Updates only the dynamic WooCommerce entries:
+# Updates only the dynamically generated credential entries:
 #
 #   WC_KEY
 #   WC_SECRET
+#   WP_ADMIN_APP_PASSWORD
 #
 # Static configuration (database, logging, API_ENV,
-# etc.) remains owned by .env.example.
+# WP_ADMIN_USER, etc.) remains owned by .env.example.
 #
 # This separation keeps setup.sh focused solely on
-# provisioning WordPress/WooCommerce while this script
-# owns repository configuration updates.
+# provisioning WordPress/WooCommerce credentials while
+# this script owns repository configuration updates.
 # --------------------------------------------------
 
 
 # write_env_credentials.sh
 #
-# Single responsibility: read WC_KEY / WC_SECRET lines
-# from stdin and merge them into the local .env file — updating
-# existing keys in place, appending any that are missing, and
-# leaving every other line in .env completely untouched.
-# In other words --> merge generated WooCommerce credentials into the
-# repository .env file while preserving every other configuration entry.
+# Single responsibility: read generated credential lines from stdin
+# and merge them into the local .env file — updating existing keys in
+# place, appending any that are missing, and leaving every other line
+# in .env completely untouched.
+#
+# In other words: merge generated WooCommerce and GraphQL credentials
+# into the repository .env while preserving every other configuration entry.
 
 #
-# This is the ONLY place in the whole project that writes WooCommerce
-# credentials into .env. scripts/setup.sh never touches .env directly
+# This is the ONLY place in the whole project that writes generated
+# WooCommerce/GraphQL credentials into .env. scripts/setup.sh never
+# touches .env directly
 # (see the stdout/stderr split note near the top of that file).
 #
 # Usage:
@@ -53,7 +56,7 @@ while IFS='=' read -r key value; do
     [[ -z "$key" ]] && continue
 
     case "$key" in
-        WC_KEY|WC_SECRET)
+        WC_KEY|WC_SECRET|WP_ADMIN_APP_PASSWORD)
             if grep -q "^${key}=" .env; then
                 sed -i "s|^${key}=.*|${key}=${value}|" .env
             else
@@ -65,8 +68,8 @@ while IFS='=' read -r key value; do
 done
 
 if [[ "$UPDATED" -eq 0 ]]; then
-    echo "❌ No WC_KEY / WC_SECRET lines received on stdin — nothing to write" >&2
+    echo "❌ No generated credential lines received on stdin — nothing to write" >&2
     exit 1
 fi
 
-echo "💾 Updated .env with fresh WooCommerce credentials." >&2
+echo "💾 Updated .env with fresh WooCommerce and GraphQL credentials." >&2
