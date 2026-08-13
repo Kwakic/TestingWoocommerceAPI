@@ -62,6 +62,13 @@ services:
       WORDPRESS_DB_USER: wp
       WORDPRESS_DB_PASSWORD: wp
       WORDPRESS_DB_NAME: wordpress
+      # This stack is plain HTTP (no SSL). WordPress core only allows
+      # Application Passwords on sites using SSL OR sites whose
+      # environment type is explicitly "local":
+      #   wp_is_application_passwords_supported() = is_ssl() || 'local' === wp_get_environment_type()
+      # Without this, a valid Application Password is silently ignored
+      # over Basic Auth and the request is treated as anonymous.
+      WP_ENVIRONMENT_TYPE: local
 
     ports:
       - "8080:80"   # 🔥 API exposed to CI
@@ -91,6 +98,7 @@ services:
       WORDPRESS_DB_USER: wp
       WORDPRESS_DB_PASSWORD: wp
       WORDPRESS_DB_NAME: wordpress
+      WP_ENVIRONMENT_TYPE: local   # ✅ keep in sync with wordpress
 
     volumes:
       - ./wp-data:/var/www/html   # ✅ MUST match wordpress

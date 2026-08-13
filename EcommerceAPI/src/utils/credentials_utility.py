@@ -19,6 +19,19 @@ def get_wc_api_keys():
     return {"wc_key": wc_key, "wc_secret": wc_secret}
 
 
+def get_wp_admin_credentials():
+    wp_admin_user = os.environ.get("WP_ADMIN_USER")
+    wp_admin_app_password = os.environ.get("WP_ADMIN_APP_PASSWORD")
+    if not wp_admin_user or not wp_admin_app_password:
+        raise MissingCredentialsError(
+            "Set WP_ADMIN_USER and WP_ADMIN_APP_PASSWORD in environment or .env file."
+        )
+    return {
+        "wp_admin_user": wp_admin_user,
+        "wp_admin_app_password": wp_admin_app_password,
+    }
+
+
 def get_db_credentials():
     db_user = os.environ.get("DB_USER")
     db_password = os.environ.get("DB_PASSWORD")
