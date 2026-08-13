@@ -9,6 +9,7 @@
 # • Install WooCommerce
 # • Configure permalinks
 # • Generate fresh WooCommerce API credentials
+# • Generate a WordPress Application Password for GraphQL authentication
 
 
 # This script intentionally does NOT:
@@ -72,9 +73,9 @@ WPGRAPHQL_WOOCOMMERCE_VERSION="1.0.3"
 #   - the final credentials block is written explicitly to fd 3
 #
 # Result: `bash scripts/setup.sh` still shows full progress as
-# before. `OUTPUT=$(bash scripts/setup.sh)` captures ONLY the three
-# WC_KEY / WC_SECRET lines — nothing else. No .env
-# handling and no log-grepping required by the caller.
+# before. `OUTPUT=$(bash scripts/setup.sh)` captures ONLY the generated
+# credential lines — nothing else. No .env handling and no log-grepping
+# required by the caller.
 # ------------------------------------------------------------------
 exec 3>&1
 exec 1>&2
@@ -358,35 +359,36 @@ echo
 echo "✅ GraphQL API is ready"
 
 # ------------------------------------------------------------------
-# STEP 3 — Generate fresh WooCommerce API credentials
+# STEP 3 — Generate fresh API credentials# ------------------------------------------------------------------
 #
-# This step's responsibility ends the moment credentials exist. It
-# does NOT decide where they get stored — that belongs to whoever
-# called this script.
+# This step provisions the credentials required by both API surfaces:
 #
-# • WooCommerce stores the consumer key as a one-way hash, making
-#   existing credentials impossible to recover.
+#   • WooCommerce REST API → WC_KEY / WC_SECRET
+#   • WPGraphQL mutations  → WP_ADMIN_APP_PASSWORD
 #
-# • Rather than attempting recovery, this provisions a fresh
-#   credential pair on every execution — deterministic, cheap, and
-#   idempotent from the caller's point of view.
+# The credentials are generated here and emitted to the caller. This
+# script does NOT write .env directly; the caller decides where the
+# machine-readable output is stored (local .env or CI environment).
+#
+# WooCommerce credentials are regenerated because WooCommerce stores
+# the consumer key as a one-way hash and the original key cannot be
+# recovered.
+#
+# The GraphQL Application Password is also regenerated on each setup.
+# The previous Application Passwords are revoked first so repeated
+# provisioning does not accumulate stale credentials.
 # ------------------------------------------------------------------
 
 echo "🔑 Provisioning WooCommerce API credentials..."
 
 CREDENTIALS=$(
-docker compose -f docker-compose.wp.yml run --rm \
+  docker compose -f docker-compose.wp.yml run --rm \
     -e HTTP_HOST="$WP_HTTP_HOST" \
     wpcli wp eval '
 global $wpdb;
 
 // ---------------------------------------------------------------
 // Resolve the administrator account.
-//
-// Avoid assuming the administrator always has user ID 1.
-// Instead, locate the administrator configured by the setup
-// script so the implementation remains resilient to future
-// configuration changes.
 // ---------------------------------------------------------------
 
 $admin = get_user_by("login", "admin");
@@ -399,12 +401,11 @@ if (!$admin) {
 $user_id = $admin->ID;
 
 // ---------------------------------------------------------------
-// Remove previously generated API credentials.
+// Remove previously generated WooCommerce API credentials.
 //
 // The consumer key cannot be reconstructed because WooCommerce
-// stores only its hash. Regenerating credentials is therefore
-// deterministic, inexpensive and keeps the local environment
-// consistent.
+// stores only its hash. Regenerating credentials keeps the local
+// environment deterministic.
 // ---------------------------------------------------------------
 
 $wpdb->query(
@@ -412,7 +413,7 @@ $wpdb->query(
 );
 
 // ---------------------------------------------------------------
-// Generate a fresh credential pair.
+// Generate a fresh WooCommerce credential pair.
 // ---------------------------------------------------------------
 
 $key = wc_rand_hash();
@@ -431,11 +432,7 @@ $wpdb->insert(
 );
 
 // ---------------------------------------------------------------
-// Emit credentials for the caller.
-//
-// This is the ONLY output this script produces on its real stdout
-// (fd 3) — see the stdout/stderr split note near the top of the
-// file.
+// Emit WooCommerce credentials.
 // ---------------------------------------------------------------
 
 printf(
@@ -447,12 +444,39 @@ printf(
 )
 
 # ------------------------------------------------------------------
-# STEP 3.1 — Validate credentials (in-memory, no file involved)
+# STEP 3.1 — Generate a fresh WordPress Application Password
 #
-# Fail fast if provisioning did not complete successfully, before
-# handing anything back to the caller. This avoids obscure pytest
-# failures later in the workflow, and avoids ever handing back a
-# partial/broken credential set.
+# WPGraphQL mutation authentication uses WordPress Application
+# Passwords over HTTP Basic Auth. This is deliberately separate from
+# the WooCommerce OAuth1 credentials used by the REST API.
+#
+# WP_ENVIRONMENT_TYPE=local is configured in docker-compose.wp.yml,
+# which allows Application Password authentication on this plain-HTTP
+# local stack.
+#
+# The password is created with --porcelain so only the secret itself
+# is captured. It is never printed as human-readable setup output.
+# ------------------------------------------------------------------
+
+echo "🔐 Provisioning GraphQL Application Password..."
+
+docker compose -f docker-compose.wp.yml run --rm \
+    -e HTTP_HOST="$WP_HTTP_HOST" \
+    wpcli wp user application-password delete \
+    "$WP_ADMIN_USER" --all --allow-root >/dev/null 2>&1 || true
+
+WP_ADMIN_APP_PASSWORD=$(
+    docker compose -f docker-compose.wp.yml run --rm \
+        -e HTTP_HOST="$WP_HTTP_HOST" \
+        wpcli wp user application-password create \
+        "$WP_ADMIN_USER" "GraphQL API" --porcelain --allow-root
+)
+
+# ------------------------------------------------------------------
+# STEP 3.2 — Validate generated credentials
+#
+# Fail fast if any required credential is missing before handing the
+# machine-readable output back to the caller.
 # ------------------------------------------------------------------
 
 if ! grep -q '^WC_KEY=' <<< "$CREDENTIALS" || \
@@ -461,13 +485,30 @@ if ! grep -q '^WC_KEY=' <<< "$CREDENTIALS" || \
     exit 1
 fi
 
+if [[ -z "$WP_ADMIN_APP_PASSWORD" ]]; then
+    echo "❌ GraphQL Application Password generation returned no password"
+    exit 1
+fi
+
+# ------------------------------------------------------------------
+# STEP 3.3 — Add GraphQL credentials to the machine-readable output
+#
+# WP_ADMIN_USER is static configuration and is therefore not emitted
+# here. It is already defined in .env.example and matches the admin
+# account provisioned above.
+# ------------------------------------------------------------------
+
+CREDENTIALS="${CREDENTIALS}"$'\n'"WP_ADMIN_APP_PASSWORD=${WP_ADMIN_APP_PASSWORD}"
+
 {
 echo
 echo "═══════════════════════════════════════════════════════════════"
 echo "✅ WordPress installed"
 echo "✅ WooCommerce installed"
 echo "✅ REST API available"
+echo "✅ GraphQL API available"
 echo "✅ WooCommerce API credentials generated"
+echo "✅ GraphQL Application Password generated"
 echo
 echo "🚀 Local WooCommerce environment is ready."
 echo
@@ -476,21 +517,20 @@ echo "    make test"
 echo
 echo "═══════════════════════════════════════════════════════════════"
 } >&2
+
 # ------------------------------------------------------------------
 # Hand credentials back to the caller on the real stdout (fd 3).
 #
 # Local dev: Makefile's `setup` target pipes this into
-#            scripts/write_env_credentials.sh, which merges it into
-#            .env.
-# CI:        action.yml captures this directly into $GITHUB_ENV —
-#            no .env file involved at all.
-# ------------------------------------------------------------------
-
-# IMPORTANT
+#            scripts/write_env_credentials.sh, which merges the
+#            generated credentials into .env.
 #
+# CI: action.yml can capture the same machine-readable stream into
+#     the CI environment without requiring a local .env file.
+#
+# IMPORTANT:
 # This is intentionally the ONLY data emitted on the script's real
 # stdout. Everything else is progress information written to stderr.
-#
-# This guarantees that callers (Makefile, GitHub Actions, CI, etc.)
-# always receive a clean machine-readable stream without parsing logs.
+# ------------------------------------------------------------------
+
 echo "$CREDENTIALS" >&3

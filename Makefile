@@ -12,11 +12,11 @@
 #   .env.example                  -> static local defaults (DB, logging,
 #                                     framework options)
 #   scripts/setup.sh              -> dynamic infra ONLY (WordPress,
-#                                     WooCommerce, API keys). It never
-#                                     touches .env — it just prints fresh
-#                                     credentials to stdout.
+#                                     WooCommerce, API credentials). It
+#                                     never touches .env — it just prints
+#                                     fresh credentials to stdout.
 #   scripts/write_env_credentials.sh -> the ONLY thing that writes
-#                                     WooCommerce credentials into .env
+#                                     generated API credentials into .env
 #   Python                        -> consumes .env, never creates it
 
 .PHONY: up setup install test test-ci run down clean ensure-env
