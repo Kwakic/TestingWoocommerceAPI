@@ -10,7 +10,7 @@ from EcommerceAPI.src.customers.validators.customer_validators import (
     assert_customer_creation_failed,
 )
 from jsonschema import validate
-from tests.shared.contracts.error_schema import error_schema
+from tests.shared.contracts.rest.error_schema import error_schema
 
 faker = Faker()
 

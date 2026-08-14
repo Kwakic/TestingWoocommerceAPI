@@ -299,7 +299,8 @@ The framework uses **pytest plugins** located in:
 EcommerceAPI/plugins/
 
 api/
-    shared.py
+    shared_api.py
+    shared_graphql.py
     customers.py
     orders.py
     products.py

@@ -23,11 +23,12 @@
 
 # 🧪 TestEcommerceAPI
 
-A fully automated **API testing framework for WooCommerce**, built with **Python**, **pytest**, and **Docker**.
+A fully automated **API testing framework for WooCommerce**, built with **Python**, **pytest**, and **Docker**, supporting both **REST and GraphQL APIs**.
 
 This project demonstrates real-world API testing practices:
 
 * 🔌 REST API validation
+* 🔗 GraphQL API validation (WPGraphQL / WooGraphQL)
 * 🗄️ Database verification (API ↔ DB consistency)
 * 🐳 Fully reproducible Docker environment
 * ⚙️ One-command setup (`make run`)
@@ -37,7 +38,7 @@ This project demonstrates real-world API testing practices:
 
 ## ✨ What makes this framework architecturally interesting
 
-- 🏗️ **Domain-Driven Architecture** — Organizes the framework into independent business entities (Customers, Orders, Products, Coupons), each with its own API layer, DAO, validators, models, helpers, and tests.
+- 🏗️ **Domain-Driven Architecture** — Organizes the framework into independent business entities (Customers, Orders, Products, Coupons), each with its own REST/GraphQL API tests, DAO, validators, models, helpers, and tests.
 
 - 🐳 **Reproducible Test Environment** — Spins up a complete WordPress + WooCommerce stack using Docker, providing identical local and CI environments through a one-command bootstrap (`make run`).
 
@@ -53,7 +54,7 @@ This project demonstrates real-world API testing practices:
 
 - 🧱 **Enterprise-Oriented Framework Design** — Follows clear separation of concerns, reusable pytest plugins, dependency injection, layered architecture, comprehensive documentation, and configuration contracts to support long-term maintainability.
 
-- 🔐 **Automatic Authentication Provisioning** — Provisions WooCommerce REST API credentials during bootstrap, injects them into the local environment automatically, and keeps authentication independent from endpoint configuration.
+- 🔐 **Multi-Protocol Authentication** — Uses WooCommerce OAuth1 for REST API tests and WordPress Application Passwords over HTTP Basic Auth for authenticated GraphQL mutations, while keeping authentication independent from endpoint configuration.
 
 ---
 
@@ -118,6 +119,7 @@ All in-depth guides live under [`docs/`](./docs). This README is the landing pag
 | | [Architecture Guide](./docs/development/README_ARCHITECTURE.md)                         | Framework internals in depth                             |
 | | [Validators Guide](./docs/development/README_VALIDATORS.md)                             | Writing and using validators                             |
 | | [Team Guides](docs/development/team-guides)                                             | Per-entity guides (Customers, Orders, Coupons, Products) |
+| | [GraphQL Testing Guide](./docs/development/README_GRAPHQL_TESTING_GUIDE.md) |GraphQL architecture, authentication, contracts and tests |
 | **Framework** | [Plugins Reference](./docs/framework/README_PLUGINS_REFERENCE.md)                       | Pytest plugin architecture                               |
 | | [Environment & Config Guide](./docs/framework/README_ENVIRONMENT_CONFIG_GUIDE.md)       | `API_ENV` and configuration resolution                   |
 | | [Config Contract](./docs/framework/README_CONFIG_CONTRACT.md)                           | Configuration schema/contract                            |
@@ -235,7 +237,7 @@ API_ENV=test pytest
 📌 The framework automatically resolves the correct API endpoint based on the selected environment.
 
 
-📚 **Related documentation:** [Environment & Config Guide](./docs/framework/README_ENVIRONMENT_CONFIG_GUIDE.md)
+📚 **Related documentation:** [GraphQL Testing Guide](./docs/development/README_GRAPHQL_TESTING_GUIDE.md)
 
 ---
 
@@ -252,6 +254,8 @@ The framework uses a segmented CI/CD architecture with independent workflows:
 - Preflight
 
 Each workflow runs independently and publishes its own artifacts and reports.
+
+GraphQL framework-level contract tests run through the **Contract** workflow. GraphQL does not require a separate CI workflow: connectivity and schema-contract checks live under `tests/shared/contracts/graphql/`.
 
 📚 Learn more:
 - [CI/CD Architecture Guide](./docs/ci/README_CI_ARCHITECTURE.md)
@@ -321,13 +325,15 @@ flowchart TD
 
     G[Pytest Framework] --> N[API_ENV]
     N --> O[config_<entity>.py]
-    O --> H[API Clients]
+    O --> H[REST API Clients]
+    O --> Q[GraphQL Client]
 
     G --> I[Helpers]
     G --> J[Validators]
     G --> K[DAO Layer]
 
-    H -->|HTTP| E
+    H -->|REST / HTTP| E
+    Q -->|GraphQL / HTTP| E
     K -->|SQL| D
 
     %% --------------------------------------------------
@@ -335,6 +341,11 @@ flowchart TD
     %% --------------------------------------------------
 
     G --> L[Test Suite]
+    L --> R[REST Entity Tests]
+    L --> S[GraphQL Entity Tests]
+    L --> T[Shared Contract Tests]
+    T --> U[REST Contracts]
+    T --> V[GraphQL Contracts]
     L --> M[Allure Reports]
 ```
 
@@ -349,8 +360,12 @@ flowchart TD
 ## 🧭 Project Structure
 
 This project follows a domain-driven architecture where each business entity
-(customers, products, orders, coupons) owns its own API, DAO, validators,
-models, helpers, and tests.
+(customers, products, orders, coupons) owns its own REST API tests, GraphQL
+tests, DAO, validators, models, helpers, and performance tests.
+
+Framework-level protocol contracts are kept separately under
+`tests/shared/contracts/`, with REST and GraphQL contract tests grouped by
+protocol.
 
 👉 For a full breakdown of the structure, responsibilities, and where to extend the framework:
 
@@ -361,11 +376,14 @@ models, helpers, and tests.
 
 ## 🔐 Authentication
 
-* Uses **OAuth1 (WooCommerce API keys)**
-* Credentials are generated automatically during setup
-* `.env` is created dynamically — no manual key management
+The framework uses different authentication mechanisms for the two API protocols:
 
-📚 **Related documentation:** [Authentication Guide](./docs/framework/README_AUTHENTICATION.md)
+* **REST API** → OAuth1 with WooCommerce API keys
+* **GraphQL API** → HTTP Basic Auth using a WordPress Application Password
+  (`WP_ADMIN_USER` / `WP_ADMIN_APP_PASSWORD`)
+* REST and GraphQL authentication are intentionally kept independent
+
+📚 **Related documentation:** [Authentication Guide](./docs/framework/README_AUTHENTICATION.md) · [GraphQL Guide](./docs/development/README_GRAPHQL.md)
 
 ---
 
@@ -415,10 +433,13 @@ This cleans previous Allure results, generates fresh test artifacts, and matches
 
 The framework includes:
 
-* ✅ Positive API tests
+* ✅ Positive REST API tests
+* 🔗 GraphQL queries and mutations
 * ❌ Negative validation tests
 * 🔄 Update & lifecycle tests
 * 🗄️ Database consistency validation
+* 📐 REST and GraphQL contract validation
+* 🔐 Authentication and authorization scenarios
 * ⏱️ Timestamp validation (API vs DB)
 
 📚 **Related documentation:** [Test Development Guide](./docs/development/README_TEST_DEVELOPMENT_GUIDE.md) · [API Client Guide](./docs/development/README_API_CLIENT.md) · [Validators Guide](./docs/development/README_VALIDATORS.md)
@@ -429,7 +450,15 @@ The framework includes:
 ## 🧪 Test Organization
 
 Tests are organized by domain (customers, products, orders, coupons),
-each with its own structure and dedicated documentation.
+with REST API tests, GraphQL tests, and performance tests grouped inside each
+domain.
+
+Framework-level tests live under `tests/shared/`, including:
+
+* `contracts/rest/` — REST response and connectivity contracts
+* `contracts/graphql/` — GraphQL connectivity and schema contracts
+* `security/` — authentication and security validation
+* `preflight/` — environment and framework checks
 
 📚 See: [Test Development Guide](./docs/development/README_TEST_DEVELOPMENT_GUIDE.md)
 
@@ -441,6 +470,10 @@ each with its own structure and dedicated documentation.
 * ✔️ Automatically generated GitHub Pages QA Portal
 * ✔️ Metadata-driven entity discovery
 * ✔️ Independent Smoke, Integration, Regression, and Performance dashboards
+* ✔️ REST API test coverage across business entities
+* ✔️ GraphQL query and mutation test coverage
+* ✔️ GraphQL schema/contract validation
+* ✔️ Separate REST OAuth1 and GraphQL Application Password authentication
 * ✔️ Allure history preservation
 * ✔️ Automated report publication to GitHub Pages
 * ✔️ Docker-based reproducible test execution
@@ -464,6 +497,7 @@ each with its own structure and dedicated documentation.
 | ⚙️ Config Guide | [Environment & Config Guide](./docs/framework/README_ENVIRONMENT_CONFIG_GUIDE.md) |
 | 🚀 CI Architecture | [CI/CD Architecture Guide](./docs/ci/README_CI_ARCHITECTURE.md) |
 | 📊 Allure Guide | [Allure Reporting Guide](./docs/ci/README_ALLURE.md) |
+| 🔗 GraphQL Guide | [GraphQL Guide](./docs/development/README_GRAPHQL.md) |
 
 ---
 

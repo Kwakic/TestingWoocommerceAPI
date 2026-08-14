@@ -1,4 +1,23 @@
+import pytest
+
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.graphql,
+]
+
+
 def test_update_product(graphql_client):
+    """
+    Verify that a product can be updated through the GraphQL API.
+
+    The test creates its own product, captures its database ID, updates
+    the product name, and verifies the mutation response. It then queries
+    the same product again to confirm that the updated state was persisted.
+
+    This ensures the test does not depend on pre-existing database data
+    and validates both the mutation response and the resulting resource state.
+    """
+
     create_query = """
     mutation {
         createProduct(

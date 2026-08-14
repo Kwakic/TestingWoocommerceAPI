@@ -98,7 +98,7 @@ This is the **only place** allowed to read env vars.
 
 ---
 
-## api/shared.py
+## api/shared_api.py
 
 **Responsibilities**
 
@@ -130,6 +130,18 @@ This validation must:
 This prevents cascading failures across all tests.
 
 ---
+
+## api/shared_graphql.py
+
+**Responsibilities**
+
+TBD
+
+---
+
+
+---
+
 
 ## api/<entity>.py
 

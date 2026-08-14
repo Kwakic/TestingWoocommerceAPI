@@ -24,7 +24,8 @@ Top-level (trimmed):
 │       ├── entity_metadata.py
 │       ├── entities.py
 │       ├── api/
-│       │   ├── shared.py
+│       │   ├── shared_api.py
+│       │   ├── shared_graphql.py
 │       │   ├── customers.py
 │       │   ├── products.py
 │       │   ├── orders.py

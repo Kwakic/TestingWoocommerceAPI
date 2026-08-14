@@ -62,7 +62,7 @@ from EcommerceAPI.src.utils.credentials_utility import get_wc_api_keys
 from EcommerceAPI.src.clients.api_client import APIClient
 from EcommerceAPI.src.auth.base_auth import AuthStrategy
 from EcommerceAPI.src.metadata.entity_metadata import discover_framework_entities
-from tests.shared.contracts.error_schema import error_schema
+from tests.shared.contracts.rest.error_schema import error_schema
 
 
 logger = logging.getLogger(__name__)

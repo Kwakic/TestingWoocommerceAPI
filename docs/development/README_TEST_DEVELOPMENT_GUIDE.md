@@ -430,7 +430,7 @@ tests/
 | `sanity` | Narrow and deep. Targets only the modules that recently changed; runs after smoke has passed. |
 | `regression` | Full coverage |
 
-**3. Test type:**
+ **3. Test type**
 
 | Marker | Meaning |
 |---|---|
@@ -438,7 +438,7 @@ tests/
 | `contract` | Schema validation |
 | `negative` | Invalid input tests |
 | `e2e` | Multi-step workflow |
-
+| `graphql` | GraphQL API tests |
 **4. Specialized:** `performance`, `security`, `preflight`, `bulk`
 
 **Marker rules:**
@@ -458,9 +458,10 @@ workflows (Smoke, Integration, Regression, Performance,
 Contract, Security and Preflight).
 
 **Big picture:**
+
 - Domain → `customers`, `orders`, etc.
 - Execution → `smoke`, `sanity`, `regression`
-- Type → `integration`, `contract`, `negative`, `e2e`
+- Type → `integration`, `contract`, `negative`, `e2e`, `graphql`
 - Special → `performance`, `security`, `preflight`, `bulk`
 
 ---
@@ -490,13 +491,25 @@ tests/shared/
         test_authentication_matrix.py
         test_authentication_success.py
     contracts/
-        test_api_connectivity.py
-        test_response_format.py
+           rest/
+              test_api_connectivity.py
+              test_response_format.py
+           graphql/
+              test_graphql_connectivity.py
+              test_product_mutation_schema.py
 ```
 
 **Preflight** — verifies environment/framework configuration before the full suite runs (API connectivity, logging config, response format). Must NOT: call live APIs, require Docker, require OAuth credentials, require a database, or require WooCommerce.
 
-**Contract** — validates API contracts and transport behavior: connectivity, HTTP status, response format, content-type, schema, serialization. Entities are discovered automatically.
+**Contract** — validates API contracts and transport behavior:
+connectivity, HTTP status, response format, content-type, schema,
+serialization, and GraphQL schema/transport contracts. Entities are
+discovered automatically where applicable.
+
+GraphQL contract tests therefore belong to the shared Contract suite,
+while GraphQL business behavior remains under the corresponding entity's
+`graphql/` directory.
+
 
 **Security** — validates framework-level authentication: successful auth, invalid OAuth credential rejection, an authentication matrix across all entities, GET/POST/PUT/DELETE coverage, and error schema/response validation. Entities are discovered automatically.
 

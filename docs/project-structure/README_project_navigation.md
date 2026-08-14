@@ -90,7 +90,7 @@ EcommerceAPI/
 │   │   └── __init__.py
 │   │
 │   ├── configs/
-│   │   ├── config_qraphql.py         ← GraphQL endpoint configuration by environment
+│   │   ├── config_graphql.py         ← GraphQL endpoint configuration by environment
 │   │   ├── config_loader.py          ← Load environment and service configuration
 │   │   ├── runtime_config.py         ← Framework runtime configuration
 │   │   ├── runtime_metadata.py       ← Runtime session metadata (shared, plugin-agnostic)
@@ -223,7 +223,11 @@ tests/
 │   │   ├── test_update_customer.py
 │   │   └── __init__.py
 │   ├── graphql/                       ← GraphQL queries/mutations
-│   │   ├── test_customer_queries.py
+│   │   ├── test_create_customer.py
+│   │   ├── test_delete_customer.py
+│   │   ├── test_get_customer.py
+│   │   ├── test_update_customer.py
+│   │   ├── test_customer_negative.py
 │   │   └── __init__.py
 │   └── performance/
 │       ├── test_customer_performance.py
@@ -235,17 +239,19 @@ tests/
 │
 ├── shared/                           ← Framework-level tests (run once)
 │   ├── __init__.py
-│   ├── contracts/                    ← Contract testing (response schemas)
-│   │   ├── error_schema.py           ← Error response contracts
-│   │   ├── test_response_format.py   ← Validate response format
-│   │   ├── test_api_connectivity.py  ← Basic connectivity checks
-│   │   └── __init__.py
+│   ├── contracts/                             ← Contract testing (response schemas)
+│   │    ├── rest/
+│   │    │    ├── error_schema.py              ← Error response contracts
+│   │    │    ├── test_response_format.py      ← Validate response format
+│   │    │    ├── test_api_connectivity.py     ← Basic rest connectivity checks
+│   │    │    └── __init__.py
+│   │    └── graphql/
+│   │         ├── test_graphql_conectivity.py  ← Basic graphql connectivity checks
+│   │         ├── test_product_mutation_schema.py  ← Validation of GraphQL schema
+│   │         └── __init__.py
 │   ├── security/                     ← Security & auth validation
 │   │   ├── test_authentication_matrix.py ← Auth scheme matrix
 │   │   ├── test_authentication_success.py ← Successful auth scenarios
-│   │   └── __init__.py
-│   ├── graphQL/                               ← GraphQL framework-level tests
-│   │   ├── test_graphql_smoke.py
 │   │   └── __init__.py
 │   └── preflight/                    ← Pre-test checks
 │       ├── test_logging_globals.py   ← Logging validation
@@ -565,6 +571,7 @@ TestEcommerceAPI (project suite/root)
 │     ├── development/
 │     │     ├── README_TEST_DEVELOPMENT_GUIDE.md     ← Canonical guide for writing tests
 │     │     ├── README_API_CLIENT.md                 ← How the API client layer works
+│     │     ├── README_GRAPHQL_TESTING_GUIDE.md      ← canonical GraphQL guide
 │     │     ├── README_ARCHITECTURE.md               ← Framework internals in depth
 │     │     ├── README_VALIDATORS.md                 ← Writing and using validators
 │     │     └── team-guides/                         ← Per-entity guides (Customers, Orders, Coupons, Products)
@@ -576,7 +583,6 @@ TestEcommerceAPI (project suite/root)
 │     ├── framework/
 │     │     ├── README_PLUGINS_REFERENCE.md          ← Pytest plugin architecture
 │     │     ├── README_ENVIRONMENT_CONFIG_GUIDE.md   ← API_ENV and configuration resolution
-│     │     ├── README_GRAPHQL.md                    ← GraphQL architecture and usage guide
 │     │     ├── README_CONFIG_CONTRACT.md            ← Configuration schema/contract
 │     │     ├── README_AUTHENTICATION.md             ← Credential handling
 │     │     ├── README_LOGGING_ARCHITECTURE.md       ← Structured logging design
@@ -767,7 +773,11 @@ TestEcommerceAPI (project suite/root)
 │     │   │   ├── test_update_customer.py
 │     │   │   └── __init__.py
 │     │   ├── graphql/                               ← GraphQL queries/mutations for this business entity
-│     │   │   ├── test_customer_queries.py
+│     │   │   ├── test_create_customer.py
+│     │   │   ├── test_delete_customer.py
+│     │   │   ├── test_get_customer.py
+│     │   │   ├── test_update_customer.py
+│     │   │   ├── test_customer_negative.py
 │     │   │   └── __init__.py
 │     │   └── performance/
 │     │       ├── test_customer_performance.py
@@ -780,16 +790,18 @@ TestEcommerceAPI (project suite/root)
 │     ├── shared/                                    ← Framework-level tests (run once)
 │     │   ├── __init__.py
 │     │   ├── contracts/                             ← Contract testing (response schemas)
-│     │   │   ├── error_schema.py                    ← Error response contracts
-│     │   │   ├── test_response_format.py            ← Validate response format
-│     │   │   ├── test_api_connectivity.py           ← Basic connectivity checks
-│     │   │   └── __init__.py
+│     │   │    ├── rest/
+│     │   │    │    ├── error_schema.py              ← Error response contracts
+│     │   │    │    ├── test_response_format.py      ← Validate response format
+│     │   │    │    ├── test_api_connectivity.py     ← Basic rest connectivity checks
+│     │   │    │    └── __init__.py
+│     │   │    └── graphql/
+│     │   │         ├── test_graphql_connectivity.py  ← Basic graphql connectivity checks
+│     │   │         ├── test_product_mutation_schema.py  ← Validation of GraphQL schema
+│     │   │         └── __init__.py
 │     │   ├── security/                              ← Security & auth validation
 │     │   │   ├── test_authentication_matrix.py      ← Auth scheme matrix
 │     │   │   ├── test_authentication_success.py     ← Successful auth scenarios
-│     │   │   └── __init__.py
-│     │   ├── graphQL/                               ← GraphQL framework-level tests
-│     │   │   ├── test_graphql_smoke.py
 │     │   │   └── __init__.py
 │     │   └── preflight/                             ← Pre-test checks
 │     │       ├── test_logging_globals.py            ← Logging validation

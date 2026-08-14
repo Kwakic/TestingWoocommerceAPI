@@ -1,6 +1,17 @@
+import pytest
+
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.graphql,
+]
+
+
 def test_get_product(graphql_client):
     """
-    We can retrieve a product we created ourselves
+    Verify that a product created by the test can be retrieved by database ID.
+
+    The test creates its own product, captures its database ID, queries that
+    exact product, and verifies the returned product data.
     """
 
     create_query = """

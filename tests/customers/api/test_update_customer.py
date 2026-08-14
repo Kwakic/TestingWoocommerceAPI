@@ -16,7 +16,7 @@ from EcommerceAPI.src.utils.date_timestamp_utils import (
     assert_timestamp_matches_system_behavior,
 )
 
-from tests.shared.contracts.error_schema import error_schema
+from tests.shared.contracts.rest.error_schema import error_schema
 
 logger = logging.getLogger(__name__)
 

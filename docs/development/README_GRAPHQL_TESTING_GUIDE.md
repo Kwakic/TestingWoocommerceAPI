@@ -1,11 +1,13 @@
 # GraphQL Testing Guide
 
-> **Status:** Active development
-> **Scope:** GraphQL testing with WPGraphQL + WPGraphQL for WooCommerce
-> **Current entity:** Products
-> **Last updated:** 2026-08-13
+* > **Status:** Active development
+* > **Scope:** GraphQL testing with WPGraphQL + WPGraphQL for WooCommerce
+* > **Current entity:** Products
+* > **Last updated:** 2026-08-14
 
-## 1. Purpose
+---
+
+## 1. 🎯 Purpose
 
 This guide documents the GraphQL testing architecture and development approach used by the test suite.
 
@@ -33,13 +35,38 @@ tests/
 │   ├── graphql/
 │   └── performance/
 └── shared/
-    └── graphql/
-        └── test_graphql_smoke.py
+    ├── contracts/
+    │    ├── rest/
+    │    │    ├── error_schema.py
+    │    │    ├── test_response_format.py
+    │    │    ├── test_api_connectivity.py
+    │    │    └── __init__.py
+    │    └── graphql/
+    │         ├── test_graphql_connectivity.py
+    │         ├── test_product_mutation_schema.py
+    │         └── __init__.py
+    ├── security/
+    └── preflight/
+
+```
+GraphQL follows the same domain-oriented organization as REST for
+entity-specific behavior.
+
+Entity-specific GraphQL operations live under:
+
+```text
+tests/<entity>/graphql/
 ```
 
-GraphQL therefore follows the same domain-oriented organization as REST, but uses a dedicated `graphql/` area inside each entity.
+Framework-level GraphQL contract tests live under the shared Contract suite:
 
-## 2. Current GraphQL Architecture
+```text
+tests/shared/contracts/graphql/
+```
+
+---
+
+## 2. 🏛️ Current GraphQL Architecture
 
 The current request flow is:
 
@@ -48,24 +75,38 @@ pytest test
     ↓
 graphql_client fixture
     ↓
-GraphQLClient
+credentials
     ↓
 BasicAuth
     ↓
-WordPress Application Password
-    ↓
 HttpClient
+    ↓
+GraphQLClient
+    ↓
+WordPress Application Password
     ↓
 /graphql
     ↓
 WPGraphQL
     ↓
 WPGraphQL for WooCommerce
+    ↓
+createProduct
+    ↓
+real database record
 ```
 
-The GraphQL client is responsible for GraphQL transport and response wrapping. Business-specific assertions remain in the tests.
+>This chain was verified during the initial GraphQL implementation using the Product createProduct mutation.
 
-## 3. GraphQL Endpoint Configuration
+>The test does not rely on pre-existing database data. The mutation creates a real WooCommerce product, returns its
+databaseId, and the test validates the resulting resource. This establishes that the complete path from pytest through
+the framework's authentication and HTTP layers to WPGraphQL/WPGraphQL for WooCommerce is functioning end-to-end.
+The GraphQL client is responsible for GraphQL transport and response wrapping. Business-specific assertions
+remain in the tests.
+
+---
+
+## 3. 🛠️ GraphQL Endpoint Configuration
 
 The environment-specific GraphQL endpoint is configured centrally in:
 
@@ -73,7 +114,7 @@ The environment-specific GraphQL endpoint is configured centrally in:
 EcommerceAPI/src/configs/config_graphql.py
 ```
 
-The endpoint is selected according to the active framework environment (`API_ENV`).
+👉 The endpoint is selected according to the active framework environment (`API_ENV`).
 
 This configuration remains in the framework because it describes where the GraphQL service is located, rather than product-specific test data or business behavior.
 
@@ -83,11 +124,14 @@ REST entity configuration remains under the individual test domains, for example
 tests/products/configs/config_products.py
 ```
 
-GraphQL and REST therefore intentionally have different configuration responsibilities.
+GraphQL and REST therefore intentionally have **different configuration** responsibilities.
 
-## 4. Authentication
+---
 
-### 4.1 Why GraphQL does not use the REST OAuth1 pipeline
+
+## 4. 🔐 Authentication
+
+### 4.1 🤔 Why GraphQL does not use the REST OAuth1 pipeline
 
 The REST framework uses WooCommerce API credentials:
 
@@ -106,7 +150,7 @@ Those credentials are appropriate for the WooCommerce REST API but do not establ
 
 GraphQL mutations such as `createProduct` therefore use WordPress authentication instead.
 
-### 4.2 WordPress Application Password
+### 4.2 🔑 WordPress Application Password
 
 The GraphQL client authenticates using:
 
@@ -127,7 +171,7 @@ which is handled by the existing `BasicAuth` authentication strategy.
 
 The GraphQL authentication flow is intentionally separate from the REST `AUTH_TYPE/OAuth1` pipeline.
 
-### 4.3 Docker requirement
+### 4.3 🐋 Docker requirement
 
 The Docker WordPress service uses:
 
@@ -139,7 +183,9 @@ The local environment setting is required because the Docker stack uses plain HT
 
 The `wpcli` service uses the same environment type for consistency.
 
-## 5. Credentials
+---
+
+## 5. 🔐 Credentials
 
 The current local test environment provides:
 
@@ -154,7 +200,9 @@ The application password is currently provisioned manually during development.
 
 Automating Application Password generation as part of `setup.sh` is a possible future improvement, but is intentionally outside the current GraphQL implementation scope.
 
-## 6. GraphQL Client
+---
+
+## 6. ⚙️ GraphQL Client
 
 The GraphQL client is located at:
 
@@ -282,11 +330,13 @@ assert response.errors
 
 This distinction is part of the GraphQL test contract.
 
-## 9. Current Product GraphQL Tests
+## 9. 🧪 Current Product GraphQL Tests
 
-The initial Product GraphQL coverage contains three tests.
+The initial Product GraphQL coverage contains 5 tests.
 
-### 9.1 Create Product
+---
+
+### 9.1 🛠️ Create Product
 
 File:
 
@@ -303,7 +353,9 @@ The test:
 
 The important principle is that the test creates its own data rather than depending on products that happen to exist in the database.
 
-### 9.2 Get Product
+---
+
+### 9.2 🫴 Get Product
 
 File:
 
@@ -339,7 +391,56 @@ products(first: 1)
 
 or any pre-existing database record.
 
-### 9.3 Negative GraphQL Test
+---
+
+### 9.3 🗑️ Delete Product
+
+File:
+
+```text
+tests/products/graphql/test_delete_product.py
+```
+
+The test follows this lifecycle:
+
+```
+create product
+    ↓
+capture databaseId
+    ↓
+delete product using databaseId
+    ↓
+verify deletion
+    ↓
+query the same databaseId
+    ↓
+verify product no longer exists
+```
+
+The deletion mutation uses:
+
+```
+deleteProduct(
+    input: {
+        id: $id
+        force: true
+    }
+)
+```
+
+The `force: true` option is important because the default deletion behavior moves the product to the WordPress trash
+rather than permanently deleting it.
+
+The test therefore verifies the final state by querying the product after deletion and expecting GraphQL to
+report that no product exists with the given database `ID`.
+
+The test creates its own product and never depends on an existing database record.
+
+
+
+---
+
+### 9.4 ❌ Negative GraphQL Test
 
 File:
 
@@ -358,7 +459,70 @@ assert response.errors
 
 This test documents the distinction between HTTP-level success and GraphQL-level success.
 
-## 10. Data Independence Principle
+### 9.5 ✏️ Update product
+
+```text
+tests/products/graphql/test_update_product.py
+```
+
+The test verifies that an existing product can be updated through the GraphQL API and that the change is
+actually persisted.
+
+The test follows this lifecycle:
+
+```
+create product
+    ↓
+capture databaseId
+    ↓
+update product name
+    ↓
+verify mutation response
+    ↓
+query the same databaseId
+    ↓
+verify updated product state
+```
+
+The product is created by the test itself, so the test does not depend on any pre-existing database data.
+
+The update mutation receives the product databaseId and the new product name as GraphQL variables:
+
+```
+mutation UpdateProduct($id: ID!, $name: String!) {
+    updateProduct(
+        input: {
+            id: $id
+            name: $name
+        }
+    ) {
+        product {
+            databaseId
+            name
+        }
+    }
+}
+```
+
+### ✅ The test verifies that:
+* the mutation succeeds;
+* the response contains no GraphQL errors;
+* the returned databaseId is unchanged;
+* the returned product name matches the new value;
+* a subsequent query returns the updated product.
+
+The final query is important because it verifies the resulting state rather than relying only on the mutation response.
+
+This follows the general GraphQL testing pattern:
+
+```
+CREATE → UPDATE → READ
+```
+and keeps the test deterministic by using the identifier of the product created during the test.
+
+---
+
+## 10. 📊 Data Independence Principle
 
 GraphQL tests must not depend on arbitrary records already present in the Docker database.
 
@@ -382,7 +546,9 @@ query/update/delete using identifier
 
 This makes tests deterministic and suitable for fresh Docker environments and CI.
 
-## 11. Current Test Structure
+---
+
+## 11.🏗️ Current Test Structure
 
 The current Product GraphQL area is:
 
@@ -390,53 +556,105 @@ The current Product GraphQL area is:
 tests/products/graphql/
 ├── test_create_product.py
 ├── test_get_product.py
+├── test_delete_product.py
+├── test_update_product.py
 └── test_product_negative.py
 ```
 
 Temporary diagnostic tests used during GraphQL authentication investigation have been removed.
 
-## 12. Running GraphQL Tests
+---
 
-Run an individual test:
+## 12. ⚡ Running GraphQL Tests
+
+Run an individual Product GraphQL test:
 
 ```bash
 pytest tests/products/graphql/test_create_product.py -v
 ```
 
-Run the Product GraphQL suite:
+Run the complete Product GraphQL suite:
 
 ```bash
 pytest tests/products/graphql/ -v
 ```
 
-Run the shared GraphQL smoke test:
+Run all GraphQL tests:
 
 ```bash
-pytest tests/shared/graphql/test_graphql_smoke.py -v
+pytest -m graphql -v
 ```
 
-## 13. Shared GraphQL Smoke Test
+Run GraphQL contract tests:
 
-Framework-level GraphQL checks live under:
+```bash
+pytest -m "graphql and contract" -v
+```
+
+Run Product GraphQL integration tests:
+
+```bash
+pytest -m "products and graphql and integration" -v
+```
+
+Run GraphQL negative tests:
+
+```bash
+pytest -m "graphql and negative" -v
+```
+
+---
+
+## 13. 🔗 GraphQL Contract Tests
+
+Framework-level GraphQL contract tests live under:
 
 ```text
-tests/shared/graphql/
+tests/shared/contracts/graph/
+                        ├── test_graphql_connectivity.py
+                        └── test_product_mutation_schema.py
 ```
+These tests validate the GraphQL API contract rather than Product business
+behavior.
 
-The current smoke test verifies basic GraphQL endpoint availability.
+### 🌐 GraphQL connectivity
 
-Entity-specific GraphQL behavior belongs under the corresponding domain:
+```text
+test_graphql_connectivity.py
+```
+Verifies that the GraphQL endpoint is reachable and can successfully execute
+a basic GraphQL operation.
 
+### 🧬 Product mutation schema
+```text
+test_product_mutation_schema.py
+```
+Uses GraphQL introspection to verify that the schema exposes the fields and
+inputs required by the Product GraphQL tests.
+
+The schema test does not execute a real Product mutation and therefore does
+not modify database state.
+
+Both tests are marked:
+
+```text
+@pytest.mark.contract
+@pytest.mark.graphql
+```
+GraphQL business behavior remains under the corresponding entity:
 ```text
 tests/products/graphql/
 tests/customers/graphql/
 tests/orders/graphql/
 tests/coupons/graphql/
 ```
+This keeps framework-level API contracts separate from entity-level GraphQL
+behavior.
 
-This keeps framework-level connectivity checks separate from business-entity behavior.
 
-## 14. Development Roadmap
+---
+
+## 14. 👨‍💻 Development Roadmap
 
 The GraphQL implementation is intentionally being developed incrementally.
 
@@ -447,44 +665,37 @@ The GraphQL implementation is intentionally being developed incrementally.
 - [x] WPGraphQL for WooCommerce version pinned.
 - [x] GraphQL endpoint readiness check added to provisioning.
 - [x] Environment-specific GraphQL endpoint configuration established.
-- [x] Shared GraphQL smoke test created.
+- [x] Shared GraphQL connectivity test
 - [x] GraphQL client implemented.
 - [x] WordPress Application Password authentication established.
 - [x] GraphQL authentication integrated into the client fixture.
 - [x] Product create test.
 - [x] Product get test.
+- [x] Product delete test.
+- [x] Product update test.
 - [x] GraphQL negative/error test.
 - [x] Temporary OAuth diagnostic test removed.
 - [x] Product GraphQL test suite verified together.
 
 ### Next development area
 
-The next logical Product GraphQL coverage should extend the entity lifecycle, for example:
+The next logical areas for Product GraphQL coverage are:
 
-```text
-CREATE
-  ↓
-READ
-  ↓
-UPDATE
-  ↓
-DELETE
-```
+* product search;
+* product filters;
+* categories;
+* additional variables and query patterns;
+* additional mutations;
+* authorization scenarios;
+* error handling;
+* broader GraphQL schema contract coverage.
 
-Additional GraphQL capabilities can then be added incrementally, such as:
-
-- product search;
-- product filters;
-- categories;
-- variables;
-- mutations;
-- authorization scenarios;
-- error handling;
-- GraphQL-specific contract coverage.
 
 The exact order should evolve with the Product entity implementation rather than being over-designed in advance.
 
-## 15. Design Principles
+---
+
+## 15. 🎨 Design Principles
 
 ### Keep GraphQL separate from REST
 
@@ -522,7 +733,9 @@ Do not rely on arbitrary records already present in the database.
 
 HTTP status alone is insufficient to determine GraphQL operation success.
 
-## 16. Known Development State
+---
+
+## 16. </> Known Development State
 
 This document is intentionally a living guide.
 

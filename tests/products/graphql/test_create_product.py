@@ -1,34 +1,17 @@
-"""
-This proves the entire chain:
+import pytest
 
-pytest
- ↓
-graphql_client fixture
- ↓
-credentials
- ↓
-BasicAuth
- ↓
-GraphQLClient
- ↓
-HttpClient
- ↓
-WordPress Application Password
- ↓
-WPGraphQL
- ↓
-WooGraphQL
- ↓
-createProduct
- ↓
-real database record
-
-"""
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.graphql,
+]
 
 
 def test_create_product(graphql_client):
     """
-    Authenticated GraphQL mutation creates a real product
+    Verify that an authenticated GraphQL mutation creates a real product.
+
+    The test creates the product through GraphQL and verifies that the
+    response contains a valid database ID and the expected product name.
     """
 
     query = """

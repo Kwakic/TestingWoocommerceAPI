@@ -278,19 +278,23 @@ security, and environment behavior before running entity-specific tests.
 
 Directory structure:
 
+```
 tests/shared/
-
     preflight/
-        test_api_connectivity.py
-        test_response_format.py
         test_logging_globals.py
-
     security/
         test_authentication_matrix.py
         test_authentication_success.py
+    contracts/
+           rest/
+              test_api_connectivity.py
+              test_response_format.py
+           graphql/
+              test_graphql_connectivity.py
+              test_product_mutation_schema.py
+```
 
-    performance/
-        test_basic_response_times.py
+
 
 Purpose of each category:
 
@@ -315,10 +319,34 @@ Example matrix:
 × 3 invalid credential cases
 = 48 security tests
 
-Performance tests
+Contract tests
 -----------------
-Validate entity-specific performance benchmarks detect regressions
-in API responsiveness.
+Validate the API contracts exposed by the framework.
+
+Contract tests are organized by API protocol:
+
+```
+tests/shared/contracts/
+├── rest/
+│   ├── error_schema.py
+│   ├── test_response_format.py
+│   └── test_api_connectivity.py
+└── graphql/
+    ├── test_graphql_connectivity.py
+    └── test_product_mutation_schema.py
+```
+
+REST contract tests validate the HTTP/REST response contract, including
+response format, connectivity, and error structure.
+
+GraphQL contract tests validate the GraphQL transport and schema contract,
+including endpoint connectivity and the schema required by GraphQL operations.
+
+Contract tests are framework-level tests. They do not belong to a specific
+business entity and are executed separately from entity-specific API tests.
+
+When adding a new API protocol, its contract tests should be placed under
+the corresponding protocol directory.
 
 
 ---
