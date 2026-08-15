@@ -1,0 +1,3 @@
+INFO     EcommerceAPI.src.clients.graphql_client:graphql_client.py:171 🔷 GraphQL mutation createProduct → HTTP 200 (completed in 0.18s)
+INFO     EcommerceAPI.src.clients.graphql_client:graphql_client.py:171 🔷 GraphQL mutation UpdateProduct → HTTP 200 (completed in 0.15s)
+INFO     EcommerceAPI.src.clients.graphql_client:graphql_client.py:171 🔷 GraphQL query GetProduct → HTTP 200 (completed in 0.12s)
