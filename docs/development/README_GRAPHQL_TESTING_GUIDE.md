@@ -3,7 +3,7 @@
 * > **Status:** Active development
 * > **Scope:** GraphQL testing with WPGraphQL + WPGraphQL for WooCommerce
 * > **Current entity:** Products
-* > **Last updated:** 2026-08-14
+* > **Last updated:** 2026-08-15
 
 ---
 
@@ -249,7 +249,9 @@ GraphQLClient(
 
 is used by the authenticated test fixture.
 
-## 7. GraphQL Fixture
+## 7. GraphQL Fixtures
+
+### 7.1 Authenticated GraphQL client
 
 The shared GraphQL fixture creates a session-scoped authenticated client.
 
@@ -280,6 +282,58 @@ def test_something(graphql_client):
 rather than handling credentials themselves.
 
 This keeps authentication out of individual tests.
+
+### 7.2 GraphQL resource cleanup
+
+GraphQL-created Products use the existing shared REST resource cleanup mechanism.
+
+The shared GraphQL fixture exposes:
+
+```python
+graphql_resources(product_id)
+```
+
+When a GraphQL test creates a Product, it registers the returned `databaseId` with the shared resource tracker. The existing entity teardown then removes the Product using the established Product delete method.
+
+This keeps GraphQL from introducing a second cleanup framework.
+
+Normal usage:
+
+```python
+product_id = created_product["databaseId"]
+
+# Register the GraphQL-created product with the shared framework so the
+# existing product cleanup runs automatically during fixture teardown.
+graphql_resources(product_id)
+```
+
+When a test intentionally needs to keep the Product in the database:
+
+```python
+graphql_resources(product_id, skip_cleanup=True)
+```
+
+This mirrors the existing REST fixture cleanup pattern.
+
+The cleanup lifecycle is therefore:
+
+```text
+GraphQL createProduct
+        ↓
+capture databaseId
+        ↓
+graphql_resources(product_id)
+        ↓
+shared_api_resources
+        ↓
+existing Product teardown
+        ↓
+DELETE /wp-json/wc/v3/products/{id}?force=True
+```
+
+Tests that explicitly delete the Product themselves, such as the GraphQL delete test, do not register that Product for shared cleanup.
+
+Category resources are not currently part of the shared entity cleanup model.
 
 ## 8. GraphQL Response Semantics
 
@@ -336,7 +390,7 @@ This distinction is part of the GraphQL test contract.
 
 ## 9. 🧪 Current Product GraphQL Tests
 
-The initial Product GraphQL coverage contains 5 tests.
+The current Product GraphQL coverage contains 9 tests.
 
 ---
 
@@ -526,6 +580,58 @@ and keeps the test deterministic by using the identifier of the product created 
 
 ---
 
+### 9.6 🔎 Product Search
+
+File:
+
+```text
+tests/products/graphql/test_search_product.py
+```
+
+The test creates its own Product, searches for it using the GraphQL `search`
+filter, and verifies that the created Product is returned.
+
+The flow is:
+
+```text
+create product
+    ↓
+capture databaseId
+    ↓
+products(where: { search: $search })
+    ↓
+verify created product is returned
+```
+
+The test uses GraphQL variables for the search value and registers the created
+Product with the shared cleanup mechanism.
+
+### 9.7 🔍 Product Filters
+
+File:
+
+```text
+tests/products/graphql/test_filter_products.py
+```
+
+This file contains the Product filter coverage currently implemented:
+
+- filter by SKU;
+- filter by category.
+
+The SKU test creates a Product with unique test data, filters the Product
+connection by SKU, and verifies that the created Product is returned.
+
+The category test creates a Product Category, creates a Product assigned to that
+category, filters the Product connection by category ID, and verifies that the
+created Product is returned.
+
+Both tests register their created Products with the shared cleanup mechanism.
+
+The category itself is currently not registered for shared cleanup because
+Product Categories are not part of the framework's existing entity cleanup
+model.
+
 ## 10. 📊 Data Independence Principle
 
 GraphQL tests must not depend on arbitrary records already present in the Docker database.
@@ -562,6 +668,9 @@ tests/products/graphql/
 ├── test_get_product.py
 ├── test_delete_product.py
 ├── test_update_product.py
+├── test_search_product.py
+├── test_filter_products.py
+├── test_get_all_products.py
 └── test_product_negative.py
 ```
 
@@ -636,8 +745,49 @@ test_product_mutation_schema.py
 Uses GraphQL introspection to verify that the schema exposes the fields and
 inputs required by the Product GraphQL tests.
 
-The schema test does not execute a real Product mutation and therefore does
-not modify database state.
+The current Product schema contract coverage verifies:
+
+```text
+CreateProductPayload
+└── product
+
+CreateProductInput
+├── name
+├── sku
+├── description
+└── regularPrice
+
+UpdateProductPayload
+└── product
+
+UpdateProductInput
+├── id
+├── name
+├── sku
+├── description
+└── regularPrice
+
+DeleteProductPayload
+└── product
+
+DeleteProductInput
+├── id
+└── force
+
+ProductConnection
+├── nodes
+└── pageInfo
+
+PageInfo
+├── hasNextPage
+└── endCursor
+```
+
+The introspection operations are explicitly named so that the shared GraphQL
+request logger reports meaningful operation names rather than `unknown`.
+
+The schema tests do not execute real Product mutations or queries and therefore
+do not modify database state.
 
 Both tests are marked:
 
@@ -680,17 +830,25 @@ The GraphQL implementation is intentionally being developed incrementally.
 - [x] GraphQL negative/error test.
 - [x] Temporary OAuth diagnostic test removed.
 - [x] Product GraphQL test suite verified together.
+- [x] Product search test.
+- [x] Product SKU filter test.
+- [x] Product category filter test.
+- [x] Product pagination test using GraphQL cursors.
+- [x] Shared Product cleanup reused by GraphQL tests.
+- [x] GraphQL request-level logging with operation name/type, HTTP status, and duration.
+- [x] Product GraphQL schema contracts for create, update, delete, and Product pagination.
 
 ### Next development area
 
 The next logical areas for Product GraphQL coverage are:
 
-
-* additional variables and query patterns;
+* additional useful query and variable patterns;
 * additional mutations;
 * authorization scenarios;
-* error handling;
-* broader GraphQL schema contract coverage.
+* meaningful GraphQL error handling.
+
+Further schema contract coverage should be added only where it protects a
+real Product GraphQL operation rather than duplicating the functional tests.
 
 
 The exact order should evolve with the Product entity implementation rather than being over-designed in advance.
@@ -731,6 +889,11 @@ Domain behavior belongs in tests/helpers as the framework evolves.
 
 Do not rely on arbitrary records already present in the database.
 
+### Clean up what GraphQL creates
+
+GraphQL-created Products should be registered with the shared resource cleanup
+mechanism so normal test execution does not leave Product data behind.
+
 ### Treat GraphQL errors explicitly
 
 HTTP status alone is insufficient to determine GraphQL operation success.
@@ -741,6 +904,6 @@ HTTP status alone is insufficient to determine GraphQL operation success.
 
 This document is intentionally a living guide.
 
-GraphQL support is currently under development and the Product entity is the first active implementation.
+GraphQL support is currently under development and the Product entity is the first active implementation. Product coverage now includes CRUD, search, SKU/category filtering, cursor-based pagination, negative/error behavior, shared cleanup, request-level logging, and schema contracts.
 
 As GraphQL coverage expands to Customers, Orders, Coupons, and additional Product operations, this document should be updated to reflect the architecture that has actually been implemented rather than speculative future design.

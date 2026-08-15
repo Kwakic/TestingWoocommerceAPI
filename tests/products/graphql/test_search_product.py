@@ -7,7 +7,7 @@ pytestmark = [
 ]
 
 
-def test_search_product(graphql_client):
+def test_search_product(graphql_client, graphql_resources):
     """
     Verify that a product can be found through the GraphQL product search.
 
@@ -39,6 +39,10 @@ def test_search_product(graphql_client):
 
     created_product = create_response.data["createProduct"]["product"]
     product_id = created_product["databaseId"]
+
+    # Register the GraphQL-created product with the shared framework so the
+    # existing product cleanup runs automatically during fixture teardown.
+    graphql_resources(product_id)
 
     search_query = """
     query SearchProducts($search: String!) {

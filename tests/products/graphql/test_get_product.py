@@ -6,7 +6,7 @@ pytestmark = [
 ]
 
 
-def test_get_product(graphql_client):
+def test_get_product(graphql_client, graphql_resources):
     """
     Verify that a product created by the test can be retrieved by database ID.
 
@@ -36,6 +36,10 @@ def test_get_product(graphql_client):
 
     created_product = create_response.data["createProduct"]["product"]
     product_id = created_product["databaseId"]
+
+    # Register the GraphQL-created product with the shared framework so the
+    # existing product cleanup runs automatically during fixture teardown.
+    graphql_resources(product_id)
 
     query = """
     query GetProduct($id: ID!) {

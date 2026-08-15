@@ -776,8 +776,11 @@ TestEcommerceAPI (project suite/root)
 │     │   │   ├── test_create_customer.py
 │     │   │   ├── test_delete_customer.py
 │     │   │   ├── test_get_customer.py
+│     │   │   ├── test_get_all_customers.py
+│     │   │   ├── test_filter_customers.py
 │     │   │   ├── test_update_customer.py
 │     │   │   ├── test_customer_negative.py
+│     │   │   ├── test_search_product.py
 │     │   │   └── __init__.py
 │     │   └── performance/
 │     │       ├── test_customer_performance.py

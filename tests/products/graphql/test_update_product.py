@@ -6,7 +6,7 @@ pytestmark = [
 ]
 
 
-def test_update_product(graphql_client):
+def test_update_product(graphql_client, graphql_resources):
     """
     Verify that a product can be updated through the GraphQL API.
 
@@ -40,6 +40,10 @@ def test_update_product(graphql_client):
 
     created_product = create_response.data["createProduct"]["product"]
     product_id = created_product["databaseId"]
+
+    # Register the GraphQL-created product with the shared framework so the
+    # existing product cleanup runs automatically during fixture teardown.
+    graphql_resources(product_id)
 
     update_query = """
     mutation UpdateProduct($id: ID!, $name: String!) {

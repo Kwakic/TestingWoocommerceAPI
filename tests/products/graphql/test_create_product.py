@@ -6,7 +6,7 @@ pytestmark = [
 ]
 
 
-def test_create_product(graphql_client):
+def test_create_product(graphql_client, graphql_resources):
     """
     Verify that an authenticated GraphQL mutation creates a real product.
 
@@ -35,6 +35,10 @@ def test_create_product(graphql_client):
     assert not response.errors
 
     product = response.data["createProduct"]["product"]
+
+    # Register the GraphQL-created product with the shared framework so the
+    # existing product cleanup runs automatically during fixture teardown.
+    graphql_resources(product["databaseId"])
 
     assert product["databaseId"] > 0
     assert product["name"] == "GraphQL Test Product"
