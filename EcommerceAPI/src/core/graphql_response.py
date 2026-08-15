@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
 import requests
@@ -53,13 +53,13 @@ class GraphQLResponse:
     """
 
     status_code: int
-    headers: Dict[str, str]
+    headers: Dict[str, str] = field(repr=False)
     data: Optional[Any]
     errors: List[Any]
-    text: str
+    text: str = field(repr=False)
     url: str
     elapsed: float
-    content: Optional[bytes] = None
+    content: Optional[bytes] = field(default=None, repr=False)
 
     @property
     def ok(self) -> bool:

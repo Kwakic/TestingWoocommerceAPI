@@ -32,6 +32,7 @@ so every local run and CI workflow writes results to the same location.
 
 ``` bash
 pytest -m customers
+pytest -m "products and graphql"
 ```
 
 The plugin automatically:

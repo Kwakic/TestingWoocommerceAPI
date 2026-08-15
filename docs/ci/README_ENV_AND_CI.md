@@ -80,10 +80,12 @@ a fresh pair of REST API credentials for the newly provisioned
 WordPress installation. These credentials are then merged into
 `.env` by `write_env_credentials.sh`.
 
-Only the authentication credentials are updated:
+Authentication credentials are updated as part of bootstrap:
 
 - `WC_KEY`
 - `WC_SECRET`
+- `WP_ADMIN_USER`
+- `WP_ADMIN_APP_PASSWORD`
 
 All other developer-specific settings remain unchanged.
 
@@ -112,6 +114,59 @@ environment.
 > process, see:
 >
 > `docs/framework/README_ENVIRONMENT_CONFIG_GUIDE.md`
+
+---
+
+### GraphQL endpoint configuration
+
+GraphQL follows the same environment-selection principle as REST, but uses
+dedicated GraphQL configuration.
+
+```text
+API_ENV
+   ↓
+config_graphql.py
+   ↓
+graphql_client fixture
+   ↓
+GraphQLClient
+```
+
+The GraphQL endpoint is infrastructure configuration and must not be
+hardcoded inside individual GraphQL tests.
+
+GraphQL authentication is also separate from WooCommerce REST
+authentication:
+
+```text
+REST
+WC_KEY + WC_SECRET
+       ↓
+     OAuth1
+       ↓
+WooCommerce REST API
+```
+
+```text
+GraphQL
+WP_ADMIN_USER + WP_ADMIN_APP_PASSWORD
+       ↓
+    BasicAuth
+       ↓
+    WPGraphQL
+```
+
+The local bootstrap provisions the WordPress credentials required for
+authenticated GraphQL operations and preserves them in `.env` alongside
+the REST credentials.
+
+GitHub Actions does not use the repository `.env` file. The CI environment
+is provisioned during the workflow and the required credentials are
+exported directly into the workflow environment.
+
+> 📖 For the complete GraphQL endpoint and authentication flow, see:
+>
+> `docs/development/README_GRAPHQL_TESTING_GUIDE.md`
 
 ---
 

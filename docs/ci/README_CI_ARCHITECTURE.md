@@ -2,7 +2,7 @@
 
 Your framework has evolved beyond a "simple pytest project." You now have:
 
-- ✅ Layered API testing
+- ✅ Layered REST + GraphQL API testing
 - ✅ Segmented CI/CD pipelines
 - ✅ Dockerized test environments
 - ✅ Structured logging
@@ -24,7 +24,7 @@ Your pipelines should answer **one specific question each**:
 |----------|----------|---------|
 | **preflight.yml** | Can the framework start safely? | Ultra-fast validation; fast feedback |
 | **smoke.yml** | Are critical business flows healthy? | Deployment gate; powers badge |
-| **contract.yml** | Did the API contract/schema change? | Schema validation; diagnostics |
+| **contract.yml** | Did the REST/GraphQL API contract or schema change? | Contract validation; diagnostics |
 | **integration.yml** | Does API state match DB state? | End-to-end integration validation |
 | **regression.yml** | Did we break anything? | Full coverage; trends & history |
 | **performance.yml** | Is the system getting slower? | Latency tracking; SLA validation |
@@ -34,9 +34,9 @@ Your pipelines should answer **one specific question each**:
 
 ## 🚨 Environment Gate (Runtime Validation)
 
-All test workflows that use the API rely on a shared **environment validation gate** implemented in the `api_client` fixture.
+All test workflows that use the API rely on shared **environment validation** performed by the API client fixtures.
 
-This gate runs at the start of each pytest session (only when a test requires the `api_client` fixture):
+This validation runs at the start of the relevant pytest session when API client fixtures are required:
 
 - API is reachable
 - Credentials are valid
@@ -286,36 +286,38 @@ This mirrors the framework's domain-driven architecture, allowing each microserv
 ## 🔀 CI Flow
 
 ```text
-                Framework
-                    │
-                    ▼
-        discover_framework_entities()
-                    │
-                    ▼
-         build_entity_matrix()
-                    │
-                    ▼
-      .github/scripts/generate_matrix.py
-                    │
-                    ▼
-         GitHub Actions Matrix
-                    │
-      ┌─────────────┼─────────────┐
-      ▼             ▼             ▼
-   Smoke      Integration    Regression
-      │             │             │
-      └─────────────┼─────────────┘
-                    ▼
-        reusable-test-runner.yml
-                    │
-                    ▼
-      reusable-allure-report.yml
-                    │
-                    ▼
-      dashboard-publisher.yml
-                    │
-                    ▼
-             GitHub Pages
+                         GitHub Actions
+                               │
+              ┌────────────────┴────────────────┐
+              │                                 │
+       Entity workflows                   Shared workflows
+              │                                 │
+       entity discovery                 Preflight / Contract / Security
+              │                                 │
+       build entity matrix                    │
+              │                                 │
+       ┌──────┼──────┐                         │
+       ▼      ▼      ▼                         │
+     Smoke Integration Regression             │
+       │      │      │                         │
+       └──────┼──────┘                         │
+              │                                 │
+              └────────────┬────────────────────┘
+                           ▼
+                reusable-test-runner.yml
+                           │
+                ┌──────────┴──────────┐
+                ▼                     ▼
+       Entity Allure reports    Shared artifacts
+                │
+                ▼
+       reusable-allure-report.yml
+                │
+                ▼
+       dashboard-publisher.yml
+                │
+                ▼
+            GitHub Pages
 
 ```
 👉 The matrix includes optional ownership metadata (for example team). When omitted, the framework defaults the team to the entity name.
@@ -704,10 +706,15 @@ API_ENV=ci
 ## 2.4 contract.yml 📋
 
 ### Purpose
-Validate API contracts and response schemas before regression runs.
+Validate REST and GraphQL API contracts and response schemas before regression runs.
+
+REST and GraphQL contract tests run through the same shared `contract.yml` workflow; GraphQL does not require a separate CI workflow.
 
 ### What It Tests
+- REST API contract validation
+- GraphQL API contract validation
 - JSON schema validation
+- GraphQL response and type validation
 - Required/immutable field validation
 - Response structure correctness
 - API contract compatibility
@@ -758,9 +765,9 @@ SESSION_ID=${{ github.run_id }}
 - **Badge:** Shows last smoke run status
 
 ### Why This Configuration?
-- **Push trigger** catches schema changes early
+- **Push trigger** catches REST and GraphQL contract changes early
 - **No public Allure** keeps dashboard focused on operational metrics
-- **Artifacts only** allow developers to debug contract failures
+- **Artifacts only** allow developers to debug REST and GraphQL contract failures
 - **Structured logs** provide detailed request/response data
 
 ---
@@ -1236,7 +1243,9 @@ pytest \
   --alluredir=reports/allure-results
 ```
 
-- `--maxfail=1` — Stop at first schema failure (diagnostic-focused)
+Contract tests cover both REST and GraphQL API contracts while remaining part of the same shared `contract.yml` workflow.
+
+- `--maxfail=1` — Stop at the first contract failure (diagnostic-focused)
 
 ---
 
@@ -1486,7 +1495,7 @@ The framework is implementing best practice concepts:
 
 ✅ **Operations**
 - Dockerized CI environment (reproducibility)
-- API contract validation (schema checking)
+- API contract validation (REST + GraphQL schema checking)
 - Performance telemetry (latency tracking)
 - Security audit trails
 
@@ -1561,5 +1570,5 @@ Because:
 
 ---
 
-**Last updated:** 2026-07-07
-**Guide version:** 1.3 (CI/CD & Allure best practices)
+**Last updated:** 2026-08-15
+**Guide version:** 1.4 (CI/CD & Allure best practices)

@@ -23,7 +23,11 @@ tests/
 │   ├── api/
 │   ├── graphql/
 │   │   ├── test_create_product.py
+│   │   ├── test_delete_product.py
 │   │   ├── test_get_product.py
+│   │   ├── test_update_product.py
+│   │   ├── test_search_product.py
+│   │   ├── test_filter_products.py
 │   │   └── test_product_negative.py
 │   └── performance/
 ├── orders/
@@ -681,9 +685,7 @@ The GraphQL implementation is intentionally being developed incrementally.
 
 The next logical areas for Product GraphQL coverage are:
 
-* product search;
-* product filters;
-* categories;
+
 * additional variables and query patterns;
 * additional mutations;
 * authorization scenarios;

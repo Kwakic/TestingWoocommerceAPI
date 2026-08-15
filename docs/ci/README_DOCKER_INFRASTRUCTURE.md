@@ -62,6 +62,26 @@ The stack gives you a disposable, reproducible WooCommerce instance to run API +
 
 This is orchestrated by `docker-compose.wp.yml` at the repo root, and bootstrapped by `scripts/setup.sh`.
 
+### 🌐 GraphQL uses the same Docker environment
+
+GraphQL does not introduce a separate container, database, or Docker network.
+
+The GraphQL endpoint is served by the existing WordPress application:
+
+```text
+WordPress container
+       │
+       ├── WooCommerce REST API
+       │
+       └── WPGraphQL
+             ↓
+          /graphql
+```
+
+Authenticated GraphQL mutations use the WordPress Application Password
+provisioned during bootstrap. The Docker infrastructure is therefore shared
+by both REST and GraphQL tests.
+
 ---
 ## 🐳 Why Docker?
 
@@ -89,7 +109,7 @@ Dockerfile               → builds a container image for running the test
 scripts/setup.sh         → waits for containers, fixes permissions,
                             installs WordPress + WooCommerce, generates
                             API keys, generates WooCommerce credentials.
-write_env_credentials.sh → merges credentials into .env
+write_env_credentials.sh → merges generated REST and GraphQL credentials into `.env`
 
 Makefile                 → orchestrates the whole flow behind `make run`
 .env.example             → template for required environment variables
@@ -165,7 +185,7 @@ The local bootstrap process intentionally separates responsibilities across mult
 | Makefile | Orchestrates the complete local workflow. |
 | docker-compose.wp.yml | Starts the Docker infrastructure. |
 | setup.sh | Installs and configures WordPress and WooCommerce. |
-| write_env_credentials.sh | Updates only the generated WooCommerce credentials inside `.env`. |
+| write_env_credentials.sh | Updates the generated REST and GraphQL authentication credentials inside `.env`. |
 | EcommerceAPI | Executes the test suite. |
 
 Following the Single Responsibility Principle (SRP), each component owns one specific task. This keeps the bootstrap
@@ -195,9 +215,10 @@ During the bootstrap it:
 3. Installs WooCommerce (if needed).
 4. Configures permalinks.
 5. Waits for the REST API to become available.
-6. Generates a fresh WooCommerce API key pair.
-7. Emits the generated credentials to stdout in a machine-readable format.
-8. Delegates `.env` updates to `write_env_credentials.sh`.
+6. Generates fresh WooCommerce REST API credentials.
+7. Provisions the WordPress Application Password used by authenticated GraphQL operations.
+8. Emits the generated credentials to stdout in a machine-readable format.
+9. Delegates `.env` updates to `write_env_credentials.sh`.
 
 This step is **idempotent** — rerunning `make run` skips anything already installed instead of failing or duplicating data.
 
@@ -207,8 +228,12 @@ python -m pip install -e "./EcommerceAPI[dev]"
 pytest
 ```
 The framework talks to:
-- **API** → `http://localhost:8080/wp-json/wc/v3/`
+- **REST API** → `http://localhost:8080/wp-json/wc/v3/`
+- **GraphQL API** → `http://localhost:8080/graphql`
 - **DB** → the `db` MySQL container, for direct state validation
+
+REST and GraphQL use the same WordPress/WooCommerce container; GraphQL does
+not require a separate Docker service or network.
 
 ---
 
@@ -303,6 +328,7 @@ Makefile                   → single entrypoint tying it all together
 - README_ENVIRONMENT_CONFIG_GUIDE.md
 - README_CI_ARCHITECTURE.md
 - README_ALLURE.md
+- docs/development/README_GRAPHQL_TESTING_GUIDE.md
 
 
 ---
@@ -313,7 +339,22 @@ The bootstrap process generates only authentication credentials.
 
 It intentionally does **not** generate or overwrite `WC_API_URL`.
 
-The framework resolves the API endpoint from the selected execution environment (`API_ENV`) using the entity configuration files.
+The framework resolves API endpoints from the selected execution
+environment (`API_ENV`) using dedicated configuration.
+
+REST entity APIs use the entity configuration files.
+
+GraphQL uses dedicated GraphQL configuration:
+
+```text
+API_ENV
+   ↓
+config_graphql.py
+   ↓
+graphql_client fixture
+   ↓
+GraphQLClient
+```
 
 For example:
 
@@ -321,7 +362,10 @@ For example:
 - API_ENV=ci
 - API_ENV=docker
 
-all resolve their own URLs through the framework configuration.
+all resolve their endpoints through the framework configuration.
+
+GraphQL endpoint configuration is infrastructure configuration and must not
+be hardcoded in individual GraphQL tests.
 
 This prevents stale `.env` values from overriding the intended execution environment.
 
@@ -336,5 +380,6 @@ The Docker infrastructure follows several design principles.
 - Bootstrap is idempotent.
 - Credentials are generated automatically.
 - Environment selection belongs to the framework, not `.env`.
+- REST and GraphQL share the same Docker infrastructure.
 - Components follow the Single Responsibility Principle.
 - Developers should only need one command (`make run`) to obtain a fully working test environment.
