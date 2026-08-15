@@ -1,0 +1,84 @@
+DEBUG    EcommerceAPI.plugins.entities:entities.py:459 ✅ [customers] Loaded API client: CustomersApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:468 ✅ [customers] Instantiated helper with API client
+DEBUG    EcommerceAPI.plugins.entities:entities.py:459 ✅ [products] Loaded API client: ProductsApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:468 ✅ [products] Instantiated helper with API client
+DEBUG    EcommerceAPI.src.products.dao.products_dao:products_dao.py:45 🗄️ ProductsDAO initialized: table=wordpress.wp_posts
+INFO     EcommerceAPI.plugins.entities:entities.py:532 🔍 ENTITY DISCOVERY SUMMARY
+INFO     EcommerceAPI.plugins.entities:entities.py:534    coupons      | ⏭️ SKIPPED (missing API module)
+INFO     EcommerceAPI.plugins.entities:entities.py:534    customers    | ✅  READY
+INFO     EcommerceAPI.plugins.entities:entities.py:534    orders       | ⏭️ SKIPPED (missing API module)
+INFO     EcommerceAPI.plugins.entities:entities.py:534    products     | ✅  READY
+INFO     tests.products.graphql.test_get_all_products:test_get_all_products.py:58 Creating 12 products for GraphQL pagination test (first=5)
+INFO     EcommerceAPI.src.clients.graphql_client:graphql_client.py:171 🔷 GraphQL mutation CreatePaginationProduct → HTTP 200 (completed in 0.23s)
+INFO     EcommerceAPI.src.clients.graphql_client:graphql_client.py:171 🔷 GraphQL mutation CreatePaginationProduct → HTTP 200 (completed in 0.23s)
+INFO     EcommerceAPI.src.clients.graphql_client:graphql_client.py:171 🔷 GraphQL mutation CreatePaginationProduct → HTTP 200 (completed in 0.22s)
+INFO     EcommerceAPI.src.clients.graphql_client:graphql_client.py:171 🔷 GraphQL mutation CreatePaginationProduct → HTTP 200 (completed in 0.23s)
+INFO     EcommerceAPI.src.clients.graphql_client:graphql_client.py:171 🔷 GraphQL mutation CreatePaginationProduct → HTTP 200 (completed in 0.23s)
+INFO     EcommerceAPI.src.clients.graphql_client:graphql_client.py:171 🔷 GraphQL mutation CreatePaginationProduct → HTTP 200 (completed in 0.24s)
+INFO     EcommerceAPI.src.clients.graphql_client:graphql_client.py:171 🔷 GraphQL mutation CreatePaginationProduct → HTTP 200 (completed in 0.22s)
+INFO     EcommerceAPI.src.clients.graphql_client:graphql_client.py:171 🔷 GraphQL mutation CreatePaginationProduct → HTTP 200 (completed in 0.23s)
+INFO     EcommerceAPI.src.clients.graphql_client:graphql_client.py:171 🔷 GraphQL mutation CreatePaginationProduct → HTTP 200 (completed in 0.23s)
+INFO     EcommerceAPI.src.clients.graphql_client:graphql_client.py:171 🔷 GraphQL mutation CreatePaginationProduct → HTTP 200 (completed in 0.23s)
+INFO     EcommerceAPI.src.clients.graphql_client:graphql_client.py:171 🔷 GraphQL mutation CreatePaginationProduct → HTTP 200 (completed in 0.23s)
+INFO     EcommerceAPI.src.clients.graphql_client:graphql_client.py:171 🔷 GraphQL mutation CreatePaginationProduct → HTTP 200 (completed in 0.23s)
+INFO     tests.products.graphql.test_get_all_products:test_get_all_products.py:126 Created 12 products for pagination test: IDs=[15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26]
+INFO     tests.products.graphql.test_get_all_products:test_get_all_products.py:172 Fetching GraphQL products page 1 (first=5, search=GraphQL-Pagination-xFrFmcDu, after=None)
+INFO     EcommerceAPI.src.clients.graphql_client:graphql_client.py:171 🔷 GraphQL query GetProductsPage → HTTP 200 (completed in 0.18s)
+INFO     tests.products.graphql.test_get_all_products:test_get_all_products.py:203 Page 1 → 5 products | hasNextPage=True | endCursor=YXJyYXljb25uZWN0aW9uOjIy
+INFO     tests.products.graphql.test_get_all_products:test_get_all_products.py:172 Fetching GraphQL products page 2 (first=5, search=GraphQL-Pagination-xFrFmcDu, after=YXJyYXljb25uZWN0aW9uOjIy)
+INFO     EcommerceAPI.src.clients.graphql_client:graphql_client.py:171 🔷 GraphQL query GetProductsPage → HTTP 200 (completed in 0.17s)
+INFO     tests.products.graphql.test_get_all_products:test_get_all_products.py:203 Page 2 → 5 products | hasNextPage=True | endCursor=YXJyYXljb25uZWN0aW9uOjE3
+INFO     tests.products.graphql.test_get_all_products:test_get_all_products.py:172 Fetching GraphQL products page 3 (first=5, search=GraphQL-Pagination-xFrFmcDu, after=YXJyYXljb25uZWN0aW9uOjE3)
+INFO     EcommerceAPI.src.clients.graphql_client:graphql_client.py:171 🔷 GraphQL query GetProductsPage → HTTP 200 (completed in 0.17s)
+INFO     tests.products.graphql.test_get_all_products:test_get_all_products.py:203 Page 3 → 2 products | hasNextPage=False | endCursor=YXJyYXljb25uZWN0aW9uOjE1
+INFO     tests.products.graphql.test_get_all_products:test_get_all_products.py:236 GraphQL pagination returned 12 products across 3 pages
+INFO     tests.products.graphql.test_get_all_products:test_get_all_products.py:260 ✅ Pagination confirmed: 12 products retrieved across 3 pages
+INFO     tests.products.graphql.test_get_all_products:test_get_all_products.py:276 ✅ No duplicate products found across pages
+INFO     tests.products.graphql.test_get_all_products:test_get_all_products.py:292 ✅ All 12 products created by this test were returned
+INFO     tests.products.graphql.test_get_all_products:test_get_all_products.py:310 🎯 GraphQL product pagination test completed successfully
+INFO     EcommerceAPI.plugins.entities:entities.py:715 🔧 Starting teardown of created test resources...
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up product(s)... (12 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 15
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/15?force=True → Status code: 200 (completed in 0.150s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 15
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 16
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/16?force=True → Status code: 200 (completed in 0.140s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 16
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 17
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/17?force=True → Status code: 200 (completed in 0.145s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 17
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 18
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/18?force=True → Status code: 200 (completed in 0.142s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 18
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 19
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/19?force=True → Status code: 200 (completed in 0.142s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 19
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 20
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/20?force=True → Status code: 200 (completed in 0.173s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 20
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 21
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/21?force=True → Status code: 200 (completed in 0.168s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 21
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 22
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/22?force=True → Status code: 200 (completed in 0.138s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 22
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 23
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/23?force=True → Status code: 200 (completed in 0.142s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 23
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 24
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/24?force=True → Status code: 200 (completed in 0.140s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 24
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 25
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/25?force=True → Status code: 200 (completed in 0.138s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 25
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 26
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/26?force=True → Status code: 200 (completed in 0.141s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 26
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for product(s).
+INFO     EcommerceAPI.plugins.entities:entities.py:746 
+
+🧹 ====================================== CLEANUP SUMMARY ======================================
+INFO     EcommerceAPI.plugins.entities:entities.py:749 📊 Created during test run: {'products': 12}
+INFO     EcommerceAPI.plugins.entities:entities.py:750 🧾 Cleanup total summary:
+INFO     EcommerceAPI.plugins.entities:entities.py:752    • product: 12 deleted (12 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:753 ✅ All test data cleanup completed.
