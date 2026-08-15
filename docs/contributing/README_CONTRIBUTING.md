@@ -155,8 +155,10 @@ You **must** update documentation if your PR:
 - ✅ Adds or removes a config flag
 - ✅ Changes config precedence or defaults
 - ✅ Moves config or runtime metadata
-- ��� Changes logging output or startup banners
+- ✅ Changes logging output or startup banners
 - ✅ Changes plugin responsibilities
+- ✅ If adding or changing GraphQL infrastructure or GraphQL test architecture,
+  update `docs/development/README_GRAPHQL_TESTING_GUIDE.md`.
 
 ### Relevant docs:
 

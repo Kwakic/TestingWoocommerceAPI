@@ -196,6 +196,28 @@ pytest tests/customers/api/test_create_customer.py::test_name -q -vv
 
 ---
 
+### GraphQL tests
+
+GraphQL tests use the same Dockerized WordPress/WooCommerce environment
+as the rest of the API test suite.
+
+Run the Product GraphQL suite with:
+
+```bash
+pytest tests/products/graphql/ -v
+```
+
+Run GraphQL contract tests with:
+
+```bash
+pytest -m "graphql and contract" -v
+```
+For GraphQL architecture, authentication and test development, see:
+
+[GraphQL Testing Guide](./docs/development/README_GRAPHQL_TESTING_GUIDE.md)
+
+---
+
 ## Troubleshooting: “0 tests collected”
 1. Avoid filters while debugging (`-m`, `-k`, `-q`).
    Run `pytest --collect-only -q tests/`.

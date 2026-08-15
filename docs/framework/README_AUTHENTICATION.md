@@ -6,9 +6,9 @@ The framework uses a **pluggable authentication architecture** so that
 API authentication can be changed without modifying the API client or
 tests.
 
-Currently the framework **implements OAuth1 (WooCommerce)**
-authentication, but the architecture is intentionally designed to
-support additional strategies in the future (JWT, OAuth2, Basic, etc.).
+The framework implements **OAuth1 (WooCommerce)** for the REST API.
+GraphQL uses **WordPress Application Password + HTTP Basic Auth**.
+The two authentication flows are intentionally independent.
 
 Authentication is resolved dynamically during runtime using
 configuration.
@@ -156,6 +156,59 @@ Example behavior:
 
 ------------------------------------------------------------------------
 
+# GraphQL Authentication
+
+GraphQL uses a different authentication mechanism from the WooCommerce
+REST API.
+
+## REST authentication
+
+```text
+WC_KEY + WC_SECRET
+        ↓
+      OAuth1
+        ↓
+   WooCommerce REST API
+```
+
+## GraphQL authentication
+
+```text
+WP_ADMIN_USER + WP_ADMIN_APP_PASSWORD
+                ↓
+             BasicAuth
+                ↓
+             WPGraphQL
+```
+
+GraphQL mutations require a WordPress user context, so the REST OAuth1
+credentials are **not** used for authenticated GraphQL operations.
+
+The GraphQL client receives its authentication strategy through the
+`graphql_client` fixture rather than resolving the REST
+`AUTH_TYPE=oauth1` pipeline.
+
+GraphQL authentication is therefore intentionally independent from the
+REST OAuth1 pipeline.
+
+The GraphQL credentials are:
+
+```text
+WP_ADMIN_USER
+WP_ADMIN_APP_PASSWORD
+```
+
+They are loaded from the environment and must not be hardcoded in GraphQL
+tests.
+
+For the complete GraphQL authentication and testing flow, see:
+
+```text
+docs/development/README_GRAPHQL_TESTING_GUIDE.md
+```
+
+------------------------------------------------------------------------
+
 # APIClient Authentication Resolution
 
 Inside `APIClient.__init__`:
@@ -182,19 +235,27 @@ APIClient(base_url, auth_strategy=InvalidOAuthStrategy())
 
 ------------------------------------------------------------------------
 
-# Switching Authentication Methods
+# Switching REST Authentication Methods
 
-Authentication is controlled by **environment configuration**, not code.
+REST authentication is controlled by **environment configuration**, not code.
 
 Edit your `.env` file:
 
     AUTH_TYPE=oauth1
 
-Currently supported:
+Currently supported REST authentication:
 
   Method   Description
   -------- --------------------------------------------------
   oauth1   WooCommerce consumer key / secret authentication
+
+GraphQL authentication is configured separately:
+
+  Component                  Description
+  ------------------------   --------------------------------------------
+  BasicAuth                  HTTP Basic authentication
+  WP_ADMIN_USER              WordPress administrator/user account
+  WP_ADMIN_APP_PASSWORD      WordPress Application Password
 
 Example `.env`:
 
@@ -249,6 +310,10 @@ if auth_type == "jwt":
 
 No changes required in `APIClient` or tests.
 
+> **Note:** `AUTH_TYPE` and `auth_factory` describe the REST authentication
+> pipeline. GraphQL authentication is intentionally wired separately through
+> the GraphQL client fixture and is not selected by `AUTH_TYPE`.
+
 ------------------------------------------------------------------------
 
 # Security Testing
@@ -293,14 +358,35 @@ The authentication system follows several architectural rules:
 
 # Final Notes
 
-Current implementation focuses on **WooCommerce OAuth1 authentication**,
-which is the only method required by the system under test.
+The current framework has two authentication paths:
 
-However the architecture already supports adding additional
-authentication strategies without changing:
+```text
+REST
+    WC_KEY + WC_SECRET
+            ↓
+          OAuth1
+            ↓
+       APIClient
+
+GraphQL
+    WP_ADMIN_USER + WP_ADMIN_APP_PASSWORD
+                    ↓
+                 BasicAuth
+                    ↓
+              GraphQLClient
+```
+
+These paths are intentionally independent because WooCommerce REST and
+WPGraphQL use different authentication mechanisms.
+
+The REST authentication architecture remains pluggable and supports adding
+additional REST authentication strategies without changing:
 
 -   APIClient
 -   HttpClient
--   existing tests
+-   existing REST tests
+
+GraphQL authentication is handled independently by the GraphQL client
+infrastructure.
 
 This ensures the framework remains maintainable and extensible.

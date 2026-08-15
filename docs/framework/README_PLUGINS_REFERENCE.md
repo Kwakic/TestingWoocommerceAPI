@@ -50,7 +50,7 @@ Environment / CI / CLI
 
 # 📋 Plugin Contracts
 
-## logging_plugin.py
+## 🔹logging_plugin.py
 
 **Responsibilities**
 - Configure logging
@@ -70,7 +70,7 @@ Environment / CI / CLI
 
 ---
 
-## config_pytest.py
+## 🔹config_pytest.py
 
 **Responsibilities**
 - Read environment variables
@@ -84,7 +84,7 @@ This is the **only place** allowed to read env vars.
 
 ---
 
-## allure_autogen.py
+## 🔹allure_autogen.py
 
 **Responsibilities**
 - Allure lifecycle management
@@ -98,7 +98,7 @@ This is the **only place** allowed to read env vars.
 
 ---
 
-## api/shared_api.py
+## 🔹api/shared_api.py
 
 **Responsibilities**
 
@@ -131,19 +131,47 @@ This prevents cascading failures across all tests.
 
 ---
 
-## api/shared_graphql.py
+
+## 🔹api/shared_graphql.py
 
 **Responsibilities**
 
-TBD
+- Provide the shared `graphql_client` fixture.
+- Resolve the GraphQL endpoint from the framework GraphQL configuration.
+- Provide a session-scoped `GraphQLClient` to GraphQL tests.
+- Wire GraphQL authentication into the shared client fixture.
+- Keep GraphQL transport setup separate from REST API fixtures.
+
+**Forbidden**
+
+- Entity-specific GraphQL fixtures.
+- GraphQL business logic.
+- GraphQL assertions.
+- Reading environment variables directly.
+- Implementing GraphQL HTTP transport.
+
+### GraphQL Fixture Boundary
+
+The shared GraphQL plugin is responsible for **infrastructure wiring**, not GraphQL business behavior.
+
+The fixture follows:
+
+```text
+GraphQL configuration
+        ↓
+GraphQL endpoint
+        ↓
+Authentication
+        ↓
+GraphQLClient
+        ↓
+GraphQL tests
+```
 
 ---
 
 
----
-
-
-## api/<entity>.py
+## 🔹api/<entity>.py
 
 **Responsibilities**
 
@@ -166,7 +194,7 @@ Examples:
 
 ---
 
-## entities.py
+## 🔹entities.py
 
 **Responsibilities**
 
@@ -181,7 +209,7 @@ README_ENTITY_DISCOVER_ARCHITECTURE_GUIDE.md
 
 ---
 
-## entity_metadata.py
+## 🔹entity_metadata.py
 
 **Responsibilities**
 
@@ -193,7 +221,7 @@ This module defines framework architecture rather than runtime resources.
 
 ---
 
-## reporting.py
+## 🔹reporting.py
 
 **Responsibilities**
 
@@ -205,7 +233,7 @@ This plugin consumes runtime metadata but does not perform test execution.
 
 ---
 
-## db_fixtures.py
+## 🔹db_fixtures.py
 
 **Responsibilities**
 

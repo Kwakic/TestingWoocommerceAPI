@@ -40,22 +40,64 @@ It provides:
 ------------------------------------------------------------------
 # 🧱 Core Framework Layers
 
-The framework follows a **clean layered architecture**.
+The framework uses a shared HTTP transport layer with
+protocol-specific API clients.
+
+REST and GraphQL share the same low-level HTTP transport,
+but each protocol has its own request orchestration and
+response model.
+
+```text
+                         ┌── REST ──────→ APIClient ──────→ HttpResponse
+                         │
+HttpClient ──────────────┤
+                         │
+                         └── GraphQL ───→ GraphQLClient ──→ GraphQLResponse
+```
+
+Above these protocol layers, tests remain organized by
+business entity.
 
 ```
-HttpClient        → transport
-APIClient         → request orchestration
-HttpResponse      → structured response object
-API Layer         → endpoint mapping
-Helper Layer      → workflow orchestration
-Validators        → data validation
-Pydantic Models   → structure validation
-Tests             → business assertions
+REST / GraphQL clients
+          ↓
+   Entity-specific tests
+          ↓
+     Business assertions
+```
+
+The REST and GraphQL clients therefore share infrastructure
+without forcing both protocols into the same client or
+response abstraction.
+
+So the final architecture story becomes:
+```
+                    TestEcommerceAPI
+                          │
+              ┌───────────┴───────────┐
+              │                       │
+            REST                   GraphQL
+              │                       │
+          APIClient              GraphQLClient
+              │                       │
+        HttpResponse          GraphQLResponse
+              │                       │
+              └───────────┬───────────┘
+                          │
+                     HttpClient
+                          │
+                   requests.Session
+                          │
+                       Server
 ```
 
 
 ------------------------------------------------------------------
-# 🔄 End‑to‑End Execution Flow
+# 🔄 REST End-to-End Execution Flow
+
+The following flow describes the REST API execution path.
+GraphQL uses the same low-level `HttpClient` transport but
+has its own `GraphQLClient` and `GraphQLResponse` layers.
 
 Typical positive test execution:
 
@@ -414,13 +456,15 @@ Benefits:
 ------------------------------------------------------------------
 # 🧠 Mental Model
 
-```
-HttpClient      → send request
-APIClient       → manage request lifecycle
-HttpResponse    → safe response
-Helper          → orchestrate workflows
-Validator       → validate data
-Test            → assert behavior
+```text
+HttpClient       → send HTTP request
+APIClient        → manage REST request lifecycle
+GraphQLClient    → manage GraphQL request lifecycle
+HttpResponse     → represent REST response
+GraphQLResponse  → represent GraphQL response
+Helper           → orchestrate REST workflows
+Validator        → validate data
+Test             → assert behaviour
 ```
 
 
@@ -440,14 +484,16 @@ Test            → assert behavior
 If you are unsure where code belongs:
 
 | Task | Location |
-|-----|-----|
-Send HTTP request | HttpClient |
-Manage request | APIClient |
-Wrap response | HttpResponse |
-Call endpoints | API layer |
-Orchestrate workflow | Helper |
-Validate data | Validators |
-Assert behaviour | Tests |
+|------|----------|
+| Send HTTP request | HttpClient |
+| Manage REST request | APIClient |
+| Manage GraphQL request | GraphQLClient |
+| Wrap REST response | HttpResponse |
+| Wrap GraphQL response | GraphQLResponse |
+| Call REST endpoints | API layer |
+| Orchestrate REST workflow | Helper |
+| Validate data | Validators |
+| Assert behaviour | Tests |
 
 
 ------------------------------------------------------------------
@@ -483,19 +529,22 @@ security, and environment behavior before running entity-specific tests.
 
 Directory structure:
 
+
+```
 tests/shared/
-
     preflight/
-        test_api_connectivity.py
-        test_response_format.py
         test_logging_globals.py
-
     security/
         test_authentication_matrix.py
         test_authentication_success.py
-
-    performance/
-        test_basic_response_times.py
+    contracts/
+           rest/
+              test_api_connectivity.py
+              test_response_format.py
+           graphql/
+              test_graphql_connectivity.py
+              test_product_mutation_schema.py
+```
 
 Purpose of each category:
 
@@ -509,6 +558,8 @@ Examples:
 - logging configuration
 - response format validation
 
+---
+
 Security tests
 --------------
 Validate authentication and access control behavior.
@@ -520,9 +571,20 @@ Example matrix:
 × 3 invalid credential cases
 = 48 security tests
 
-Performance tests
------------------
-Validate entity-specific performance benchmarks detect regressions
-in API responsiveness.
+---
+
+Contract tests
+------------------
+Contract tests validate the expected API response structure.
+
+REST contract tests validate REST response contracts.
+
+GraphQL contract tests validate GraphQL schema-level expectations,
+such as the availability of required GraphQL types and mutation
+fields.
+
+GraphQL contract tests do not replace entity-specific GraphQL tests.
+They validate the GraphQL API contract at framework level, while
+tests under `tests/<entity>/graphql/` validate business behaviour.
 
 ------------------------------------------------------------------

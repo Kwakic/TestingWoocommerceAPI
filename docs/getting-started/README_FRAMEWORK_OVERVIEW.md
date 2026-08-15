@@ -5,11 +5,26 @@ Covers purpose, quick-start steps, key conventions, and where to find deeper doc
 
 ---
 
-## Purpose — what this repo is for
+## 🎯 Purpose — what this repo is for
 - Provide a reusable, team-friendly API test framework for the EcommerceAPI (WooCommerce) ecosystem.
+- Support both **REST API testing** and **GraphQL API testing**.
 - Run fast preflight checks and full regression suites per microservice (customers, orders, products, coupons).
 - Produce machine- and human-friendly outputs: structured JSONL logs for ingestion and Allure results/HTML for test reporting.
 - Make it easy to run tests locally, in containers, and in CI (GitHub Actions / GitLab).
+
+### 🌐 API Capabilities
+
+The framework currently covers two API protocols:
+
+- **REST API testing**
+  - Entity-level REST behavior
+  - Shared REST contract tests
+  - Authentication and security validation
+
+- **GraphQL API testing**
+  - Entity-level GraphQL behavior
+  - Shared GraphQL contract tests
+  - GraphQL authentication using WordPress Application Passwords + Basic Auth
 
 Who should read this
 - New engineers joining the test team
@@ -37,6 +52,7 @@ The bootstrap process automatically:
 - 🌐 Installs WordPress
 - 🛒 Installs WooCommerce
 - 🔑 Generates fresh WooCommerce REST API credentials
+- 🔐 Provisions the local WordPress Application Password used by authenticated GraphQL tests
 - 📝 Creates `.env` (if it does not already exist)
 - ⚙️ Configures the local testing environment
 
@@ -117,16 +133,25 @@ For full developer setup and step-by-step onboarding, see: `DEVELOPER_ONBOARDING
 
 ---
 
-## Where to find deeper docs
+## 📚 Where to find deeper docs
 
+Use this page as the map; use the documents below when you need implementation
+details or development guidance.
+
+- **GraphQL testing:**
+  - `docs/development/README_GRAPHQL_TESTING_GUIDE.md` — GraphQL client,
+    authentication, fixtures, entity tests, contract tests, and execution
 - Developer onboarding and CLI commands:
   - `README_QA_DEVELOPER_ONBOARDING.md` — full developer setup & troubleshooting
 - Architecture and internals:
-  - `README_ARCHITECTURE.md` — design overview and component responsibilities
+  - `README_ARCHITECTURE.md` — full design overview and component responsibilities
+  - `README_ARCHITECTURE_QUICK_START.md` — concise architecture mental model
 - Schema & validation:
-  - `SCHEMA_VALIDATION_GUIDE.md` — how schemas are used, where they live, and how to add new schemas
+  - `SCHEMA_VALIDATION_GUIDE.md` — REST response schemas, where they live, and how to add new schemas
+  - `tests/shared/contracts/graphql/` — shared GraphQL contract tests for the GraphQL API schema
 - Environment & CI:
-  - `README_ENV_AND_CI.md` — Allure, .env, Docker and CI best practices
+  - `README_ENV_AND_CI.md` — Allure, `.env`, Docker and CI best practices
+  - `docs/development/README_GRAPHQL_TESTING_GUIDE.md` — GraphQL-specific environment and authentication details
 - Contribution & workflows:
   - `CONTRIBUTING.md` — PR guidelines, test expectations, and branch workflow
 - Logging & diagnostics:
@@ -134,6 +159,50 @@ For full developer setup and step-by-step onboarding, see: `DEVELOPER_ONBOARDING
 - Tests & fixtures examples:
   - `tests/shared/api_fixtures.py` — common fixtures (api_client, factory fixtures)
   - `tests/customers/helpers/customers_helper.py` — sample helper showing patterns
+
+---
+
+## 🌐 GraphQL at a Glance
+
+GraphQL is part of the framework's API testing capabilities, but it is kept
+separate from the REST authentication and protocol pipeline.
+
+```text
+                    API TESTING
+                         │
+              ┌──────────┴──────────┐
+              │                     │
+            REST                 GraphQL
+              │                     │
+          APIClient           GraphQLClient
+              │                     │
+              └──────────┬──────────┘
+                         │
+                    HttpClient
+```
+
+GraphQL tests are organized in two levels:
+
+```text
+tests/<entity>/graphql/
+    → entity-specific GraphQL behavior
+
+tests/shared/contracts/graphql/
+    → framework-level GraphQL contract checks
+```
+
+For authenticated GraphQL mutations, the local environment uses:
+
+```text
+WP_ADMIN_USER + WP_ADMIN_APP_PASSWORD
+                ↓
+             BasicAuth
+                ↓
+          GraphQLClient
+```
+
+See `docs/development/README_GRAPHQL_TESTING_GUIDE.md` for the complete
+GraphQL testing flow.
 
 ---
 
@@ -171,4 +240,8 @@ For full developer setup and step-by-step onboarding, see: `DEVELOPER_ONBOARDING
 
 ---
 
-This document is the high-level landing page for contributors and stakeholders. For architecture details see `README_ARCHITECTURE.md`.
+This document is the high-level landing page for contributors and stakeholders.
+
+For architecture details see `README_ARCHITECTURE.md`.
+For the concise architecture model see `README_ARCHITECTURE_QUICK_START.md`.
+For GraphQL testing details see `docs/development/README_GRAPHQL_TESTING_GUIDE.md`.

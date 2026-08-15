@@ -64,6 +64,11 @@ config_loader.py
 
 `log_context.py`
     Stores per-test logging context.
+
+`config_graphql.py`
+    Stores the GraphQL endpoint configuration used by the shared `graphql_client` fixture.
+    GraphQL has a single endpoint rather than one endpoint per REST entity, its configuration is
+maintained separately from `config_<entity>.py`.
 ---
 
 ## 3️⃣ Programmatic Access (Correct Way)
@@ -217,6 +222,25 @@ env = os.getenv("API_ENV") or os.getenv("ENV", "test")
 ...
 return module.API_HOSTS[env]
 ```
+---
+
+### 🌐 GraphQL Endpoint
+
+GraphQL endpoint resolution follows the same environment-selection
+principle as REST but uses dedicated GraphQL configuration.
+
+```text
+API_ENV
+   ↓
+config_graphql.py
+   ↓
+graphql_client fixture
+   ↓
+GraphQLClient
+```
+GraphQL endpoint configuration is infrastructure configuration and must
+not be hardcoded in individual GraphQL tests.
+
 ---
 
 ### 🔄 Complete Base URL Resolution Flow

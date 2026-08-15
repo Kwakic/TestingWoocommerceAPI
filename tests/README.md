@@ -11,13 +11,27 @@ The test suite follows a **domain-driven** structure: each business entity owns 
 ```text
 tests/
 ├── customers/
+│   ├── api/                    ← REST API behaviour
+│   ├── graphql/                ← GraphQL behaviour
+│   └── performance/
 ├── products/
+│   ├── api/
+│   ├── graphql/
+│   └── performance/
 ├── orders/
+│   ├── api/
+│   ├── graphql/
+│   └── performance/
 ├── coupons/
+│   ├── api/
+│   ├── graphql/
+│   └── performance/
 ├── shared/
-│   ├── preflight/
-│   ├── contract/
-│   └── security/
+│   ├── preflight/              ← Environment/framework checks
+│   ├── contracts/
+│   │   ├── rest/               ← REST contract tests
+│   │   └── graphql/            ← GraphQL contract tests
+│   └── security/               ← Authentication/security tests
 └── conftest.py
 ```
 
@@ -27,6 +41,8 @@ Each business entity owns its own test suite.
 
 Typical responsibilities include:
 
+- REST API tests
+- GraphQL API tests
 - Smoke tests
 - Integration tests
 - Regression tests
@@ -34,6 +50,18 @@ Typical responsibilities include:
 - Entity-specific fixtures
 - Test data
 - Domain configuration
+
+REST and GraphQL behaviour remain under the same business domain:
+
+```text
+products/
+├── api/              ← REST behaviour
+├── graphql/          ← GraphQL behaviour
+└── performance/      ← performance tests
+```
+
+GraphQL tests are therefore not a separate top-level test domain. They belong
+to the entity they exercise.
 
 Each entity also has its own Team Guide under:
 
@@ -57,10 +85,31 @@ Examples:
 Examples include:
 
 - Preflight checks
-- Contract validation
+- REST contract validation
+- GraphQL contract validation
 - Security validation
 
-These suites execute once for the framework and automatically discover supported entities where appropriate.
+Contract tests are separated by protocol:
+
+```text
+tests/shared/contracts/
+├── rest/
+└── graphql/
+```
+
+REST contract tests validate REST response contracts.
+
+GraphQL contract tests validate framework-level GraphQL schema expectations,
+such as required types, fields, and mutation structure.
+
+Entity-specific GraphQL behaviour remains under:
+
+```text
+tests/<entity>/graphql/
+```
+
+These shared suites execute once for the framework and automatically discover
+supported entities where appropriate.
 
 ---
 
@@ -77,11 +126,18 @@ coupons/
 
 Each domain owns:
 
+• REST behaviour
+• GraphQL behaviour
 • smoke
 • integration
 • regression
 • performance
 ```
+
+GraphQL does not create a separate business domain. It is another API
+protocol used by the existing business domains.
+
+Framework-level protocol contracts remain in `tests/shared/contracts/`.
 
 This organisation:
 
@@ -106,6 +162,18 @@ Run shared framework tests:
 pytest tests/shared
 ```
 
+Run an entity's GraphQL tests:
+
+```bash
+pytest tests/products/graphql -v
+```
+
+Run shared GraphQL contract tests:
+
+```bash
+pytest tests/shared/contracts/graphql -v
+```
+
 Run the complete suite:
 
 ```bash
@@ -119,6 +187,7 @@ For marker-based execution, see the Test Development Guide.
 ## 📚 Related Documentation
 
 - `docs/development/README_TEST_DEVELOPMENT_GUIDE.md` — How to write tests
+- `docs/development/README_GRAPHQL_TESTING_GUIDE.md` — GraphQL testing, authentication, fixtures, and contracts
 - `docs/development/README_ARCHITECTURE.md` — Framework architecture
 - `docs/ci/README_CI_ARCHITECTURE.md` — CI workflows
 - `docs/framework/README_PLUGINS_REFERENCE.md` — Plugin system

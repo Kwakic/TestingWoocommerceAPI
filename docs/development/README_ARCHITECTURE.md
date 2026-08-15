@@ -148,6 +148,26 @@ The framework follows a layered architecture:
 - Helper layer (business logic)
 - API/DB layer (system under test)
 
+For the API layer, REST and GraphQL use separate protocol clients while
+sharing the same low-level HTTP transport:
+
+```text
+REST
+  ↓
+APIClient
+  ↓
+HttpClient
+
+GraphQL
+  ↓
+GraphQLClient
+  ↓
+HttpClient
+```
+
+This keeps protocol-specific behavior separate without duplicating the HTTP
+transport implementation.
+
 
 ---
 
@@ -171,29 +191,95 @@ Top-level `conftest.py` uses:
 
 ```python
 pytest_plugins = [
-    "EcommerceAPI.plugins.logging_plugin",        # MUST load first
+    # -----------------------
+    # Core Framework Plugins
+    # -----------------------
+    "EcommerceAPI.plugins.logging_plugin",  # MUST load first!!!
     "EcommerceAPI.plugins.config_pytest",
     "EcommerceAPI.plugins.reporting",
-    "EcommerceAPI.plugins.allure_autogen", # manage Allure lifecycle
-    "EcommerceAPI.plugins.entities",
-    "EcommerceAPI.plugins.db_fixtures",
-    "EcommerceAPI.plugins.api_fixtures",
-    "EcommerceAPI.plugins.entity_metadata",
+    "EcommerceAPI.plugins.allure_autogen",
     # -----------------------
-    # API Layer (split by domain) This layer provides entity-scoped pytest fixtures and acts as the bridge between pytest and the helper/API layers.
+    # Core Dependency Layer
+    # -----------------------
+    "EcommerceAPI.plugins.entities",  # <-- defines shared_api_resources
+    "EcommerceAPI.plugins.db_fixtures",
+    "EcommerceAPI.plugins.api_fixtures",  # <-- uses shared_api_resources
+    # -----------------------
+    # API Layer (split by domain)
     # -----------------------
     "EcommerceAPI.plugins.api.shared_api",
+    "EcommerceAPI.plugins.api.shared_graphql",
     "EcommerceAPI.plugins.api.customers",
     "EcommerceAPI.plugins.api.products",
     "EcommerceAPI.plugins.api.orders",
     "EcommerceAPI.plugins.api.coupons",
 ]
 
+
 ```
 
 Order matters: logging must load first so all log records are created with the custom factory and redaction rules.
 
+---
 
+### 🧩 API Plugin Layer — REST and GraphQL
+
+The `EcommerceAPI/plugins/api/` directory contains shared pytest plugins for
+the API-facing test infrastructure.
+
+There are two shared protocol-level plugins:
+
+```text
+EcommerceAPI/plugins/api/
+├── shared_api.py
+└── shared_graphql.py
+```
+
+They have different responsibilities:
+
+```text
+shared_api.py
+    ↓
+Shared REST infrastructure
+
+shared_graphql.py
+    ↓
+Shared GraphQL infrastructure
+```
+
+`shared_graphql.py` provides the shared GraphQL test infrastructure, including
+the `graphql_client` fixture and the configuration/authentication wiring
+needed by GraphQL tests.
+
+It does **not** contain Product, Customer, Order, or Coupon GraphQL business
+behavior.
+
+Entity-specific plugins remain separate:
+
+```text
+EcommerceAPI/plugins/api/
+├── shared_api.py       ← shared REST infrastructure
+├── shared_graphql.py   ← shared GraphQL infrastructure
+├── customers.py       ← Customer API fixtures/helpers
+├── products.py         ← Product API fixtures/helpers
+├── orders.py           ← Order API fixtures/helpers
+└── coupons.py          ← Coupon API fixtures/helpers
+```
+
+Entity-specific GraphQL behavior remains in the corresponding test domain:
+
+```text
+tests/products/graphql/
+tests/customers/graphql/
+tests/orders/graphql/
+tests/coupons/graphql/
+```
+
+Framework-level GraphQL contract tests remain under:
+
+```text
+tests/shared/contracts/graphql/
+```
 
 ### 🧩 API Fixture Layer (plugins/api/)
 
@@ -247,6 +333,18 @@ Run a single microservice:
 
 ```
 pytest tests/customers --alluredir=reports/customers/allure-results
+```
+
+Run Product GraphQL tests directly when the environment is already prepared:
+
+```bash
+pytest tests/products/graphql/ -v
+```
+
+Run shared GraphQL contract tests:
+
+```bash
+pytest tests/shared/contracts/graphql/ -v
 ```
 
 ---
@@ -348,6 +446,26 @@ Each workflow answers a specific question:
 - performance → latency + SLA
 - security → auth & permissions
 
+GraphQL follows the same segmented CI model. It is a test protocol, not a new
+CI tier by itself.
+
+GraphQL tests are selected by pytest markers and therefore run through the
+existing CI suite workflows and reusable test runner:
+
+```text
+GraphQL test
+    ↓
+pytest markers
+    ↓
+existing CI suite
+    ↓
+reusable test runner
+```
+
+For example, framework-level GraphQL contract tests belong to the `contract`
+suite, while entity-level GraphQL tests are classified according to the type
+of behavior they verify.
+
 This design provides:
 
 - Faster feedback
@@ -410,6 +528,56 @@ This means:
 - Entity configuration files own endpoint mappings.
 - The same configuration model is used for local development, Docker,
   and GitHub Actions.
+
+### GraphQL configuration
+
+GraphQL follows the same environment-aware approach, but uses its own
+framework configuration because `/graphql` is a GraphQL endpoint rather than
+an entity-specific REST endpoint.
+
+```text
+API_ENV
+   ↓
+config_graphql.py
+   ↓
+get_graphql_host()
+   ↓
+GraphQLClient
+```
+
+GraphQL authentication is separate from the REST authentication pipeline.
+
+Local authenticated GraphQL mutations use WordPress Application Passwords:
+
+```text
+WP_ADMIN_USER
+WP_ADMIN_APP_PASSWORD
+        ↓
+     BasicAuth
+        ↓
+ GraphQLClient
+```
+
+The Docker WordPress service uses:
+
+```yaml
+WP_ENVIRONMENT_TYPE: local
+```
+
+because the local Docker stack serves WordPress over plain HTTP. This enables
+WordPress Application Password authentication in the local environment.
+
+The GraphQL environment therefore has two separate concerns:
+
+```text
+Endpoint
+  API_ENV → config_graphql.py → GraphQLClient
+
+Authentication
+  WP_ADMIN_USER + WP_ADMIN_APP_PASSWORD
+             → BasicAuth → GraphQLClient
+```
+
 
 For a complete explanation of the configuration architecture, see:
 
@@ -534,6 +702,24 @@ reports/
 2. No change needed to shared plugins—discovery and CI will pick up the folder automatically.
 3. For local Docker/matrix runs add the profile name if you want to run via `docker-compose` (optional).
 
+If the new microservice exposes GraphQL, follow the same domain structure:
+
+```text
+tests/<new_service>/
+├── api/                         ← REST behavior
+├── graphql/                     ← GraphQL behavior
+└── ...
+```
+
+Do not create a new GraphQL fixture implementation for each entity. Reuse the
+shared `graphql_client` fixture from `EcommerceAPI/plugins/api/shared_graphql.py`.
+
+Framework-level GraphQL contract tests belong under:
+
+```text
+tests/shared/contracts/graphql/
+```
+
 ---
 
 ## Troubleshooting checklist
@@ -581,6 +767,46 @@ reports/
 5. Rollback must be trivial (git revert one file)
 
 ---
+## 🔗 REST and GraphQL — Architecture Summary
+
+REST and GraphQL use the same low-level HTTP transport but have separate
+protocol clients:
+
+```text
+                         API TESTS
+                            │
+               ┌────────────┴────────────┐
+               │                         │
+             REST                     GraphQL
+               │                         │
+           APIClient                GraphQLClient
+               │                         │
+               └────────────┬────────────┘
+                            │
+                        HttpClient
+                            │
+                     requests.Session
+```
+
+The main responsibilities are:
+
+| Component | Responsibility |
+|---|---|
+| `shared_api.py` | Shared REST pytest infrastructure |
+| `shared_graphql.py` | Shared GraphQL pytest infrastructure |
+| `APIClient` | REST request orchestration |
+| `GraphQLClient` | GraphQL request orchestration |
+| `HttpClient` | Low-level HTTP transport |
+| Entity plugins | Entity-specific fixtures/helpers |
+| Entity tests | Business behavior and assertions |
+| `tests/shared/contracts/` | Framework/API contract checks |
+
+GraphQL does not replace or alter the existing REST authentication pipeline.
+REST continues to use WooCommerce authentication, while authenticated
+GraphQL mutations use WordPress Application Passwords through Basic Auth.
+
+---
+
 ## Final note
 
 The framework is designed for multi-team scale: independent microservice test folders, shared plugins for consistent behavior, and CI matrix support for fast, isolated feedback. Keeping Allure generation optional and CI-installed (rather than baked into images) yields smaller images and more reproducible CI runs.
