@@ -111,10 +111,16 @@ echo "════════════════════════�
 echo
 
 echo "⏳ Waiting for WordPress container..."
-# Only check that the HTTP server itself is responding here — NOT that
-# WordPress is installed/configured. /wp-json only exists once `wp core
-# install` has run (further down this script)...
-until curl -fsS --max-time 5 http://localhost:8080/ > /dev/null; do
+
+# Only check that the HTTP server itself is responding.
+# The HTTP status is intentionally ignored here because WordPress may
+# still be starting or installing. API-specific readiness checks happen
+# later in this script.
+until HTTP_STATUS=$(curl -sS --max-time 5 \
+    -o /dev/null \
+    -w "%{http_code}" \
+    http://localhost:8080/ 2>/dev/null) &&
+    [[ "$HTTP_STATUS" != "000" ]]; do
   echo "Waiting for WordPress..."
   sleep 3
 done
