@@ -111,8 +111,10 @@ echo "════════════════════════�
 echo
 
 echo "⏳ Waiting for WordPress container..."
-# Use a slightly stricter probe to fail fast on network issues but loop until ready.
-until curl -fsS --max-time 5 http://localhost:8080/wp-json > /dev/null; do
+# Only check that the HTTP server itself is responding here — NOT that
+# WordPress is installed/configured. /wp-json only exists once `wp core
+# install` has run (further down this script)...
+until curl -fsS --max-time 5 http://localhost:8080/ > /dev/null; do
   echo "Waiting for WordPress..."
   sleep 3
 done
