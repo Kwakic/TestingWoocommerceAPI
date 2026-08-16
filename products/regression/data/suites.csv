@@ -1,0 +1,24 @@
+"Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
+"passed","Sun Aug 16 03:08:06 UTC 2026","Sun Aug 16 03:08:09 UTC 2026","3317","tests.products.graphql","test_get_all_products","","","","test_get_all_products_pagination","
+Verify cursor-based pagination for the GraphQL Product collection.
+
+The test creates a controlled dataset so that pagination does not depend
+on products already present in the database. The GraphQL collection is
+scoped with a unique search token so only products created by this test
+are included in the paginated result set.
+
+Test flow:
+    1. Create a controlled set of products.
+    2. Register every created product with the shared cleanup framework.
+    3. Request the first page using a small `first` value.
+    4. Follow `pageInfo.endCursor` while `hasNextPage` is True.
+    5. Aggregate all returned products.
+    6. Verify the expected number of products was retrieved.
+    7. Verify pagination actually required multiple pages.
+    8. Verify there are no duplicate product IDs.
+    9. Verify all products created by this test were returned.
+
+GraphQL pagination uses cursors rather than the REST API's page/per_page
+parameters, so this test intentionally exercises GraphQL's native
+connection pagination instead of the REST pagination utility.
+"
