@@ -163,10 +163,23 @@ class GraphQLClient:
             )
 
             for error in graphql_response.errors:
-                log.error(
-                    "   GraphQL error: %s",
-                    error.get("message", error) if isinstance(error, dict) else error,
-                )
+                if isinstance(error, dict):
+                    message = error.get("message", error)
+                    path = error.get("path")
+
+                    log.error("   GraphQL error: %s", message)
+
+                    # GraphQL errors may identify the response field where
+                    # execution failed. Include it when available because it
+                    # makes generic messages such as "Internal server error"
+                    # much more useful when diagnosing a failed mutation.
+                    if path:
+                        log.error(
+                            "   GraphQL error path: %s",
+                            " → ".join(map(str, path)),
+                        )
+                else:
+                    log.error("   GraphQL error: %s", error)
         else:
             log.info(
                 "🔷 GraphQL %s %s → HTTP %s (completed in %.2fs)",

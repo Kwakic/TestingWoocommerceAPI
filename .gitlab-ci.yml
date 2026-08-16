@@ -35,7 +35,7 @@ stages:
 # Global variables (safe defaults)
 # ------------------------------------------------------------
 variables:
-  PYTHON_VERSION: "3.11"
+  PYTHON_VERSION: "3.13"
 
   # Space-separated list of environments to test.
   # Overridable via:

@@ -557,7 +557,7 @@ TestEcommerceAPI (project suite/root)
 │           ├── generate_portal.py                   ← Generate Allure portal
 │           └── __init__.py
 │
-├── .venv/...                                        ← Shared virtual environment - library root(optional)
+├── .venv/...                                        ← Local Python virtual environment
 │
 ├── docs/...                                         ← Framework documentation
 │     ├── project_structure                          ← Project Structure
@@ -601,7 +601,7 @@ TestEcommerceAPI (project suite/root)
 │            └── README_PYPROJECT.md                 ← Packaging & dependency notes
 │
 ├── EcommerceAPI (installable framework package)/    ← SHARED INSTALLABLE FRAMEWORK
-│     ├── ecommerceapitest.egg-info/..
+│     ├── ecommerceapitest.egg-info/..               ← editable-install metadata
 │     ├── plugins/                                   ← pytest plugin system
 │     │     ├── api/
 │     │     │     ├── shared_api.py                  ← Shared REST API fixtures
@@ -819,8 +819,8 @@ TestEcommerceAPI (project suite/root)
 │     ├── setup.sh                                   ← Project setup script
 │     └── write_env_credentials.sh                   ← Environment credential setup
 │
-│─── wp-data/...                                     ← Persistent storage for local WordPress and database data
-│─── Makefile                                        ← Orchestrates common tasks (make run, make test, etc.)
+│─── wp-data/...                                     ← WordPress infrastructure. Persistent storage for local WordPress and database data
+│─── Makefile                                        ← Environment/bootstrap orchestrationOrchestrates common tasks (make run, make test, etc.)
 │─── .dockerignore                                   ← Specifies files to exclude from Docker build context
 │─── .env                                            ← Local environment variables & credentials
 │─── .env.example                                    ← Template for .env file

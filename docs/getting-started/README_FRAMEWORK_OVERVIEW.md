@@ -54,6 +54,7 @@ The bootstrap process automatically:
 - 🔑 Generates fresh WooCommerce REST API credentials
 - 🔐 Provisions the local WordPress Application Password used by authenticated GraphQL tests
 - 📝 Creates `.env` (if it does not already exist)
+- 🐍 Creates (or reuses) a project-local `.venv` and installs the framework + dev dependencies into it
 - ⚙️ Configures the local testing environment
 
 Run the test suite:
@@ -79,11 +80,46 @@ It explains:
 - Debugging
 - Docker workflows
 - CI development
-3. Install editable package + dev extras:
-   ```bash
-   pip install --upgrade pip setuptools wheel
-   pip install -e './EcommerceAPI[dev]'
-   ```
+3. Install the editable package + development extras inside your activated
+`.venv` — see the onboarding guide for creating one, or let `make install`
+create it for you:
+```bash
+# Active the environment if already exists:
+
+# Git Bash on Windows
+source .venv/Scripts/activate
+# or on Windows Command Prompt (cmd.exe)
+.venv\Scripts\activate.bat
+
+# or on PowerShell
+.\.venv\Scripts\Activate.ps1
+
+# or on Linux/macOS
+source .venv/bin/activate
+
+python -m pip install --upgrade pip setuptools wheel
+python -m pip install -e './EcommerceAPI[dev]'
+```
+**Why?**
+
+It makes the relationship explicit:
+
+```text
+activated .venv
+      ↓
+python
+      ↓
+python -m pip
+      ↓
+the pip belonging to that Python
+```
+rather than:
+```text
+pip
+ ↓
+whatever pip happens to be first on PATH
+```
+
 4. Run a single test:
    ```bash
    pytest tests/customers/api/test_create_customer_negative.py::test_create_single_customer_with_email_and_password_only -q -vv
@@ -108,8 +144,8 @@ For full developer setup and step-by-step onboarding, see: `DEVELOPER_ONBOARDING
 
 - Packaging & install
   - Two `pyproject.toml` files (root: tool configs; package-level: packaging + extras).
-  - Use editable install for development: `pip install -e './EcommerceAPI[dev]'`.
-
+- Use editable install for development:
+  `python -m pip install -e './EcommerceAPI[dev]'`.
 - Test discovery & structure
   - Root-level pytest config controls discovery (`[tool.pytest.ini_options]`).
   - Tests follow naming: `test_*.py`, `Test*` classes, `test_*` functions.

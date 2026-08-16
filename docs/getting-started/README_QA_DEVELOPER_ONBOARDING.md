@@ -1,4 +1,4 @@
-# Developer Onboarding — TestEcommerceAPI
+# 🚀 Developer Onboarding — TestEcommerceAPI
 
 Quick guide to set up a developer environment, run tests locally, and contribute.
 
@@ -6,8 +6,8 @@ Quick guide to set up a developer environment, run tests locally, and contribute
 
 ---
 
-## Prerequisites
-- Python 3.9+ (3.11 recommended)
+## 📋Prerequisites
+- Python 3.13+
 - pip, virtualenv
 - Git
 - Docker & Docker Compose (optional — for matrix runs)
@@ -30,64 +30,135 @@ We intentionally use two `pyproject.toml` files:
 
 ---
 
-## Quick Setup (copy/paste)
+## 🚀 Quick Setup — One-Command Setup
 
-1) Clone & branch
+Make sure **Docker Desktop** is running first.
+
+Then clone the repository and bootstrap the complete test environment:
+
 ```bash
-git clone git@github.com:org/TestEcommerceAPI.git
-cd TestEcommerceAPI
-git checkout -b feat/your-change
+git clone https://github.com/Kwakic/TestingWoocommerceAPI.git && cd TestingWoocommerceAPI && make run
 ```
 
-2) Create & activate virtual environment
-```bash
-# Create venv
-python -m venv .venv
-
-# Activate:
-# Windows (PowerShell)
-. .venv/Scripts/Activate.ps1
-# Windows (cmd)
-.venv\Scripts\activate.bat
-# macOS / Linux
-source .venv/bin/activate
-```
-
-3) Upgrade packaging tools
-```bash
-pip install --upgrade pip setuptools wheel
-```
-
-4) Install the shared framework (editable) with dev extras
-```bash
-# From repo root (recommended)
-# Activate local virtual environment
-source .venv/Scripts/activate
-
-# Upgrade packaging tooling
-python -m pip install --upgrade pip setuptools wheel
-
-# Install framework + dev dependencies
-python -m pip install -e "./EcommerceAPI[dev]"
-```
-- This makes `import EcommerceAPI` resolve to your live source.
-- Use the same install (`.[dev]`) in CI and Docker to avoid surprises.
-
-Optional legacy approach (not recommended):
-```bash
-pip install -e EcommerceAPI
-pip install -r requirements.txt
-```
-
-5) Verify importability
-```bash
-python -c "import EcommerceAPI; print(getattr(EcommerceAPI,'__file__','NOT IMPORTABLE'))"
-```
-Expected: path inside your repository (editable install).
+👉 **That's it — no manual Python or virtual-environment setup is required.**
 
 ---
 
-## 🌱 Environment Configuration
+### 🚀 How `make run` Works
+
+`make run` is the single-command bootstrap for the complete local test
+environment.
+
+On the first run, it automatically:
+
+- 📁 Creates `.env` from `.env.example` when needed
+- 🐍 Creates the project-local `.venv` if it does not exist
+- 🔍 Verifies that the Python interpreter used by `.venv` is **Python 3.13+**
+- 📦 Installs `EcommerceAPI[dev]` into the project-local `.venv`
+- 🐳 Starts the Docker infrastructure
+- 🌐 Installs WordPress
+- 🛒 Installs WooCommerce
+- 🔑 Generates WooCommerce REST API credentials
+- ⚙️ Configures the local test environment
+- 🧪 Runs the test suite
+
+---
+
+### 🔁 Re-running `make run`
+
+`make run` is designed to be idempotent. When run again in the same project
+environment, it:
+
+- ♻️ Reuses the existing `.venv` when it is valid
+- 🐳 Reuses the existing Docker environment
+- ⏭️ Skips already-installed components where applicable
+- 🚫 Avoids creating duplicate data
+- 💾 Preserves the existing database
+- 🔑 Regenerates WooCommerce REST API credentials only when a fresh
+  WordPress installation is created
+- 🧪 Runs the test suite again using the project-local `.venv`
+- 🔄 Refreshes credentials when a fresh WordPress installation requires them
+
+> **💡 No manual virtual-environment activation is required.**
+>
+> `make run` invokes the project's `.venv` directly. Manual activation is only
+> needed if you want to run `python`, `pytest`, or other Python commands
+> directly from your terminal.
+
+If an existing `.venv` was created with an unsupported Python version, `make run`
+fails with an explicit version error rather than silently continuing.
+
+---
+
+### 🧑‍💻 Manual virtual-environment activation — optional
+
+You only need to activate `.venv` if you want to run `python`, `pytest`, or
+other Python commands directly from your shell rather than through `make`.
+
+**Git Bash on Windows:**
+
+```bash
+source .venv/Scripts/activate
+```
+
+**PowerShell:**
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+**Windows Command Prompt:**
+
+```cmd
+.venv\Scripts\activate.bat
+```
+
+**macOS / Linux:**
+
+```bash
+source .venv/bin/activate
+```
+
+After activation, direct commands such as:
+
+```bash
+python --version
+pytest -q
+```
+
+use the project-local environment.
+
+### 🛠️ Manual setup — framework development only
+
+Manual setup is useful when you need to configure the Python environment before
+running Make targets, or when working on the framework itself.
+
+Create the environment with Python 3.13+:
+
+```bash
+python -m venv .venv
+```
+
+Activate it using the command for your shell shown above, then install the
+framework and development dependencies:
+
+```bash
+python -m pip install --upgrade pip setuptools wheel
+python -m pip install -e "./EcommerceAPI[dev]"
+```
+
+Verify the editable installation:
+
+```bash
+python -c "import EcommerceAPI; print(getattr(EcommerceAPI, '__file__', 'NOT IMPORTABLE'))"
+```
+
+Expected: a path inside your repository.
+
+> ⚠️ **Do not use a Python `sys.path` hack as a substitute for installing the
+> framework.** Use the editable installation shown above.
+
+## 🌎 Environment Configuration
 
 For local development, simply run:
 
@@ -103,6 +174,7 @@ The bootstrap process automatically:
 - installs WooCommerce
 - generates REST API credentials
 - writes `WC_KEY` and `WC_SECRET` into `.env`
+- creates (or reuses) a project-local `.venv` and installs the framework + dev dependencies into it
 
 Developers should not manually edit endpoint URLs.
 
@@ -162,7 +234,27 @@ For environment resolution details, see:
 ---
 
 
-## Running tests (recommended commands)
+## 💡 IDE setup (avoid two different environments)
+
+`make run` / `make install` create and use a single project-local `.venv` at
+the repo root. Point your IDE at that **same** interpreter, or it can end up
+running a different Python than your terminal — same packages installed in
+one, missing in the other, with no obvious reason why.
+
+- **PyCharm:** *Settings → Project → Python Interpreter → Add → Existing
+  environment* → select `.venv/Scripts/python.exe` (Windows) or
+  `.venv/bin/python` (macOS/Linux)
+- **VS Code:** Command Palette → *Python: Select Interpreter* → choose the
+  one listed under `.venv`
+
+If you ever see an IDE error like `No module named 'requests'` while the
+same import works fine from your terminal, this mismatch is almost always
+the cause — check which interpreter the IDE is actually using before
+suspecting a missing dependency.
+
+---
+
+## ⚡ Running tests (recommended commands)
 
 - Show pytest config (turn off live logging to see pytest trace clearly):
 ```bash
@@ -196,7 +288,7 @@ pytest tests/customers/api/test_create_customer.py::test_name -q -vv
 
 ---
 
-### GraphQL tests
+### ⚛️ GraphQL tests
 
 GraphQL tests use the same Dockerized WordPress/WooCommerce environment
 as the rest of the API test suite.
@@ -218,7 +310,7 @@ For GraphQL architecture, authentication and test development, see:
 
 ---
 
-## Troubleshooting: “0 tests collected”
+## 🩺Troubleshooting: “0 tests collected”
 1. Avoid filters while debugging (`-m`, `-k`, `-q`).
    Run `pytest --collect-only -q tests/`.
 2. Confirm package importable (see step 5 above).
@@ -254,6 +346,7 @@ This command automatically:
 - Provisions WordPress
 - Installs WooCommerce
 - Generates REST API credentials
+- Creates (or reuses) `.venv` and installs the Python framework into it
 - Prepares the local test environment
 
 
@@ -311,7 +404,7 @@ pipeline debugging rather than day-to-day testing.
 ## CI notes (summary)
 - GitHub Actions and GitLab dynamic pipelines should install dev extras:
 ```bash
-pip install -e './EcommerceAPI[dev]'
+python -m pip install -e './EcommerceAPI[dev]'
 ```
 - GitHub matrix discovery should output a JSON array of quoted service names (e.g. `["customers","orders"]`) to feed the matrix.
 - GitLab discover job dynamically creates `matrix.yml` at runtime; that artifact is referenced by the trigger.
@@ -371,11 +464,6 @@ pytest tests/customers/api/test_create_customer.py -q -vv
 - Use `.dockerignore` to reduce Docker build context (`.venv/`, `reports/`, `build/`, etc.).
 
 ---
-
-If you want, I can:
-- Add a `bootstrap.sh` or `Makefile` that automates steps 2–5,
-- Open a small PR that (a) updates Dockerfile and CI to `.[dev]`, and (b) removes the duplicate `DEV_SETUP.md`.
-Which would you prefer?
 
 ------------------------------------------------------------------
 # 🧪 Shared Test Suites (Framework-Level Tests)

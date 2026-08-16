@@ -19,7 +19,30 @@
 #                                     generated API credentials into .env
 #   Python                        -> consumes .env, never creates it
 
-.PHONY: up setup install test test-ci run down clean ensure-env
+.PHONY: up setup install test test-ci run down clean ensure-env venv
+
+# --------------------------------------------------
+# Project-local virtual environment.
+#
+# `make run` must be self-contained: it should never depend on whichever
+# `python`/`pip` happens to resolve first on the developer's PATH (system
+# install, Windows App Execution Alias stub, an unrelated venv another
+# project activated, etc). That ambiguity is exactly what caused two
+# different Python environments to silently diverge between a plain
+# `git clone` and an existing dev checkout.
+#
+# From here on, `venv` is created once at the repo root and every
+# subsequent step (install, pytest) invokes $(VENV_PYTHON) explicitly —
+# never bare `python`/`pip`. Point PyCharm/VS Code at this same
+# .venv and the IDE, Git Bash, and `make run` all share one environment.
+# --------------------------------------------------
+VENV_DIR := .venv
+
+ifeq ($(OS),Windows_NT)
+VENV_PYTHON := $(VENV_DIR)/Scripts/python.exe
+else
+VENV_PYTHON := $(VENV_DIR)/bin/python
+endif
 
 # --------------------------------------------------
 # Ensure a local .env exists before anything else runs
@@ -36,6 +59,22 @@ ensure-env:
 		cp .env.example .env; \
 	else \
 		echo "[OK] .env already exists - leaving it untouched"; \
+	fi
+
+# --------------------------------------------------
+# Create the project virtual environment if it doesn't exist yet.
+#
+# This is the ONE place an ambient `python`/`python3` is allowed to be
+# used — creating a venv requires *some* interpreter to bootstrap from.
+# Every other target below must go through $(VENV_PYTHON) instead.
+# --------------------------------------------------
+venv:
+	@if [ ! -f "$(VENV_PYTHON)" ]; then \
+		echo "[VENV] Creating virtual environment in $(VENV_DIR)..."; \
+		(python -m venv $(VENV_DIR) || python3 -m venv $(VENV_DIR)) || \
+			(echo "[ERROR] Could not create a virtual environment - is Python 3.13+ installed and on PATH?" && exit 1); \
+	else \
+		echo "[OK] Virtual environment already exists - reusing it"; \
 	fi
 
 # --------------------------------------------------
@@ -69,21 +108,22 @@ setup: ensure-env
 # --------------------------------------------------
 # Install Python framework (editable mode)
 # --------------------------------------------------
-install:
+install: venv
 	@echo "[INSTALL] Installing EcommerceAPI framework..."
-	pip install -e "./EcommerceAPI[dev]"
+	$(VENV_PYTHON) -m pip install --upgrade pip
+	$(VENV_PYTHON) -m pip install -e "./EcommerceAPI[dev]"
 
 # --------------------------------------------------
 # Run tests (developer-friendly)
 # --------------------------------------------------
-test:
-	pytest -v
+test: venv
+	$(VENV_PYTHON) -m pytest -v
 
 # --------------------------------------------------
 # Run tests (CI-style with clean Allure results)
 # --------------------------------------------------
-test-ci:
-	pytest --clean-alluredir --alluredir=reports/allure-results -v
+test-ci: venv
+	$(VENV_PYTHON) -m pytest --clean-alluredir --alluredir=reports/allure-results -v
 
 # --------------------------------------------------
 # Full local developer workflow.

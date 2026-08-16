@@ -31,7 +31,17 @@ Testing & CI specifics
     ```bash
     # From repo root (recommended)
     # Activate local virtual environment
+    # Git Bash on Windows
     source .venv/Scripts/activate
+
+    # Command Prompt
+    .venv\Scripts\activate.bat
+
+    # PowerShell
+    .\.venv\Scripts\Activate.ps1
+
+    # Linux/macOS
+    source .venv/bin/activate
 
     # Upgrade packaging tooling
     python -m pip install --upgrade pip setuptools wheel

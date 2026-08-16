@@ -195,34 +195,59 @@ It demonstrates:
 
 ---
 
-## 🚀  Quick Start (One-Command Setup)
+## 🚀 Quick Start (One-Command Setup)
 
-Make sure you have **Docker Desktop** running on your computer first.
+Make sure **Docker Desktop** is running first.
 
-Then, copy and paste this entire block below as single command into your terminal and press Enter:
+Then clone the repository and bootstrap the complete test environment:
 
 ```bash
 git clone https://github.com/Kwakic/TestingWoocommerceAPI.git && cd TestingWoocommerceAPI && make run
 ```
 
-👉 That's it — no manual setup required.
+👉 **That's it — no manual Python or virtual-environment setup is required.**
 
-### 💡 What this automatically does
+### 💡 What `make run` does
 
-- 📁 Creates `.env` from `.env.example` (first run only)
+On the first run, it automatically:
+
+- 📁 Creates `.env` from `.env.example` when needed
+- 🐍 Creates the project-local `.venv`
+- 🔍 Verifies that `.venv` uses **Python 3.13+**
+- 📦 Installs `EcommerceAPI[dev]` into `.venv`
 - 🐳 Starts the Docker infrastructure
 - 🌐 Installs WordPress
 - 🛒 Installs WooCommerce
-- 🔑 Generates fresh WooCommerce REST API credentials
+- 🔑 Generates WooCommerce REST API credentials
 - ⚙️ Configures the local test environment
+- 🧪 Runs the test suite
 
-After the bootstrap completes, simply run:
+### 🔁 Re-running `make run`
+
+`make run` is idempotent. Subsequent runs:
+
+- ♻️ Reuse the existing `.venv` when valid
+- 🐳 Reuse the existing Docker environment
+- ⏭️ Skip already-installed components where applicable
+- 🚫 Avoid creating duplicate data
+- 💾 Preserve the existing database
+- 🔑 Generate new REST credentials only when a fresh WordPress installation is created
+- 🧪 Run the tests again
+- 🔄 Refreshes credentials when a fresh WordPress installation requires them
+
+> **💡 You do not need to activate `.venv` manually.**
+>
+> `make run` invokes the project-local Python environment directly. Manual
+> activation is only needed when running `python`, `pytest`, or other Python
+> commands directly from your terminal.
+
+After the bootstrap completes, normal test execution is simply:
 
 ```bash
 make test
 ```
----
 
+---
 
 ## 🌍 Environment Selection
 
@@ -282,16 +307,6 @@ Reports are:
 - [CI/CD Architecture Guide](./docs/ci/README_CI_ARCHITECTURE.md)
 - [Allure Reporting Guide](./docs/ci/README_ALLURE.md)
 ---
-
-## ⚙️ How Setup Works (High-Level)
-
-The `make run` command bootstraps a complete WooCommerce environment using Docker,
-including WordPress installation, WooCommerce setup, and automatic API credential provisioning.
-
-📚 Learn more: [Docker Infrastructure Guide](./docs/ci/README_DOCKER_INFRASTRUCTURE.md)
-
----
-
 
 
 ## 🏗️ Architecture Overview
@@ -386,19 +401,6 @@ The framework uses different authentication mechanisms for the two API protocols
 📚 **Related documentation:** [Authentication Guide](./docs/framework/README_AUTHENTICATION.md) · [GraphQL Guide](./docs/development/README_GRAPHQL.md)
 
 ---
-
-## 🔁 Idempotent Setup
-
-`make run` is idempotent. Re-running it in the same project will:
-
-* reuse the existing Docker environment
-* skip already-installed components
-* avoid creating duplicate data
-* preserve the existing database
-* regenerate WooCommerce REST API credentials whenever a fresh WordPress installation is created
-
----
-
 ## 🧪 Running Tests Manually
 
 If you want to run tests without `make run`:
@@ -413,8 +415,8 @@ make test
 Manual pytest execution is primarily intended for framework development.
 
 ```bash
-pip install -e "./EcommerceAPI[dev]"
-pytest -v
+python -m pip install -e "./EcommerceAPI[dev]"
+python -m pytest -v
 ```
 
 > ⚠️ **One thing you should NOT do:** rely on the Python `sys.path` hack of running from repo root without installing the package — install it in editable mode instead (see above).

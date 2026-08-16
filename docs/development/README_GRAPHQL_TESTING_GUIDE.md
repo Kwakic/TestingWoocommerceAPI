@@ -3,7 +3,7 @@
 * > **Status:** Active development
 * > **Scope:** GraphQL testing with WPGraphQL + WPGraphQL for WooCommerce
 * > **Current entity:** Products
-* > **Last updated:** 2026-08-15
+* > **Last updated:** 2026-08-16
 
 ---
 
@@ -28,7 +28,8 @@ tests/
 │   │   ├── test_update_product.py
 │   │   ├── test_search_product.py
 │   │   ├── test_filter_products.py
-│   │   └── test_product_negative.py
+│   │   ├── test_get_all_products.py
+│   │   └── test_product_error_handling.py
 │   └── performance/
 ├── orders/
 │   ├── api/
@@ -384,13 +385,36 @@ A negative GraphQL test can intentionally assert:
 ```python
 assert response.status_code == 200
 assert response.errors
+assert not response.ok
 ```
 
-This distinction is part of the GraphQL test contract.
+The important distinction is:
+
+```text
+HTTP 200
+    ↓
+The GraphQL endpoint successfully received and processed the HTTP request.
+
+GraphQL errors[]
+    ↓
+The requested GraphQL operation failed.
+```
+
+Therefore, `HTTP 200` should not be read as "the test operation passed".
+`GraphQLResponse.ok` combines both levels:
+
+```text
+HTTP 200 + no GraphQL errors → GraphQL success
+HTTP 200 + GraphQL errors    → GraphQL failure
+HTTP != 200                  → GraphQL failure
+```
+
+This distinction is part of the GraphQL test contract and is intentionally
+different from the usual REST API status-code model.
 
 ## 9. 🧪 Current Product GraphQL Tests
 
-The current Product GraphQL coverage contains 9 tests.
+The current Product GraphQL coverage contains 10 tests.
 
 ---
 
@@ -498,24 +522,76 @@ The test creates its own product and never depends on an existing database recor
 
 ---
 
-### 9.4 ❌ Negative GraphQL Test
+### 9.4 ❌ GraphQL Error Handling
 
 File:
 
 ```text
-tests/products/graphql/test_product_negative.py
+tests/products/graphql/test_product_error_handling.py
 ```
 
-The test requests an invalid product field and verifies that GraphQL reports an error.
+This file contains two meaningful GraphQL error scenarios.
 
-The key assertions are:
+#### Schema-level error
+
+The first test requests a known valid Product field (`databaseId`) together
+with an intentionally invalid field.
+
+The operation is explicitly named:
+
+```graphql
+query InvalidProductField
+```
+
+so the request log remains meaningful.
+
+The test verifies:
 
 ```python
 assert response.status_code == 200
 assert response.errors
+assert not response.ok
 ```
 
-This test documents the distinction between HTTP-level success and GraphQL-level success.
+It also verifies that the GraphQL error identifies the intentionally invalid
+field.
+
+This documents the distinction between HTTP-level success and GraphQL-level
+success: HTTP 200 means the GraphQL endpoint processed the request, while the
+`errors` collection tells us that GraphQL rejected the operation.
+
+#### Resolver/business-level error
+
+The second test does not rely on an arbitrary Product ID such as
+`999999999`. It first creates a real Product, permanently deletes it, and then
+attempts to update the captured ID.
+
+The lifecycle is:
+
+```text
+create Product
+    ↓
+capture databaseId
+    ↓
+delete Product with force: true
+    ↓
+update the same databaseId
+    ↓
+verify GraphQL error
+```
+
+This makes the negative scenario deterministic because the test itself proves
+that the Product existed and was then removed.
+
+When GraphQL provides an error path, the test verifies that the failure belongs
+to:
+
+```text
+updateProduct
+```
+
+The test does not register the Product with shared cleanup because it
+explicitly deletes the Product itself before the negative update.
 
 ### 9.5 ✏️ Update product
 
@@ -671,7 +747,7 @@ tests/products/graphql/
 ├── test_search_product.py
 ├── test_filter_products.py
 ├── test_get_all_products.py
-└── test_product_negative.py
+└── test_product_error_handling.py
 ```
 
 Temporary diagnostic tests used during GraphQL authentication investigation have been removed.
@@ -827,7 +903,7 @@ The GraphQL implementation is intentionally being developed incrementally.
 - [x] Product get test.
 - [x] Product delete test.
 - [x] Product update test.
-- [x] GraphQL negative/error test.
+- [x] GraphQL error-handling coverage (schema-level and resolver-level errors).
 - [x] Temporary OAuth diagnostic test removed.
 - [x] Product GraphQL test suite verified together.
 - [x] Product search test.
@@ -835,7 +911,7 @@ The GraphQL implementation is intentionally being developed incrementally.
 - [x] Product category filter test.
 - [x] Product pagination test using GraphQL cursors.
 - [x] Shared Product cleanup reused by GraphQL tests.
-- [x] GraphQL request-level logging with operation name/type, HTTP status, and duration.
+- [x] GraphQL request-level logging with operation name/type, HTTP status, duration, and GraphQL error path.
 - [x] Product GraphQL schema contracts for create, update, delete, and Product pagination.
 
 ### Next development area
@@ -845,7 +921,7 @@ The next logical areas for Product GraphQL coverage are:
 * additional useful query and variable patterns;
 * additional mutations;
 * authorization scenarios;
-* meaningful GraphQL error handling.
+* further GraphQL error handling only where a real uncovered behavior is identified.
 
 Further schema contract coverage should be added only where it protects a
 real Product GraphQL operation rather than duplicating the functional tests.

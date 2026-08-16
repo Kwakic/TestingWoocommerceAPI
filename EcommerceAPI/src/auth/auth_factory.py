@@ -1,10 +1,11 @@
 """
-Authentication factory.
+REST authentication factory only!
 
-Responsible for selecting the correct authentication
-strategy based on framework configuration.
+Responsible for selecting the authentication strategy used by the
+REST API client based on framework configuration.
 
-Auth strategies manage their own credential loading.
+GraphQL authentication is handled separately by the GraphQL client
+and does not use this factory.
 """
 
 from .oauth1_auth import OAuth1Auth
@@ -16,28 +17,20 @@ from .oauth1_auth import OAuth1Auth
 
 def build_auth(auth_type: str):
     """
-    Build authentication strategy.
+    Build the REST authentication strategy.
 
     Args:
-        auth_type: authentication method defined in framework config
+        auth_type: REST authentication method defined in framework config
 
     Returns:
         AuthStrategy instance
 
-    You can add following authentication methods if needed:
+    Raises:
+        ValueError: If the requested REST authentication method is unsupported.
 
-    if auth_type == "oauth1":
-        return OAuth1Auth()
-
-    if auth_type == "oauth2":
-        return OAuth2Auth()
-
-    if auth_type == "jwt":
-        return JWTAuth()
-
-    if auth_type == "basic":
-        return BasicAuth()
-
+    Note:
+        GraphQL authentication is intentionally handled separately and
+        does not use this factory.
     """
 
     auth_type = auth_type.lower()

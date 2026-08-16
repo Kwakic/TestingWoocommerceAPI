@@ -17,7 +17,7 @@
 # -------------------------------------------------------------------
 # Stage 1: Build dependencies & install framework
 # -------------------------------------------------------------------
-FROM python:3.11-slim AS builder
+FROM python:3.13-slim AS builder
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
@@ -36,12 +36,12 @@ COPY EcommerceAPI ./EcommerceAPI
 RUN pip install --upgrade pip setuptools wheel
 
 # Install framework + dev dependencies
-RUN pip install -e './EcommerceAPI[dev]'
+RUN python -m pip install -e './EcommerceAPI[dev]'
 
 # -------------------------------------------------------------------
 # Stage 2: Runtime image
 # -------------------------------------------------------------------
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 WORKDIR /app
 

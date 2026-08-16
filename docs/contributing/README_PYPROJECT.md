@@ -18,7 +18,7 @@ Quick reference / commands ✅
 - Install the framework in editable (recommended):
   ```bash
   # run from the repo root
-  pip install -e './EcommerceAPI[dev]'
+  python -m pip install -e './EcommerceAPI[dev]'
   ```
   - Uses the `dev` extras declared in `EcommerceAPI/pyproject.toml`.
   - Make sure CI/docker scripts use the same extra name (`dev`) — keep extras consistent.
@@ -110,7 +110,7 @@ Troubleshooting — “0 tests collected” checklist 🧰
    ```
    If it prints `NOT IMPORTABLE`, run:
    ```bash
-   pip install -e './EcommerceAPI[dev]'
+   python -m pip install -e './EcommerceAPI[dev]'
    ```
 4. Check for `-m` or `PYTEST_ADDOPTS` filtering:
    - Avoid `-m` unless you know tests exist with that marker.

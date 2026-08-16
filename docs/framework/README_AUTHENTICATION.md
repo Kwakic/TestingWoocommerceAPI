@@ -1,6 +1,6 @@
-# Authentication System - TestEcommerceAPI
+# 🔑 Authentication System - TestEcommerceAPI
 
-## Overview
+## 🔎 Overview
 
 The framework uses a **pluggable authentication architecture** so that
 API authentication can be changed without modifying the API client or
@@ -15,7 +15,7 @@ configuration.
 
 ------------------------------------------------------------------------
 
-# Authentication Architecture
+# 🏛️ REST Authentication Architecture
 
     pytest
        ↓
@@ -43,9 +43,28 @@ Key idea:
 -   **Factory builds strategy**
 -   **APIClient applies strategy**
 
+```
+                 Authentication
+                       │
+          ┌────────────┴────────────┐
+          │                         │
+        REST                     GraphQL
+          │                         │
+     AUTH_TYPE                  graphql_client
+          │                         │
+  auth_resolver                    │
+          ↓                         ↓
+   auth_factory                 BasicAuth
+          ↓                         ↓
+      OAuth1Auth              GraphQLClient
+          │                         │
+      APIClient                HttpClient
+```
+
+
 ------------------------------------------------------------------------
 
-# Core Components
+# 🔥 Core Components
 
 ## 1. runtime_config
 
@@ -67,7 +86,8 @@ Example:
 
     AUTH_TYPE=oauth1
 
-This value determines which authentication strategy is used.
+This value determines which authentication strategy is used by the
+**REST API authentication pipeline**.
 
 ------------------------------------------------------------------------
 
@@ -79,7 +99,7 @@ File:
 
 Purpose:
 
-Connects runtime configuration with authentication factory.
+Connects REST runtime configuration with the REST authentication factory.
 
 Example:
 
@@ -88,7 +108,10 @@ cfg = get_config()
 return build_auth(cfg.AUTH_TYPE)
 ```
 
-This isolates configuration logic from the API client.
+This isolates REST authentication configuration from the API client.
+
+GraphQL authentication is resolved separately by the graphql_client
+fixture.
 
 ------------------------------------------------------------------------
 
@@ -100,17 +123,21 @@ File:
 
 Purpose:
 
-Selects the correct authentication strategy.
+Selects the authentication strategy for the **REST API client** based on
+the `AUTH_TYPE` framework configuration.
 
-Example:
+The factory currently supports:
 
-``` python
+```python
 if auth_type == "oauth1":
     return OAuth1Auth()
 ```
+The factory never performs authentication itself.
+It only **creates the appropriate REST authentication strategy**.
 
-The factory never performs authentication itself.\
-It only **chooses the correct strategy class**.
+>👉 Note: GraphQL authentication does not use AUTH_TYPE or
+auth_factory. GraphQL uses BasicAuth through the graphql_client
+fixture.
 
 ------------------------------------------------------------------------
 
@@ -156,7 +183,7 @@ Example behavior:
 
 ------------------------------------------------------------------------
 
-# GraphQL Authentication
+# 🔐 GraphQL Authentication
 
 GraphQL uses a different authentication mechanism from the WooCommerce
 REST API.
@@ -209,7 +236,7 @@ docs/development/README_GRAPHQL_TESTING_GUIDE.md
 
 ------------------------------------------------------------------------
 
-# APIClient Authentication Resolution
+# 🔐 REST API Authentication Resolution
 
 Inside `APIClient.__init__`:
 
@@ -235,7 +262,7 @@ APIClient(base_url, auth_strategy=InvalidOAuthStrategy())
 
 ------------------------------------------------------------------------
 
-# Switching REST Authentication Methods
+# 🔄 Switching REST Authentication Methods
 
 REST authentication is controlled by **environment configuration**, not code.
 
@@ -269,9 +296,22 @@ After changing `.env`, restart pytest to reload configuration.
 
 ------------------------------------------------------------------------
 
-# Adding New Authentication Methods (Future)
+# ➕ Adding New REST Authentication Methods (Future)
 
 The architecture already supports adding more strategies.
+
+The REST authentication architecture supports adding additional
+authentication strategies.
+
+For a new REST authentication method:
+
+1. Create the strategy.
+2. Register it in `auth_factory.py`.
+3. Add the corresponding REST configuration.
+4. No changes are required in `APIClient` or existing REST tests.
+
+> **Important:** This process applies to REST authentication.
+> GraphQL authentication is intentionally maintained separately.
 
 Steps:
 
@@ -316,7 +356,7 @@ No changes required in `APIClient` or tests.
 
 ------------------------------------------------------------------------
 
-# Security Testing
+# 🛡️ Security Testing
 
 Authentication strategies can be injected directly during tests.
 
@@ -342,7 +382,7 @@ Allows testing:
 
 ------------------------------------------------------------------------
 
-# Design Principles
+# 🎨 Design Principles
 
 The authentication system follows several architectural rules:
 
@@ -356,7 +396,7 @@ The authentication system follows several architectural rules:
 
 ------------------------------------------------------------------------
 
-# Final Notes
+# 🏆 Final Notes
 
 The current framework has two authentication paths:
 
