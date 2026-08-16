@@ -64,18 +64,89 @@ ensure-env:
 # --------------------------------------------------
 # Create the project virtual environment if it doesn't exist yet.
 #
-# This is the ONE place an ambient `python`/`python3` is allowed to be
-# used — creating a venv requires *some* interpreter to bootstrap from.
-# Every other target below must go through $(VENV_PYTHON) instead.
+# `make run` must never trust whatever `python`/`python3` happens to
+# resolve to on PATH — that ambiguity is exactly what let a fresh
+# clone create a .venv with the wrong Python version while the dev
+# repo used a different one. This target searches a short list of
+# known interpreter names (and, on Windows, the `py` launcher) for one
+# that actually reports >= 3.13, and refuses to create .venv with
+# anything older. It also re-checks the resulting .venv itself, in
+# case a stale/broken one is already sitting on disk.
+#
+# If auto-detection can't find a qualifying interpreter (e.g. Python
+# 3.13 is installed but not on PATH), point at it explicitly:
+#
+#   make install PYBIN=/c/Users/you/AppData/Local/Programs/Python/Python313/python.exe
+#
+# Every other target below must keep going through $(VENV_PYTHON) —
+# never bare `python`/`pip`.
 # --------------------------------------------------
+PYTHON_MIN_MAJOR := 3
+PYTHON_MIN_MINOR := 13
+PYBIN ?=
+
 venv:
-	@if [ ! -f "$(VENV_PYTHON)" ]; then \
-		echo "[VENV] Creating virtual environment in $(VENV_DIR)..."; \
-		(python -m venv $(VENV_DIR) || python3 -m venv $(VENV_DIR)) || \
-			(echo "[ERROR] Could not create a virtual environment - is Python 3.13+ installed and on PATH?" && exit 1); \
-	else \
+	@if [ -f "$(VENV_PYTHON)" ]; then \
 		echo "[OK] Virtual environment already exists - reusing it"; \
+	else \
+		echo "[VENV] Looking for a Python $(PYTHON_MIN_MAJOR).$(PYTHON_MIN_MINOR)+ interpreter..."; \
+		FOUND=""; \
+		if [ -n "$(PYBIN)" ]; then \
+			if command -v "$(PYBIN)" >/dev/null 2>&1 || [ -x "$(PYBIN)" ]; then \
+				VER=$$("$(PYBIN)" -c "import sys; print('%d.%d' % sys.version_info[:2])" 2>/dev/null); \
+				MAJ=$${VER%%.*}; MIN=$${VER##*.}; \
+				if [ "$$MAJ" = "$(PYTHON_MIN_MAJOR)" ] && [ -n "$$MIN" ] && [ "$$MIN" -ge $(PYTHON_MIN_MINOR) ] 2>/dev/null; then \
+					echo "[OK] Found Python $$VER via PYBIN='$(PYBIN)'"; \
+					FOUND="$(PYBIN)"; \
+				fi; \
+			fi; \
+			if [ -z "$$FOUND" ]; then \
+				echo "[ERROR] PYBIN='$(PYBIN)' is not a working Python $(PYTHON_MIN_MAJOR).$(PYTHON_MIN_MINOR)+ interpreter."; \
+				exit 1; \
+			fi; \
+		else \
+			for CAND in python$(PYTHON_MIN_MAJOR).$(PYTHON_MIN_MINOR) python$(PYTHON_MIN_MAJOR) python; do \
+				if command -v "$$CAND" >/dev/null 2>&1; then \
+					VER=$$("$$CAND" -c "import sys; print('%d.%d' % sys.version_info[:2])" 2>/dev/null); \
+					if [ -n "$$VER" ]; then \
+						MAJ=$${VER%%.*}; MIN=$${VER##*.}; \
+						if [ "$$MAJ" = "$(PYTHON_MIN_MAJOR)" ] && [ "$$MIN" -ge $(PYTHON_MIN_MINOR) ]; then \
+							echo "[OK] Found Python $$VER via '$$CAND'"; \
+							FOUND="$$CAND"; \
+							break; \
+						else \
+							echo "[SKIP] '$$CAND' is Python $$VER - too old"; \
+						fi; \
+					fi; \
+				fi; \
+			done; \
+			if [ -z "$$FOUND" ] && command -v py >/dev/null 2>&1; then \
+				VER=$$(py -$(PYTHON_MIN_MAJOR).$(PYTHON_MIN_MINOR) -c "import sys; print('%d.%d' % sys.version_info[:2])" 2>/dev/null); \
+				if [ -n "$$VER" ]; then \
+					echo "[OK] Found Python $$VER via 'py -$(PYTHON_MIN_MAJOR).$(PYTHON_MIN_MINOR)'"; \
+					FOUND="py -$(PYTHON_MIN_MAJOR).$(PYTHON_MIN_MINOR)"; \
+				fi; \
+			fi; \
+		fi; \
+		if [ -z "$$FOUND" ]; then \
+			echo "[ERROR] No Python $(PYTHON_MIN_MAJOR).$(PYTHON_MIN_MINOR)+ interpreter found."; \
+			echo "        Checked: python$(PYTHON_MIN_MAJOR).$(PYTHON_MIN_MINOR), python$(PYTHON_MIN_MAJOR), python, py -$(PYTHON_MIN_MAJOR).$(PYTHON_MIN_MINOR)"; \
+			echo "        Install Python $(PYTHON_MIN_MAJOR).$(PYTHON_MIN_MINOR)+, or if it's already installed"; \
+			echo "        but not on PATH, point at it directly:"; \
+			echo "          make install PYBIN=/path/to/python.exe"; \
+			exit 1; \
+		fi; \
+		echo "[VENV] Creating virtual environment in $(VENV_DIR) with '$$FOUND'..."; \
+		$$FOUND -m venv $(VENV_DIR); \
 	fi
+	@VER=$$("$(VENV_PYTHON)" -c "import sys; print('%d.%d' % sys.version_info[:2])" 2>/dev/null); \
+	MAJ=$${VER%%.*}; MIN=$${VER##*.}; \
+	if [ "$$MAJ" != "$(PYTHON_MIN_MAJOR)" ] || [ "$$MIN" -lt $(PYTHON_MIN_MINOR) ]; then \
+		echo "[ERROR] $(VENV_PYTHON) is Python $$VER, but $(PYTHON_MIN_MAJOR).$(PYTHON_MIN_MINOR)+ is required."; \
+		echo "        Delete $(VENV_DIR) and re-run so it can be recreated correctly."; \
+		exit 1; \
+	fi; \
+	echo "[OK] Virtual environment is Python $$VER"
 
 # --------------------------------------------------
 # Start infrastructure
