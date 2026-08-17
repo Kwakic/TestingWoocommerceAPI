@@ -145,6 +145,42 @@ until curl -sS --max-time 5 http://127.0.0.1:8080/ > /dev/null 2>&1; do
 done
 
 # ------------------------------------------------------------------
+# Wait for the WordPress CORE FILES to exist on the shared bind mount —
+# not just for Apache to answer HTTP.
+#
+# The HTTP check above only proves the `wordpress` container's own
+# Apache is responding, which happens only after ITS entrypoint has
+# already copied WordPress core into ./wp-data. wp-cli (below), though,
+# runs in its own separate, freshly-created container every time
+# (`docker compose run --rm wpcli ...`), reading that same host folder
+# through its own independent bind mount. On a fresh clone — especially
+# on Windows, where bind mounts go through Docker Desktop's VM-backed
+# file sharing — there's a brief window where a brand-new container's
+# view of ./wp-data hasn't caught up yet, so the very first wp-cli call
+# below can fail with "This does not seem to be a WordPress
+# installation" even though the files are already on disk.
+#
+# wp-load.php is part of WordPress core itself — present as soon as the
+# copy finishes, regardless of whether `wp core install` has run yet —
+# so checking for it here is purely about closing that race window. It
+# is not expected to legitimately be missing at this point; if it never
+# appears, something else is actually wrong (see the log hint below).
+# ------------------------------------------------------------------
+echo "⏳ Waiting for WordPress core files..."
+WP_FILES_ATTEMPTS=20   # 20 x 1s = 20s
+WP_FILES_COUNT=0
+until docker compose -f docker-compose.wp.yml exec -T wordpress \
+    test -f /var/www/html/wp-load.php > /dev/null 2>&1; do
+  WP_FILES_COUNT=$((WP_FILES_COUNT + 1))
+  if [ "$WP_FILES_COUNT" -ge "$WP_FILES_ATTEMPTS" ]; then
+    echo "❌ WordPress core files never appeared in ./wp-data after ${WP_FILES_ATTEMPTS}s."
+    echo "   Check: docker compose -f docker-compose.wp.yml logs wordpress"
+    exit 1
+  fi
+  sleep 1
+done
+
+# ------------------------------------------------------------------
 # FIX — Permissions (light, no ownership fight)
 # ------------------------------------------------------------------
 echo "🔧 Ensuring WordPress writable folders..."
