@@ -161,7 +161,17 @@ up: ensure-env
 	@echo "[OK] Ensuring WordPress data directory exists..."
 	@mkdir -p wp-data
 	@echo "[DOCKER]  Starting Docker infrastructure..."
-	docker compose -f docker-compose.wp.yml up -d
+	@if [ ! -f wp-data/wp-load.php ]; then \
+		WP_CONTAINER="$$(docker compose -f docker-compose.wp.yml ps -aq wordpress 2>/dev/null)"; \
+		if [ -n "$$WP_CONTAINER" ]; then \
+			echo "[DOCKER]  Existing WordPress container has no core files - recreating it..."; \
+			docker compose -f docker-compose.wp.yml up -d --force-recreate wordpress; \
+		else \
+			docker compose -f docker-compose.wp.yml up -d; \
+		fi; \
+	else \
+		docker compose -f docker-compose.wp.yml up -d; \
+	fi
 # --------------------------------------------------
 # Bootstrap WordPress + WooCommerce, then merge the fresh WooCommerce
 # credentials into .env.
