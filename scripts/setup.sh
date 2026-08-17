@@ -112,15 +112,34 @@ echo
 
 echo "⏳ Waiting for WordPress container..."
 
-# Only check that the HTTP server itself is responding.
-# The HTTP status is intentionally ignored here because WordPress may
-# still be starting or installing. API-specific readiness checks happen
-# later in this script.
-until HTTP_STATUS=$(curl -sS --max-time 5 \
-    -o /dev/null \
-    -w "%{http_code}" \
-    http://localhost:8080/ 2>/dev/null) &&
-    [[ "$HTTP_STATUS" != "000" ]]; do
+# Only check that the HTTP server itself is responding here — NOT that
+# WordPress is installed/configured. /wp-json only exists once `wp core
+# install` has run (further down this script), so probing it here would
+# 404 forever on a fresh clone.
+#
+# Deliberately minimal, on purpose:
+#   - no -f              any response at all (even a 4xx/5xx) proves Apache
+#                        is up and accepting connections — that's all this
+#                        check needs to know
+#   - no [[ ]] / -w      one fewer moving part; a plain curl exit status is
+#                        enough to answer "did the server respond?"
+#   - 127.0.0.1, not
+#     localhost          sidesteps IPv6/IPv4 "happy eyeballs" resolution on
+#                        `localhost`, which is a known source of flaky curl
+#                        calls against Docker Desktop on Windows even when
+#                        the port is genuinely up and healthy
+#
+# Bounded, not infinite: a real startup problem should fail loudly with a
+# pointer to the logs, rather than loop forever hiding the actual error.
+WP_WAIT_ATTEMPTS=40   # 40 x 3s = 2 minutes
+WP_WAIT_COUNT=0
+until curl -sS --max-time 5 http://127.0.0.1:8080/ > /dev/null 2>&1; do
+  WP_WAIT_COUNT=$((WP_WAIT_COUNT + 1))
+  if [ "$WP_WAIT_COUNT" -ge "$WP_WAIT_ATTEMPTS" ]; then
+    echo "❌ WordPress container did not respond after $((WP_WAIT_ATTEMPTS * 3))s."
+    echo "   Check: docker compose -f docker-compose.wp.yml logs wordpress"
+    exit 1
+  fi
   echo "Waiting for WordPress..."
   sleep 3
 done
