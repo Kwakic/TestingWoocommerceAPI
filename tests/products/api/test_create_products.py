@@ -54,7 +54,7 @@ def test_create_single_simple_product(
 
     product = create_valid_product()
 
-    product_id = product["hhhhh"]
+    product_id = product["id"]
 
     # -------------------------------------------
     # Step 2 — Verify API response matches DB
