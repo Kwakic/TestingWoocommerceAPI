@@ -290,6 +290,9 @@ def assert_product_exists_and_matches_api(
     Raises:
         AssertionError:
             If API data or DB data are inconsistent.
+            :param db_product:
+            :param products:
+            :param product_id:
     """
 
     logger.debug(
