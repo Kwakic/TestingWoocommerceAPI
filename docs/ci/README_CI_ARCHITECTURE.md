@@ -253,7 +253,6 @@ Linux, macOS and GitHub Actions are unaffected.
 | Docker-native execution | `docker` |
 
 > **Note**
->
 > - All GitHub Actions workflows use `API_ENV=ci`.
 > - Developers should normally use `API_ENV=test` when running tests locally.
 
@@ -371,7 +370,7 @@ a framework limitation.
 ---
 ## 🎨 Design principles
 
-The CI/CD platform follows five principles:
+The CI/CD platform follows six principles:
 
 1. The framework is the single source of truth.
 2. Framework entities are centrally registered.
@@ -407,6 +406,7 @@ Each entity receives its own:
 - GitHub Pages report (when enabled)
 
 This approach keeps reports isolated and allows every microservice to own its own quality metrics.
+
 ---
 
 ### 2. Shared Framework Suites
@@ -570,12 +570,33 @@ pytest \
 ```
 
 ### Triggers
+
 ```yaml
 on:
+  pull_request:
+    branches: [ main ]    # PR quality gate
+
   push:
-    branches: [ main ]    # Every merge to main
+    branches: [ main ]    # Post-merge validation
+
   workflow_dispatch:      # Manual
 ```
+
+### Trigger Strategy
+
+Smoke tests run in two CI contexts:
+
+* **Pull requests targeting `main`**
+  * Validate critical business paths before merge
+  * Act as a PR quality gate
+  * Provide fast feedback on application changes
+
+* **Pushes to `main`**
+  * Validate the merged code
+  * Provide deployment confidence
+  * Power the README status badge
+
+This ensures critical business flows are validated both before and after merge.
 
 ### Allure Report?
 ✅ **YES** — Publishes to GitHub Pages
@@ -652,14 +673,41 @@ pytest \
   --alluredir=reports/allure-results
 ```
 
+
+
 ### Triggers
 
 ```yaml
 on:
+  pull_request:
+    branches: [ main ]    # PR integration validation
+
   push:
-    branches: [ main ]
-  workflow_dispatch:
+    branches: [ main ]    # Post-merge validation
+
+  workflow_dispatch:      # Manual
 ```
+### Trigger Strategy
+
+Integration tests run on pull requests and pushes to `main`.
+
+* **Pull requests**
+  * Validate API + database consistency before merge
+  * Detect persistence and cross-layer regressions early
+  * Provide integration-level feedback during code review
+* **Pushes to `main`**
+  * Validate the merged code
+  * Provide post-merge operational confidence
+  * Maintain historical integration trends
+
+This ensures critical business flows are validated both before and after merge.
+
+Integration tests may be configured as a required or non-required
+pull-request check through GitHub branch protection/rulesets.
+
+For this project, the recommended production configuration is to make
+integration tests a `required PR check` once the suite is stable.
+
 
 ### Allure Report?
 
@@ -734,12 +782,36 @@ pytest \
 ```
 
 ### Triggers
+
 ```yaml
 on:
+  pull_request:
+    branches: [ main ]    # PR contract validation
+
   push:
-    branches: [ main ]    # Every push to main
-  workflow_dispatch:      # Manual (on-demand debugging)
+    branches: [ main ]    # Post-merge validation
+
+  workflow_dispatch:      # Manual
 ```
+### Trigger Strategy
+
+Contract tests run on both pull requests and pushes to main.
+
+* Pull requests
+  * Validate REST and GraphQL contracts before merge
+  * Detect schema and response-structure changes early
+  * Protect API compatibility
+* Pushes to main
+  * Validate the merged API contract
+  * Maintain post-merge confidence
+  * Preserve diagnostic artifacts for troubleshooting
+
+Contract validation should be configured as a **required PR check.**
+
+A contract failure indicates that an API change may be incompatible
+with its consumers and should therefore prevent the pull request from
+being merged.
+
 
 ### Allure Report?
 ⚠️ **Artifact only** — Contract validation remains internal and is intentionally not published to GitHub Pages.
@@ -978,7 +1050,62 @@ API_ENV=ci
 - **Structured logs** provide evidence trail for security reviews
 - **Sunday schedule** aligns with regression (other nightly tests)
 
+
+## Pull Request Quality Gate
+
+Every pull request targeting `main` executes the fast-to-medium
+validation suites before merge:
+
+```text
+Pull Request
+     │
+     ├── Preflight
+     │
+     ├── Smoke
+     │
+     ├── Contract
+     │
+     └── Integration
+            │
+            ▼
+      Required checks
+            │
+       ┌────┴────┐
+       ▼         ▼
+     FAIL       PASS
+       │         │
+       ▼         ▼
+   Block PR    Merge
+
+```
+
+>Pull requests targeting main execute Preflight, Smoke, Contract, and Integration validation. These workflows are configured as required status checks, preventing merges when any required quality gate fails.
+
+
+## Required PR Checks
+
+| Suite       | Purpose                          | PR       |
+| ----------- | -------------------------------- | -------- |
+| Preflight   | Framework and environment sanity | Required |
+| Smoke       | Critical business paths          | Required |
+| Contract    | REST/GraphQL compatibility       | Required |
+| Integration | API + database consistency       | Required |
+
+
+Heavy suites are intentionally excluded from the PR gate:
+
+| Suite       | Trigger | Reason                      |
+| ----------- | ------- | --------------------------- |
+| Regression  | Nightly | Long-running                |
+| Performance | Weekly  | Stable environment required |
+| Security    | Weekly  | Deeper security validation  |
+
+
+
+
+
 ---
+
 
 # 3. Understanding Allure Reporting
 
@@ -1383,13 +1510,13 @@ gh-pages/     Generated reports (indexed by destination_dir)
 
 ```text
 .github/workflows/
-├── preflight.yml        # PR validation (1–3 min)
-├── smoke.yml            # Business path (3–10 min)
-├── contract.yml         # Schema validation (5–15 min)
-├── regression.yml       # Full suite (nightly, long)
-├── integration.yml      # API+DB validation
-├── performance.yml      # Latency tracking (weekly)
-└── security.yml         # Auth validation (weekly)
+├── preflight.yml        # PR — framework validation
+├── smoke.yml            # PR + main — critical business paths
+├── contract.yml         # PR + main — API contract validation
+├── integration.yml      # PR + main — API + DB validation
+├── regression.yml       # Nightly — full functional suite
+├── performance.yml      # Weekly — latency & SLA trends
+└── security.yml         # Weekly — security validation
 
 docs/
 └── portal/

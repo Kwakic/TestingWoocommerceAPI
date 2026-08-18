@@ -30,6 +30,18 @@ name: Smoke Tests 🔥
 # 🔁 Triggers
 # ==================================================
 on:
+
+  # Run on pull requests targeting main branch
+  #
+  # Smoke suite acts as:
+  # - PR quality gate
+  # - critical business-path validation
+  # - early regression detection
+  # ==================================================
+  pull_request:
+    branches: [ main ]
+
+
   # Run on pushes to main branch
   #
   # Smoke suite acts as:
