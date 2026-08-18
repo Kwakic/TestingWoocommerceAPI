@@ -178,7 +178,7 @@ A step-by-step guide to safely work with Git using branches, commits, and Pull R
 ## 🔹Step 1. ✅ Start from updated `main`
 
 ```bash
-git checkout main
+git switch main
 git pull origin main
 ```
 
@@ -198,7 +198,7 @@ Run once:
 ## 🔹Step 2. 🛠️ Create a new branch
 
 ```bash
-git checkout -b fix/bug_ticket_1235
+git git switch -c fix/bug_ticket_1235
 ```
 
 💡 Use one branch per ticket/feature
