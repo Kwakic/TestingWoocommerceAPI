@@ -224,9 +224,44 @@ jobs:
       team: ${{ matrix.team }}
       tier: ${{ matrix.tier }}
 
+  # ==================================================
+  # 🚦 JOB 3 — INTEGRATION QUALITY GATE
+  # ==================================================
+  #
+  # Aggregates the result of all entity matrix jobs.
+  #
+  # This is the stable PR status check.
+  #
+  # Branch protection should require:
+  #   Integration Quality Gate
+  #
+  # It should NOT require individual entity jobs.
+  # ==================================================
+  integration-gate:
+
+    name: Integration Quality Gate
+
+    needs:
+      - test
+
+    if: always()
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Validate integration results
+        run: |
+          if [ "${{ needs.test.result }}" != "success" ]; then
+            echo "Integration tests failed."
+            exit 1
+          fi
+
+          echo "Integration tests passed."
+
 
   # ==================================================
-  # 📊 JOB 3 — GENERATE + PUBLISH ALLURE REPORT
+  # 📊 JOB 4 — GENERATE + PUBLISH ALLURE REPORT
   # ==================================================
   # Generates and publishes one Allure report
   # per discovered entity.
