@@ -442,7 +442,9 @@ If you used "`Squash and Merge`" on GitHub, your local machine might think your 
 git checkout main
 # 2. Pull last update:
 git pull origin main
-# 3. Delete the branch:
+# 3. Check for what has been changed (comparing last two commits)
+git diff 3bb71ec7..1cdda9a4
+# 4. Delete the branch:
 git branch -d fix/bug_ticket_1235
 # or force delete if needed:
 git branch -D fix/bug_ticket_1235
