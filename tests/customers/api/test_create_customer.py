@@ -119,7 +119,7 @@ def test_bulk_create_customers(
 
         # Extract identifiers used later for validation
         email = customer["email"]
-        customer_id = customer["idddd"]
+        customer_id = customer["id"]
 
         # 📦 Return identifiers and metadata (for teardown registration). Email: used as identifier to later validate
         # that customers exists. Metadata (like ID) is optional, but useful for debugging or future logging.

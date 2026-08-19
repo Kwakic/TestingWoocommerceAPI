@@ -640,7 +640,7 @@ It prevents review comments from silently remaining unresolved.
 
 ------------------------------------------------------------------------
 
-# 15. Signed Commits
+# 15. ✍️ Signed Commits
 
 ``` text
 [ ] Require signed commits
@@ -658,7 +658,7 @@ provenance.
 
 ------------------------------------------------------------------------
 
-# 16. Linear History
+# 16. 📜 Linear History
 
 ``` text
 [ ] Require linear history
@@ -682,7 +682,7 @@ needed.
 
 ------------------------------------------------------------------------
 
-# 17. Force Pushes
+# 17. 💪 Force Pushes
 
 ### Production recommendation: NO
 
@@ -704,7 +704,7 @@ rewriting the shared production history.
 
 ------------------------------------------------------------------------
 
-# 18. Branch Deletion
+# 18.🗑️ Branch Deletion
 
 ### Production recommendation: NO
 
@@ -720,7 +720,7 @@ Feature branches can safely be deleted after their PRs are merged.
 
 ------------------------------------------------------------------------
 
-# 19. Bypass Protection
+# 19. 🚧 Bypass Protection
 
 GitHub provides:
 
@@ -763,7 +763,7 @@ The setting is not broken. It is doing exactly what you asked.
 
 ------------------------------------------------------------------------
 
-# 20. Deployment Protection
+# 20. 🔒 Deployment Protection
 
 If your repository deploys to an actual environment, GitHub can also
 require:
@@ -794,7 +794,7 @@ process.
 
 ------------------------------------------------------------------------
 
-# 21. Merge Queue
+# 21.🚦 Merge Queue
 
 For a busy team repository, consider:
 
@@ -813,7 +813,7 @@ Not necessary
 
 ------------------------------------------------------------------------
 
-# 22. Recommended Production Configuration
+# 22. ⚙️ Recommended Production Configuration
 
 For a typical professional team repository:
 
@@ -865,7 +865,7 @@ Merge queue:
 
 ------------------------------------------------------------------------
 
-# 23. Recommended Configuration for a Personal QA/SDET Portfolio
+# 23.🔥 Recommended Configuration for a Personal QA/SDET Portfolio
 
 A portfolio repository has a slightly different goal.
 
@@ -913,7 +913,7 @@ This gives you a very strong portfolio story:
 
 ------------------------------------------------------------------------
 
-# 24. Why You Should Not Require Every Matrix Job
+# 24.📟 Why You Should Not Require Every Matrix Job
 
 Suppose you currently have:
 
@@ -963,7 +963,7 @@ The workflow changes; the external contract stays stable.
 
 ------------------------------------------------------------------------
 
-# 25. Why Quality Gates Should Be in the Workflow Even If They Are Not Required
+# 25.💡 Why Quality Gates Should Be in the Workflow Even If They Are Not Required
 
 This is an important design choice.
 
@@ -1009,7 +1009,7 @@ repository governance**.
 
 ------------------------------------------------------------------------
 
-# 26. What Happens When a Test Fails?
+# 26. ❌ What Happens When a Test Fails?
 
 Correct behavior:
 
@@ -1070,7 +1070,7 @@ Failure visibility is more important than making the CI page look green.
 
 ------------------------------------------------------------------------
 
-# 27. Status Check Naming Is Part of Your CI Design
+# 27. 📊 Status Check Naming Is Part of Your CI Design
 
 Treat required check names as an API.
 
@@ -1107,7 +1107,7 @@ repository rule.
 
 ------------------------------------------------------------------------
 
-# 28. Keep CI Workflow Names and Quality Gate Names Different
+# 28. 🤝 Keep CI Workflow Names and Quality Gate Names Different
 
 For example:
 
@@ -1140,7 +1140,7 @@ The Quality Gate describes **what must be true before merging**.
 
 ------------------------------------------------------------------------
 
-# 29. PR CI vs Post-Merge CI
+# 29. 🆚 PR CI vs Post-Merge CI
 
 Do not confuse these two purposes.
 
@@ -1182,7 +1182,7 @@ Post-merge:
 
 ------------------------------------------------------------------------
 
-# 30. Heavy Tests Should Not Automatically Become PR Gates
+# 30. 🏋🏻 Heavy Tests Should Not Automatically Become PR Gates
 
 For this project:
 
@@ -1211,7 +1211,7 @@ Your project documentation already follows this segmentation philosophy.
 
 ------------------------------------------------------------------------
 
-# 31. A Practical GitHub Settings Checklist
+# 31. ✅ A Practical GitHub Settings Checklist
 
 Before calling `main` production-protected, verify:
 
@@ -1262,7 +1262,7 @@ ADMINISTRATIVE
 
 ------------------------------------------------------------------------
 
-# 32. The Golden Rule
+# 32.🥇 The Golden Rule
 
 The most important principle is:
 
@@ -1305,7 +1305,7 @@ currently optional---is a useful production practice.
 
 ------------------------------------------------------------------------
 
-# 33. Final Recommended Setup for This Repository
+# 33. 🏆 Final Recommended Setup for This Repository
 
 For this project, the target state is:
 
@@ -1364,7 +1364,7 @@ The latter are implementation details of the CI pipeline.
 
 ------------------------------------------------------------------------
 
-## 34. Useful GitHub Documentation
+## 34. ✨ Useful GitHub Documentation
 
 -   GitHub protected branches:
     https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches
