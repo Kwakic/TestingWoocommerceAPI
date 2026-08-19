@@ -221,7 +221,7 @@ jobs:
       tier: ${{ matrix.tier }}
 
   # ==================================================
-  # 🚦 JOB 3 — INTEGRATION QUALITY GATE
+  # 🚦 JOB 3 — SMOKE QUALITY GATE
   # ==================================================
   #
   # Aggregates the result of all entity matrix jobs.
@@ -229,10 +229,41 @@ jobs:
   # This is the stable PR status check.
   #
   # Branch protection should require:
-  #   Integration Quality Gate
+  #   Smoke Quality Gate
   #
   # It should NOT require individual entity jobs.
+
+  # GitHub branch protection only cares about Smoke Quality Gate, not the individual entities.
+  # So you'll get for Smoke Tests
+  # ├── Test • customers
+  # ├── Test • orders
+  # ├── Test • products
+  # ├── Test • coupons
+  # │
+  # └── Smoke Quality Gate
   # ==================================================
+
+  smoke-gate:
+
+    name: Smoke Quality Gate
+
+    needs:
+      - test
+
+    if: always()
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Validate smoke results
+        run: |
+          if [ "${{ needs.test.result }}" != "success" ]; then
+            echo "Smoke tests failed."
+            exit 1
+          fi
+
+          echo "Smoke tests passed."
 
 
 

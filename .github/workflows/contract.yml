@@ -45,7 +45,7 @@ jobs:
 
   # ==================================================
   # 🧪 JOB 1 — EXECUTE CONTRACT TESTS
-  #
+  # ==================================================
   # Delegates all shared CI logic to the reusable test runner workflow.
   #
   # Shared responsibilities extracted:
@@ -70,3 +70,47 @@ jobs:
       pytest_markers: contract  # Execute only contract validation tests.
       timeout_minutes: 15
       pytest_durations: 10
+
+  # ==================================================
+  # 🚦 JOB 2 — CONTRACT QUALITY GATE
+  # ==================================================
+  #
+  # Provides a stable PR status check.
+  #
+  # Branch protection should require:
+  #   Contract Quality Gate
+  #
+  # The implementation of the contract suite can evolve
+  # without changing the protected status check.
+
+  # GitHub branch protection only cares about Contract Quality Gate, not the individual entities.
+  # So you'll get for Contract Tests
+  # Contract Tests
+  # ├── Test • customers
+  # │
+  # └── Contract Quality Gate
+
+  # Even though there is only one underlying test job today
+  # ==================================================
+
+  contract-gate:
+
+    name: Contract Quality Gate
+
+    needs:
+      - test
+
+    if: always()
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Validate contract results
+        run: |
+          if [ "${{ needs.test.result }}" != "success" ]; then
+            echo "Contract tests failed."
+            exit 1
+          fi
+
+          echo "Contract tests passed."

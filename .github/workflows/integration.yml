@@ -236,6 +236,15 @@ jobs:
   #   Integration Quality Gate
   #
   # It should NOT require individual entity jobs.
+
+  # GitHub branch protection only cares about Integration Quality Gate, not the individual entities.
+  # So you'll get for Integration Tests
+  # ├── Test • customers
+  # ├── Test • orders
+  # ├── Test • products
+  # ├── Test • coupons
+  # │
+  # └── Integration Quality Gate
   # ==================================================
   integration-gate:
 
