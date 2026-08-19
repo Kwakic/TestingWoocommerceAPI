@@ -1,0 +1,5 @@
+INFO     EcommerceAPI.src.clients.graphql_client:graphql_client.py:184 🔷 GraphQL mutation createProduct → HTTP 200 (completed in 0.24s)
+INFO     EcommerceAPI.src.clients.graphql_client:graphql_client.py:184 🔷 GraphQL mutation DeleteProduct → HTTP 200 (completed in 0.22s)
+ERROR    EcommerceAPI.src.clients.graphql_client:graphql_client.py:157 ❌ GraphQL query GetProduct → HTTP 200 (completed in 0.17s)
+ERROR    EcommerceAPI.src.clients.graphql_client:graphql_client.py:170    GraphQL error: No product exists with the database_id: 12
+ERROR    EcommerceAPI.src.clients.graphql_client:graphql_client.py:177    GraphQL error path: product
