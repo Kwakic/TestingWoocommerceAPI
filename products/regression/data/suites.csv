@@ -1,5 +1,5 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Sun Aug 30 08:12:33 UTC 2026","Sun Aug 30 08:12:35 UTC 2026","2956","tests.products.graphql","test_get_all_products","","","","test_get_all_products_pagination","
+"passed","Mon Aug 31 08:33:19 UTC 2026","Mon Aug 31 08:33:22 UTC 2026","3299","tests.products.graphql","test_get_all_products","","","","test_get_all_products_pagination","
 Verify cursor-based pagination for the GraphQL Product collection.
 
 The test creates a controlled dataset so that pagination does not depend
