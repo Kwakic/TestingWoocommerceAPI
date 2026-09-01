@@ -1053,59 +1053,231 @@ API_ENV=ci
 
 ## Pull Request Quality Gate
 
-Every pull request targeting `main` executes the fast-to-medium
-validation suites before merge:
+A **Quality Gate** is an optional CI job that turns the result of one or more
+test jobs into a single, explicit pass/fail decision.
+
+This project implements the pattern in the entity workflows. For example,
+`integration.yml` contains an **Integration Quality Gate** that evaluates the
+result of the integration test job:
+
+```yaml
+integration-gate:
+
+  name: Integration Quality Gate
+
+  needs:
+    - test
+
+  if: always()
+
+  runs-on: ubuntu-latest
+
+  steps:
+
+    - name: Validate integration results
+      run: |
+        if [ "${{ needs.test.result }}" != "success" ]; then
+          echo "Integration tests failed."
+          exit 1
+        fi
+
+        echo "Integration tests passed."
+```
+
+The important distinction is:
+
+```text
+                 TEST EXECUTION
+                       │
+              ┌────────┴────────┐
+              │                 │
+          Entity A          Entity B
+              │                 │
+              └────────┬────────┘
+                       ▼
+                Quality Gate
+                       │
+                  PASS / FAIL
+                       │
+                       ▼
+              GitHub branch rule
+                       │
+                ┌──────┴──────┐
+                ▼             ▼
+             Required       Optional
+              check          check
+```
+
+### Why use a Quality Gate?
+
+The test jobs answer:
+
+> **"Did the tests pass?"**
+
+The Quality Gate answers:
+
+> **"Should this CI result be considered acceptable for the next stage?"**
+
+This separation is particularly useful when a workflow uses a **matrix** and
+therefore creates multiple test jobs.
+
+Instead of making every individual matrix job a required GitHub status check,
+the repository can expose one stable check such as:
+
+```text
+Integration Quality Gate
+```
+
+GitHub branch protection can then require that single check.
+
+### Quality Gate vs Required Status Check
+
+These are related, but they are **not the same thing**.
+
+| Concept | Responsibility |
+|---|---|
+| Test job | Executes the tests |
+| Quality Gate | Aggregates/validates the test result |
+| Required status check | GitHub repository rule that can block a PR |
+| Branch protection / Ruleset | Defines whether the status check is mandatory |
+
+The Quality Gate therefore works even when it is **not configured as a required
+status check**.
+
+This makes it useful during development:
+
+1. Implement the Quality Gate.
+2. Run it on pull requests.
+3. Observe its behaviour.
+4. Confirm that failures correctly propagate.
+5. Once the workflow is stable, optionally add the gate to
+   **Settings → Branches → Branch protection rules → Required status checks**.
+
+This project deliberately keeps that final step configurable.
+
+### Recommended production pattern
+
+For a mature repository, prefer:
 
 ```text
 Pull Request
      │
      ├── Preflight
-     │
-     ├── Smoke
-     │
-     ├── Contract
-     │
-     └── Integration
-            │
-            ▼
-      Required checks
-            │
-       ┌────┴────┐
-       ▼         ▼
-     FAIL       PASS
-       │         │
-       ▼         ▼
-   Block PR    Merge
-
+     ├── Smoke tests
+     ├── Contract tests
+     └── Integration tests
+              │
+              ▼
+       Quality Gate(s)
+              │
+              ▼
+      Required status check
+              │
+        ┌─────┴─────┐
+        ▼           ▼
+      FAIL         PASS
+        │           │
+        ▼           ▼
+    Block PR     Allow merge
 ```
 
->Pull requests targeting main execute Preflight, Smoke, Contract, and Integration validation. These workflows are configured as required status checks, preventing merges when any required quality gate fails.
+The gate should fail when the test job it represents fails. Diagnostic and
+reporting steps can still run with `if: always()` so that artifacts and Allure
+reports remain available after a test failure.
 
+### Why this is better than requiring every test job
+
+Requiring individual matrix jobs can make branch protection fragile.
+
+For example, an entity matrix may produce:
+
+```text
+Integration Tests / customers
+Integration Tests / orders
+Integration Tests / products
+Integration Tests / coupons
+```
+
+GitHub could require every one of those generated checks. As entities are
+added or renamed, the repository protection configuration may need to be
+updated.
+
+A stable:
+
+```text
+Integration Quality Gate
+```
+
+provides a much cleaner contract between CI and branch protection.
+
+The same pattern can be applied to other workflows when useful:
+
+```text
+Smoke Quality Gate
+Contract Quality Gate
+Integration Quality Gate
+```
+
+It is **optional**, not a requirement that every workflow must have one.
 
 ## Required PR Checks
 
-| Suite       | Purpose                          | PR       |
-| ----------- | -------------------------------- | -------- |
-| Preflight   | Framework and environment sanity | Required |
-| Smoke       | Critical business paths          | Required |
-| Contract    | REST/GraphQL compatibility       | Required |
-| Integration | API + database consistency       | Required |
+The Quality Gate becomes a true merge blocker only when its status is selected
+as a **required status check** in GitHub branch protection or repository
+rulesets.
 
+For example:
 
-Heavy suites are intentionally excluded from the PR gate:
+| CI component | Can exist without being required? | Can block a PR when configured as required? |
+|---|---:|---:|
+| Preflight | Yes | Yes |
+| Smoke tests | Yes | Yes |
+| Contract tests | Yes | Yes |
+| Integration tests | Yes | Yes |
+| Integration Quality Gate | Yes | **Yes — recommended when stable** |
 
-| Suite       | Trigger | Reason                      |
-| ----------- | ------- | --------------------------- |
-| Regression  | Nightly | Long-running                |
-| Performance | Weekly  | Stable environment required |
-| Security    | Weekly  | Deeper security validation  |
+For this project, the recommended approach is to first validate the Quality
+Gate behaviour and then decide which gates should become required checks.
 
+> **Best practice:** keep CI execution and repository policy separate. The
+> workflow defines *how quality is evaluated*; branch protection defines
+> *whether that quality result is mandatory for merging*.
 
+### Current PR validation flow
 
+The current architecture validates the following suites on pull requests:
 
+```text
+Pull Request
+     │
+     ├── Preflight
+     ├── Smoke
+     ├── Contract
+     └── Integration
+              │
+              ▼
+      Integration Quality Gate
+              │
+        ┌─────┴─────┐
+        ▼           ▼
+      FAIL         PASS
+        │           │
+        ▼           ▼
+   Gate fails    Gate passes
+```
 
----
+The gate can then be selected in GitHub as a required status check when the
+repository owner is ready to enforce it.
 
+### Heavy suites
+
+Heavy suites are intentionally excluded from the normal PR gate:
+
+| Suite | Trigger | Reason |
+|---|---|---|
+| Regression | Nightly | Long-running |
+| Performance | Weekly | Stable environment required |
+| Security | Weekly | Deeper security validation |
 
 # 3. Understanding Allure Reporting
 
