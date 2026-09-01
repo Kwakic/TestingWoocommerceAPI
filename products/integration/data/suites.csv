@@ -1,17 +1,11 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Wed Aug 19 10:51:16 UTC 2026","Wed Aug 19 10:51:17 UTC 2026","433","tests.products.graphql","test_search_product","","","","test_search_product","
-Verify that a product can be found through the GraphQL product search.
+"passed","Tue Sep 01 11:05:33 UTC 2026","Tue Sep 01 11:05:33 UTC 2026","432","tests.products.graphql","test_get_product","","","","test_get_product","
+Verify that a product created by the test can be retrieved by database ID.
 
-The test creates its own product, searches for a unique part of its name,
-and verifies that the created product is returned by the search.
+The test creates its own product, captures its database ID, queries that
+exact product, and verifies the returned product data.
 "
-"passed","Wed Aug 19 10:51:08 UTC 2026","Wed Aug 19 10:51:08 UTC 2026","266","tests.products.graphql","test_create_product","","","","test_create_product","
-Verify that an authenticated GraphQL mutation creates a real product.
-
-The test creates the product through GraphQL and verifies that the
-response contains a valid database ID and the expected product name.
-"
-"passed","Wed Aug 19 10:51:10 UTC 2026","Wed Aug 19 10:51:14 UTC 2026","3510","tests.products.graphql","test_get_all_products","","","","test_get_all_products_pagination","
+"passed","Tue Sep 01 11:05:27 UTC 2026","Tue Sep 01 11:05:31 UTC 2026","3603","tests.products.graphql","test_get_all_products","","","","test_get_all_products_pagination","
 Verify cursor-based pagination for the GraphQL Product collection.
 
 The test creates a controlled dataset so that pagination does not depend
@@ -34,7 +28,7 @@ GraphQL pagination uses cursors rather than the REST API's page/per_page
 parameters, so this test intentionally exercises GraphQL's native
 connection pagination instead of the REST pagination utility.
 "
-"passed","Wed Aug 19 10:51:17 UTC 2026","Wed Aug 19 10:51:17 UTC 2026","652","tests.products.graphql","test_update_product","","","","test_update_product","
+"passed","Tue Sep 01 11:05:34 UTC 2026","Tue Sep 01 11:05:34 UTC 2026","654","tests.products.graphql","test_update_product","","","","test_update_product","
 Verify that a product can be updated through the GraphQL API.
 
 The test creates its own product, captures its database ID, updates
@@ -44,14 +38,41 @@ the same product again to confirm that the updated state was persisted.
 This ensures the test does not depend on pre-existing database data
 and validates both the mutation response and the resulting resource state.
 "
-"passed","Wed Aug 19 10:51:09 UTC 2026","Wed Aug 19 10:51:10 UTC 2026","614","tests.products.graphql","test_filter_products","","","","test_filter_product_by_category","
-Verify that products can be filtered by product category through GraphQL.
+"passed","Tue Sep 01 11:05:26 UTC 2026","Tue Sep 01 11:05:26 UTC 2026","461","tests.products.graphql","test_filter_products","","","","test_filter_product_by_sku","
+Verify that products can be filtered by SKU through GraphQL.
 
-The test creates its own product category, creates a product assigned to
-that category, filters the product collection by the category ID, and
-verifies that the created product is returned.
+The test creates its own product with a unique SKU, filters the product
+collection by that SKU, and verifies that the created product is returned.
 "
-"passed","Wed Aug 19 10:51:07 UTC 2026","Wed Aug 19 10:51:08 UTC 2026","333","tests.products.api","test_create_products","","","","test_create_single_simple_product","
+"passed","Tue Sep 01 11:05:24 UTC 2026","Tue Sep 01 11:05:25 UTC 2026","279","tests.products.graphql","test_create_product","","","","test_create_product","
+Verify that an authenticated GraphQL mutation creates a real product.
+
+The test creates the product through GraphQL and verifies that the
+response contains a valid database ID and the expected product name.
+"
+"passed","Tue Sep 01 11:05:33 UTC 2026","Tue Sep 01 11:05:34 UTC 2026","430","tests.products.graphql","test_search_product","","","","test_search_product","
+Verify that a product can be found through the GraphQL product search.
+
+The test creates its own product, searches for a unique part of its name,
+and verifies that the created product is returned by the search.
+"
+"passed","Tue Sep 01 11:05:25 UTC 2026","Tue Sep 01 11:05:26 UTC 2026","675","tests.products.graphql","test_delete_product","","","","test_delete_product","
+Verify that a product can be permanently deleted through GraphQL.
+
+The test creates its own product to avoid relying on pre-existing
+database state, permanently deletes it using ``force: true``, and
+verifies that the product can no longer be retrieved by its database ID.
+
+The final lookup intentionally expects a GraphQL error indicating that
+the product does not exist. WPGraphQL returns HTTP 200 with
+``data.product = null`` and an error entry for this expected condition,
+so the final assertion validates the response data rather than using
+``GraphQLResponse.ok``.
+
+Args:
+    graphql_client: Authenticated GraphQL client fixture.
+"
+"passed","Tue Sep 01 11:05:24 UTC 2026","Tue Sep 01 11:05:24 UTC 2026","335","tests.products.api","test_create_products","","","","test_create_single_simple_product","
 Create a simple product using the minimum valid payload.
 
 The fixture `create_valid_product` already performs:
@@ -67,31 +88,10 @@ Test flow:
     2. Fetch product via API
     3. Verify API data matches database record
 "
-"passed","Wed Aug 19 10:51:09 UTC 2026","Wed Aug 19 10:51:09 UTC 2026","425","tests.products.graphql","test_filter_products","","","","test_filter_product_by_sku","
-Verify that products can be filtered by SKU through GraphQL.
+"passed","Tue Sep 01 11:05:26 UTC 2026","Tue Sep 01 11:05:27 UTC 2026","631","tests.products.graphql","test_filter_products","","","","test_filter_product_by_category","
+Verify that products can be filtered by product category through GraphQL.
 
-The test creates its own product with a unique SKU, filters the product
-collection by that SKU, and verifies that the created product is returned.
-"
-"passed","Wed Aug 19 10:51:16 UTC 2026","Wed Aug 19 10:51:16 UTC 2026","418","tests.products.graphql","test_get_product","","","","test_get_product","
-Verify that a product created by the test can be retrieved by database ID.
-
-The test creates its own product, captures its database ID, queries that
-exact product, and verifies the returned product data.
-"
-"passed","Wed Aug 19 10:51:08 UTC 2026","Wed Aug 19 10:51:09 UTC 2026","660","tests.products.graphql","test_delete_product","","","","test_delete_product","
-Verify that a product can be permanently deleted through GraphQL.
-
-The test creates its own product to avoid relying on pre-existing
-database state, permanently deletes it using ``force: true``, and
-verifies that the product can no longer be retrieved by its database ID.
-
-The final lookup intentionally expects a GraphQL error indicating that
-the product does not exist. WPGraphQL returns HTTP 200 with
-``data.product = null`` and an error entry for this expected condition,
-so the final assertion validates the response data rather than using
-``GraphQLResponse.ok``.
-
-Args:
-    graphql_client: Authenticated GraphQL client fixture.
+The test creates its own product category, creates a product assigned to
+that category, filters the product collection by the category ID, and
+verifies that the created product is returned.
 "
