@@ -1,5 +1,5 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Wed Sep 02 14:18:58 UTC 2026","Wed Sep 02 14:18:58 UTC 2026","309","tests.products.api","test_create_products","","","","test_create_single_simple_product","
+"passed","Wed Sep 02 14:30:50 UTC 2026","Wed Sep 02 14:30:51 UTC 2026","986","tests.products.api","test_create_products","","","","test_create_single_simple_product","
 Create a simple product using the minimum valid payload.
 
 The fixture `create_valid_product` already performs:
