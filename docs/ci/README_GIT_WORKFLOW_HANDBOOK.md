@@ -2139,15 +2139,98 @@ git status
 
 ---
 
-### 🔎 See the actual code changes you staged (after running `git add .`):
+### 🔎 See what you're about to commit (staged vs unstaged, to be used after `git add .`)
 
-This lets you verify exactly what you're about to commit.
-```
+Already ran `git add .`? Double-check exactly what you're about to commit:
+
+```bash
 git diff --cached
-# or
-git diff
-
+# To see your staged changes compared to the main branch
+git diff --cached main
 ```
+
+Haven't staged yet? See what's still sitting unstaged in your working folder:
+
+```bash
+git diff
+```
+
+---
+
+### 🔎 Compare your branch against `main` (to be used after a `git commit`)
+
+Shows commits **you** added that aren't on `main` yet — usually what you actually want:
+
+```bash
+git log main..feature/GitHub_CI --oneline
+```
+
+👉 Meaning: "Show commits that are on `feature/GitHub_CI` but not on `main`."
+
+Want it the other way around — what does `main` have that your branch is missing?
+
+```bash
+git log feature/GitHub_CI..main --oneline
+```
+
+**Note:** `git log` only looks at committed history, not staged files.
+
+---
+
+### 📊 See the actual code differences (not just commit messages, to be used after a `git commit` )
+
+```bash
+git diff main...feature/GitHub_CI
+```
+
+Just want the list of changed files?
+
+```bash
+git diff --name-only main...feature/GitHub_CI
+```
+
+Just want a short summary (files changed, lines added/removed)?
+
+```bash
+git diff --stat main...feature/GitHub_CI
+```
+
+Just did a `git fetch`? Compare your branch against the freshly-updated `main`:
+
+```bash
+git diff main..HEAD
+```
+
+> 👉 Shows what you've added that isn't in `main` yet.
+
+---
+
+### ⚔️ Two Dots (`..`) vs Three Dots (`...`) — what's the difference?
+
+This is the part that confuses most people. Simple version:
+
+- **Three dots (`...`)** → compares against the point where your branch and `main` split apart. Shows **only your work**, even if `main` moved forward since then.
+- **Two dots (`..`)** → compares the **current tip** of `main` directly against your branch. If `main` changed since you branched, those changes show up too (as deletions).
+
+#### ✅ Use three dots — your daily default
+
+- 👉 Reviewing your own feature branch — matches exactly what GitHub/GitLab/Bitbucket show in a Pull Request.
+- 👉 When `main` has moved on without you — three dots ignores those extra commits and shows only *your* work.
+
+#### ⚠️ Use two dots — special cases only
+
+- 👉 Right before a fast-forward merge, as a final sanity check.
+- 👉 Checking how far your branch has drifted from `main` (including what you're missing).
+
+> 📌 **Rule of thumb:** Default to **three dots** (`...`) for everyday work. Only switch to **two dots** (`..`) when merging or checking sync/drift.
+
+#### Quick reference table
+
+| Command | Compares against | Shows recent `main` updates? | Shows your uncommitted changes? | Best for |
+|---|---|---|---|---|
+| `git diff main...feature` | Common ancestor | No | No | Matching the GitHub PR view |
+| `git diff main..feature` | Tip of `main` right now | Yes (as deletions) | No | Checking the exact net difference before merging |
+
 
 ---
 
@@ -2200,50 +2283,6 @@ git log feature/GitHub_CI --oneline
 
 ---
 
-### 🔎 Show only commits DIFFERENT from main (most useful):
-This is usually what you actually want:
-```Bash
-git log main..feature/GitHub_CI --oneline
-```
-👉 Meaning:
->“Show commits that are in feature/GitHub_CI but NOT in main”
-
----
-
-### ⚖️ Compare both branches directly
-What feature branch has that main doesn't (same command as above):
-```
-git log main..feature/GitHub_CI --oneline
-```
-
-What main has that the feature branch doesn't (the reverse):
-```
-git log feature/GitHub_CI..main --oneline
-```
----
-
-### 📊 See actual code differences too
-
-```
-git diff main..feature/GitHub_CI
-```
-
-Or just filenames:
-```
-git diff --name-only main..feature/GitHub_CI
-```
----
-
-### 🔎 To see changes compared to main:
-
-Since you just did a git fetch, you might want to see how your feature branch differs from the server's main:
-
-```Bash
-git diff main..HEAD
-```
-👉 Shows what you have added that isn't in main yet.
-
----
 ## II. 🐞 Debugging Git
 
 ---
