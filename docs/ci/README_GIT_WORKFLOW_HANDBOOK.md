@@ -2157,7 +2157,7 @@ git diff
 
 ---
 
-### 🔎 Compare your branch against `main` (to be used after `git add .`)
+### 🔎 Compare your branch against `main` (to be used after a `git commit`)
 
 Shows commits **you** added that aren't on `main` yet — usually what you actually want:
 
