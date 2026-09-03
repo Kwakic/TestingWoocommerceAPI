@@ -1,0 +1,25 @@
+DEBUG    EcommerceAPI.plugins.entities:entities.py:459 ✅ [customers] Loaded API client: CustomersApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:468 ✅ [customers] Instantiated helper with API client
+DEBUG    EcommerceAPI.plugins.entities:entities.py:459 ✅ [products] Loaded API client: ProductsApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:468 ✅ [products] Instantiated helper with API client
+DEBUG    EcommerceAPI.src.products.dao.products_dao:products_dao.py:45 🗄️ ProductsDAO initialized: table=wordpress.wp_posts
+INFO     EcommerceAPI.plugins.entities:entities.py:532 🔍 ENTITY DISCOVERY SUMMARY
+INFO     EcommerceAPI.plugins.entities:entities.py:534    coupons      | ⏭️ SKIPPED (missing API module)
+INFO     EcommerceAPI.plugins.entities:entities.py:534    customers    | ✅  READY
+INFO     EcommerceAPI.plugins.entities:entities.py:534    orders       | ⏭️ SKIPPED (missing API module)
+INFO     EcommerceAPI.plugins.entities:entities.py:534    products     | ✅  READY
+INFO     EcommerceAPI.src.clients.graphql_client:graphql_client.py:184 🔷 GraphQL mutation createProduct → HTTP 200 (completed in 0.21s)
+INFO     EcommerceAPI.src.clients.graphql_client:graphql_client.py:184 🔷 GraphQL query GetProduct → HTTP 200 (completed in 0.15s)
+INFO     EcommerceAPI.plugins.entities:entities.py:715 🔧 Starting teardown of created test resources...
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up product(s)... (1 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 27
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/27?force=True → Status code: 200 (completed in 0.132s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 27
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for product(s).
+INFO     EcommerceAPI.plugins.entities:entities.py:746 
+
+🧹 ====================================== CLEANUP SUMMARY ======================================
+INFO     EcommerceAPI.plugins.entities:entities.py:749 📊 Created during test run: {'products': 1}
+INFO     EcommerceAPI.plugins.entities:entities.py:750 🧾 Cleanup total summary:
+INFO     EcommerceAPI.plugins.entities:entities.py:752    • product: 1 deleted (1 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:753 ✅ All test data cleanup completed.
