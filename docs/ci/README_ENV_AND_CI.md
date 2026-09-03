@@ -65,12 +65,31 @@ Push
 GitHub Actions
 ```
 
+---
+
 The same workflow is used by all entity teams
 (customers, products, orders and coupons).
 
+### 🎭 Playwright browser setup
+
+Playwright is included as a development dependency of the framework.
+
+When `make run` executes the `install` target, it:
+
+1. Installs the Python development dependencies from `pyproject.toml`.
+2. Installs the Playwright browser binaries required for UI tests.
+
+Therefore, a fresh local environment is fully prepared for both
+API and UI testing through the existing:
+
+```bash
+make run
+```
+
 ---
 
-### 🦾 Automatic `.env` creation
+
+### 🦾 Automatic `.env` creation and Playwright setup
 
 For local development, `make run` automatically creates `.env`
 from `.env.example` the first time it is executed.
@@ -79,6 +98,15 @@ During the bootstrap process, WooCommerce automatically generates
 a fresh pair of REST API credentials for the newly provisioned
 WordPress installation. These credentials are then merged into
 `.env` by `write_env_credentials.sh`.
+
+The same `make run` bootstrap also installs the project's Python
+development dependencies and Playwright browser binaries.
+
+**Playwright browser installation:** The Playwright Python package
+is declared in `pyproject.toml` as a development dependency.
+The required browser binaries are installed automatically by the
+Makefile, so developers do not need to run `playwright install`
+manually.
 
 Authentication credentials are updated as part of bootstrap:
 
@@ -89,7 +117,9 @@ Authentication credentials are updated as part of bootstrap:
 
 All other developer-specific settings remain unchanged.
 
-### Endpoint configuration
+---
+
+### ⚙️ Endpoint configuration
 
 Unlike previous framework versions, the framework no longer stores
 API endpoint URLs inside `.env`.
