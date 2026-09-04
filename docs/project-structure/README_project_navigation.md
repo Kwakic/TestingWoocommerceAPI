@@ -258,9 +258,26 @@ tests/
 │       ├── __init__.py
 │       └── README_PREFLIGHT.md
 │
+├── ui/                               ← Playwright tests
+│   ├── tests/
+│   │   ├── Login
+│   │   │    └── test_home_page.py   ← First learning test
+│   │   ├── Products
+│   │   │    └── test_home_page.py   ← First learning test
+│   │   ├── Carts
+│   │   │    └── test_home_page.py   ← First learning test
+│   │   └── Checkout
+│   │        └── test_home_page.py   ← First learning test
+│   │
+│   ├── pages/                        ← Page Objects
+│   ├── components/                   ← Reusable UI components
+│   ├── data/                         ← UI test data
+│   ├── conftest.py                   ← UI-specific fixtures
+│   └── README.md                     ← UI testing guide
+│
 ├── __init__.py
 ├── conftest.py                       ← Shared root fixtures
-└── README.md                          ← Test suite documentation
+└── README.md                         ← Test suite documentation
 ```
 
 ### 📋 Test Types per Domain
@@ -810,6 +827,23 @@ TestEcommerceAPI (project suite/root)
 │     │       ├── test_logging_globals.py            ← Logging validation
 │     │       ├── __init__.py
 │     │       └── README_PREFLIGHT.md
+│     │
+│     ├── ui/                               ← Playwright tests
+│     │   ├── tests/
+│     │   │   ├── Login
+│     │   │   │    └── test_home_page.py   ← First learning test
+│     │   │   ├── Products
+│     │   │   │    └── test_home_page.py   ← First learning test
+│     │   │   ├── Carts
+│     │   │   │    └── test_home_page.py   ← First learning test
+│     │   │   └── Checkout
+│     │   │        └── test_home_page.py   ← First learning test
+│     │   │
+│     │   ├── pages/                        ← Page Objects
+│     │   ├── components/                   ← Reusable UI components
+│     │   ├── data/                         ← UI test data
+│     │   ├── conftest.py                   ← UI-specific fixtures
+│     │   └── README.md                     ← UI testing guide
 │     │
 │     ├── __init__.py
 │     ├── conftest.py                                ← Shared root fixtures
