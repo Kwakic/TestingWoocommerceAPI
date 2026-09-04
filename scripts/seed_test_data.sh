@@ -83,7 +83,7 @@ seed_product() {
         --status=publish \
         --sku="$sku" \
         --regular_price="$price" \
-        --stock_status=instock \
+        --in_stock=true \
         --catalog_visibility=visible \
         --user=admin \
         --allow-root
