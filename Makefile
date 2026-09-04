@@ -15,6 +15,7 @@
 #                                     WooCommerce, API credentials). It
 #                                     never touches .env — it just prints
 #                                     fresh credentials to stdout.
+#   seed_test_data.sh             -> Seed deterministic baseline WooCommerce data.
 #   scripts/write_env_credentials.sh -> the ONLY thing that writes
 #                                     generated API credentials into .env
 #   Python                        -> consumes .env, never creates it
@@ -185,6 +186,8 @@ up: ensure-env
 setup: ensure-env
 	@echo "[SETUP] Bootstrapping WooCommerce..."
 	@bash scripts/setup.sh | bash scripts/write_env_credentials.sh
+	@echo "[SETUP] Seeding WooCommerce test data..."
+	@bash scripts/seed_test_data.sh
 
 # --------------------------------------------------
 # Install Python framework (editable mode)
@@ -235,8 +238,6 @@ test-ci: venv
 #   make run
 # --------------------------------------------------
 run: ensure-env up setup install test
-
-#run: up setup install test -->It's functionally equivalent, avoids declaring the same dependency twice, and expresses the orchestration more cleanly.
 
 # --------------------------------------------------
 # Stop infrastructure and remove everything Docker manages

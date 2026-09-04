@@ -250,6 +250,8 @@ GraphQLClient(
 
 is used by the authenticated test fixture.
 
+---
+
 ## 7. GraphQL Fixtures
 
 ### 7.1 Authenticated GraphQL client
@@ -336,6 +338,8 @@ Tests that explicitly delete the Product themselves, such as the GraphQL delete 
 
 Category resources are not currently part of the shared entity cleanup model.
 
+---
+
 ## 8. GraphQL Response Semantics
 
 GraphQL has an important behavior that differs from conventional REST testing:
@@ -411,6 +415,9 @@ HTTP != 200                  → GraphQL failure
 
 This distinction is part of the GraphQL test contract and is intentionally
 different from the usual REST API status-code model.
+
+
+---
 
 ## 9. 🧪 Current Product GraphQL Tests
 

@@ -268,6 +268,18 @@ This removes the containers **and** the named volumes (DB data, WordPress files)
 
 > ⚠️ Only delete local working files (e.g. a stray `wp-data/` directory or the `woocommerce/` plugin folder) if you've created them yourself outside of Docker's managed volumes. Docker Compose volumes are already handled by `down -v` — don't `rm -rf` paths you're not sure about.
 
+
+### UI/E2E data after a clean reset
+
+A clean reset also removes WooCommerce application data stored in the
+Docker volumes.
+
+The next `make run` therefore recreates the deterministic baseline products
+required by Playwright UI/E2E tests before pytest starts.
+
+The seed operation is idempotent, so running `make run` against an existing
+environment does not create duplicate baseline products.
+
 ---
 
 ## 7. Do you need to build anything yourself?
