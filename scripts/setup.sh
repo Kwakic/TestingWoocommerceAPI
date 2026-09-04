@@ -2,6 +2,7 @@
 
 # --------------------------------------------------
 # Bootstrap a local WooCommerce development instance.
+# Provisions WordPress/WooCommerce and generates credentials
 #
 # Responsibilities
 # ----------------

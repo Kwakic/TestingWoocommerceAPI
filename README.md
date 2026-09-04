@@ -23,24 +23,39 @@
 
 # 🧪 TestEcommerceAPI
 
-A fully automated **API testing framework for WooCommerce**, built with **Python**, **pytest**, and **Docker**, supporting both **REST and GraphQL APIs**.
+A fully automated **API and UI testing framework for WooCommerce**, built with **Python**, **pytest**, **Playwright**, and **Docker**, supporting **REST, GraphQL, and browser-based UI testing**.
 
-This project demonstrates real-world API testing practices:
+This project demonstrates real-world API and UI testing practices:
 
 * 🔌 REST API validation
 * 🔗 GraphQL API validation (WPGraphQL / WooGraphQL)
+* 🎭 UI / browser automation with Playwright
 * 🗄️ Database verification (API ↔ DB consistency)
 * 🐳 Fully reproducible Docker environment
 * ⚙️ One-command setup (`make run`)
 * 🔁 Idempotent infrastructure (safe to rerun)
 
+### 🧪 Test Automation Scope
+
+The framework covers multiple layers of the WooCommerce application:
+
+| Layer | Technology | Purpose |
+|---|---|---|
+| API | REST / WooCommerce API | Entity and lifecycle validation |
+| API | GraphQL / WPGraphQL / WooGraphQL | Queries, mutations and schema validation |
+| UI | Playwright | Browser-based end-to-end and UI workflow validation |
+| Data | MySQL / DAO | API ↔ database consistency checks |
+
+Playwright is integrated into the same pytest-based framework rather than
+being maintained as a separate UI automation project.
+
 ---
 
 ## ✨ What makes this framework architecturally interesting
 
-- 🏗️ **Domain-Driven Architecture** — Organizes the framework into independent business entities (Customers, Orders, Products, Coupons), each with its own REST/GraphQL API tests, DAO, validators, models, helpers, and tests.
+- 🏗️ **Domain-Driven Architecture** — Organizes the framework into independent business entities (Customers, Orders, Products, Coupons), each with its own REST/GraphQL API tests, UI tests where applicable, DAO, validators, models, helpers, and test data.
 
-- 🐳 **Reproducible Test Environment** — Spins up a complete WordPress + WooCommerce stack using Docker, providing identical local and CI environments through a one-command bootstrap (`make run`).
+- 🐳 **Reproducible Test Environment** — Spins up a complete WordPress + WooCommerce stack using Docker, providing a deterministic environment for API and Playwright UI testing through a one-command bootstrap (`make run`).
 
 - 🌍 **Environment-Aware Configuration** — Uses `API_ENV` together with entity configuration files to resolve endpoints dynamically, completely separating environment selection from authentication.
 
@@ -52,7 +67,7 @@ This project demonstrates real-world API testing practices:
 
 - 📊 **Automated QA Reporting** — Generates interactive Allure reports and publishes a dynamic GitHub Pages QA Portal that automatically grows as new entity reports become available.
 
-- 🧱 **Enterprise-Oriented Framework Design** — Follows clear separation of concerns, reusable pytest plugins, dependency injection, layered architecture, comprehensive documentation, and configuration contracts to support long-term maintainability.
+- 🎭 **Multi-Layer Test Automation** — Combines REST API, GraphQL API, database validation, and Playwright browser testing in a single pytest-based automation framework.
 
 - 🔐 **Multi-Protocol Authentication** — Uses WooCommerce OAuth1 for REST API tests and WordPress Application Passwords over HTTP Basic Auth for authenticated GraphQL mutations, while keeping authentication independent from endpoint configuration.
 
@@ -100,6 +115,7 @@ any HTML or README updates.
 * QA Engineers
 * SDETs
 * Python API automation developers
+* UI automation engineers
 * Teams building reusable test frameworks
 
 ---
@@ -149,6 +165,7 @@ Install the following tools before running the framework:
 | Docker Desktop | ✅ | Runs the WordPress, WooCommerce and MySQL containers |
 | Git | ✅ | Clone the repository |
 | GNU Make | ✅ | Required for the `make run` and other Makefile commands |
+| Playwright browsers | ⚙️ | Installed automatically by `make run`; no manual browser installation required |
 
 ### Windows
 
@@ -186,7 +203,10 @@ xcode-select --install
 
 It demonstrates:
 
-* Real API + DB integration testing
+* REST API automation
+* GraphQL API automation
+* Playwright UI / browser automation
+* API + DB integration testing
 * Clean, domain-driven test architecture
 * Reproducible environments
 * CI-ready infrastructure
@@ -215,11 +235,13 @@ On the first run, it automatically:
 - 🐍 Creates the project-local `.venv`
 - 🔍 Verifies that `.venv` uses **Python 3.13+**
 - 📦 Installs `EcommerceAPI[dev]` into `.venv`
+- 🎭 Installs the Playwright browser binaries required by UI tests
 - 🐳 Starts the Docker infrastructure
 - 🌐 Installs WordPress
 - 🛒 Installs WooCommerce
 - 🔑 Generates WooCommerce REST API credentials
 - ⚙️ Configures the local test environment
+- 🌱 Seeds deterministic baseline WooCommerce data used by UI/E2E tests
 - 🧪 Runs the test suite
 
 ### 🔁 Re-running `make run`
@@ -413,6 +435,9 @@ make test
 ```
 
 Manual pytest execution is primarily intended for framework development.
+Playwright browsers are installed automatically as part of the project development
+dependencies/bootstrap; developers do not need to run `playwright install` separately
+when using `make run`.
 
 ```bash
 python -m pip install -e "./EcommerceAPI[dev]"
@@ -452,8 +477,8 @@ The framework includes:
 ## 🧪 Test Organization
 
 Tests are organized by domain (customers, products, orders, coupons),
-with REST API tests, GraphQL tests, and performance tests grouped inside each
-domain.
+with REST API tests, GraphQL tests, Playwright UI tests where applicable,
+and performance tests grouped inside each domain.
 
 Framework-level tests live under `tests/shared/`, including:
 
@@ -474,6 +499,7 @@ Framework-level tests live under `tests/shared/`, including:
 * ✔️ Independent Smoke, Integration, Regression, and Performance dashboards
 * ✔️ REST API test coverage across business entities
 * ✔️ GraphQL query and mutation test coverage
+* ✔️ Playwright UI / browser test coverage
 * ✔️ GraphQL schema/contract validation
 * ✔️ Separate REST OAuth1 and GraphQL Application Password authentication
 * ✔️ Allure history preservation

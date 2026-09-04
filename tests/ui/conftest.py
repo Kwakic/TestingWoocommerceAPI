@@ -1,7 +1,8 @@
 """
 Shared pytest fixtures for Playwright UI tests.
 
-This module owns the Playwright browser lifecycle for the UI test suite.
+This module owns the browser lifecycle and provides role-oriented fixtures
+for the UI test suite.
 
 Architecture:
 
@@ -10,26 +11,30 @@ Architecture:
         ▼
     Browser  ─────────────── session-scoped
         │
-        ├── Browser Context ── function-scoped
-        │        │
-        │        └── Page ──── function-scoped
-        │
-        └── Browser Context
+        └── Browser Context ── function-scoped
                  │
-                 └── Page
+                 └── Page ──── function-scoped
+                         │
+                         ├── guest_page
+                         └── customer_page (future)
 
 Design principles:
     - One browser process is reused during the pytest session.
     - Every test receives a fresh Browser Context.
     - Every test receives a fresh Page.
     - Browser Context provides session/cookie/storage isolation.
-    - Tests should never manage browser lifecycle themselves.
+    - Role-specific fixtures build on the generic page fixture.
+    - Tests should not manage browser lifecycle themselves.
+    - Authentication details belong in role fixtures, not individual tests.
 """
 
-from collections.abc import Generator
-
 import pytest
+import os
+
+from collections.abc import Generator
 from playwright.sync_api import Browser, BrowserContext, Page, sync_playwright
+
+from tests.ui.config.config_ui import UI_HOSTS
 
 
 @pytest.fixture(scope="session")
@@ -44,15 +49,13 @@ def browser() -> Generator[Browser, None, None]:
     Yields:
         Browser: Active browser instance available to dependent fixtures.
     """
-    # 1. Start the Playwright driver context
+    # Start the Playwright driver and launch the browser once per session.
     with sync_playwright() as playwright:
-        # 2. Launch the browser
         browser = playwright.chromium.launch(headless=False)
+
         try:
-            # 3. Hand control over to the caller
             yield browser
         finally:
-            # 4. Clean up after the caller finishes
             browser.close()
 
 
@@ -65,8 +68,8 @@ def context(browser: Browser) -> Generator[BrowserContext, None, None]:
     Cookies, local storage, session storage, and authentication state
     are isolated from other contexts.
 
-    This allows different tests — and eventually different users —
-    to operate independently within the same browser process.
+    This is the isolation boundary between different tests and,
+    eventually, different user roles.
 
     Args:
         browser: Browser instance provided by the session-scoped
@@ -90,14 +93,12 @@ def page(context: BrowserContext) -> Generator[Page, None, None]:
 
     The page belongs to the test's isolated Browser Context.
 
-    Tests should normally depend on this fixture rather than creating
-    Playwright pages directly. This keeps browser lifecycle management
-    outside the test and allows the fixture architecture to evolve
-    without changing individual tests.
+    This is the generic low-level page fixture. Role-specific fixtures
+    such as ``guest_page`` and ``customer_page`` should build on top of
+    this fixture rather than creating their own browser lifecycle.
 
     Args:
-        context: Isolated Browser Context provided by the ``context``
-            fixture.
+        context: Isolated Browser Context provided by the generic fixture.
 
     Yields:
         Page: Active Playwright page available to the test.
@@ -108,3 +109,80 @@ def page(context: BrowserContext) -> Generator[Page, None, None]:
         yield page
     finally:
         page.close()
+
+
+@pytest.fixture(scope="session")
+def ui_base_url() -> str:
+    """
+    Return the storefront base URL for the current UI test session.
+
+    The active environment is selected using the same ``API_ENV``
+    convention used by the API framework.
+
+    Returns:
+        str: Base URL of the WooCommerce storefront.
+    """
+    environment = os.getenv("API_ENV", "test")
+
+    try:
+        return UI_HOSTS[environment]
+    except KeyError as exc:
+        supported_environments = ", ".join(sorted(UI_HOSTS))
+        raise ValueError(
+            f"Unsupported UI environment '{environment}'. "
+            f"Supported environments: {supported_environments}"
+        ) from exc
+
+
+@pytest.fixture
+def guest_page(page: Page) -> Page:
+    """
+    Provide a page representing an unauthenticated storefront user.
+
+    Guest tests intentionally use a fresh page and isolated browser context.
+    No authentication state is applied.
+
+    Args:
+        page: Fresh page provided by the generic ``page`` fixture.
+
+    Returns:
+        Page: Page representing a guest storefront session.
+    """
+    return page
+
+
+# ---------------------------------------------------------------------------
+# Future authenticated roles
+# ---------------------------------------------------------------------------
+#
+# Customer authentication should be implemented here once the login flow
+# and dedicated test-account strategy are established. Tests should not
+# contain username/password handling or login selectors.
+#
+# @pytest.fixture
+# def customer_page(page: Page) -> Generator[Page, None, None]:
+#     """
+#     Provide a page authenticated as a WooCommerce customer.
+#
+#     The fixture will own the customer login/session setup so that tests
+#     can focus on customer behavior rather than authentication mechanics.
+#     """
+#     # TODO: Authenticate using the dedicated customer test account.
+#     yield page
+#
+#
+# Admin role is intentionally kept as a reminder for future multi-role
+# end-to-end scenarios (for example: API creates product → Admin UI
+# verifies product → Storefront customer purchases product).
+#
+# @pytest.fixture
+# def admin_page(page: Page) -> Generator[Page, None, None]:
+#     """
+#     Provide a page authenticated as a WooCommerce/WordPress administrator.
+#
+#     This role is reserved for future administrative UI and cross-role
+#     end-to-end scenarios.
+#     """
+#     # TODO: Implement administrator authentication when admin UI coverage
+#     # becomes part of the framework.
+#     yield page

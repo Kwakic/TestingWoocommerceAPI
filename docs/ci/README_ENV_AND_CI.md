@@ -78,6 +78,7 @@ When `make run` executes the `install` target, it:
 
 1. Installs the Python development dependencies from `pyproject.toml`.
 2. Installs the Playwright browser binaries required for UI tests.
+3. Seeds deterministic baseline WooCommerce data
 
 Therefore, a fresh local environment is fully prepared for both
 API and UI testing through the existing:
@@ -85,6 +86,34 @@ API and UI testing through the existing:
 ```bash
 make run
 ```
+
+### 🧹 Playwright and clean environments
+
+`make clean` removes the Docker environment and its persistent volumes.
+This also removes WooCommerce data, including the deterministic baseline
+products used by UI/E2E tests.
+
+Running `make run` afterwards recreates the complete test environment:
+
+```text
+make clean
+    ↓
+Fresh Docker volumes
+    ↓
+WordPress + WooCommerce bootstrap
+    ↓
+REST / GraphQL credentials
+    ↓
+Baseline UI/E2E seed data
+    ↓
+Python dependencies
+    ↓
+Playwright browsers
+    ↓
+pytest
+```
+
+
 
 ---
 
