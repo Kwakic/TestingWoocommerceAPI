@@ -44,7 +44,8 @@ class HomePage:
         # Storefront navigation link used to open the Shop page.
         self.shop_link = page.get_by_role("banner").get_by_role(
             "link",
-            name="Test Shop",
+            name="Shop",
+            exact=True,
         )
 
     def open(self) -> None:

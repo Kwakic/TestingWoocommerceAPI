@@ -11,6 +11,7 @@ containing Playwright selectors and implementation details directly.
 """
 
 from playwright.sync_api import Page, expect
+from tests.ui.pages.product_page import ProductPage
 
 
 class ShopPage:
@@ -29,6 +30,10 @@ class ShopPage:
             page: Playwright Page associated with the current test context.
         """
         self.page = page
+        self.shop_heading = page.get_by_role(
+            "heading",
+            name="Shop",
+        )
 
     def should_be_loaded(self) -> None:
         """
@@ -38,7 +43,12 @@ class ShopPage:
         the Page Object so tests do not depend on implementation details
         such as the browser title.
         """
-        expect(self.page).to_have_title("Test Shop")
+        expect(self.shop_heading).to_be_visible()
+
+    def open_product(self, product_name: str) -> ProductPage:
+        """Open a product from the Shop page."""
+        self.page.get_by_role("link", name=product_name).click()
+        return ProductPage(self.page)
 
 
 # def test_seeded_products_are_visible(page):
