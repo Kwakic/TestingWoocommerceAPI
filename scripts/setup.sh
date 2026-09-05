@@ -215,6 +215,45 @@ else
 fi
 
 # ------------------------------------------------------------------
+# STEP 1.5 — Ensure the default WordPress theme is installed and active.
+#
+# Twenty Twenty-Four is the default WordPress theme used by the
+# reference local installation. Installing and activating it explicitly
+# keeps the Docker UI consistent and reproducible.
+# ------------------------------------------------------------------
+
+DEFAULT_THEME="twentytwentyfour"
+
+echo "🎨 Checking WordPress default theme..."
+
+if ! docker compose -f docker-compose.wp.yml run --rm \
+    -e HTTP_HOST="$WP_HTTP_HOST" \
+    wpcli wp theme is-installed "$DEFAULT_THEME" --allow-root
+then
+    echo "🚀 Installing $DEFAULT_THEME..."
+
+    retry 5 docker compose -f docker-compose.wp.yml run --rm \
+        -e HTTP_HOST="$WP_HTTP_HOST" \
+        wpcli wp theme install "$DEFAULT_THEME" --activate --allow-root
+else
+    echo "✅ $DEFAULT_THEME already installed"
+fi
+
+if ! docker compose -f docker-compose.wp.yml run --rm \
+    -e HTTP_HOST="$WP_HTTP_HOST" \
+    wpcli wp theme is-active "$DEFAULT_THEME" --allow-root
+then
+    echo "🎨 Activating $DEFAULT_THEME..."
+
+    docker compose -f docker-compose.wp.yml run --rm \
+        -e HTTP_HOST="$WP_HTTP_HOST" \
+        wpcli wp theme activate "$DEFAULT_THEME" --allow-root
+else
+    echo "✅ $DEFAULT_THEME already active"
+fi
+
+
+# ------------------------------------------------------------------
 # STEP 2 — Ensure WooCommerce is installed and active.
 #
 # Installation and activation are two independent states.
