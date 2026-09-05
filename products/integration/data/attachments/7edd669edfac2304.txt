@@ -1,0 +1,19 @@
+INFO     EcommerceAPI.src.clients.graphql_client:graphql_client.py:184 🔷 GraphQL mutation CreateCategoryFilterCategory → HTTP 200 (completed in 0.20s)
+INFO     EcommerceAPI.src.clients.graphql_client:graphql_client.py:184 🔷 GraphQL mutation CreateCategoryFilterProduct → HTTP 200 (completed in 0.28s)
+INFO     EcommerceAPI.src.clients.graphql_client:graphql_client.py:184 🔷 GraphQL query FilterProductsByCategory → HTTP 200 (completed in 0.19s)
+INFO     EcommerceAPI.plugins.entities:entities.py:715 🔧 Starting teardown of created test resources...
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up product(s)... (2 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 19
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/19?force=True → Status code: 200 (completed in 0.178s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 19
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 20
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/20?force=True → Status code: 200 (completed in 0.180s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 20
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for product(s).
+INFO     EcommerceAPI.plugins.entities:entities.py:746 
+
+🧹 ====================================== CLEANUP SUMMARY ======================================
+INFO     EcommerceAPI.plugins.entities:entities.py:749 📊 Created during test run: {'products': 2}
+INFO     EcommerceAPI.plugins.entities:entities.py:750 🧾 Cleanup total summary:
+INFO     EcommerceAPI.plugins.entities:entities.py:752    • product: 2 deleted (2 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:753 ✅ All test data cleanup completed.
