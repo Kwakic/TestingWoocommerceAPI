@@ -151,6 +151,46 @@ def guest_page(page: Page) -> Page:
     return page
 
 
+@pytest.fixture
+def ui_role_page(
+    request: pytest.FixtureRequest,
+) -> Page:
+    """
+    Provide the Playwright page associated with the requested UI role.
+
+    The role is selected through pytest parametrization. Role-specific
+    fixtures own authentication and session setup, while this fixture
+    provides a common interface to UI tests.
+
+    Currently supported:
+        - guest
+
+    Future roles:
+        - customer
+        - admin
+
+    Returns:
+        Page: Playwright page configured for the requested role.
+    """
+    role = request.param
+
+    role_fixtures = {
+        "guest": "guest_page",
+        # "customer": "customer_page",
+        # "admin": "admin_page",
+    }
+
+    try:
+        fixture_name = role_fixtures[role]
+    except KeyError as exc:
+        supported_roles = ", ".join(role_fixtures)
+        raise ValueError(
+            f"Unsupported UI role '{role}'. " f"Supported roles: {supported_roles}"
+        ) from exc
+
+    return request.getfixturevalue(fixture_name)
+
+
 # ---------------------------------------------------------------------------
 # Future authenticated roles
 # ---------------------------------------------------------------------------

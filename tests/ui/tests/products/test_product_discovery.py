@@ -1,8 +1,8 @@
 import pytest
-
 from playwright.sync_api import Page
 
 from tests.ui.pages.home_page import HomePage
+
 
 pytestmark = [
     pytest.mark.ui,
@@ -24,8 +24,8 @@ def test_guest_can_open_product(
     shop_page.should_be_loaded()
 
     product_page = shop_page.open_product("UI Seed – Album")
+
     product_page.should_be_loaded()
-    product_page.add_to_cart()
     product_page.should_show_price("$15.00")
     product_page.should_show_sku("ui-seed-album")
     product_page.should_show_category("Uncategorized")
