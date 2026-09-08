@@ -7,10 +7,33 @@ on:
   workflow_call:
 
     # --------------------------------------------------
+    # 🔐 Optional UI test credentials
+    # That gives the reusable workflow the ability to
+    # support UI in the future without forcing API
+    # workflows to provide UI credentials
+    #
+    # Only UI-enabled workflows need these secrets.
+    # API-only workflows can call this reusable workflow
+    # without providing them.
+    #
+    # The credentials are supplied by the caller workflow
+    # from GitHub Secrets and are used by the WooCommerce
+    # environment setup to seed the dedicated UI customer.
+    # --------------------------------------------------
+    secrets:
+      UI_CUSTOMER_USERNAME:
+        required: false
+
+      UI_CUSTOMER_EMAIL:
+        required: false
+
+      UI_CUSTOMER_PASSWORD:
+        required: false
+
+    # --------------------------------------------------
     # 🔧 Inputs configurable by caller workflows
     # --------------------------------------------------
     inputs:
-
       suite_name:
         required: true
         type: string
@@ -88,6 +111,17 @@ on:
         type: boolean
         default: true
 
+      # --------------------------------------------------
+      # UI environment setup
+      #
+      # Disabled by default so API-only workflows do not
+      # require UI credentials or seed UI users.
+      # --------------------------------------------------
+      seed_ui_users:
+        required: false
+        type: boolean
+        default: false
+
 jobs:
 
   # ==================================================
@@ -115,6 +149,8 @@ jobs:
     runs-on: ubuntu-latest
 
     timeout-minutes: ${{ inputs.timeout_minutes }}
+
+
 
     steps:
 
@@ -171,6 +207,16 @@ jobs:
       - name: Setup WooCommerce environment
         if: inputs.setup_woocommerce
         uses: ./.github/actions/setup-woocommerce
+        with:
+          # UI user seeding is opt-in and enabled only by ui.yml.
+          seed_ui_users: ${{ inputs.seed_ui_users }}
+
+          # These values are received from the caller workflow's
+          # GitHub Secrets. They are passed only when the UI suite
+          # explicitly provides them.
+          ui_customer_username: ${{ secrets.UI_CUSTOMER_USERNAME }}
+          ui_customer_email: ${{ secrets.UI_CUSTOMER_EMAIL }}
+          ui_customer_password: ${{ secrets.UI_CUSTOMER_PASSWORD }}
 
       # --------------------------------------------------
       # 4. Configure CI environment

@@ -48,9 +48,11 @@ class CartPage:
 
     def remove_product(self, product_name: str) -> None:
         """Remove the specified product from the shopping cart."""
+        remove_button_name = f"Remove {product_name}".replace("–", "&#8211;")
+
         self.page.get_by_role(
             "button",
-            name=f"Remove {product_name}",
+            name=remove_button_name,
         ).click()
 
     def should_be_empty(self) -> None:

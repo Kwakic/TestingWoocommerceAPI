@@ -15,7 +15,8 @@
 #                                     WooCommerce, API credentials). It
 #                                     never touches .env — it just prints
 #                                     fresh credentials to stdout.
-#   seed_test_data.sh             -> Seed deterministic baseline WooCommerce data.
+#   seed_test_products.sh         -> Seed deterministic baseline WooCommerce products.
+#   seed_test_users.sh            -> Seed persistent UI customers.
 #   scripts/write_env_credentials.sh -> the ONLY thing that writes
 #                                     generated API credentials into .env
 #   Python                        -> consumes .env, never creates it
@@ -186,8 +187,10 @@ up: ensure-env
 setup: ensure-env
 	@echo "[SETUP] Bootstrapping WooCommerce..."
 	@bash scripts/setup.sh | bash scripts/write_env_credentials.sh
-	@echo "[SETUP] Seeding WooCommerce test data..."
-	@bash scripts/seed_test_data.sh
+	@echo "[SETUP] Seeding WooCommerce test products..."
+	@bash scripts/seed_test_products.sh
+	@echo "[SETUP] Seeding UI test users..."
+	@set -a; . ./.env; set +a; bash scripts/seed_test_users.sh
 
 # --------------------------------------------------
 # Install Python framework (editable mode)

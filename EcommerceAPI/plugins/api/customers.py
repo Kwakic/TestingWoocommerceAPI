@@ -158,7 +158,9 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
               ↓
         cleanup registration  -> Register cleanup
               ↓
-        return dict
+        return dict to test
+
+
 
 
         Args:

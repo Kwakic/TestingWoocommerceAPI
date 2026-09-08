@@ -38,7 +38,9 @@ def test_add_product_to_cart(
     product_page.should_be_loaded()
     product_page.add_to_cart()
 
-    cart_page = CartPage(ui_role_page)
+    cart_page = CartPage(
+        ui_role_page
+    )  # It is giving the Page Object the same Playwright Page object that already belongs to that role.
     cart_page.open_from_add_to_cart_notice()
     cart_page.should_be_loaded()
     cart_page.should_contain_product(product_name)

@@ -152,9 +152,7 @@ def guest_page(page: Page) -> Page:
 
 
 @pytest.fixture
-def ui_role_page(
-    request: pytest.FixtureRequest,
-) -> Page:
+def ui_role_page(request: pytest.FixtureRequest) -> Page:
     """
     Provide the Playwright page associated with the requested UI role.
 

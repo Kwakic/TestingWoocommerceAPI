@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Seed deterministic baseline WooCommerce data.
+# Seed deterministic baseline WooCommerce products.
 #
 # Responsibilities
 # ----------------
@@ -24,7 +24,7 @@
 #     ↓
 # WordPress + WooCommerce ready
 #     ↓
-# seed_test_data.sh
+# seed_test_products.sh
 #     ↓
 # Product exists?
 #     ├── YES

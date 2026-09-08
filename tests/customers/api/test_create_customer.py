@@ -52,6 +52,24 @@ INVALID_EMAIL_PAYLOADS = [
     ),  # ❌ Missing email (the only required field).)
 ]
 
+"""
+The flow for creating a customer is:
+
+Test
+  ↓
+Plugin / fixture
+  ↓
+CustomerHelper
+  ↓
+CustomersApi
+  ↓
+APIClient
+  ↓
+HttpClient
+  ↓
+WooCommerce
+"""
+
 
 # ---------------------------
 # 🚀 Test: Bulk Create Customers

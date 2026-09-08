@@ -1,0 +1,134 @@
+name: UI Tests 🎭
+
+# ==================================================
+# 🎭 UI TESTS
+# ==================================================
+#
+# Purpose:
+# - Execute Playwright UI tests
+# - Provision the WooCommerce environment
+# - Seed the dedicated UI customer
+# - Keep UI authentication credentials isolated
+#   from API-only workflows
+#
+# UI credentials are supplied through GitHub Secrets.
+#
+# ==================================================
+
+on:
+
+  # --------------------------------------------------
+  # Run UI tests on pull requests targeting main
+  # --------------------------------------------------
+  pull_request:
+    branches: [ main ]
+
+  # --------------------------------------------------
+  # Run UI tests after changes reach main
+  # --------------------------------------------------
+  push:
+    branches: [ main ]
+
+  # --------------------------------------------------
+  # Allow manual execution from GitHub Actions UI
+  # --------------------------------------------------
+  workflow_dispatch:
+
+
+jobs:
+
+  # ==================================================
+  # 🎭 JOB — EXECUTE PLAYWRIGHT UI TESTS
+  # ==================================================
+  #
+  # UI tests are intentionally isolated from the
+  # API entity matrix.
+  #
+  # This workflow owns:
+  # - Playwright UI execution
+  # - UI test credentials
+  # - WooCommerce environment setup
+  # - UI test-user provisioning
+  #
+  # ==================================================
+
+  test:
+
+    name: Playwright UI Tests
+
+    uses: ./.github/workflows/reusable-test-runner.yml
+
+    with:
+
+      # --------------------------------------------------
+      # Test suite metadata
+      # --------------------------------------------------
+      suite_name: ui
+
+      # --------------------------------------------------
+      # Pytest marker
+      #
+      # UI tests should use:
+      #
+      # @pytest.mark.ui
+      #
+      # --------------------------------------------------
+      pytest_markers: ui
+
+      # --------------------------------------------------
+      # Runtime configuration
+      # --------------------------------------------------
+      timeout_minutes: 20
+      pytest_durations: 10
+      pytest_maxfail: 3
+
+      # --------------------------------------------------
+      # Do not scope UI tests to an API entity.
+      #
+      # The UI suite lives under:
+      #
+      # tests/ui/
+      #
+      # The reusable runner will currently execute
+      # the repository target and filter by the UI marker.
+      # --------------------------------------------------
+      entity: ""
+
+      # --------------------------------------------------
+      # UI is not owned by an individual API entity.
+      # --------------------------------------------------
+      team: ui
+      tier: critical
+
+      # --------------------------------------------------
+      # UI tests require the complete WooCommerce stack.
+      # --------------------------------------------------
+      setup_woocommerce: true
+
+      # --------------------------------------------------
+      # Provision the persistent customer required by
+      # authenticated Playwright UI tests.
+      # --------------------------------------------------
+      seed_ui_users: true
+
+    # --------------------------------------------------
+    # 🔐 UI TEST CUSTOMER CREDENTIALS
+    #
+    # Real credentials are stored in GitHub Secrets.
+    #
+    # They are passed only to the UI workflow and are
+    # subsequently consumed by the WooCommerce setup
+    # for UI test-user provisioning.
+    #
+    # They are NOT stored in:
+    # - source control
+    # - .env.example
+    # - API workflows
+    # --------------------------------------------------
+    secrets:
+
+      UI_CUSTOMER_USERNAME: ${{ secrets.UI_CUSTOMER_USERNAME }}
+
+      UI_CUSTOMER_EMAIL: ${{ secrets.UI_CUSTOMER_EMAIL }}
+
+      UI_CUSTOMER_PASSWORD: ${{ secrets.UI_CUSTOMER_PASSWORD }}
