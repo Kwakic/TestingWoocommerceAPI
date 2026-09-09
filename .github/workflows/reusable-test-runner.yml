@@ -122,6 +122,17 @@ on:
         type: boolean
         default: false
 
+      # --------------------------------------------------
+      # Playwright browser installation
+      #
+      # Disabled by default so API-only workflows do not
+      # download browser binaries they do not use.
+      # --------------------------------------------------
+      install_playwright:
+        required: false
+        type: boolean
+        default: false
+
 jobs:
 
   # ==================================================
@@ -173,7 +184,20 @@ jobs:
         uses: ./.github/actions/setup-python-project
 
       # --------------------------------------------------
-      # 3. Setup WooCommerce environment
+      # 3. Install Playwright browsers
+      #
+      # Required by UI tests because the GitHub runner does not
+      # have Playwright browser binaries available by default.
+      # `--with-deps` installs the Linux system dependencies too.
+      # --------------------------------------------------
+      - name: Install Playwright browsers
+        if: inputs.install_playwright
+        shell: bash
+        run: |
+          python -m playwright install --with-deps chromium firefox webkit
+
+      # --------------------------------------------------
+      # 4. Setup WooCommerce environment
       # Optional:
       #
       # Some suites require a full Dockerized
@@ -219,7 +243,7 @@ jobs:
           ui_customer_password: ${{ secrets.UI_CUSTOMER_PASSWORD }}
 
       # --------------------------------------------------
-      # 4. Configure CI environment
+      # 5. Configure CI environment
       #
       # Shared composite action:
       # - runtime configuration
@@ -231,7 +255,7 @@ jobs:
         uses: ./.github/actions/configure-ci-env
 
       # --------------------------------------------------
-      # 5. Determine pytest collection target
+      # 6. Determine pytest collection target
       #
       # Rationale:
       #
@@ -271,7 +295,7 @@ jobs:
           echo "$TARGET"
 
       # --------------------------------------------------
-      # 6. Run pytest
+      # 7. Run pytest
       # Generates:
       # - Allure raw results
       # - JUnit XML
@@ -406,7 +430,7 @@ jobs:
 
 
       # --------------------------------------------------
-      # 8. Publish Allure results artifact
+      # 9. Publish Allure results artifact
       # --------------------------------------------------
       # Entity-specific artifacts
       #
@@ -443,7 +467,7 @@ jobs:
           if-no-files-found: ignore
 
       # --------------------------------------------------
-      # 9. Publish structured logs artifact
+      # 10. Publish structured logs artifact
       # --------------------------------------------------
       - name: Publish structured logs artifact
         if: always()
@@ -456,7 +480,7 @@ jobs:
           if-no-files-found: ignore
 
       # --------------------------------------------------
-      # 10. Publish JUnit artifact
+      # 11. Publish JUnit artifact
       # --------------------------------------------------
       - name: Publish JUnit artifact
         if: always()
@@ -468,7 +492,7 @@ jobs:
           path: reports/junit/results.xml
           if-no-files-found: warn
       # --------------------------------------------------
-      # 11. Cleanup Docker environment
+      # 12. Cleanup Docker environment
       #
       # Shared composite action:
       # - stop containers

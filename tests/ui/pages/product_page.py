@@ -93,8 +93,52 @@ class ProductPage:
         self.reviewer_email.fill(email)
 
     def submit_review(self) -> None:
-        """Submit the product review."""
-        self.submit_review_button.click()
+        """
+        Submit the product review.
+
+        The WordPress review form performs a native POST to
+        ``wp-comments-post.php`` and responds with a 302 redirect.
+
+        WebKit can hang while waiting for this POST → redirect navigation to
+        complete automatically. We therefore disable Playwright's automatic
+        navigation wait, validate the POST/302 response, and explicitly
+        navigate to the redirect URL.
+
+        This workaround is intentionally kept in the ProductPage because it
+        is specific to the WordPress review form and is not a generic UI
+        helper.
+        """
+
+        with self.page.expect_request("**/wp-comments-post.php") as request_info:
+            self.submit_review_button.click(no_wait_after=True)
+
+        request = request_info.value
+
+        if request.method != "POST":
+            raise AssertionError(f"Expected POST request, got {request.method}.")
+
+        response = request.response()
+
+        if response is None:
+            raise AssertionError("Review submission response was not received.")
+
+        if response.status != 302:
+            raise AssertionError(
+                f"Expected 302 response from review submission, "
+                f"got {response.status}."
+            )
+
+        redirect_url = response.headers.get("location")
+
+        if not redirect_url:
+            raise AssertionError(
+                "Review submission response did not contain a redirect URL."
+            )
+
+        self.page.goto(
+            redirect_url,
+            wait_until="domcontentloaded",
+        )
 
     def should_show_review_awaiting_approval(self) -> None:
         """Verify that the submitted review is awaiting approval."""

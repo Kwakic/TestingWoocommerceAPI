@@ -111,6 +111,9 @@ jobs:
       # --------------------------------------------------
       seed_ui_users: true
 
+      # UI tests require Playwright browser binaries in CI.
+      install_playwright: true
+
     # --------------------------------------------------
     # 🔐 UI TEST CUSTOMER CREDENTIALS
     #

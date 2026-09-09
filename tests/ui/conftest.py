@@ -37,28 +37,6 @@ from playwright.sync_api import Browser, BrowserContext, Page
 from tests.ui.config.config_ui import UI_HOSTS
 
 
-# @pytest.fixture(scope="session")
-# def browser() -> Generator[Browser, None, None]:
-#     """
-#     Start and manage the Playwright browser for the test session.
-#
-#     The browser is created once and reused by all UI tests in the
-#     pytest session. Individual tests receive isolated Browser Contexts
-#     rather than launching a new browser process for every test.
-#
-#     Yields:
-#         Browser: Active browser instance available to dependent fixtures.
-#     """
-#     # Start the Playwright driver and launch the browser once per session.
-#     with sync_playwright() as playwright:
-#         browser = playwright.chromium.launch(headless=False)
-#
-#         try:
-#             yield browser
-#         finally:
-#             browser.close()
-
-
 @pytest.fixture
 def context(browser: Browser) -> Generator[BrowserContext, None, None]:
     """
