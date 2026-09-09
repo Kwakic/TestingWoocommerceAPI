@@ -54,7 +54,15 @@ jobs:
 
   test:
 
-    name: Playwright UI Tests
+    name: Playwright UI Tests (${{ matrix.browser }})
+
+    strategy:
+      fail-fast: false
+      matrix:
+        browser:
+          - chromium
+          - firefox
+          - webkit
 
     uses: ./.github/workflows/reusable-test-runner.yml
 
@@ -110,6 +118,9 @@ jobs:
       # authenticated Playwright UI tests.
       # --------------------------------------------------
       seed_ui_users: true
+
+      # Run the UI suite against the selected browser.
+      browser: ${{ matrix.browser }}
 
       # UI tests require Playwright browser binaries in CI.
       install_playwright: true

@@ -388,7 +388,7 @@ Automation, workflows, and GitHub-specific configuration.
 │   ├── contract.yml                  ← Contract test pipeline
 │   ├── preflight.yml                 ← Pre-flight checks
 │   ├── security.yml                  ← Security test pipeline
-│   ├── ui.yml                        ← Playwright UI tests pipeline
+│   ├── ui-browser-matrix.yml         ← Playwright UI tests pipeline
 │   ├── e2e.yml                       ← Future API → UI → API
 │   ├── dashboard-publisher.yml       ← Allure dashboard publishing
 │   ├── reusable-test-runner.yml      ← Reusable test execution
@@ -552,7 +552,7 @@ TestEcommerceAPI (project suite/root)
 │     │     ├── contract.yml                         ← Contract test pipeline
 │     │     ├── preflight.yml                        ← Pre-flight checks
 │     │     ├── e2e.yml                              ← Future development
-│     │     ├── preflight.yml                        ← Ui Tests
+│     │     ├── ui-browser-matrix.yml                ← Playwright UI tests pipeline
 │     │     ├── security.yml                         ← Security test pipeline
 │     │     ├── dashboard-publisher.yml              ← Allure dashboard publishing
 │     │     ├── reusable-test-runner.yml             ← Reusable test execution

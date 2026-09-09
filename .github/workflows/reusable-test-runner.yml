@@ -106,6 +106,16 @@ on:
         type: string
         default: ""
 
+      browser:
+        required: false
+        type: string
+        default: "chromium"
+
+      install_playwright:
+        required: false
+        type: boolean
+        default: false
+
       setup_woocommerce:
         required: false
         type: boolean
@@ -118,17 +128,6 @@ on:
       # require UI credentials or seed UI users.
       # --------------------------------------------------
       seed_ui_users:
-        required: false
-        type: boolean
-        default: false
-
-      # --------------------------------------------------
-      # Playwright browser installation
-      #
-      # Disabled by default so API-only workflows do not
-      # download browser binaries they do not use.
-      # --------------------------------------------------
-      install_playwright:
         required: false
         type: boolean
         default: false
@@ -184,17 +183,13 @@ jobs:
         uses: ./.github/actions/setup-python-project
 
       # --------------------------------------------------
-      # 3. Install Playwright browsers
-      #
-      # Required by UI tests because the GitHub runner does not
-      # have Playwright browser binaries available by default.
-      # `--with-deps` installs the Linux system dependencies too.
+      # 3. Install Playwright browser
       # --------------------------------------------------
-      - name: Install Playwright browsers
+      - name: Install Playwright browser
         if: inputs.install_playwright
         shell: bash
         run: |
-          python -m playwright install --with-deps chromium firefox webkit
+          python -m playwright install --with-deps "${{ inputs.browser }}"
 
       # --------------------------------------------------
       # 4. Setup WooCommerce environment
@@ -365,6 +360,7 @@ jobs:
 
           python -m pytest "$TEST_TARGET" \
             -m "${{ inputs.pytest_markers }}" \
+            --browser "${{ inputs.browser }}" \
             -ra \
             ${{ inputs.pytest_extra_args }} \
             --durations=${{ inputs.pytest_durations }} \

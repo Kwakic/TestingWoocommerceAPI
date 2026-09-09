@@ -52,16 +52,34 @@ export MSYS_NO_PATHCONV=1
 WP_HTTP_HOST="localhost:8080"
 
 # --------------------------------------------------
-# WooCommerce sample images
+# Local UI fixture images
 #
-# These are fixed URLs from WooCommerce's sample data.
-# They are used only as visual fixtures for the UI/E2E
-# baseline products.
+# Images are stored in the repository so a clean local
+# environment and CI do not depend on an external host.
 # --------------------------------------------------
 
-ALBUM_IMAGE="https://woocommercecore.mystagingwebsite.com/wp-content/uploads/2017/12/album-1.jpg"
-BEANIE_IMAGE="https://woocommercecore.mystagingwebsite.com/wp-content/uploads/2017/12/beanie-2.jpg"
-HOODIE_IMAGE="https://woocommercecore.mystagingwebsite.com/wp-content/uploads/2017/12/hoodie-2.jpg"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+IMAGE_DIR="$SCRIPT_DIR/../tests/ui/data/images"
+
+ALBUM_IMAGE="ui-seed-album.jpg"
+BEANIE_IMAGE="ui-seed-beanie.jpg"
+HOODIE_IMAGE="ui-seed-hoodie.jpg"
+
+# Docker needs to read the repository fixtures from the host.
+# Git Bash on Windows requires a Windows-style host path.
+if [[ "${OSTYPE:-}" == msys* || "${OSTYPE:-}" == cygwin* || "${OSTYPE:-}" == win32* ]]; then
+    DOCKER_IMAGE_DIR="$(cygpath -w "$IMAGE_DIR")"
+else
+    DOCKER_IMAGE_DIR="$(cd "$IMAGE_DIR" && pwd)"
+fi
+
+# Fail early with a useful message if a fixture is missing.
+for image in "$ALBUM_IMAGE" "$BEANIE_IMAGE" "$HOODIE_IMAGE"; do
+    if [ ! -f "$IMAGE_DIR/$image" ]; then
+        echo "❌ Missing UI image fixture: $IMAGE_DIR/$image" >&2
+        exit 1
+    fi
+done
 
 # --------------------------------------------------
 # Ensure a product has a featured image
@@ -70,7 +88,7 @@ HOODIE_IMAGE="https://woocommercecore.mystagingwebsite.com/wp-content/uploads/20
 ensure_product_image() {
     local product_id="$1"
     local product_name="$2"
-    local image_url="$3"
+    local image_file="$3"
 
     echo "🖼️ Checking featured image: $product_name"
 
@@ -94,8 +112,9 @@ ensure_product_image() {
 
     docker compose -f docker-compose.wp.yml run --rm \
         -e HTTP_HOST="$WP_HTTP_HOST" \
+        -v "$DOCKER_IMAGE_DIR:/seed-images:ro" \
         wpcli wp media import \
-        "$image_url" \
+        "/seed-images/$image_file" \
         --post_id="$product_id" \
         --title="$product_name" \
         --alt="$product_name" \
@@ -113,7 +132,7 @@ seed_product() {
     local name="$1"
     local sku="$2"
     local price="$3"
-    local image_url="$4"
+    local image_file="$4"
 
     echo "🔎 Checking seed product: $name"
 
@@ -138,7 +157,7 @@ seed_product() {
         ensure_product_image \
             "$existing_id" \
             "$name" \
-            "$image_url"
+            "$image_file"
 
         return
     fi
@@ -168,7 +187,7 @@ seed_product() {
     ensure_product_image \
         "$product_id" \
         "$name" \
-        "$image_url"
+        "$image_file"
 }
 
 echo
