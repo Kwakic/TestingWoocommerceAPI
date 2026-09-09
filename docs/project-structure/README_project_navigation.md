@@ -388,6 +388,8 @@ Automation, workflows, and GitHub-specific configuration.
 │   ├── contract.yml                  ← Contract test pipeline
 │   ├── preflight.yml                 ← Pre-flight checks
 │   ├── security.yml                  ← Security test pipeline
+│   ├── ui.yml                        ← Playwright UI tests pipeline
+│   ├── e2e.yml                       ← Future API → UI → API
 │   ├── dashboard-publisher.yml       ← Allure dashboard publishing
 │   ├── reusable-test-runner.yml      ← Reusable test execution
 │   └── reusable-allure-report.yml    ← Reusable report generation
@@ -403,13 +405,11 @@ Automation, workflows, and GitHub-specific configuration.
 │       └── action.yml                ← WooCommerce container setup
 │
 ├── scripts/
-│   ├── generate_matrix.py            ← Generate test matrix
-│   └── portal/
-│       ├── style.css                 ← Portal styling
-│       └── generate_portal.py        ← Generate Allure portal
+│   └──  generate_matrix.py           ← Generate test matrix
+│
 └── portal/                           ← Allure portal configuration
-    ├── style.css
-    └── generate_portal.py
+    ├── style.css                     ← Portal styling
+    └── generate_portal.py            ← Generate Allure portal
 ```
 
 ### 📝 When to Edit
@@ -445,19 +445,20 @@ scripts/
 
 Project-level configuration and orchestration.
 
-| File | Purpose |
-|------|---------|
-| **Makefile** | Orchestrates common tasks (`make run`, `make test`, etc.) |
-| **pytest.ini** | pytest configuration & marker definitions |
-| **conftest.py** | Shared root-level fixtures & hooks |
-| **.env** | Local environment variables & credentials |
-| **.env.example** | Template for `.env` file |
-| **docker-compose.matrix.yml** | Multi-container setup (WordPress, WooCommerce, MySQL) |
-| **Dockerfile** | Container image for CI/CD execution |
-| **README.md** | Project landing page & documentation index |
-| **.gitignore** | Git ignore rules |
-| **CHANGELOG.md** | Project changelog |
-| **pyproject.toml** | Python project metadata (in EcommerceAPI/) |
+| File                          | Purpose                                                         |
+|-------------------------------|-----------------------------------------------------------------|
+| **Makefile**                  | Orchestrates common tasks (`make run`, `make test`, etc.)       |
+| **pytest.ini**                | pytest configuration & marker definitions                       |
+| **conftest.py**               | Shared root-level fixtures & hooks                              |
+| **.env**                      | Local environment variables & credentials                       |
+| **.env.example**              | Template for `.env` file                                        |
+| **docker-compose.matrix.yml** | Multi-container setup (WordPress, WooCommerce, MySQL)           |
+| **Dockerfile**                | Container image for CI/CD execution                             |
+| **README.md**                 | Project landing page & documentation index                      |
+| **.gitignore**                | Git ignore rules                                                |
+| **CHANGELOG.md**              | Project changelog                                               |
+| **pyproject.toml**            | Python project metadata (in EcommerceAPI/)                      |
+| **scripts**                   | setup, write_env_credentials, seed_test_usersseed_test_products |
 
 ### 📝 When to Edit
 
@@ -550,6 +551,8 @@ TestEcommerceAPI (project suite/root)
 │     │     ├── performance.yml                      ← Performance test pipeline
 │     │     ├── contract.yml                         ← Contract test pipeline
 │     │     ├── preflight.yml                        ← Pre-flight checks
+│     │     ├── e2e.yml                              ← Future development
+│     │     ├── preflight.yml                        ← Ui Tests
 │     │     ├── security.yml                         ← Security test pipeline
 │     │     ├── dashboard-publisher.yml              ← Allure dashboard publishing
 │     │     ├── reusable-test-runner.yml             ← Reusable test execution
@@ -851,6 +854,8 @@ TestEcommerceAPI (project suite/root)
 │
 │─── scripts                                         ← Shared setup
 │     ├── setup.sh                                   ← Project setup script
+│     ├── seed_test_products.sh                      ← Seed deterministic baseline WooCommerce products
+│     ├── seed_test_users.sh                         ← Seed persistent test users required by UI/E2E tests
 │     └── write_env_credentials.sh                   ← Environment credential setup
 │
 │─── wp-data/...                                     ← WordPress infrastructure. Persistent storage for local WordPress and database data
