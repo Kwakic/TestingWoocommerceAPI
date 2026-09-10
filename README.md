@@ -80,11 +80,13 @@ New to the framework? Follow this path:
 1. 📖 [Framework Overview](./docs/getting-started/README_FRAMEWORK_OVERVIEW.md)
 2. 🧭 [Project Navigation Guide](./docs/project-structure/README_project_navigation.md)
 3. 🧪 [Test Development Guide](./docs/development/README_TEST_DEVELOPMENT_GUIDE.md)
+4. 🎭 [UI Testing Guide](./docs/development/README_UI_TESTING_GUIDE.md)
 
 This will give you:
 - what the framework does
 - how it's structured
-- how to write tests
+- how to write API tests
+- how to write and run Playwright UI tests
 
 ---
 
@@ -132,6 +134,7 @@ All in-depth guides live under [`docs/`](./docs). This README is the landing pag
 | | [Architecture Quick Start](./docs/getting-started/README_ARCHITECTURE_QUICK_START.md)   | Fast-track architecture primer                           |
 | **Development** | [Test Development Guide](./docs/development/README_TEST_DEVELOPMENT_GUIDE.md) ⭐         | Canonical guide for writing tests                        |
 | | [API Client Guide](./docs/development/README_API_CLIENT.md)                             | How the API client layer works                           |
+| | [UI Testing Guide](./docs/development/README_UI_TESTING_GUIDE.md) | Playwright UI architecture, fixtures, Page Objects, roles and browser execution |
 | | [Architecture Guide](./docs/development/README_ARCHITECTURE.md)                         | Framework internals in depth                             |
 | | [Validators Guide](./docs/development/README_VALIDATORS.md)                             | Writing and using validators                             |
 | | [Team Guides](docs/development/team-guides)                                             | Per-entity guides (Customers, Orders, Coupons, Products) |
@@ -292,6 +295,7 @@ API_ENV=test pytest
 
 The framework uses a segmented CI/CD architecture with independent workflows:
 
+- UI
 - Smoke
 - Integration
 - Regression
@@ -300,6 +304,7 @@ The framework uses a segmented CI/CD architecture with independent workflows:
 - Security
 - Preflight
 
+
 Each workflow runs independently and publishes its own artifacts and reports.
 
 GraphQL framework-level contract tests run through the **Contract** workflow. GraphQL does not require a separate CI workflow: connectivity and schema-contract checks live under `tests/shared/contracts/graphql/`.
@@ -307,6 +312,26 @@ GraphQL framework-level contract tests run through the **Contract** workflow. Gr
 📚 Learn more:
 - [CI/CD Architecture Guide](./docs/ci/README_CI_ARCHITECTURE.md)
 - [Allure Reporting Guide](./docs/ci/README_ALLURE.md)
+
+---
+
+### 🎭 UI browser execution
+
+The UI workflow uses an explicit browser matrix:
+
+| Execution | Browser | Mode |
+|---|---|---|
+| Pull request | Chromium | Headless |
+| Push to `main` | Chromium + Firefox + WebKit | Headless |
+| Manual workflow | Chromium + Firefox + WebKit | Headless |
+| Local debugging | Developer choice | Headed or headless |
+
+This keeps pull-request feedback fast while providing full cross-browser
+coverage after changes reach `main`.
+
+📚 See the [UI Testing Guide](./docs/development/README_UI_TESTING_GUIDE.md)
+for the complete Playwright architecture and execution model.
+
 ---
 
 ## 🔄 CI/CD & Reporting
@@ -345,23 +370,20 @@ flowchart TD
     %% --------------------------------------------------
     %% Infrastructure
     %% --------------------------------------------------
-
     A[User] -->|make run| B[Makefile]
     B --> C[Docker Compose]
 
-    C --> D[MySQL DB]
-    C --> E[WordPress + WooCommerce]
-    C --> F[WP-CLI]
+    C --> D[MySQL Database]
+    C --> E[WordPress and WooCommerce]
+    C --> F[WP CLI]
 
     F -->|Bootstrap WordPress| E
     F -->|Generate REST API credentials| D
 
-    %% --------------------------------------------------
     %% Framework
-    %% --------------------------------------------------
+    G[Pytest Framework] --> N[API Environment]
+    N --> O[Entity Configuration]
 
-    G[Pytest Framework] --> N[API_ENV]
-    N --> O[config_<entity>.py]
     O --> H[REST API Clients]
     O --> Q[GraphQL Client]
 
@@ -369,20 +391,23 @@ flowchart TD
     G --> J[Validators]
     G --> K[DAO Layer]
 
-    H -->|REST / HTTP| E
-    Q -->|GraphQL / HTTP| E
+    H -->|REST HTTP| E
+    Q -->|GraphQL HTTP| E
     K -->|SQL| D
 
-    %% --------------------------------------------------
-    %% Tests & Reporting
-    %% --------------------------------------------------
-
+    %% Tests and Reporting
     G --> L[Test Suite]
+
     L --> R[REST Entity Tests]
     L --> S[GraphQL Entity Tests]
+
+    L --> W[Playwright UI Tests]
+    W --> X[Chromium Firefox WebKit]
+
     L --> T[Shared Contract Tests]
     T --> U[REST Contracts]
     T --> V[GraphQL Contracts]
+
     L --> M[Allure Reports]
 ```
 

@@ -32,6 +32,17 @@ Top-level (trimmed):
 │       │   └── coupons.py
 │
 ├── tests/                     # test suites (by entity)
+│   ├── customers/
+│   ├── products/
+│   ├── orders/
+│   ├── coupons/
+│   └── ui/
+│       ├── config/
+│       ├── pages/
+│       ├── components/
+│       ├── data/
+│       ├── tests/
+│       └── conftest.py
 ├── docs/                      # framework + CI + guides
 ├── scripts/                   # setup + CI helpers
 ├── .github/workflows/         # CI pipelines
@@ -139,34 +150,40 @@ API / DB
 
 ## 🧠 Architecture Style
 
-The framework follows a layered architecture:
-
-- Orchestration layer (Makefile / Docker)
-- Execution layer (pytest)
-- Plugin layer (shared behavior)
-- Fixture layer (entity-scoped setup)
-- Helper layer (business logic)
-- API/DB layer (system under test)
-
-For the API layer, REST and GraphQL use separate protocol clients while
-sharing the same low-level HTTP transport:
+The framework contains two execution domains:
 
 ```text
-REST
-  ↓
-APIClient
-  ↓
-HttpClient
-
-GraphQL
-  ↓
-GraphQLClient
-  ↓
-HttpClient
+                         TestEcommerceAPI
+                                │
+                 ┌──────────────┴──────────────┐
+                 │                             │
+              API TESTING                   UI TESTING
+                 │                             │
+          REST / GraphQL                   Playwright
+                 │                             │
+      APIClient / GraphQLClient            Browser
+                 │                             │
+             HttpClient                BrowserContext
+                 │                             │
+                 │                           Page
+                 │                             │
+                 └──────────────┬──────────────┘
+                                │
+                         WooCommerce SUT
 ```
 
-This keeps protocol-specific behavior separate without duplicating the HTTP
-transport implementation.
+The API and UI layers share the same application under test and environment
+bootstrap, but they use different execution and abstraction layers.
+
+The API architecture owns HTTP transport, API clients, helpers, validators,
+database access and API-specific fixtures.
+
+The UI architecture owns browser lifecycle, BrowserContexts, Pages, Page
+Objects, components, roles and browser-specific execution.
+
+The complete UI architecture is documented in:
+
+`docs/development/README_UI_TESTING_GUIDE.md`
 
 
 ---

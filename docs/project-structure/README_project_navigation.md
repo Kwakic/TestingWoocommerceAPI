@@ -388,7 +388,7 @@ Automation, workflows, and GitHub-specific configuration.
 │   ├── contract.yml                  ← Contract test pipeline
 │   ├── preflight.yml                 ← Pre-flight checks
 │   ├── security.yml                  ← Security test pipeline
-│   ├── ui-browser-matrix.yml         ← Playwright UI tests pipeline
+│   ├── ui.yml                        ← Playwright UI tests pipeline
 │   ├── e2e.yml                       ← Future API → UI → API
 │   ├── dashboard-publisher.yml       ← Allure dashboard publishing
 │   ├── reusable-test-runner.yml      ← Reusable test execution
@@ -552,7 +552,7 @@ TestEcommerceAPI (project suite/root)
 │     │     ├── contract.yml                         ← Contract test pipeline
 │     │     ├── preflight.yml                        ← Pre-flight checks
 │     │     ├── e2e.yml                              ← Future development
-│     │     ├── ui-browser-matrix.yml                ← Playwright UI tests pipeline
+│     │     ├── ui.yml                               ← Playwright UI tests pipeline
 │     │     ├── security.yml                         ← Security test pipeline
 │     │     ├── dashboard-publisher.yml              ← Allure dashboard publishing
 │     │     ├── reusable-test-runner.yml             ← Reusable test execution
@@ -592,6 +592,7 @@ TestEcommerceAPI (project suite/root)
 │     │     ├── README_TEST_DEVELOPMENT_GUIDE.md     ← Canonical guide for writing tests
 │     │     ├── README_API_CLIENT.md                 ← How the API client layer works
 │     │     ├── README_GRAPHQL_TESTING_GUIDE.md      ← canonical GraphQL guide
+│     │     ├── README_UI_TESTING_GUIDE.md               ← Canonical Playwright UI testing guide
 │     │     ├── README_ARCHITECTURE.md               ← Framework internals in depth
 │     │     ├── README_VALIDATORS.md                 ← Writing and using validators
 │     │     └── team-guides/                         ← Per-entity guides (Customers, Orders, Coupons, Products)

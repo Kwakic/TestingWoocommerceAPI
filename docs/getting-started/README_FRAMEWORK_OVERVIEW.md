@@ -32,6 +32,25 @@ Who should read this
 - Cross-functional teams integrating with the API who want to run or extend tests
 
 ---
+### 🎭 UI / Browser Testing
+
+The framework also includes a Playwright-based browser automation layer for
+user-facing WooCommerce workflows.
+
+Current UI coverage includes:
+
+- storefront navigation
+- product discovery
+- cart interactions
+- product reviews
+
+The UI layer is documented separately in:
+
+`docs/development/README_UI_TESTING_GUIDE.md`
+
+
+
+---
 
 ## 🚀 Quick Start (Recommended)
 
@@ -195,7 +214,9 @@ details or development guidance.
 - Tests & fixtures examples:
   - `tests/shared/api_fixtures.py` — common fixtures (api_client, factory fixtures)
   - `tests/customers/helpers/customers_helper.py` — sample helper showing patterns
-
+- **UI testing:**
+  - `docs/development/README_UI_TESTING_GUIDE.md` — Playwright architecture,
+    Page Objects, fixtures, roles, browser execution and UI/E2E strategy
 ---
 
 ## 🌐 GraphQL at a Glance

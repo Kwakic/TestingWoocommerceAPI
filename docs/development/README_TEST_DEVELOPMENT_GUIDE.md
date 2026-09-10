@@ -19,6 +19,15 @@ This guide replaces two overlapping documents (`README_API_TESTING_STANDARDS.md`
 >
 > `docs/framework/README_ENVIRONMENT_CONFIG_GUIDE.md`
 
+
+> 🎭 **UI tests**
+>
+> This document covers API test development.
+> For Playwright browser tests, Page Objects, UI fixtures, roles,
+> browser selection and UI/E2E practices, see:
+>
+> `docs/development/README_UI_TESTING_GUIDE.md`
+
 ---
 
 ## 📋 Contents

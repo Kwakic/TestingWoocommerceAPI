@@ -70,6 +70,8 @@ GitHub Actions
 The same workflow is used by all entity teams
 (customers, products, orders and coupons).
 
+---
+
 ### 🎭 Playwright browser setup
 
 Playwright is included as a development dependency of the framework.
@@ -78,14 +80,84 @@ When `make run` executes the `install` target, it:
 
 1. Installs the Python development dependencies from `pyproject.toml`.
 2. Installs the Playwright browser binaries required for UI tests.
-3. Seeds deterministic baseline WooCommerce data
+3. Seeds deterministic baseline WooCommerce UI/E2E data.
+4. Runs the pytest suite.
 
-Therefore, a fresh local environment is fully prepared for both
-API and UI testing through the existing:
+Therefore, a fresh local environment is fully prepared for both API and UI
+testing through the existing:
 
 ```bash
 make run
 ```
+---
+
+### 🌐 Browser selection
+
+Playwright UI tests support Chromium, Firefox and WebKit.
+
+Local developers can select the browser explicitly:
+
+```bash
+pytest -m ui --browser chromium
+pytest -m ui --browser firefox
+pytest -m ui --browser webkit
+```
+
+For interactive debugging, headed execution can be requested explicitly:
+
+```bash
+pytest -m ui --browser chromium --headed
+```
+
+Without `--headed`, Playwright runs headlessly.
+
+---
+
+### 🤖 CI browser policy
+
+GitHub Actions uses an explicit browser matrix with different coverage
+depending on the execution context:
+
+| Execution                  | Browser                     | Mode     | Purpose                |
+| -------------------------- | --------------------------- | -------- | ---------------------- |
+| Pull request               | Chromium                    | Headless | Fast feedback          |
+| Push to `main`             | Chromium + Firefox + WebKit | Headless | Cross-browser coverage |
+| Manual `workflow_dispatch` | Chromium + Firefox + WebKit | Headless | Full UI validation     |
+
+
+The browser is passed from `ui.yml` into the reusable test runner and then to
+pytest using:
+
+```bash
+--browser <browser>
+```
+
+CI does not pass `--headed`, so UI tests execute headlessly.
+
+GitHub Actions also installs the selected Playwright browser explicitly before
+running the UI suite.
+
+---
+
+### 🖼️ UI seed image fixtures
+
+Deterministic baseline UI/E2E products use image fixtures stored in the
+repository:
+
+```text
+tests/ui/data/images/
+├── ui-seed-album.jpg
+├── ui-seed-beanie.jpg
+└── ui-seed-hoodie.jpg
+```
+
+The WooCommerce seed script imports these local fixtures into WordPress rather
+than depending on an external image host.
+
+This makes `make clean && make run` reproducible and prevents UI/E2E seed data
+from depending on external network resources.
+
+---
 
 ### 🧹 Playwright and clean environments
 
@@ -113,7 +185,10 @@ Playwright browsers
 pytest
 ```
 
+For UI test architecture, browser selection, role fixtures and Playwright
+development conventions, see:
 
+`docs/development/README_UI_TESTING_GUIDE.md`
 
 ---
 

@@ -350,19 +350,19 @@ This command automatically:
 - Prepares the local test environment
 
 
-> **⚠️ Running multiple local environments**
->
-> `make run` is idempotent when used with the same project environment, so `make down` is **not required before every `make run`**.
->
-> However, the Docker environment uses fixed host ports. If you have another TestEcommerceAPI checkout running on the same machine (for example, a development checkout and a separate clean/public checkout), stop the other environment first:
->
-> ```bash
-> make down
-> ```
->
-> Then run `make run` from the environment you want to use.
->
-> This prevents port conflicts and ensures that Docker commands are operating on the intended project environment.
+ **⚠️ Running multiple local environments**
+
+ `make run` is idempotent when used with the same project environment, so `make down` is **not required before every `make run`**.
+
+ However, the Docker environment uses fixed host ports. If you have another TestEcommerceAPI checkout running on the same machine (for example, a development checkout and a separate clean/public checkout), stop the other environment first:
+
+ ```bash
+ make down
+ ```
+
+ Then run `make run` from the environment you want to use.
+
+This prevents port conflicts and ensures that Docker commands are operating on the intended project environment.
 
 
 
@@ -377,6 +377,38 @@ make test
 ```bash
 make down
 ```
+
+---
+### 🎭 Playwright UI tests
+
+The project includes a Playwright UI test layer.
+
+The normal `make run` workflow prepares the local environment for both API and
+UI testing, including the Playwright browser binaries.
+
+To run the UI suite:
+
+```bash
+pytest -m ui
+```
+
+To select a browser explicitly:
+
+```bash
+pytest -m ui --browser chromium
+pytest -m ui --browser firefox
+pytest -m ui --browser webkit
+```
+For interactive debugging:
+```bash
+pytest -m ui --browser chromium --headed
+```
+
+CI runs UI tests headlessly.
+
+For the complete UI architecture and development rules, see:
+
+`docs/development/README_UI_TESTING_GUIDE.md`
 
 ---
 

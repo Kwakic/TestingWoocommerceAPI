@@ -53,16 +53,32 @@ jobs:
   # ==================================================
 
   test:
+    # --------------------------------------------------
+    # 🌐 Browser execution policy
+    #
+    # Pull requests run only on Chromium to keep feedback
+    # fast and cost-efficient.
+    #
+    # Changes merged into main, and manual workflow runs,
+    # execute the full cross-browser matrix.
+    #
+    # CI remains headless by default because --headed is not
+    # passed to pytest. Local developers can opt into headed
+    # execution when debugging.
+    #
+    # Policy:
+    #   PR          → Chromium
+    #   Main/manual → Chromium + Firefox + WebKit
+    # --------------------------------------------------
 
     name: Playwright UI Tests (${{ matrix.browser }})
 
     strategy:
       fail-fast: false
       matrix:
-        browser:
-          - chromium
-          - firefox
-          - webkit
+        browser: ${{ github.event_name == 'pull_request'
+          && fromJSON('["chromium"]')
+          || fromJSON('["chromium", "firefox", "webkit"]') }}
 
     uses: ./.github/workflows/reusable-test-runner.yml
 

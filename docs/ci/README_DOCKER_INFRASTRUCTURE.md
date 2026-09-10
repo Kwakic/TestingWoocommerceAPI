@@ -31,12 +31,21 @@ This document describes the Docker layer of the [TestingWoocommerceAPI](https://
  Install WP     Install WooCommerce   Generate API Keys
                        │
                        ▼
-      write_env_credentials.sh
+          write_env_credentials.sh
                        │
-      updates only WC_KEY / WC_SECRET
+          updates only WC_KEY / WC_SECRET
                        │
                        ▼
-          pip install -e "./EcommerceAPI[dev]"
+           Seed deterministic UI/E2E data
+                       │
+                       ├── baseline products
+                       └── repository-local image fixtures
+                       │
+                       ▼
+                pip install -e "./EcommerceAPI[dev]"
+                       │
+                       ▼
+                Playwright browsers
                        │
                        ▼
                     pytest
@@ -47,6 +56,38 @@ The same infrastructure is used locally and in GitHub Actions.
 Running tests against the same Dockerized services
 helps ensure consistency between local development
 and CI execution.
+
+---
+
+### 🗺️ The big picture
+
+```text
+                        TESTINGWOOCOMMERCEAPI
+                                  │
+              ┌───────────────────┴──────────────────┐
+              │                                      │
+          API TESTING                             UI TESTING
+              │                                      │
+       Entity / Shared                        Playwright
+              │                                      │
+       GitHub matrix                         Browser selection
+              │                                      │
+              │                         ┌────────────┴────────────┐
+              │                         │                         │
+              │                       PR                    main/manual
+              │                         │                         │
+              │                     Chromium              Chromium + Firefox
+              │                                             + WebKit
+              │
+              └──────────────────┬───────────────────────────┘
+                                 │
+                           reusable-test-runner
+                                 │
+                         Docker WooCommerce
+                                 │
+                          Allure / JUnit / Logs
+
+```
 
 ---
 
@@ -131,8 +172,21 @@ make run
 
 `make run` chains together:
 
-```
-Makefile → docker compose up -d → scripts/setup.sh → pip install -e ./EcommerceAPI[dev] → pytest
+
+```text
+Makefile
+   ↓
+docker compose up -d
+   ↓
+scripts/setup.sh
+   ↓
+seed_test_products.sh
+   ↓
+pip install -e "./EcommerceAPI[dev]"
+   ↓
+Playwright browser installation
+   ↓
+pytest
 ```
 
 Nothing needs to be run manually — no separate `docker compose up`, no manual WordPress install screen, no manually generated API keys.
@@ -256,7 +310,7 @@ not require a separate Docker service or network.
 
 ---
 
-## 6. Clean reset
+## 6. 🔄 Clean reset
 
 To fully tear down and start fresh:
 
@@ -268,17 +322,41 @@ This removes the containers **and** the named volumes (DB data, WordPress files)
 
 > ⚠️ Only delete local working files (e.g. a stray `wp-data/` directory or the `woocommerce/` plugin folder) if you've created them yourself outside of Docker's managed volumes. Docker Compose volumes are already handled by `down -v` — don't `rm -rf` paths you're not sure about.
 
+---
 
 ### UI/E2E data after a clean reset
 
-A clean reset also removes WooCommerce application data stored in the
-Docker volumes.
+A clean reset removes the WooCommerce application data used by the UI/E2E
+suite.
 
 The next `make run` therefore recreates the deterministic baseline products
 required by Playwright UI/E2E tests before pytest starts.
 
 The seed operation is idempotent, so running `make run` against an existing
 environment does not create duplicate baseline products.
+
+### 🖼️ Repository-local UI image fixtures
+
+Baseline UI/E2E products use image fixtures committed to the repository:
+
+```text
+tests/ui/data/images/
+├── ui-seed-album.jpg
+├── ui-seed-beanie.jpg
+└── ui-seed-hoodie.jpg
+```
+
+The product seed script imports these files into WordPress through WP-CLI.
+
+The fixtures are mounted read-only into the WP-CLI container during the import
+operation.
+
+This deliberately avoids external image URLs so that:
+
+* clean local environments are reproducible
+* CI does not depend on a third-party image host
+* baseline product images remain deterministic
+* UI/E2E seeding works consistently after make clean
 
 ---
 

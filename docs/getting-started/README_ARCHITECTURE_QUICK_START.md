@@ -92,6 +92,42 @@ So the final architecture story becomes:
 ```
 
 
+---
+
+# 🎭 UI Testing Layer
+
+The framework also contains a browser-based UI automation layer built with
+Playwright.
+
+The UI layer is intentionally separated from the REST/GraphQL transport
+architecture:
+
+```text
+                         TestEcommerceAPI
+                              │
+                ┌─────────────┴─────────────┐
+                │                           │
+             API TESTING                 UI TESTING
+                │                           │
+          REST / GraphQL                 Playwright
+                │                           │
+          APIClient /                    Browser
+        GraphQLClient                       │
+                │                       BrowserContext
+                │                           │
+                │                          Page
+                │                           │
+                └───────────────┬───────────┘
+                                │
+                         WooCommerce
+```
+
+UI tests are organized by business behavior rather than by Page Object.
+
+For the complete UI architecture, see:
+
+`docs/development/README_UI_TESTING_GUIDE.md`
+
 ------------------------------------------------------------------
 # 🔄 REST End-to-End Execution Flow
 
@@ -519,6 +555,7 @@ For deeper understanding:
 - README_API_TESTING_STANDARDS.md
 - README_VALIDATORS.md
 - QA_DEVELOPER_ONBOARDING.md
+- README_UI_TESTING_GUIDE.md
 
 
 ------------------------------------------------------------------

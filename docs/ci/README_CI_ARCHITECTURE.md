@@ -83,27 +83,39 @@ Splitting pipelines by intent because:
 ## 🏛️ Repository Architecture
 
 ```text
-.github/
-│
-├── actions/
-│      configure-ci-env
-│      docker-cleanup
-│      ...
-│
-├── workflows/
-│      smoke.yml
-│      integration.yml
-│      ...
-│
-├── scripts/
-│      generate_matrix.py
-│
-EcommerceAPI/
-│
-└── plugins/
-       entities.py
-       entity_metadata.py
-       entity_discovery.py
+├──.github/                                          ← CI/CD & GitHub Actions
+│     ├── workflows/                                 ← GitHub Actions workflows
+│     │     ├── smoke.yml                            ← Smoke test pipeline
+│     │     ├── integration.yml                      ← Integration test pipeline
+│     │     ├── regression.yml                       ← Regression test pipeline
+│     │     ├── performance.yml                      ← Performance test pipeline
+│     │     ├── contract.yml                         ← Contract test pipeline
+│     │     ├── preflight.yml                        ← Pre-flight checks
+│     │     ├── e2e.yml                              ← Future development
+│     │     ├── ui.yml                               ← Playwright UI tests pipeline
+│     │     ├── security.yml                         ← Security test pipeline
+│     │     ├── dashboard-publisher.yml              ← Allure dashboard publishing
+│     │     ├── reusable-test-runner.yml             ← Reusable test execution
+│     │     └── reusable-allure-report.yml           ← Reusable report generation
+│     │
+│     ├── actions/                                   ← Custom GitHub Actions
+│     │     ├── setup-python-project/
+│     │     │   └── action.yml                       ← Python project setup
+│     │     ├── configure-ci-env/
+│     │     │   └── action.yml                       ← CI environment setup
+│     │     ├── docker-cleanup/
+│     │     │   └── action.yml                       ← Docker cleanup action
+│     │     └── setup-woocommerce/
+│     │         └── action.yml                       ← WooCommerce container setup
+│     │
+│     ├── scripts/
+│     │     ├── generate_matrix.py                   ← Generate test matrix
+│     │     └── __init__.py
+│     │
+│     └── portal/                                    ← Allure portal configuration
+│           ├── style.css                            ← Portal styling
+│           ├── generate_portal.py                   ← Generate Allure portal
+│           └── __init__.py
 ```
 
 ---
@@ -1050,8 +1062,154 @@ API_ENV=ci
 - **Structured logs** provide evidence trail for security reviews
 - **Sunday schedule** aligns with regression (other nightly tests)
 
+---
 
-## Pull Request Quality Gate
+## 2.8 ui.yml 🎭 (Playwright UI validation)
+
+### Purpose
+
+Validate critical storefront and browser-based user journeys using Playwright.
+
+The UI suite is intentionally separated from the API entity matrix because it
+validates user-facing behaviour rather than an individual API entity.
+
+### What It Tests
+
+- Storefront page loading and navigation
+- Product discovery
+- Cart behaviour
+- Product reviews
+- Guest/customer/admin flows as they are implemented
+- Future cross-layer E2E scenarios
+
+### Browser Execution Policy
+
+The UI pipeline uses an explicit browser matrix, but does not execute every
+browser on every pull request.
+
+| Execution | Browser | Mode | Purpose |
+|---|---|---|---|
+| Pull request | Chromium | Headless | Fast feedback |
+| Push to `main` | Chromium + Firefox + WebKit | Headless | Cross-browser coverage |
+| Manual `workflow_dispatch` | Chromium + Firefox + WebKit | Headless | Full UI validation |
+| Local debugging | Developer choice | Headed or headless | Development and debugging |
+
+This keeps normal pull-request feedback fast while still providing full
+cross-browser coverage after changes reach `main`.
+
+### Browser Selection
+
+The selected browser is passed from `ui.yml` to the reusable test runner.
+
+```text
+ui.yml
+   │
+   ├── chromium
+   ├── firefox
+   └── webkit
+         │
+         ▼
+reusable-test-runner.yml
+         │
+         ├── install selected Playwright browser
+         │
+         └── pytest --browser <browser>
+```
+
+The reusable runner exposes the browser as an explicit workflow input:
+
+```text
+browser:
+  required: false
+  type: string
+  default: "chromium"
+```
+and installs only the selected browser when Playwright installation is enabled.
+
+### Headless Execution
+
+CI does not pass the --headed option to pytest, so Playwright runs
+headlessly by default.
+
+Local developers can explicitly request headed execution when debugging:
+
+```bash
+pytest -m ui --browser chromium --headed
+```
+
+The browser lifecycle itself is managed by `pytest-playwright`; the project's
+UI fixtures provide isolated `BrowserContext` and `Page` instances rather than
+launching a hard-coded browser.
+
+### Playwright Browser Installation
+
+GitHub Actions runners do not rely on pre-installed Playwright browser
+binaries.
+
+The reusable test runner installs the browser selected by the workflow:
+
+```bash
+python -m playwright install --with-deps "${{ inputs.browser }}"
+```
+
+This keeps browser installation explicit and ensures that each CI job has the
+correct browser available before UI tests start.
+
+### UI Environment
+
+The UI workflow provisions:
+
+* The Dockerized WooCommerce environment
+* Deterministic baseline UI/E2E products
+* The persistent UI test customer when required
+* The selected Playwright browser
+
+UI credentials are supplied through GitHub Actions Secrets and are not stored
+in source control.
+
+
+```text
+Pull Request / Push / Manual Run
+                │
+                ▼
+             ui.yml
+                │
+        ┌───────┴────────┐
+        │                │
+      PR             main/manual
+        │                │
+   Chromium       Chromium + Firefox + WebKit
+        │                │
+        └───────┬────────┘
+                ▼
+      reusable-test-runner.yml
+                │
+                ▼
+       WooCommerce environment
+                │
+                ▼
+          Playwright UI
+                │
+                ▼
+         Allure + JUnit
+```
+
+### Why Browser Matrixing Is Scoped
+
+Running all UI tests against every browser on every pull request increases CI
+runtime and cost without always providing proportional feedback value.
+
+The current policy therefore prioritizes:
+
+* fast Chromium feedback during code review
+* full browser coverage after changes reach main
+* explicit full-suite execution through manual workflow dispatch
+* developer-controlled browser selection during local debugging
+
+
+---
+
+## 🛡️ Pull Request Quality Gate
 
 A **Quality Gate** is an optional CI job that turns the result of one or more
 test jobs into a single, explicit pass/fail decision.
@@ -1253,17 +1411,18 @@ Pull Request
      ├── Preflight
      ├── Smoke
      ├── Contract
-     └── Integration
-              │
-              ▼
-      Integration Quality Gate
-              │
-        ┌─────┴─────┐
-        ▼           ▼
-      FAIL         PASS
-        │           │
-        ▼           ▼
-   Gate fails    Gate passes
+     ├── Integration
+     │       ┌─────┴─────┐
+     │       ▼           ▼
+     │     FAIL         PASS
+     │       │           │
+     │       ▼           ▼
+     │  Gate fails    Gate passes
+     │
+     └── UI
+         │
+         └── Chromium
+
 ```
 
 The gate can then be selected in GitHub as a required status check when the
@@ -1683,6 +1842,7 @@ gh-pages/     Generated reports (indexed by destination_dir)
 ```text
 .github/workflows/
 ├── preflight.yml        # PR — framework validation
+├── ui.yml               # PR — Chromium; main/manual — cross-browser
 ├── smoke.yml            # PR + main — critical business paths
 ├── contract.yml         # PR + main — API contract validation
 ├── integration.yml      # PR + main — API + DB validation
@@ -1869,5 +2029,5 @@ Because:
 
 ---
 
-**Last updated:** 2026-08-15
-**Guide version:** 1.4 (CI/CD & Allure best practices)
+**Last updated:** 2026-09-10
+**Guide version:** 1.5 (CI/CD & Allure best practices)
