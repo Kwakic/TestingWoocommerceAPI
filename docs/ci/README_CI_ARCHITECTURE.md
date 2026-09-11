@@ -14,6 +14,72 @@ Your framework has evolved beyond a "simple pytest project." You now have:
 
 Your custom Allure integration implements many advanced reporting concepts.
 
+## 🧭 End-to-End Development & CI/CD Flow
+
+The easiest way to understand the repository is to follow the path from a
+developer's local commit to the protected `main` branch.
+
+```text
+Developer
+     │
+ git commit
+     │
+     ▼
+ pre-commit
+ fast local checks
+     │
+     ├── #1. Fix trailing whitespace automatically ✅
+     ├── #2. Fix EOF newline automatically ✅
+     ├── #3. Format code with black ✅
+     ├── #4. Run flake8 ✅
+     ├── #5. Run preflight tests ✅
+     └── #6. Block commit if anything fails ❌
+     │
+     ▼
+    PR
+     │
+     ├───────────────┬────────────────┐
+     │               │                │
+     ▼               ▼                ▼
+  SMOKE          CONTRACT       INTEGRATION
+   tests           tests            tests
+     │               │                │
+     ▼               ▼                ▼
+  SMOKE          contract       INTEGRATION
+   GATE            result            GATE
+     │               │                │
+ REQUIRED        OPTIONAL          REQUIRED
+     │               │                │
+     └───────────────┼────────────────┘
+                     ▼
+              Branch Protection
+                     │
+                ✅ merge allowed
+                     │
+                     ▼
+                   main
+                     │
+            ┌────────┼────────┐
+            │        │        │
+            ▼        ▼        ▼
+       Regression Performance Security
+       scheduled   scheduled  scheduled
+```
+
+### What each stage means
+
+| Stage | Purpose |
+|---|---|
+| **Pre-commit** | Gives the developer fast local feedback and prevents a bad commit from being created. |
+| **PR test workflows** | Run the authoritative CI validation on a clean GitHub runner. |
+| **Quality Gate** | Aggregates the result of its test workflow into one stable pass/fail check; it does **not** run the tests again. |
+| **Branch Protection** | Decides which CI results are mandatory before `main` can be updated. |
+| **Scheduled suites** | Run deeper validation after code has reached `main`, without slowing down normal pull requests. |
+
+The current branch-protection policy requires **Smoke Quality Gate** and
+**Integration Quality Gate**. Contract tests still run on pull requests, but
+their result is informational rather than a required merge check.
+
 ---
 
 # 🎯 1. CI/CD Philosophy
@@ -1315,29 +1381,20 @@ This project deliberately keeps that final step configurable.
 
 ### Recommended production pattern
 
-For a mature repository, prefer:
+For this repository, the pull-request path is:
 
 ```text
 Pull Request
      │
-     ├── Preflight
-     ├── Smoke tests
-     ├── Contract tests
-     └── Integration tests
-              │
-              ▼
-       Quality Gate(s)
-              │
-              ▼
-      Required status check
-              │
-        ┌─────┴─────┐
-        ▼           ▼
-      FAIL         PASS
-        │           │
-        ▼           ▼
-    Block PR     Allow merge
+     ├── Preflight        (informational framework validation)
+     ├── Smoke tests      ──> Smoke Quality Gate      ──> required
+     ├── Contract tests   ──> diagnostic result       ──> not required
+     └── Integration tests ─> Integration Quality Gate -> required
 ```
+
+The Quality Gates do not execute the test suites again. They only evaluate
+the result of the test job(s) they depend on and expose a stable check for
+GitHub branch protection.
 
 The gate should fail when the test job it represents fails. Diagnostic and
 reporting steps can still run with `if: always()` so that artifacts and Allure
@@ -1368,15 +1425,19 @@ Integration Quality Gate
 
 provides a much cleaner contract between CI and branch protection.
 
-The same pattern can be applied to other workflows when useful:
+The same pattern is used for the protected PR suites:
 
 ```text
 Smoke Quality Gate
-Contract Quality Gate
 Integration Quality Gate
 ```
 
-It is **optional**, not a requirement that every workflow must have one.
+`Contract Quality Gate` is not part of the current branch-protection policy.
+The Contract workflow still runs on pull requests and provides diagnostic
+feedback, but its result is not required for merge.
+
+A Quality Gate is optional at the workflow level; whether a gate blocks a PR
+is controlled separately by GitHub branch protection.
 
 ## Required PR Checks
 
@@ -1392,10 +1453,12 @@ For example:
 | Smoke tests | Yes | Yes |
 | Contract tests | Yes | Yes |
 | Integration tests | Yes | Yes |
-| Integration Quality Gate | Yes | **Yes — recommended when stable** |
+| Smoke Quality Gate | Yes | **Yes — required for this project** |
+| Integration Quality Gate | Yes | **Yes — required for this project** |
 
-For this project, the recommended approach is to first validate the Quality
-Gate behaviour and then decide which gates should become required checks.
+For this project, Smoke and Integration Quality Gates are the required
+branch-protection checks. Contract remains a PR validation workflow but is
+currently informational.
 
 > **Best practice:** keep CI execution and repository policy separate. The
 > workflow defines *how quality is evaluated*; branch protection defines
@@ -1425,8 +1488,35 @@ Pull Request
 
 ```
 
-The gate can then be selected in GitHub as a required status check when the
-repository owner is ready to enforce it.
+The current branch-protection policy requires the Smoke and Integration
+Quality Gates. The Contract workflow still runs on pull requests, but its
+result is informational and does not block merge.
+
+### Why Preflight remains on pull requests
+
+`preflight.yml` remains a pull-request workflow even though the same general
+checks may also run locally through `pre-commit`. The two layers have different
+roles:
+
+```text
+git commit
+   ↓
+pre-commit
+   ↓
+fast local feedback
+
+Pull Request
+   ↓
+preflight.yml
+   ↓
+clean CI-runner validation
+```
+
+Local hooks improve developer feedback, but they are not the authoritative CI
+check because they can be bypassed or depend on the developer's local
+environment. The CI preflight is intentionally lightweight: it does not start
+Docker, WooCommerce, or MySQL, and is designed to fail fast before the
+infrastructure-dependent suites.
 
 ### Heavy suites
 
@@ -1437,6 +1527,20 @@ Heavy suites are intentionally excluded from the normal PR gate:
 | Regression | Nightly | Long-running |
 | Performance | Weekly | Stable environment required |
 | Security | Weekly | Deeper security validation |
+
+
+
+📚 We have different layers:
+
+| Layer                 | Question                                   |
+| --------------------- | ------------------------------------------ |
+| **pre-commit**        | "Should I even create this commit?"        |
+| **CI test**           | "Does the software actually work?"         |
+| **Quality Gate**      | "Is the CI result acceptable for merging?" |
+| **Branch protection** | "Must that result pass before merge?"      |
+
+----
+
 
 # 3. Understanding Allure Reporting
 
@@ -1841,7 +1945,7 @@ gh-pages/     Generated reports (indexed by destination_dir)
 
 ```text
 .github/workflows/
-├── preflight.yml        # PR — framework validation
+├── preflight.yml        # PR — lightweight framework validation
 ├── ui.yml               # PR — Chromium; main/manual — cross-browser
 ├── smoke.yml            # PR + main — critical business paths
 ├── contract.yml         # PR + main — API contract validation
