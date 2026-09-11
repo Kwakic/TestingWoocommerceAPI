@@ -1,3 +1,4 @@
+```bash
 #!/bin/bash
 
 # Seed persistent test users required by UI/E2E tests.
@@ -48,6 +49,11 @@
 # • Existing users are not duplicated
 # • Existing credentials are not changed
 # • Test-created users remain owned by their individual tests/fixtures
+#
+# IMPORTANT:
+# The username is the primary identity check because WordPress requires
+# usernames to be unique. Checking only by email can incorrectly conclude
+# that the user does not exist when the username is already registered.
 # --------------------------------------------------
 
 set -euo pipefail
@@ -68,22 +74,24 @@ WP_HTTP_HOST="localhost:8080"
 # Seed customer account
 # --------------------------------------------------
 
-echo "🔎 Checking UI test customer: $UI_CUSTOMER_EMAIL"
+echo "🔎 Checking UI test customer: $UI_CUSTOMER_USERNAME"
 
+# WordPress usernames are unique, so use the configured username
+# as the primary idempotency check.
 EXISTING_USER_ID=$(
     docker compose -f docker-compose.wp.yml run --rm \
         -e HTTP_HOST="$WP_HTTP_HOST" \
         wpcli wp user get \
-        "$UI_CUSTOMER_EMAIL" \
+        "$UI_CUSTOMER_USERNAME" \
         --field=ID \
-        --by=email \
+        --by=login \
         --allow-root 2>/dev/null || true
 )
 
 if [ -n "$EXISTING_USER_ID" ]; then
-    echo "✅ UI test customer already exists: $UI_CUSTOMER_EMAIL (ID: $EXISTING_USER_ID)"
+    echo "✅ UI test customer already exists: $UI_CUSTOMER_USERNAME (ID: $EXISTING_USER_ID)"
 else
-    echo "🌱 Creating UI test customer: $UI_CUSTOMER_EMAIL"
+    echo "🌱 Creating UI test customer: $UI_CUSTOMER_USERNAME"
 
     docker compose -f docker-compose.wp.yml run --rm \
         -e HTTP_HOST="$WP_HTTP_HOST" \
@@ -95,7 +103,7 @@ else
         --display_name="$UI_CUSTOMER_USERNAME" \
         --allow-root
 
-    echo "✅ UI test customer created: $UI_CUSTOMER_EMAIL"
+    echo "✅ UI test customer created: $UI_CUSTOMER_USERNAME"
 fi
 
 echo
