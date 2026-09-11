@@ -75,15 +75,12 @@ WP_HTTP_HOST="localhost:8080"
 
 echo "🔎 Checking UI test customer: $UI_CUSTOMER_USERNAME"
 
-# WordPress usernames are unique, so use the configured username
-# as the primary idempotency check.
 EXISTING_USER_ID=$(
     docker compose -f docker-compose.wp.yml run --rm \
         -e HTTP_HOST="$WP_HTTP_HOST" \
         wpcli wp user get \
         "$UI_CUSTOMER_USERNAME" \
         --field=ID \
-        --by=login \
         --allow-root 2>/dev/null || true
 )
 
