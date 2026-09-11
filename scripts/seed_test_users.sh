@@ -1,4 +1,3 @@
-```bash
 #!/bin/bash
 
 # Seed persistent test users required by UI/E2E tests.
