@@ -29,7 +29,7 @@ class GraphQLClient:
     - GraphQL auth is intentionally NOT resolved via auth_resolver /
       auth_factory / AUTH_TYPE — that pipeline is WooCommerce REST's
       OAuth1 mechanism, which does not authenticate WPGraphQL requests
-      (proven: OAuth1 + Basic Auth with the login password both fail
+      (proven: OAuth1 + Basic Auth with the auth password both fail
       the createProduct capability check; a WordPress Application
       Password over Basic Auth is what WPGraphQL actually recognizes).
       Callers pass in whichever AuthStrategy fits instead.

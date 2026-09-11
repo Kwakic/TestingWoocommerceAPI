@@ -494,7 +494,7 @@ global $wpdb;
 // Resolve the administrator account.
 // ---------------------------------------------------------------
 
-$admin = get_user_by("login", "admin");
+$admin = get_user_by("auth", "admin");
 
 if (!$admin) {
     fwrite(STDERR, "Administrator account not found.\n");

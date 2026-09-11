@@ -425,19 +425,18 @@ A good structure for this project is:
 
 ``` text
 Preflight
-   └── Preflight Quality Gate       (optional)
+   └── framework validation workflow
 
 Smoke
    ├── entity tests
-   └── Smoke Quality Gate           (recommended)
+   └── Smoke Quality Gate           (required)
 
 Contract
-   ├── REST/GraphQL contract tests
-   └── Contract Quality Gate        (recommended)
+   └── REST/GraphQL contract tests  (informational)
 
 Integration
    ├── entity tests
-   └── Integration Quality Gate     (recommended)
+   └── Integration Quality Gate     (required)
 ```
 
 The Quality Gate is deliberately independent from whether GitHub
@@ -462,47 +461,31 @@ when you are still experimenting.
 
 # 11.🔥 Recommended Required Checks for This Project
 
-Once the workflows are stable, a strong PR configuration is:
+For this repository, the pull-request policy is:
 
 ``` text
 [x] Require status checks to pass before merging
 
 Required:
-
-    ✓ Preflight Quality Gate
     ✓ Smoke Quality Gate
-    ✓ Contract Quality Gate
     ✓ Integration Quality Gate
+
+Informational PR workflows:
+    • Preflight
+    • Contract
 ```
 
-However, these do not all have to become required immediately.
+Preflight remains on pull requests because CI must validate the change on a
+clean GitHub runner. Local `pre-commit` checks provide fast developer feedback,
+but local hooks can be bypassed and can depend on the developer's environment.
+They are therefore not a replacement for CI validation.
 
-A sensible rollout is:
+Contract tests also run on pull requests, but the Contract Quality Gate is not
+a required branch-protection check in the current policy.
 
-### Phase 1 --- Experiment
-
-``` text
-Integration Quality Gate    required
-Smoke Quality Gate          optional
-Contract Quality Gate       optional
-Preflight                   optional
-```
-
-Verify that the gates correctly turn red when tests fail.
-
-### Phase 2 --- Production
-
-``` text
-Integration Quality Gate    required
-Smoke Quality Gate          required
-Contract Quality Gate       required
-Preflight Quality Gate      required (if useful and stable)
-```
-
-This is exactly why keeping the Quality Gate code in the workflows is
-useful: the GitHub protection setting can be changed independently.
-
-------------------------------------------------------------------------
+This keeps the merge policy focused on the two required signals that provide
+the strongest protection for this project: critical business health and
+API/database consistency.
 
 # 12.⚠️ Important: Select the Job Name, Not the Workflow Name
 
@@ -835,10 +818,12 @@ CI:
     [x] Require branches to be up to date
 
 Required checks:
-    ✓ Preflight Quality Gate
     ✓ Smoke Quality Gate
-    ✓ Contract Quality Gate
     ✓ Integration Quality Gate
+
+Informational PR checks:
+    • Preflight (workflow validation)
+    • Contract tests / Contract Quality Gate
 
 History/security:
     [ ] Require signed commits
@@ -884,8 +869,11 @@ Recommended:
 
 Required:
     ✓ Smoke Quality Gate
-    ✓ Contract Quality Gate
     ✓ Integration Quality Gate
+
+Informational:
+    • Preflight
+    • Contract tests / Contract Quality Gate
 
 [x] Require branches to be up to date
 
@@ -1086,7 +1074,6 @@ Better:
 
 ``` text
 Smoke Quality Gate
-Contract Quality Gate
 Integration Quality Gate
 ```
 
@@ -1149,10 +1136,10 @@ Do not confuse these two purposes.
 ``` text
 PR → main
 
-Preflight
-Smoke
-Contract
-Integration
+Preflight       (informational)
+Smoke           (required gate)
+Contract        (informational)
+Integration     (required gate)
 
         ↓
 
@@ -1189,10 +1176,15 @@ For this project:
 ``` text
 Required PR gates
 
-Preflight       Fast
 Smoke           Critical business paths
-Contract        API compatibility
 Integration     API + DB consistency
+```
+
+PR validation that is not required for merge:
+
+``` text
+Preflight       Framework validation
+Contract        API compatibility
 ```
 
 While:
@@ -1231,13 +1223,13 @@ REVIEWS
 [x] 1 approval for team repository
 [x] Dismiss stale approvals for team repository
 
-QUALITY GATES
+QUALITY GATES / PR CI
 ────────────────────────────────────────
 
-[ ] Preflight Quality Gate
-[ ] Smoke Quality Gate
-[ ] Contract Quality Gate
-[ ] Integration Quality Gate
+[x] Smoke Quality Gate
+[x] Integration Quality Gate
+[ ] Contract Quality Gate (informational)
+[ ] Preflight Quality Gate (not used)
 
 SAFETY
 ────────────────────────────────────────
@@ -1316,19 +1308,16 @@ For this project, the target state is:
                     │             │             │
                 Preflight       Smoke        Contract
                     │             │             │
-                    ▼             ▼             ▼
-                 Quality       Quality       Quality
-                  Gate          Gate          Gate
-                    │             │             │
-                    └─────────────┼─────────────┘
+             informational       ▼       informational
                                   │
-                             Integration
+                         Smoke Quality Gate
                                   │
+                                  ├───────────────┐
+                                  │               │
+                            Integration       Required
+                                  │            PR checks
                                   ▼
-                           Quality Gate
-                                  │
-                                  ▼
-                         Required PR checks
+                     Integration Quality Gate
                                   │
                          ┌────────┴────────┐
                          ▼                 ▼
@@ -1339,14 +1328,15 @@ For this project, the target state is:
 ```
 
 And the GitHub branch protection/ruleset should know only about the
-stable gates:
+stable required gates:
 
 ``` text
-Preflight Quality Gate
 Smoke Quality Gate
-Contract Quality Gate
 Integration Quality Gate
 ```
+
+Preflight and Contract remain CI workflows, but they are not required
+branch-protection checks in the current policy.
 
 not:
 
