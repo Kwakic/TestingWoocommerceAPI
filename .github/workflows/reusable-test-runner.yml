@@ -231,8 +231,12 @@ jobs:
           seed_ui_users: ${{ inputs.seed_ui_users }}
 
           # These values are received from the caller workflow's
-          # GitHub Secrets. They are passed only when the UI suite
-          # explicitly provides them.
+          # GitHub Secrets. They are passed to the setup action
+          # only when the UI suite explicitly provides them.
+          #
+          # This allows the setup action to seed the dedicated
+          # UI customer before the tests run. The same credentials
+          # are separately exposed to pytest below.
           ui_customer_username: ${{ secrets.UI_CUSTOMER_USERNAME }}
           ui_customer_email: ${{ secrets.UI_CUSTOMER_EMAIL }}
           ui_customer_password: ${{ secrets.UI_CUSTOMER_PASSWORD }}
@@ -350,6 +354,23 @@ jobs:
       # --------------------------------------------------
       - name: Run pytest
         shell: bash
+        env:
+          # --------------------------------------------------
+          # 🔐 UI test credentials
+          #
+          # These secrets are optional at the reusable-workflow
+          # level because API-only workflows do not need them.
+          #
+          # UI tests, however, read these values directly from
+          # the process environment via os.getenv(...).
+          #
+          # The credentials are therefore exposed only to the
+          # pytest process and are not written to GITHUB_ENV.
+          # --------------------------------------------------
+          UI_CUSTOMER_USERNAME: ${{ secrets.UI_CUSTOMER_USERNAME }}
+          UI_CUSTOMER_EMAIL: ${{ secrets.UI_CUSTOMER_EMAIL }}
+          UI_CUSTOMER_PASSWORD: ${{ secrets.UI_CUSTOMER_PASSWORD }}
+
         run: |
 
           # ----------------------------------------------
