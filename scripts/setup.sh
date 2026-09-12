@@ -310,6 +310,26 @@ then
 else
     echo "✅ WooCommerce already active"
 fi
+
+# ------------------------------------------------------------------
+# STEP 2.1 — Enable customer registration on the My Account page
+#
+# UI registration tests depend on WooCommerce exposing the customer
+# registration form from /my-account/. This is part of the test
+# environment contract and therefore belongs in the bootstrap layer,
+# not in individual Playwright tests.
+#
+# The option update is idempotent, so repeated local/CI bootstrap runs
+# safely converge on the same configuration.
+# ------------------------------------------------------------------
+echo "👤 Enabling customer registration on My Account..."
+
+docker compose -f docker-compose.wp.yml run --rm \
+    -e HTTP_HOST="$WP_HTTP_HOST" \
+    wpcli wp option update woocommerce_enable_myaccount_registration yes --allow-root
+
+echo "✅ Customer registration on My Account enabled"
+
 # ------------------------------------------------------------------
 # STEP 2.5 — 🔥 CRITICAL FIX: Permalinks (REST API routing)
 # ------------------------------------------------------------------
