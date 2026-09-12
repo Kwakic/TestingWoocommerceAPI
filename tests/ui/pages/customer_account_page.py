@@ -49,6 +49,36 @@ class CustomerAccountPage:
             exact=True,
         )
 
+        # WooCommerce exposes the authenticated account navigation through
+        # the accessible "Account pages" navigation region.
+        self.account_navigation = page.get_by_label("Account pages")
+
+        self.dashboard_link = self.account_navigation.get_by_role(
+            "link",
+            name="Dashboard",
+            exact=True,
+        )
+        self.orders_link = self.account_navigation.get_by_role(
+            "link",
+            name="Orders",
+            exact=True,
+        )
+        self.downloads_link = self.account_navigation.get_by_role(
+            "link",
+            name="Downloads",
+            exact=True,
+        )
+        self.addresses_link = self.account_navigation.get_by_role(
+            "link",
+            name="Addresses",
+            exact=True,
+        )
+        self.account_details_link = self.account_navigation.get_by_role(
+            "link",
+            name="Account details",
+            exact=True,
+        )
+
     def should_be_loaded(self) -> None:
         """
         Verify that the authenticated customer account page is displayed.
@@ -66,3 +96,21 @@ class CustomerAccountPage:
         logout control exposed by WooCommerce.
         """
         expect(self.logout_link).to_be_visible()
+
+    def should_have_account_navigation(self) -> None:
+        """Verify that the main customer account sections are available."""
+        expect(self.dashboard_link).to_be_visible()
+        expect(self.orders_link).to_be_visible()
+        expect(self.downloads_link).to_be_visible()
+        expect(self.addresses_link).to_be_visible()
+        expect(self.account_details_link).to_be_visible()
+
+    def open_addresses(self) -> None:
+        """Open the customer Addresses section."""
+        self.addresses_link.click()
+        self.page.wait_for_load_state("domcontentloaded")
+
+    def open_account_details(self) -> None:
+        """Open the customer Account details section."""
+        self.account_details_link.click()
+        self.page.wait_for_load_state("domcontentloaded")
