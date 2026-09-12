@@ -4,6 +4,20 @@ Positive UI tests for WooCommerce customer shipping address management.
 These tests validate that an authenticated customer can save and modify a
 shipping address through the real My Account UI. The Page Object owns the
 reusable address form interactions, while the test owns the business scenario.
+
+The flow is:
+
+    Registered customer
+            ↓
+    No shipping address
+            ↓
+    Create shipping address
+            ↓
+    Verify address exists
+            ↓
+    Modify shipping address
+            ↓
+    Verify modification
 """
 
 import re

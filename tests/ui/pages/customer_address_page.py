@@ -62,11 +62,9 @@ class CustomerAddressPage:
             name="Town / City *",
             exact=True,
         )
-        self.zip_code_input = page.get_by_role(
-            "textbox",
-            name="Postcode / ZIP *",
-            exact=True,
-        )
+        # WooCommerce exposes a stable DOM id for the postcode field, while
+        # its accessible name can differ between browser/environment runs.
+        self.zip_code_input = page.locator("#shipping_postcode")
 
         self.save_address_button = page.get_by_role(
             "button",
