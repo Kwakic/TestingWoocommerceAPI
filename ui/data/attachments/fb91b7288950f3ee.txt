@@ -1,0 +1,2 @@
+DEBUG    EcommerceAPI.src.utils.generic_utilities:generic_utilities.py:32 📝 Generating random email and password.
+DEBUG    EcommerceAPI.src.utils.generic_utilities:generic_utilities.py:49 📝 Generated credentials email and password=***'email': 'ui-registration_ptodjjmnoe@supersqa.com', 'password': '***'}
