@@ -23,18 +23,13 @@ name: Security Tests 🔒
 # 🔁 Triggers
 # ==================================================
 on:
-#  schedule:
-#    # Weekly execution keeps CI costs low while
-#    # providing regular security validation.
-#    #
-#    # Every Sunday at 03:00 UTC.
-#    - cron: "0 3 * * 0"
+  schedule:
+    # Weekly execution keeps CI costs low while
+    # providing regular security validation.
+    #
+    # Every Sunday at 03:00 UTC.
+    - cron: "0 3 * * 0"
 
-  pull_request:
-    branches: [ main ]
-
-  push:
-    branches: [ main ]
 
   workflow_dispatch:
 
