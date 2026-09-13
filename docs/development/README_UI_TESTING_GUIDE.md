@@ -6,7 +6,7 @@
 > **Scope:** Playwright UI testing with pytest
 > **Current UI coverage:** Guest storefront flows
 > **Browser coverage:** Chromium, Firefox, WebKit
-> **Last updated:** 2026-09-10
+> **Last updated:** 2026-09-13
 
 This document is the canonical guide for the browser-based UI test layer.
 
@@ -33,12 +33,13 @@ For the API test architecture, see
 10. [Browser Selection](#10--browser-selection)
 11. [Local Execution](#11--local-execution)
 12. [CI Execution](#12--ci-execution)
-13. [Authentication](#13--authentication)
-14. [API + UI E2E Strategy](#14--api--ui-e2e-strategy)
-15. [Stability and Cross-Browser Rules](#15--stability-and-cross-browser-rules)
-16. [Current Coverage](#16--current-coverage)
-17. [Development Roadmap](#17--development-roadmap)
-18. [Golden Rules](#18--golden-rules)
+13. [Allure Reporting](#13--allure-reporting)
+14. [Authentication](#14--authentication)
+15. [API + UI E2E Strategy](#15--api--ui-e2e-strategy)
+16. [Stability and Cross-Browser Rules](#16--stability-and-cross-browser-rules)
+17. [Current Coverage](#17--current-coverage)
+18. [Development Roadmap](#18--development-roadmap)
+19. [Golden Rules](#19--golden-rules)
 
 ---
 
@@ -602,7 +603,78 @@ The UI workflow is intentionally separate from the API entity matrix.
 
 ---
 
-# 13. 🔐 Authentication
+# 13. 📊 Allure Reporting
+
+All UI tests are integrated with the framework's existing Allure reporting
+architecture.
+
+Local UI execution writes raw results to:
+
+```text
+reports/allure-results/
+```
+
+A local HTML report can be previewed with:
+
+```bash
+allure serve reports/allure-results
+```
+
+### CI reporting
+
+The UI workflow is a separate reporting domain from the API entity matrix.
+
+On `main` and manual runs, the browser matrix produces:
+
+```text
+Chromium ──► ui-chromium-allure-results
+Firefox  ──► ui-firefox-allure-results
+WebKit   ──► ui-webkit-allure-results
+```
+
+The reusable Allure workflow merges the available browser result sets and
+generates one standalone UI report:
+
+```text
+report-ui
+    ↓
+/ui/
+```
+
+The public QA Portal therefore exposes:
+
+```text
+🎭 UI / Playwright    TIER: CRITICAL
+    └── Allure Report
+```
+
+### CI artifacts
+
+Each browser execution also produces browser-specific diagnostic artifacts:
+
+```text
+ui-<browser>-structured-logs
+ui-<browser>-junit-results
+```
+
+This keeps browser failures traceable to the exact CI execution while still
+providing one combined Allure view for the UI suite.
+
+### Browser coverage
+
+The CI policy remains:
+
+| Execution | Browser | Mode |
+|---|---|---|
+| Pull request | Chromium | Headless |
+| Push to `main` | Chromium + Firefox + WebKit | Headless |
+| Manual `workflow_dispatch` | Chromium + Firefox + WebKit | Headless |
+
+The UI suite remains intentionally separate from the API entity matrix. A UI
+test can carry a `smoke` marker for classification, but it is executed by
+`ui.yml` rather than duplicated into the API Smoke workflow.
+
+# 14. 🔐 Authentication
 
 Authentication is part of the **role fixture architecture**.
 
@@ -654,7 +726,7 @@ coverage is introduced.
 
 ---
 
-# 14. 🔄 API + UI E2E Strategy
+# 15. 🔄 API + UI E2E Strategy
 
 The UI layer is also designed to participate in meaningful cross-layer E2E
 tests.
@@ -699,7 +771,7 @@ cross-layer behavior provides additional confidence.
 
 ---
 
-# 15. 🛡️ Stability and Cross-Browser Rules
+# 16. 🛡️ Stability and Cross-Browser Rules
 
 UI tests must be written so that the same business scenario can run across
 supported browsers.
@@ -742,7 +814,7 @@ interaction. It is not a generic browser-navigation helper.
 
 ---
 
-# 16. 📊 Current Coverage
+# 17. 📊 Current Coverage
 
 The current UI suite includes browser-tested coverage for:
 
@@ -773,7 +845,7 @@ where applicable, with the guest role implemented first.
 
 ---
 
-# 17. 🛣️ Development Roadmap
+# 18. 🛣️ Development Roadmap
 
 The UI layer is being expanded incrementally.
 
@@ -814,7 +886,7 @@ clear reason for them.
 
 ---
 
-# 18. 🎯 Golden Rules
+# 19. 🎯 Golden Rules
 
 1. **Tests describe business behavior.**
 2. **Page Objects own page-level UI interaction.**

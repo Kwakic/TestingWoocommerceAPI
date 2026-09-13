@@ -124,6 +124,7 @@ class UIReport:
     path: str = "./ui/"
     icon: str = "🎭"
     title: str = "UI / Playwright"
+    tier: str = "critical"
 
 
 # ===========================================================================
@@ -278,6 +279,10 @@ def build_ui_section(report: UIReport | None) -> str:
     <div class="entity-header">
 
         <h2>{report.icon} {report.title}</h2>
+
+        <span class="tier-badge tier-{report.tier}">
+            TIER: {report.tier.upper()}
+        </span>
 
     </div>
 

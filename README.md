@@ -105,6 +105,24 @@ The **live QA Portal** is available at:
 The portal is generated automatically during deployment from the reports that
 are currently published to GitHub Pages.
 
+API reports are organized by **entity** and **suite**:
+
+```text
+/customers/smoke
+/customers/integration
+/products/smoke
+...
+```
+
+The Playwright UI report is a separate testing domain and is published at:
+
+```text
+/ui/
+```
+
+The UI report combines the browser-specific Allure results produced by the
+Chromium, Firefox and WebKit CI matrix when the full browser policy applies.
+
 As additional framework entities publish **Smoke**, **Integration**, **Regression** or
 **Performance** reports, they automatically appear in the portal without requiring
 any HTML or README updates.
@@ -306,7 +324,9 @@ The framework uses a segmented CI/CD architecture with independent workflows:
 - Preflight
 
 
-Each workflow runs independently and publishes its own artifacts and reports.
+Each workflow runs independently and publishes its own runtime artifacts.
+Public operational suites generate Allure reports for the QA Portal, while
+Preflight, Contract and Security remain artifact-only.
 
 GraphQL framework-level contract tests run through the **Contract** workflow. GraphQL does not require a separate CI workflow: connectivity and schema-contract checks live under `tests/shared/contracts/graphql/`.
 
@@ -349,7 +369,8 @@ The framework uses segmented GitHub Actions workflows:
 
 Reports are:
 - generated with Allure
-- published to GitHub Pages (QA Portal)
+- published to GitHub Pages (QA Portal) for the public operational suites
+- generated as a standalone `/ui` report for Playwright browser validation
 
 📚 Learn more:
 - [CI/CD Architecture Guide](./docs/ci/README_CI_ARCHITECTURE.md)
@@ -546,6 +567,7 @@ Framework-level tests live under `tests/shared/`, including:
 | Resource | Link |
 |---|---|
 | 📋 QA Portal | [Live portal](https://kwakic.github.io/TestingWoocommerceAPI) |
+| 🎭 UI Allure Report | [Playwright report](https://kwakic.github.io/TestingWoocommerceAPI/ui/) |
 | 🔧 CI Workflows | [GitHub Actions](https://github.com/Kwakic/TestingWoocommerceAPI/actions) |
 | 📖 Test Suite Docs | [Tests README](tests/README.md) |
 | ⚙️ Config Guide | [Environment & Config Guide](./docs/framework/README_ENVIRONMENT_CONFIG_GUIDE.md) |

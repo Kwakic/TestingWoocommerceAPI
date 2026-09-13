@@ -449,29 +449,20 @@ jobs:
       # --------------------------------------------------
       # 9. Publish Allure results artifact
       # --------------------------------------------------
-      # Entity-specific artifacts
+      # Each matrix entry publishes an independent artifact.
       #
-      # Ownership model:
+      # API entity suites:
+      #   customers-smoke-allure-results
+      #   products-integration-allure-results
       #
-      # Entity == Team == Microservice
+      # UI browser matrix:
+      #   ui-chromium-allure-results
+      #   ui-firefox-allure-results
+      #   ui-webkit-allure-results
       #
-      # Each matrix job publishes its own artifacts.
-      #
-      # Example:
-      #
-      # customers-smoke-allure-results
-      # orders-smoke-allure-results
-      # products-smoke-allure-results
-      # coupons-smoke-allure-results
-      #
-      # This enables:
-      #
-      # - independent team ownership
-      # - per-entity troubleshooting
-      # - future deployment gates
-      # - future notification routing
-      # - future report isolation
-      # --------------------------------------------------
+      # Browser must be part of the UI artifact name because
+      # chromium, firefox and webkit execute as separate
+      # GitHub Actions matrix jobs.
       # --------------------------------------------------
       - name: Upload Allure results
         if: always()
@@ -480,7 +471,7 @@ jobs:
           name: ${{ inputs.scope == 'shared'
             && format('shared-{0}-allure-results', inputs.suite_name)
             || inputs.suite_name == 'ui'
-            && 'ui-allure-results'
+            && format('ui-{0}-allure-results', inputs.browser)
             || format('{0}-{1}-allure-results', inputs.entity, inputs.suite_name) }}
           path: reports/allure-results
           if-no-files-found: ignore
@@ -495,7 +486,7 @@ jobs:
           name: ${{ inputs.scope == 'shared'
             && format('shared-{0}-structured-logs', inputs.suite_name)
             || inputs.suite_name == 'ui'
-            && 'ui-structured-logs'
+            && format('ui-{0}-structured-logs', inputs.browser)
             || format('{0}-{1}-structured-logs', inputs.entity, inputs.suite_name) }}
           path: reports/logs
           if-no-files-found: ignore
@@ -510,7 +501,7 @@ jobs:
           name: ${{ inputs.scope == 'shared'
             && format('shared-{0}-junit-results', inputs.suite_name)
             || inputs.suite_name == 'ui'
-            && 'ui-junit-results'
+            && format('ui-{0}-junit-results', inputs.browser)
             || format('{0}-{1}-junit-results', inputs.entity, inputs.suite_name) }}
           path: reports/junit/results.xml
           if-no-files-found: warn
