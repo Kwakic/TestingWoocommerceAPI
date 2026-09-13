@@ -23,8 +23,9 @@ on:
         default: 10
 
       entity:
-        required: true
+        required: false
         type: string
+        default: ""
 
       # --------------------------------------------------
       # Optional CI metadata.
@@ -119,7 +120,9 @@ jobs:
         continue-on-error: true
         uses: actions/download-artifact@v4
         with:
-          name: ${{ inputs.entity }}-${{ inputs.suite_name }}-allure-results
+          name: ${{ inputs.suite_name == 'ui'
+            && 'ui-allure-results'
+            || format('{0}-{1}-allure-results', inputs.entity, inputs.suite_name) }}
           path: reports/allure-results
 
       # --------------------------------------------------
@@ -181,10 +184,16 @@ jobs:
         run: |
           mkdir -p reports/allure-results/history
 
-          if [ -d "gh-pages/${{ inputs.entity }}/${{ inputs.suite_name }}/history" ]; then
-            cp -r gh-pages/${{ inputs.entity }}/${{ inputs.suite_name }}/history/* \
+          if [ "${{ inputs.suite_name }}" = "ui" ]; then
+            HISTORY_PATH="gh-pages/ui/history"
+          else
+            HISTORY_PATH="gh-pages/${{ inputs.entity }}/${{ inputs.suite_name }}/history"
+          fi
+
+          if [ -d "$HISTORY_PATH" ]; then
+            cp -r "$HISTORY_PATH"/* \
                   reports/allure-results/history/
-            echo "✅ Allure history restored"
+            echo "✅ Allure history restored from $HISTORY_PATH"
           else
             echo "ℹ️ No previous Allure history found"
           fi
@@ -219,8 +228,14 @@ jobs:
       - name: Generate Allure report
         if: env.HAS_ALLURE_RESULTS == 'true'
         run: |
+          if [ "${{ inputs.suite_name }}" = "ui" ]; then
+            REPORT_PATH="reports/allure-report/ui"
+          else
+            REPORT_PATH="reports/allure-report/${{ inputs.entity }}/${{ inputs.suite_name }}"
+          fi
+
           allure generate reports/allure-results \
-            -o reports/allure-report/${{ inputs.entity }}/${{ inputs.suite_name }} \
+            -o "$REPORT_PATH" \
             --clean
 
       # --------------------------------------------------
@@ -230,7 +245,9 @@ jobs:
         if: env.HAS_ALLURE_RESULTS == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.entity }}-${{ inputs.suite_name }}-report
+          name: ${{ inputs.suite_name == 'ui'
+            && 'ui-report'
+            || format('{0}-{1}-report', inputs.entity, inputs.suite_name) }}
           # --------------------------------------------------
           # Upload only the generated report for this
           # entity/suite.
@@ -245,5 +262,7 @@ jobs:
           #
           # report-customers-smoke
           # --------------------------------------------------
-          path: reports/allure-report/${{ inputs.entity }}/${{ inputs.suite_name }}
+          path: ${{ inputs.suite_name == 'ui'
+            && 'reports/allure-report/ui'
+            || format('reports/allure-report/{0}/{1}', inputs.entity, inputs.suite_name) }}
           if-no-files-found: warn

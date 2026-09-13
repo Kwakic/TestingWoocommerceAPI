@@ -103,6 +103,7 @@ on:
       - Integration Tests 🔗
       - Regression Tests 🔬
       - Performance Tests ⏱️
+      - UI Tests 🎭
 
     types:
       - completed
@@ -195,7 +196,9 @@ jobs:
           name_is_regexp: true
 
           # Download every HTML report artifact.
-          name: ".*-report$"
+          # Match existing entity reports (for example customers-smoke-report)
+          # and the standalone Playwright UI report (ui-report).
+          name: "(.*-report|ui-report)$"
 
           path: downloaded-reports
 
@@ -295,23 +298,46 @@ jobs:
 
             artifact_name=$(basename "$artifact")
 
-            # Remove the standard artifact prefix.
+            # --------------------------------------------------
+            # Standalone UI report
             #
-            # report-customers-smoke
+            # UI is not an API entity, so it does not use the
+            # existing <entity>-<suite>-report convention.
+            #
+            # ui-report
+            #     ↓
+            # site/ui/
+            # --------------------------------------------------
+            if [ "$artifact_name" = "ui-report" ]; then
+
+              echo "Publishing UI / Playwright"
+
+              mkdir -p "site/ui"
+
+              cp -R "$artifact"/. "site/ui"
+
+              continue
+
+            fi
+
+            # --------------------------------------------------
+            # Existing entity report handling
+            #
+            # Keep the existing dynamic entity/suite discovery.
+            #
+            # customers-smoke-report
             #        ↓
             # customers-smoke
+            #        ↓
+            # site/customers/smoke
+            # --------------------------------------------------
+
             name="${artifact_name%-report}"
 
             # Extract the entity name.
-            #
-            # customers-smoke
-            # └────────┘
             entity="${name%-*}"
 
             # Extract the test suite.
-            #
-            # customers-smoke
-            #           └───┘
             suite="${name##*-}"
 
             echo "Publishing $entity / $suite"
