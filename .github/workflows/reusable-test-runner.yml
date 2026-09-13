@@ -192,6 +192,17 @@ jobs:
           python -m playwright install --with-deps "${{ inputs.browser }}"
 
       # --------------------------------------------------
+      # 🔍 Diagnostic — verify Playwright browser installation
+      # --------------------------------------------------
+      - name: Verify Playwright browser
+        if: inputs.install_playwright
+        shell: bash
+        run: |
+          python -m playwright --version
+          echo "Browser: ${{ inputs.browser }}"
+          python -m playwright install --dry-run "${{ inputs.browser }}"
+
+      # --------------------------------------------------
       # 4. Setup WooCommerce environment
       # Optional:
       #
@@ -292,6 +303,40 @@ jobs:
 
           echo "Selected test target:"
           echo "$TARGET"
+
+
+      # --------------------------------------------------
+      # 🔍 Diagnostic — verify UI credentials reach the job
+      #
+      # Never print the actual secret values.
+      # This only confirms whether GitHub injected them.
+      # --------------------------------------------------
+      - name: Validate UI credentials
+        if: inputs.suite_name == 'ui'
+        shell: bash
+        env:
+          UI_CUSTOMER_USERNAME: ${{ secrets.UI_CUSTOMER_USERNAME }}
+          UI_CUSTOMER_EMAIL: ${{ secrets.UI_CUSTOMER_EMAIL }}
+          UI_CUSTOMER_PASSWORD: ${{ secrets.UI_CUSTOMER_PASSWORD }}
+        run: |
+          set -euo pipefail
+
+          [[ -n "${UI_CUSTOMER_USERNAME:-}" ]] || {
+            echo "❌ UI_CUSTOMER_USERNAME is missing"
+            exit 1
+          }
+
+          [[ -n "${UI_CUSTOMER_EMAIL:-}" ]] || {
+            echo "❌ UI_CUSTOMER_EMAIL is missing"
+            exit 1
+          }
+
+          [[ -n "${UI_CUSTOMER_PASSWORD:-}" ]] || {
+            echo "❌ UI_CUSTOMER_PASSWORD is missing"
+            exit 1
+          }
+
+          echo "✅ UI customer credentials are available"
 
       # --------------------------------------------------
       # 7. Run pytest
