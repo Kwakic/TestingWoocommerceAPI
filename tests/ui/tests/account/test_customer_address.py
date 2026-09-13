@@ -121,20 +121,16 @@ def test_customer_can_modify_shipping_address(
     # Act: Open the customer Addresses section.
     account_page.open_addresses()
 
-    # Act: Open the existing shipping address for editing.
-    edit_link = customer_page.get_by_role(
-        "link",
-        name="Edit",
-        exact=True,
-    )
-    edit_link.click()
-    customer_page.wait_for_load_state("domcontentloaded")
-
     # Arrange: Build the address Page Object for the shipping address flow.
     address_page = CustomerAddressPage(
         page=customer_page,
         base_url=ui_base_url,
     )
+
+    # Act: Open the existing shipping address for editing.
+    # The Address Page Object selects the shipping Edit link specifically;
+    # the Addresses page also contains a separate Billing Edit link.
+    address_page.open_shipping_address()
     address_page.should_be_loaded()
 
     # Act: Update selected shipping address fields.

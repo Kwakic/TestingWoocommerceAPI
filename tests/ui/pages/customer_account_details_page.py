@@ -108,6 +108,39 @@ class CustomerAccountDetailsPage:
         expect(self.email_input).to_be_visible()
         expect(self.save_changes_button).to_be_visible()
 
+    def update_profile(
+        self,
+        first_name: str | None = None,
+        last_name: str | None = None,
+    ) -> None:
+        """
+        Update the supplied customer profile fields.
+
+        Args:
+            first_name: Optional new first name.
+            last_name: Optional new last name.
+        """
+        if first_name is not None:
+            self.first_name_input.fill(first_name)
+
+        if last_name is not None:
+            self.last_name_input.fill(last_name)
+
+    def should_show_saved_profile(
+        self,
+        first_name: str,
+        last_name: str,
+    ) -> None:
+        """
+        Verify that the saved customer profile values are displayed.
+        """
+        expect(self.first_name_input).to_have_value(first_name)
+        expect(self.last_name_input).to_have_value(last_name)
+
+    def should_show_account_details_saved_message(self) -> None:
+        """Verify that WooCommerce confirms the Account details update."""
+        expect(self.alert).to_contain_text("Account details changed")
+
     def clear_required_name_fields(self) -> None:
         """Clear the required first-name and last-name fields."""
         self.first_name_input.fill("")

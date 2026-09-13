@@ -5,6 +5,29 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+# UI Allure Reporting Update
+
+## Included changes
+
+- Playwright UI browser-matrix results are aggregated into one Allure report.
+- UI Allure report is published to GitHub Pages at `/ui`.
+- Browser jobs use unique raw Allure, structured-log and JUnit artifact names.
+- Reusable test runner supports browser selection and matrix artifact keys.
+- Reusable Allure publisher supports standalone reports and artifact patterns.
+- Dashboard publisher listens for the UI workflow and publishes `report-ui`.
+- QA Portal dynamically displays a dedicated UI / Playwright entry.
+- Main README, CI/CD Architecture Guide and Allure Guide document the new model.
+
+## Security boundary
+
+UI reports are public. Do not publish credentials, authentication tokens, private
+customer data, or sensitive screenshots/traces in Playwright attachments.
+
+Contract, Security and Preflight remain artifact-only.
+
+
+---
+
 ## [Unreleased]
 
 ### Added

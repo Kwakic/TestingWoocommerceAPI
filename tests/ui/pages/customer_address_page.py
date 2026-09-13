@@ -71,6 +71,22 @@ class CustomerAddressPage:
             name="Save address",
             exact=True,
         )
+        # Shipping address "Edit" action on the Addresses summary page.
+        # The page also contains a Billing "Edit" link, so the shipping link
+        # is identified by its destination rather than by link position.
+        self.edit_shipping_address_link = page.locator(
+            'a.edit[href$="/my-account/edit-address/shipping/"]'
+        )
+
+    def open_shipping_address(self) -> None:
+        """
+        Open the existing shipping address from the Addresses summary page.
+
+        The selector is scoped to the shipping address URL because WooCommerce
+        renders separate Edit links for billing and shipping addresses.
+        """
+        self.edit_shipping_address_link.click()
+        self.page.wait_for_load_state("domcontentloaded")
 
     def open(self) -> None:
         """Navigate directly to the customer shipping address page."""
