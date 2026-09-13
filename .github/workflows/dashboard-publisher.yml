@@ -174,9 +174,10 @@ jobs:
       #
       # Artifact names follow the convention:
       #
-      #   customers-smoke-report
-      #   orders-smoke-report
-      #   products-regression-report
+      #   report-customers-smoke
+      #   report-orders-smoke
+      #   report-products-regression
+      #   report-ui
       #
       # Therefore we search using a regular expression
       # instead of an exact artifact name.
@@ -195,10 +196,10 @@ jobs:
           # Treat the artifact name as a regular expression.
           name_is_regexp: true
 
-          # Download every HTML report artifact.
-          # Match existing entity reports (for example customers-smoke-report)
-          # and the standalone Playwright UI report (ui-report).
-          name: "(.*-report|ui-report)$"
+          # Download every generated report artifact.
+          # API reports use the report-<entity>-<suite> convention.
+          # The standalone Playwright UI report is report-ui.
+          name: "^report-.*$"
 
           path: downloaded-reports
 
@@ -292,7 +293,7 @@ jobs:
           echo
           echo "===== Building website ====="
 
-          for artifact in downloaded-reports/*-report; do
+          for artifact in downloaded-reports/report-*; do
 
             [ -d "$artifact" ] || continue
 
@@ -304,11 +305,11 @@ jobs:
             # UI is not an API entity, so it does not use the
             # existing <entity>-<suite>-report convention.
             #
-            # ui-report
+            # report-ui
             #     ↓
             # site/ui/
             # --------------------------------------------------
-            if [ "$artifact_name" = "ui-report" ]; then
+            if [ "$artifact_name" = "report-ui" ]; then
 
               echo "Publishing UI / Playwright"
 
@@ -332,7 +333,7 @@ jobs:
             # site/customers/smoke
             # --------------------------------------------------
 
-            name="${artifact_name%-report}"
+            name="${artifact_name#report-}"
 
             # Extract the entity name.
             entity="${name%-*}"
