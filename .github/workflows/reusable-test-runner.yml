@@ -479,6 +479,8 @@ jobs:
         with:
           name: ${{ inputs.scope == 'shared'
             && format('shared-{0}-allure-results', inputs.suite_name)
+            || inputs.suite_name == 'ui'
+            && 'ui-allure-results'
             || format('{0}-{1}-allure-results', inputs.entity, inputs.suite_name) }}
           path: reports/allure-results
           if-no-files-found: ignore
@@ -492,6 +494,8 @@ jobs:
         with:
           name: ${{ inputs.scope == 'shared'
             && format('shared-{0}-structured-logs', inputs.suite_name)
+            || inputs.suite_name == 'ui'
+            && 'ui-structured-logs'
             || format('{0}-{1}-structured-logs', inputs.entity, inputs.suite_name) }}
           path: reports/logs
           if-no-files-found: ignore
@@ -505,6 +509,8 @@ jobs:
         with:
           name: ${{ inputs.scope == 'shared'
             && format('shared-{0}-junit-results', inputs.suite_name)
+            || inputs.suite_name == 'ui'
+            && 'ui-junit-results'
             || format('{0}-{1}-junit-results', inputs.entity, inputs.suite_name) }}
           path: reports/junit/results.xml
           if-no-files-found: warn

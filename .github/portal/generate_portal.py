@@ -11,6 +11,7 @@ reflects only published reports rather than every framework entity.
 Responsibilities
 ----------------
 * Discover published entity reports.
+* Discover the standalone Playwright UI report.
 * Read framework metadata (tier, etc.).
 * Build a static QA Portal.
 * Write ``site/index.html``.
@@ -116,6 +117,15 @@ class Entity:
     reports: list[Report]
 
 
+@dataclass(slots=True, frozen=True)
+class UIReport:
+    """Represents the standalone Playwright UI Allure report."""
+
+    path: str = "./ui/"
+    icon: str = "🎭"
+    title: str = "UI / Playwright"
+
+
 # ===========================================================================
 # Discovery
 # ===========================================================================
@@ -199,6 +209,20 @@ def discover_entities() -> list[Entity]:
     return entities
 
 
+def discover_ui_report() -> UIReport | None:
+    """
+    Discover the standalone Playwright UI report.
+
+    UI is intentionally kept outside the API entity discovery model because
+    it is a separate testing domain rather than an API entity.
+    """
+
+    if (SITE_ROOT / "ui" / "index.html").exists():
+        return UIReport()
+
+    return None
+
+
 # ===========================================================================
 # HTML generation
 # ===========================================================================
@@ -240,6 +264,36 @@ def build_entity_section(entity: Entity) -> str:
 """
 
 
+def build_ui_section(report: UIReport | None) -> str:
+    """
+    Generate the standalone UI / Playwright section when its report exists.
+    """
+
+    if report is None:
+        return ""
+
+    return f"""
+<section class="entity">
+
+    <div class="entity-header">
+
+        <h2>{report.icon} {report.title}</h2>
+
+    </div>
+
+    <div class="report-links">
+
+        <a class="report-link"
+           href="{report.path}">
+            {report.icon} Allure Report
+        </a>
+
+    </div>
+
+</section>
+"""
+
+
 def build_html(entities: list[Entity]) -> str:
     """
     Build the complete QA Portal document.
@@ -256,6 +310,8 @@ def build_html(entities: list[Entity]) -> str:
     """
 
     entity_sections = "\n".join(build_entity_section(entity) for entity in entities)
+    ui_report = discover_ui_report()
+    ui_section = build_ui_section(ui_report)
 
     return f"""<!DOCTYPE html>
     <html lang="en">
@@ -278,7 +334,7 @@ def build_html(entities: list[Entity]) -> str:
     <h1>🧪 TestEcommerceAPI</h1>
 
     <p class="subtitle">
-    API Test Automation Framework
+    API & UI Test Automation Framework
     </p>
 
     </header>
@@ -293,6 +349,8 @@ def build_html(entities: list[Entity]) -> str:
     </section>
 
     {entity_sections}
+
+    {ui_section}
 
     <section class="links">
 
