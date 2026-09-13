@@ -203,17 +203,6 @@ jobs:
           python -m playwright install --dry-run "${{ inputs.browser }}"
 
       # --------------------------------------------------
-      # 🔍 Diagnostic — verify Playwright browser installation
-      # --------------------------------------------------
-      - name: Verify Playwright browser
-        if: inputs.install_playwright
-        shell: bash
-        run: |
-          python -m playwright --version
-          echo "Browser: ${{ inputs.browser }}"
-          python -m playwright install --dry-run "${{ inputs.browser }}"
-
-      # --------------------------------------------------
       # 4. Setup WooCommerce environment
       # Optional:
       #
@@ -278,29 +267,36 @@ jobs:
       # --------------------------------------------------
       # 6. Determine pytest collection target
       #
-      # Rationale:
+      # Execution scope:
       #
-      # Allows matrix jobs to execute only the tests
-      # owned by the target entity/team.
+      # entity
+      #   Executes only the tests belonging to the
+      #   selected API entity.
       #
-      # Examples:
+      #   customers -> tests/customers
+      #   orders    -> tests/orders
+      #   products  -> tests/products
+      #   coupons   -> tests/coupons
       #
-      # customers -> tests/customers
-      # orders    -> tests/orders
-      # products  -> tests/products
-      # coupons   -> tests/coupons
-      # shared   -> tests/shared
+      # shared
+      #   Executes only framework-level tests.
       #
-      # Backward compatibility:
+      #   shared -> tests/shared
       #
-      # Workflows that do not yet pass an entity
-      # continue to execute the entire repository.
+      # UI tests are intentionally excluded from Shared
+      # Framework suites because they belong to the UI
+      # execution workflow, even when they also carry
+      # the "security" marker.
       # --------------------------------------------------
       - name: Determine test target
         shell: bash
         run: |
 
-          if [ -n "${{ inputs.entity }}" ]; then
+          if [ "${{ inputs.scope }}" = "shared" ]; then
+
+            TARGET="tests/shared"
+
+          elif [ -n "${{ inputs.entity }}" ]; then
 
             TARGET="tests/${{ inputs.entity }}"
 
