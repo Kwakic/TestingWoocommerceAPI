@@ -203,6 +203,17 @@ jobs:
           python -m playwright install --dry-run "${{ inputs.browser }}"
 
       # --------------------------------------------------
+      # 🔍 Diagnostic — verify Playwright browser installation
+      # --------------------------------------------------
+      - name: Verify Playwright browser
+        if: inputs.install_playwright
+        shell: bash
+        run: |
+          python -m playwright --version
+          echo "Browser: ${{ inputs.browser }}"
+          python -m playwright install --dry-run "${{ inputs.browser }}"
+
+      # --------------------------------------------------
       # 4. Setup WooCommerce environment
       # Optional:
       #
@@ -337,6 +348,8 @@ jobs:
           }
 
           echo "✅ UI customer credentials are available"
+
+
 
       # --------------------------------------------------
       # 7. Run pytest
