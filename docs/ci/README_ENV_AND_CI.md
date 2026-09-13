@@ -114,7 +114,6 @@ Without `--headed`, Playwright runs headlessly.
 ---
 
 ### 🤖 CI browser policy
-
 GitHub Actions uses an explicit browser matrix with different coverage
 depending on the execution context:
 
@@ -123,7 +122,6 @@ depending on the execution context:
 | Pull request               | Chromium                    | Headless | Fast feedback          |
 | Push to `main`             | Chromium + Firefox + WebKit | Headless | Cross-browser coverage |
 | Manual `workflow_dispatch` | Chromium + Firefox + WebKit | Headless | Full UI validation     |
-
 
 The browser is passed from `ui.yml` into the reusable test runner and then to
 pytest using:
@@ -136,6 +134,45 @@ CI does not pass `--headed`, so UI tests execute headlessly.
 
 GitHub Actions also installs the selected Playwright browser explicitly before
 running the UI suite.
+
+For `main` and manual runs, each browser executes as its own CI matrix job.
+Their Allure raw-result artifacts are later merged into one UI Allure report.
+
+---
+
+### 📊 UI Allure reporting in CI
+
+The UI suite is a standalone reporting domain rather than an API entity.
+
+Each browser matrix job produces its own artifacts:
+
+```text
+ui-chromium-allure-results
+ui-firefox-allure-results
+ui-webkit-allure-results
+```
+
+The reusable Allure workflow merges the available browser result sets before
+generating the single UI HTML report:
+
+```text
+Chromium ──┐
+Firefox  ──┼──► merged Allure results ──► report-ui ──► /ui/
+WebKit   ──┘
+```
+
+Additional runtime artifacts remain browser-specific:
+
+```text
+ui-<browser>-structured-logs
+ui-<browser>-junit-results
+```
+
+The UI report is published to the public QA Portal and displayed as
+**🎭 UI / Playwright — TIER: CRITICAL**.
+
+The public portal contains only operational reports. Preflight, Contract and
+Security remain artifact-only.
 
 ---
 
@@ -306,15 +343,20 @@ exported directly into the workflow environment.
 
 
 ### Run pytest (Allure results)
-- Run full suite and write Allure results (repo root):
+- Run the full repository and write Allure results:
 ```bash
 pytest tests --alluredir=./reports/allure-results
 ```
-- Run a single microservice:
+- Run an API entity:
 ```bash
-pytest tests/customers --alluredir=./reports/customers/allure-results
+pytest tests/customers --alluredir=./reports/allure-results
 ```
-- If you run tests inside containers, the `SERVICE` env var (or Docker `ARG`) will also limit the scope.
+- Run UI tests with an explicit browser:
+```bash
+pytest -m ui --browser chromium
+```
+- If you run tests inside containers, the `SERVICE` env var (or Docker `ARG`) can limit the scope.
+
 
 ### Generate Allure HTML locally
 - Allure CLI is not bundled in the test Docker image. Install it locally if you want HTML:
@@ -453,36 +495,21 @@ artifacts:
 
 ## Persistent Allure History (GitHub Pages)
 
-This project publishes Allure reports to GitHub Pages with persistent history/trend support.
+This project publishes selected operational Allure reports to GitHub Pages with
+persistent history/trend support.
 
-The CI pipeline performs the following flow:
+API reports are separated by entity and suite. UI has its own standalone
+history under `/ui/`.
 
-1. Restore previous Allure `history/`
-2. Generate a fresh report
-3. Publish report to `gh-pages`
-4. Preserve trend data across executions
+The CI reporting flow performs the following:
 
-This enables:
+1. Restore the previous report-specific `history/`
+2. Generate fresh Allure results
+3. Generate the corresponding HTML report
+4. Publish the generated report artifact
+5. Assemble the public QA Portal
+6. Preserve trend data for the next execution
 
-- 📈 Pass/fail trends
-- ⏱ Duration evolution
-- 🔁 Retry history
-- ⚠️ Flaky test visibility
-- 📊 Historical execution analytics
-
-Live report:
-
-```text
-https://kwakic.github.io/TestingWoocommerceAPI/
-```
-
-The report job is configured with:
-
-```yaml
-if: always()
-```
-
-This ensures reports are still generated and deployed even when tests fail, preserving historical trend accuracy.
 
 ### GitHub Pages history preservation
 

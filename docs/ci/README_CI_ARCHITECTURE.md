@@ -95,6 +95,7 @@ Your pipelines should answer **one specific question each**:
 | **regression.yml** | Did we break anything? | Full coverage; trends & history |
 | **performance.yml** | Is the system getting slower? | Latency tracking; SLA validation |
 | **security.yml** | Are auth/permission rules still safe? | Auth boundaries; internal audit |
+| **ui.yml** | Can users complete critical browser-based journeys? | Playwright UI validation; cross-browser coverage |
 
 
 
@@ -354,9 +355,15 @@ New projects should always use `API_ENV`.
 
 ## 📊 Reporting Strategy
 
-Public Allure reports are organized first by **entity** (customers, orders, products, coupons..) and then by **test suite** (smoke, integration, regression, performance).
+Public Allure reports are organized in two ways:
 
-This mirrors the framework's domain-driven architecture, allowing each microservice to own its own testing lifecycle while keeping GitHub Pages scalable as additional entities are introduced.
+1. **API reports** are organized by **entity** and then **test suite**:
+   `customers/smoke`, `products/integration`, etc.
+2. **UI / Playwright** is a standalone report at `/ui` because UI tests
+   validate user-facing behaviour rather than an individual API entity.
+
+This mirrors the framework's domain-driven architecture while keeping the
+standalone UI testing domain independent from the API entity matrix.
 
 ---
 
@@ -456,7 +463,7 @@ The CI/CD platform follows six principles:
 4. Every workflow answers one specific quality question.
 5. Workflows remain independently executable.
 6. Public dashboards are reserved for operational test suites
-   (Smoke, Integration, Regression and Performance).
+   (Smoke, Integration, Regression, Performance and UI / Playwright).
 
 ---
 ## 🧬 Entity vs Shared Test Suites
@@ -1150,8 +1157,7 @@ validates user-facing behaviour rather than an individual API entity.
 
 ### Browser Execution Policy
 
-The UI pipeline uses an explicit browser matrix, but does not execute every
-browser on every pull request.
+The UI pipeline uses an explicit browser matrix:
 
 | Execution | Browser | Mode | Purpose |
 |---|---|---|---|
@@ -1160,12 +1166,9 @@ browser on every pull request.
 | Manual `workflow_dispatch` | Chromium + Firefox + WebKit | Headless | Full UI validation |
 | Local debugging | Developer choice | Headed or headless | Development and debugging |
 
-This keeps normal pull-request feedback fast while still providing full
-cross-browser coverage after changes reach `main`.
-
 ### Browser Selection
 
-The selected browser is passed from `ui.yml` to the reusable test runner.
+The selected browser is passed from `ui.yml` to the reusable test runner:
 
 ```text
 ui.yml
@@ -1178,99 +1181,134 @@ ui.yml
 reusable-test-runner.yml
          │
          ├── install selected Playwright browser
-         │
          └── pytest --browser <browser>
 ```
 
-The reusable runner exposes the browser as an explicit workflow input:
+The reusable runner installs only the selected browser in each CI matrix job.
+
+### Allure Report
+
+✅ **YES** — The UI suite generates an Allure report.
+
+The UI browser matrix produces separate raw-result artifacts because each
+browser runs as an independent GitHub Actions matrix job:
 
 ```text
-browser:
-  required: false
-  type: string
-  default: "chromium"
+ui-chromium-allure-results
+ui-firefox-allure-results
+ui-webkit-allure-results
 ```
-and installs only the selected browser when Playwright installation is enabled.
+
+The reusable Allure workflow downloads the available browser result sets and
+merges them into one Allure results directory before generating the report.
+
+The generated UI report is published as:
+
+```text
+report-ui
+```
+
+and is exposed in the QA Portal under:
+
+```text
+/ui/
+```
+
+### GitHub Pages
+
+✅ **YES** — UI Allure is part of the public QA Portal.
+
+The UI report is deliberately standalone rather than being attached to
+Customers, Products or another API entity.
+
+The portal displays:
+
+```text
+🎭 UI / Playwright    TIER: CRITICAL
+    └── Allure Report
+```
+
+The UI workflow passes:
+
+```text
+team: ui
+tier: critical
+```
+
+so the UI ownership/tier metadata remains independent from API entity metadata.
+
+### Artifacts produced during runtime
+
+✅ **YES**
+
+For each browser matrix job:
+
+- `ui-<browser>-allure-results/` — Raw Allure results
+- `ui-<browser>-structured-logs/` — Structured logs for troubleshooting
+- `ui-<browser>-junit-results/` — JUnit XML results
+
+The browser-specific UI Allure results are merged before HTML generation. The
+structured logs and JUnit artifacts remain browser-specific so failures can be
+traced to the exact execution context.
 
 ### Headless Execution
 
-CI does not pass the --headed option to pytest, so Playwright runs
-headlessly by default.
+CI does not pass `--headed`, so Playwright runs headlessly.
 
-Local developers can explicitly request headed execution when debugging:
+Local developers can explicitly request headed execution:
 
 ```bash
 pytest -m ui --browser chromium --headed
 ```
 
-The browser lifecycle itself is managed by `pytest-playwright`; the project's
-UI fixtures provide isolated `BrowserContext` and `Page` instances rather than
-launching a hard-coded browser.
+### UI Reporting Flow
 
-### Playwright Browser Installation
-
-GitHub Actions runners do not rely on pre-installed Playwright browser
-binaries.
-
-The reusable test runner installs the browser selected by the workflow:
-
-```bash
-python -m playwright install --with-deps "${{ inputs.browser }}"
+```text
+ui.yml
+   │
+   ├── Chromium ──► ui-chromium-allure-results
+   ├── Firefox  ──► ui-firefox-allure-results
+   └── WebKit   ──► ui-webkit-allure-results
+                         │
+                         ▼
+              reusable-allure-report.yml
+                         │
+                 merge browser results
+                         │
+                         ▼
+                    report-ui
+                         │
+                         ▼
+                 dashboard-publisher
+                         │
+                         ▼
+                     site/ui/
 ```
 
-This keeps browser installation explicit and ensures that each CI job has the
-correct browser available before UI tests start.
+This keeps browser execution, report generation and GitHub Pages assembly as
+separate responsibilities.
 
 ### UI Environment
 
 The UI workflow provisions:
 
-* The Dockerized WooCommerce environment
-* Deterministic baseline UI/E2E products
-* The persistent UI test customer when required
-* The selected Playwright browser
+- Dockerized WooCommerce
+- Deterministic baseline UI/E2E products
+- The persistent UI test customer when required
+- The selected Playwright browser
 
 UI credentials are supplied through GitHub Actions Secrets and are not stored
 in source control.
 
-
-```text
-Pull Request / Push / Manual Run
-                │
-                ▼
-             ui.yml
-                │
-        ┌───────┴────────┐
-        │                │
-      PR             main/manual
-        │                │
-   Chromium       Chromium + Firefox + WebKit
-        │                │
-        └───────┬────────┘
-                ▼
-      reusable-test-runner.yml
-                │
-                ▼
-       WooCommerce environment
-                │
-                ▼
-          Playwright UI
-                │
-                ▼
-         Allure + JUnit
-```
-
 ### Why Browser Matrixing Is Scoped
 
-Running all UI tests against every browser on every pull request increases CI
-runtime and cost without always providing proportional feedback value.
+Running every UI test against every browser on every pull request increases CI
+runtime and cost. The current policy therefore prioritizes:
 
-The current policy therefore prioritizes:
-
-* fast Chromium feedback during code review
-* full browser coverage after changes reach main
-* explicit full-suite execution through manual workflow dispatch
-* developer-controlled browser selection during local debugging
+- fast Chromium feedback during pull requests
+- full browser coverage after changes reach `main`
+- explicit full-suite execution through manual workflow dispatch
+- developer-controlled browser selection during local debugging
 
 
 ---
@@ -1988,7 +2026,17 @@ customers/
 ├── integration/
 ├── regression/
 └── performance/
+
+products/
+├── smoke/
+└── integration/
+
+ui/
+└── index.html
 ```
+
+API entities use the entity/suite hierarchy. UI is intentionally standalone
+because it is not an API entity.
 
 As additional entities are implemented, the same structure will be extended to:
 
@@ -2133,5 +2181,5 @@ Because:
 
 ---
 
-**Last updated:** 2026-09-10
-**Guide version:** 1.5 (CI/CD & Allure best practices)
+**Last updated:** 2026-09-13
+**Guide version:** 1.6 (CI/CD & Allure best practices)

@@ -60,7 +60,10 @@ jobs:
   # Publish Report • customers
   # --------------------------------------------------
   publish-report:
-    name: Publish Report • ${{ inputs.entity }}
+    name: >-
+      ${{ inputs.suite_name == 'ui'
+          && 'Publish Report • UI'
+          || format('Publish Report • {0}', inputs.entity) }}
 
     # --------------------------------------------------
     # Always run even if previous jobs failed
@@ -97,31 +100,44 @@ jobs:
       # --------------------------------------------------
       # 2. Download Allure raw results
       # --------------------------------------------------
-      # Entity-specific artifact download
-      # Example:
-      # customers-smoke-allure-results
-      # --------------------------------------------------
-      # Some framework entities may legitimately produce
-      # no Allure artifact because no tests currently
-      # exist for that entity.
+      # API entity suite:
+      #   customers-smoke-allure-results
       #
-      # GitHub's download-artifact action emits an
-      # "Artifact not found" annotation before the
-      # workflow can recover.
+      # UI browser matrix:
+      #   ui-chromium-allure-results
+      #   ui-firefox-allure-results
+      #   ui-webkit-allure-results
       #
-      # This is expected behaviour.
+      # UI uses a pattern and merge-multiple=true so all
+      # browser result sets are combined into one Allure
+      # results directory before report generation.
       #
-      # The following step converts the missing artifact
-      # into a clean SKIPPED report summary.
+      # Missing artifacts are tolerated because an entity
+      # or browser may legitimately have no eligible tests.
       # --------------------------------------------------
 
-      - name: Download Allure results
-        id: download_allure
+      # UI is a browser matrix, so download and merge all
+      # browser-specific result artifacts into one directory.
+      - name: Download UI Allure results
+        id: download_ui_allure
+        if: inputs.suite_name == 'ui'
         continue-on-error: true
         uses: actions/download-artifact@v4
         with:
-          name: ${{ inputs.suite_name == 'ui'
-            && 'ui-allure-results'
+          pattern: ui-*-allure-results
+          path: reports/allure-results
+          merge-multiple: true
+
+      # API/shared suites keep the original exact artifact
+      # naming convention. Only the UI suite uses a pattern.
+      - name: Download API Allure results
+        id: download_api_allure
+        if: inputs.suite_name != 'ui'
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.scope == 'shared'
+            && format('shared-{0}-allure-results', inputs.suite_name)
             || format('{0}-{1}-allure-results', inputs.entity, inputs.suite_name) }}
           path: reports/allure-results
 
@@ -150,7 +166,11 @@ jobs:
 
             echo "## Report Summary" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "- Entity: ${{ inputs.entity }}" >> "$GITHUB_STEP_SUMMARY"
+            if [ "${{ inputs.suite_name }}" = "ui" ]; then
+              echo "- Scope: UI / Playwright" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "- Entity: ${{ inputs.entity }}" >> "$GITHUB_STEP_SUMMARY"
+            fi
             echo "- Status: SKIPPED" >> "$GITHUB_STEP_SUMMARY"
             echo "- Reason: No Allure results artifact found" >> "$GITHUB_STEP_SUMMARY"
 
@@ -246,8 +266,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.suite_name == 'ui'
-            && 'ui-report'
-            || format('{0}-{1}-report', inputs.entity, inputs.suite_name) }}
+            && 'report-ui'
+            || format('report-{0}-{1}', inputs.entity, inputs.suite_name) }}
           # --------------------------------------------------
           # Upload only the generated report for this
           # entity/suite.
