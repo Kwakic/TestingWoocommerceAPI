@@ -4,7 +4,7 @@
 
 > **Status:** Active development
 > **Scope:** Playwright UI testing with pytest
-> **Current UI coverage:** Guest storefront flows
+> **Current UI coverage:** Guest storefront + authenticated customer flows
 > **Browser coverage:** Chromium, Firefox, WebKit
 > **Last updated:** 2026-09-13
 
@@ -91,9 +91,9 @@ Page
   │
   ├── guest_page
   │
-  ├── customer_page       (future)
+  ├── customer_page
   │
-  └── admin_page          (future)
+  └── admin_page          (planned)
        │
        ▼
    Page Object
@@ -130,6 +130,10 @@ tests/ui/
 │   ├── home_page.py
 │   ├── shop_page.py
 │   ├── product_page.py
+│   ├── customer_login_page.py
+│   ├── customer_account_page.py
+│   ├── customer_address_page.py
+│   ├── customer_account_details_page.py
 │   └── ...
 │
 ├── components/
@@ -386,7 +390,7 @@ This is the currently implemented role.
 
 Authenticated WooCommerce customer.
 
-The intended flow is:
+The implemented flow is:
 
 ```text
 customer_page
@@ -402,7 +406,7 @@ WooCommerce My Account
 
 Authenticated WordPress/WooCommerce administrator.
 
-The intended flow is:
+The planned flow is:
 
 ```text
 admin_page
@@ -701,28 +705,22 @@ Authenticated BrowserContext
 Test
 ```
 
-Current implementation:
+Current implementations:
 
 ```text
 guest
-```
-
-Planned implementations:
-
-```text
 customer
-admin
 ```
 
-Customer authentication will use the WooCommerce My Account flow.
+Customer authentication uses the WooCommerce My Account flow.
 
 Admin authentication will use the WordPress login flow.
 
-Credentials belong in environment configuration and CI secrets, not source
-control.
+Authentication-specific mechanics belong in role fixtures and dedicated Login
+Page Objects. Credentials belong in environment configuration and CI secrets,
+not source control.
 
-The authentication implementation should be added only when authenticated UI
-coverage is introduced.
+Role fixtures keep authentication out of business-focused tests.
 
 ---
 
@@ -823,12 +821,17 @@ The current UI suite includes browser-tested coverage for:
 - Adding a product to the cart
 - Removing a product from the cart
 - Product review submission
+- Customer authentication
+- Customer account navigation
+- Customer shipping-address save and modification
+- Customer Account details update
+- Customer Account details required-field validation
 
 The current role coverage is:
 
 ```text
 Guest      ✅
-Customer   ⏳
+Customer   ✅
 Admin      ⏳
 ```
 
@@ -840,14 +843,16 @@ Firefox    ✅
 WebKit     ✅
 ```
 
-The UI test suite currently uses pytest parametrization for the role abstraction
-where applicable, with the guest role implemented first.
+The UI test suite uses role-oriented fixtures and pytest parametrization where
+the same business behavior is valid for multiple roles. Guest and customer are
+currently implemented; admin is the next role planned for UI coverage.
 
 ---
 
 # 18. 🛣️ Development Roadmap
 
-The UI layer is being expanded incrementally.
+The UI layer is being expanded incrementally for learning value and meaningful
+business coverage rather than maximum test count.
 
 Planned sequence:
 
@@ -855,36 +860,59 @@ Planned sequence:
 Current
   │
   ├── Guest storefront coverage
+  ├── Customer authentication + account flows
   ├── Page Objects
   ├── Browser matrix
   └── Deterministic UI seed data
        │
        ▼
-Customer authentication
-       │
-       ▼
 Admin authentication
        │
        ▼
-Authenticated role matrix
+Meaningful checkout / order E2E
        │
        ▼
-Cart / checkout expansion
+CartItem component
        │
        ▼
-Meaningful API + UI E2E flows
+API + UI cross-layer E2E
        │
        ▼
-Additional reusable components
+Targeted Playwright concepts
+       ├── network interception / mocking
+       ├── APIRequestContext
+       └── tracing and debugging
 ```
+
+The roadmap intentionally favors a small number of meaningful scenarios over a
+large UI regression suite.
+
+For example, the checkout flow should validate a complete business journey such
+as:
+
+```text
+Product
+   ↓
+Cart
+   ↓
+Checkout
+   ↓
+Place order
+   ↓
+Order confirmation
+```
+
+Cross-layer E2E can then extend that journey with API or backend verification.
+
+Components should be introduced only when a real repeated UI element justifies
+them. `CartItem` is the first planned component because a cart naturally
+contains multiple instances of the same product-row structure.
 
 The framework should not introduce abstractions merely because they may be
 needed later.
 
 Add Page Objects, components and fixtures when real test coverage provides a
 clear reason for them.
-
----
 
 # 19. 🎯 Golden Rules
 
