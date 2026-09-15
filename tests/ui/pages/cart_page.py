@@ -47,13 +47,20 @@ class CartPage:
         expect(self.product_price).to_have_text(expected_price)
 
     def remove_product(self, product_name: str) -> None:
-        """Remove the specified product from the shopping cart."""
+        """Remove the specified product and wait for its cart row to disappear."""
         remove_button_name = f"Remove {product_name}".replace("–", "&#8211;")
 
-        self.page.get_by_role(
+        remove_button = self.page.get_by_role(
             "button",
             name=remove_button_name,
-        ).click()
+        )
+
+        remove_button.click()
+
+        # WooCommerce updates the cart asynchronously. The removal notification
+        # is transient and its rendered text can differ across browser/DOM
+        # representations, so synchronize on the cart item itself disappearing.
+        expect(remove_button).to_have_count(0)
 
     def should_be_empty(self) -> None:
         """Verify that the shopping cart is empty."""

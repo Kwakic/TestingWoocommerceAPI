@@ -37,6 +37,7 @@ import pytest
 from playwright.sync_api import Browser, BrowserContext, Page
 
 from tests.ui.config.config_ui import UI_HOSTS
+from tests.ui.pages.admin_login_page import AdminLoginPage
 from tests.ui.pages.customer_login_page import CustomerLoginPage
 
 
@@ -55,6 +56,7 @@ from tests.ui.pages.customer_login_page import CustomerLoginPage
 UI_ROLE_FIXTURES = {
     "guest": "guest_page",
     "customer": "customer_page",
+    "admin": "admin_page",
 }
 
 
@@ -212,6 +214,55 @@ def customer_page(page: Page, ui_base_url: str) -> Page:
 
 
 @pytest.fixture
+def admin_page(page: Page, ui_base_url: str) -> Page:
+    """
+    Provide a page authenticated as the dedicated WordPress UI administrator.
+
+    Authentication is performed during fixture setup for each test that
+    requests the administrator role. Credentials are read from environment
+    variables and are never hard-coded in the test suite.
+
+    Required environment variables:
+        UI_ADMIN_USERNAME:
+            Username of the dedicated UI administrator.
+
+        UI_ADMIN_PASSWORD:
+            Password of the dedicated UI administrator.
+
+    Args:
+        page: Fresh page belonging to the test's isolated browser context.
+        ui_base_url: Storefront base URL for the active environment.
+
+    Returns:
+        Page: Page representing an authenticated WordPress administrator.
+
+    Raises:
+        pytest.UsageError: If required administrator credentials are missing.
+    """
+    username = os.getenv("UI_ADMIN_USERNAME")
+    password = os.getenv("UI_ADMIN_PASSWORD")
+
+    missing_credentials = [
+        name
+        for name, value in (
+            ("UI_ADMIN_USERNAME", username),
+            ("UI_ADMIN_PASSWORD", password),
+        )
+        if not value
+    ]
+
+    if missing_credentials:
+        raise pytest.UsageError(
+            "Missing required UI admin credentials: " + ", ".join(missing_credentials)
+        )
+
+    login_page = AdminLoginPage(page=page, base_url=ui_base_url)
+    login_page.login(username=username, password=password)
+
+    return page
+
+
+@pytest.fixture
 def ui_role_page(
     request: pytest.FixtureRequest,
     browser_name: str,
@@ -231,6 +282,7 @@ def ui_role_page(
     Supported roles:
         - guest
         - customer
+        - admin
 
     Args:
         request: Pytest fixture request containing the parametrized role.

@@ -148,7 +148,27 @@ class CustomerAccountDetailsPage:
 
     def save_changes(self) -> None:
         """Submit the Account details form and wait for the page to settle."""
-        self.save_changes_button.click()
+        # Observe the actual account-details POST so browser differences in
+        # navigation timing do not race the success-message assertion.
+        with self.page.expect_response(
+            lambda r: (
+                r.request.method == "POST"
+                and r.url.rstrip("/").endswith("/my-account/edit-account")
+            )
+        ) as response_info:
+            self.save_changes_button.click()
+
+        response = response_info.value
+
+        if response.status not in (200, 302, 303):
+            raise AssertionError(
+                f"Account details update failed with HTTP {response.status}."
+            )
+
+        # The POST response can arrive before the browser has finished the
+        # redirect navigation triggered by the form submission. Wait for the
+        # document to finish loading, but do not navigate again: WooCommerce
+        # exposes the success notice on the redirect response.
         self.page.wait_for_load_state("domcontentloaded")
 
     def should_show_required_name_validation(self) -> None:

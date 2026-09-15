@@ -46,10 +46,18 @@ def test_customer_can_update_account_details(
     account_details_page = CustomerAccountDetailsPage(customer_page)
     account_details_page.should_be_loaded()
 
+    # Arrange: Read the current persisted values so this test always performs
+    # a real state transition, even when the test has already run before.
+    current_first_name = account_details_page.first_name_input.input_value()
+    current_last_name = account_details_page.last_name_input.input_value()
+
+    new_first_name = "John" if current_first_name != "John" else "Jane"
+    new_last_name = "Beck" if current_last_name != "Beck" else "Doe"
+
     # Act: Update the customer's first and last name.
     account_details_page.update_profile(
-        first_name="John",
-        last_name="Beck",
+        first_name=new_first_name,
+        last_name=new_last_name,
     )
 
     # Act: Save the Account details changes.
@@ -64,8 +72,8 @@ def test_customer_can_update_account_details(
 
     # Assert: Verify the updated profile values persisted.
     account_details_page.should_show_saved_profile(
-        first_name="John",
-        last_name="Beck",
+        first_name=new_first_name,
+        last_name=new_last_name,
     )
 
 

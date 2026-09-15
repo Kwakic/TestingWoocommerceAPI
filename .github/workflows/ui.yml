@@ -158,11 +158,11 @@ jobs:
     secrets:
 
       UI_CUSTOMER_USERNAME: ${{ secrets.UI_CUSTOMER_USERNAME }}
-
       UI_CUSTOMER_EMAIL: ${{ secrets.UI_CUSTOMER_EMAIL }}
-
       UI_CUSTOMER_PASSWORD: ${{ secrets.UI_CUSTOMER_PASSWORD }}
 
+      UI_ADMIN_USERNAME: ${{ secrets.UI_ADMIN_USERNAME }}
+      UI_ADMIN_PASSWORD: ${{ secrets.UI_ADMIN_PASSWORD }}
   # ==================================================
   # 📊 JOB — GENERATE UI ALLURE REPORT
   # ==================================================
