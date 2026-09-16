@@ -15,28 +15,58 @@ inputs:
   # UI credentials and therefore do not seed UI users.
   # --------------------------------------------------
   seed_ui_users:
-    description: "Whether to provision the persistent UI test customer"
+    description: "Whether to provision the persistent UI test customer profiles"
     required: false
     default: "false"
 
   # --------------------------------------------------
-  # UI test customer credentials
+  # UI test customer profiles
   #
   # Supplied by the calling workflow from GitHub Secrets.
   # These are intentionally not stored in source control.
   # --------------------------------------------------
   ui_customer_username:
-    description: "Username for the persistent UI test customer"
+    description: "Username for Customer A, the stable checkout customer"
     required: false
     default: ""
 
   ui_customer_email:
-    description: "Email for the persistent UI test customer"
+    description: "Email for Customer A, the stable checkout customer"
     required: false
     default: ""
 
   ui_customer_password:
-    description: "Password for the persistent UI test customer"
+    description: "Password for Customer A, the stable checkout customer"
+    required: false
+    default: ""
+
+  ui_customer_no_address_username:
+    description: "Username for Customer B, the no-address checkout customer"
+    required: false
+    default: ""
+
+  ui_customer_no_address_email:
+    description: "Email for Customer B, the no-address checkout customer"
+    required: false
+    default: ""
+
+  ui_customer_no_address_password:
+    description: "Password for Customer B, the no-address checkout customer"
+    required: false
+    default: ""
+
+  ui_customer_profile_username:
+    description: "Username for Customer C, the mutable profile customer"
+    required: false
+    default: ""
+
+  ui_customer_profile_email:
+    description: "Email for Customer C, the mutable profile customer"
+    required: false
+    default: ""
+
+  ui_customer_profile_password:
+    description: "Password for Customer C, the mutable profile customer"
     required: false
     default: ""
 
@@ -219,6 +249,14 @@ runs:
         UI_CUSTOMER_USERNAME: ${{ inputs.ui_customer_username }}
         UI_CUSTOMER_EMAIL: ${{ inputs.ui_customer_email }}
         UI_CUSTOMER_PASSWORD: ${{ inputs.ui_customer_password }}
+
+        UI_CUSTOMER_NO_ADDRESS_USERNAME: ${{ inputs.ui_customer_no_address_username }}
+        UI_CUSTOMER_NO_ADDRESS_EMAIL: ${{ inputs.ui_customer_no_address_email }}
+        UI_CUSTOMER_NO_ADDRESS_PASSWORD: ${{ inputs.ui_customer_no_address_password }}
+
+        UI_CUSTOMER_PROFILE_USERNAME: ${{ inputs.ui_customer_profile_username }}
+        UI_CUSTOMER_PROFILE_EMAIL: ${{ inputs.ui_customer_profile_email }}
+        UI_CUSTOMER_PROFILE_PASSWORD: ${{ inputs.ui_customer_profile_password }}
       run: |
         set -euo pipefail
 
@@ -227,6 +265,14 @@ runs:
         : "${UI_CUSTOMER_USERNAME:?UI_CUSTOMER_USERNAME is required}"
         : "${UI_CUSTOMER_EMAIL:?UI_CUSTOMER_EMAIL is required}"
         : "${UI_CUSTOMER_PASSWORD:?UI_CUSTOMER_PASSWORD is required}"
+
+        : "${UI_CUSTOMER_NO_ADDRESS_USERNAME:?UI_CUSTOMER_NO_ADDRESS_USERNAME is required}"
+        : "${UI_CUSTOMER_NO_ADDRESS_EMAIL:?UI_CUSTOMER_NO_ADDRESS_EMAIL is required}"
+        : "${UI_CUSTOMER_NO_ADDRESS_PASSWORD:?UI_CUSTOMER_NO_ADDRESS_PASSWORD is required}"
+
+        : "${UI_CUSTOMER_PROFILE_USERNAME:?UI_CUSTOMER_PROFILE_USERNAME is required}"
+        : "${UI_CUSTOMER_PROFILE_EMAIL:?UI_CUSTOMER_PROFILE_EMAIL is required}"
+        : "${UI_CUSTOMER_PROFILE_PASSWORD:?UI_CUSTOMER_PROFILE_PASSWORD is required}"
 
         bash scripts/seed_test_users.sh
 

@@ -45,8 +45,9 @@ from tests.ui.pages.customer_login_page import CustomerLoginPage
 # UI role registry
 # ---------------------------------------------------------------------------
 #
-# The role router intentionally contains only implemented roles.
-# A role must have a real fixture before it is exposed to parametrized tests.
+# The role router intentionally contains only access roles.
+# Customer profiles such as checkout/profile users are persistent test-data
+# concerns, not additional access roles, so they remain direct fixtures.
 #
 # Keeping the mapping explicit prevents tests from coupling themselves to
 # authentication fixture names and gives the framework one controlled place
@@ -152,65 +153,111 @@ def guest_page(page: Page) -> Page:
     return page
 
 
-@pytest.fixture
-def customer_page(page: Page, ui_base_url: str) -> Page:
-    """
-    Provide a page authenticated as the dedicated WooCommerce UI customer.
-
-    Authentication is performed during fixture setup for each test that
-    requests the customer role. Credentials are read from the process
-    environment and are never hard-coded in the repository.
-
-    This fixture deliberately owns the authentication workflow. Tests should
-    consume ``customer_page`` and focus on customer behavior rather than
-    auth selectors, URLs, or credential handling.
-
-    Required environment variables:
-        UI_CUSTOMER_USERNAME:
-            Username of the dedicated UI customer used for authentication.
-
-        UI_CUSTOMER_PASSWORD:
-            Password of the dedicated UI customer used for authentication.
-
-    Optional customer identity:
-        UI_CUSTOMER_EMAIL:
-            Email address of the dedicated UI customer. This is not required
-            by the authentication fixture because WooCommerce accepts either
-            username or email in the login field. It may be used by individual
-            customer scenarios that need to verify the authenticated identity.
-
-    Args:
-        page: Fresh page belonging to the test's isolated browser context.
-        ui_base_url: Storefront base URL for the active environment.
-
-    Returns:
-        Page: Page representing an authenticated customer session.
-
-    Raises:
-        pytest.UsageError: If required customer credentials are missing.
-    """
-    username = os.getenv("UI_CUSTOMER_USERNAME")
-    password = os.getenv("UI_CUSTOMER_PASSWORD")
+def _login_customer(
+    page: Page,
+    ui_base_url: str,
+    username_env: str,
+    password_env: str,
+    profile_name: str,
+) -> Page:
+    """Authenticate a customer profile using environment-provided credentials."""
+    username = os.getenv(username_env)
+    password = os.getenv(password_env)
 
     missing_credentials = [
         name
         for name, value in (
-            ("UI_CUSTOMER_USERNAME", username),
-            ("UI_CUSTOMER_PASSWORD", password),
+            (username_env, username),
+            (password_env, password),
         )
         if not value
     ]
 
     if missing_credentials:
         raise pytest.UsageError(
-            "Missing required UI customer credentials: "
-            + ", ".join(missing_credentials)
+            f"Missing credentials for {profile_name}: " + ", ".join(missing_credentials)
         )
 
     login_page = CustomerLoginPage(page=page, base_url=ui_base_url)
     login_page.login(username=username, password=password)
 
     return page
+
+
+@pytest.fixture
+def customer_page(page: Page, ui_base_url: str) -> Page:
+    """
+    Provide Customer A: the stable checkout customer.
+
+    Environment variables:
+        UI_CUSTOMER
+        UI_CUSTOMER_PASSWORD
+
+    Customer A is intentionally kept stable because checkout tests depend on
+    persisted customer data such as the saved billing address.
+
+    Example:
+         Existing account + saved billing address
+         Useful for: Checkout using saved details
+    """
+    return _login_customer(
+        page=page,
+        ui_base_url=ui_base_url,
+        username_env="UI_CUSTOMER",
+        password_env="UI_CUSTOMER_PASSWORD",
+        profile_name="Customer A (stable checkout customer)",
+    )
+
+
+@pytest.fixture
+def customer_without_address_page(page: Page, ui_base_url: str) -> Page:
+    """
+    Provide Customer B: a customer without a saved billing address.
+
+    Environment variables:
+        UI_CUSTOMER_NO_ADDRESS
+        UI_CUSTOMER_NO_ADDRESS_PASSWORD
+
+    This profile is reserved for checkout scenarios that exercise manual
+    billing-address entry. It is intentionally separate from Customer A so
+    those tests cannot modify or depend on Customer A's persisted state.
+
+    Example:
+         Existing account + no saved billing address
+         Useful for: Checkout requiring address entry
+    """
+    return _login_customer(
+        page=page,
+        ui_base_url=ui_base_url,
+        username_env="UI_CUSTOMER_NO_ADDRESS",
+        password_env="UI_CUSTOMER_NO_ADDRESS_PASSWORD",
+        profile_name="Customer B (no saved billing address)",
+    )
+
+
+@pytest.fixture
+def profile_customer_page(page: Page, ui_base_url: str) -> Page:
+    """
+    Provide Customer C: the mutable profile-testing customer.
+
+    Environment variables:
+        UI_CUSTOMER_PROFILE
+        UI_CUSTOMER_PROFILE_PASSWORD
+
+    Account-profile tests are allowed to mutate this customer's persisted
+    profile data without affecting Customer A's checkout state.
+
+    Example:
+         Existing account + previous orders
+         Useful for: Order history/account tests
+    """
+    return _login_customer(
+        page=page,
+        ui_base_url=ui_base_url,
+        username_env="UI_CUSTOMER_PROFILE",
+        password_env="UI_CUSTOMER_PROFILE_PASSWORD",
+        profile_name="Customer C (mutable profile customer)",
+    )
 
 
 @pytest.fixture

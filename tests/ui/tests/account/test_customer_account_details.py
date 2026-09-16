@@ -1,9 +1,8 @@
 """
 Positive and validation UI tests for the WooCommerce customer Account details area.
 
-These tests validate the authenticated customer's Account details form through
-the real My Account UI. The Page Object owns reusable form interactions and
-UI verification, while the test owns the business scenario.
+These tests use Customer C, a dedicated mutable profile profile, so profile
+changes cannot affect Customer A's stable checkout state.
 """
 
 import pytest
@@ -20,22 +19,16 @@ pytestmark = [
 
 
 def test_customer_can_update_account_details(
-    customer_page: Page,
+    profile_customer_page: Page,
 ) -> None:
     """
-    Verify that an authenticated customer can update their first and last name.
+    Verify that Customer C can update their first and last name.
 
-    The scenario follows the recorded Playwright Codegen flow:
-        authenticated customer
-            -> Account details
-            -> update first and last name
-            -> save changes
-            -> verify success message
-            -> reopen Account details
-            -> verify updated values persist
+    The profile profile is intentionally separate from the stable checkout
+    customer, so this test may mutate persisted account data safely.
     """
-    # Arrange: Build the account Page Object and confirm the customer is logged in.
-    account_page = CustomerAccountPage(customer_page)
+    # Arrange: Customer C is the mutable profile profile used by account-edit tests.
+    account_page = CustomerAccountPage(profile_customer_page)
     account_page.should_be_loaded()
     account_page.should_be_authenticated()
 
@@ -43,18 +36,19 @@ def test_customer_can_update_account_details(
     account_page.open_account_details()
 
     # Arrange: Build the Account details Page Object.
-    account_details_page = CustomerAccountDetailsPage(customer_page)
+    account_details_page = CustomerAccountDetailsPage(profile_customer_page)
     account_details_page.should_be_loaded()
 
-    # Arrange: Read the current persisted values so this test always performs
-    # a real state transition, even when the test has already run before.
+    # Arrange: Read Customer C's current persisted values so this test always
+    # performs a real state transition, even when the test has run before.
     current_first_name = account_details_page.first_name_input.input_value()
     current_last_name = account_details_page.last_name_input.input_value()
 
+    # Toggle between two valid values so the test can be repeated safely.
     new_first_name = "John" if current_first_name != "John" else "Jane"
     new_last_name = "Beck" if current_last_name != "Beck" else "Doe"
 
-    # Act: Update the customer's first and last name.
+    # Act: Update Customer C's profile.
     account_details_page.update_profile(
         first_name=new_first_name,
         last_name=new_last_name,
@@ -66,11 +60,11 @@ def test_customer_can_update_account_details(
     # Assert: Verify WooCommerce confirms that the Account details were updated.
     account_details_page.should_show_account_details_saved_message()
 
-    # Act: Reopen the Account details section to verify persistence.
+    # Act: Reopen Account details to verify persistence.
     account_page.open_account_details()
     account_details_page.should_be_loaded()
 
-    # Assert: Verify the updated profile values persisted.
+    # Assert: Verify Customer C's updated profile values persisted.
     account_details_page.should_show_saved_profile(
         first_name=new_first_name,
         last_name=new_last_name,
@@ -78,20 +72,13 @@ def test_customer_can_update_account_details(
 
 
 def test_customer_cannot_save_account_details_without_required_names(
-    customer_page: Page,
+    profile_customer_page: Page,
 ) -> None:
     """
-    Verify that required first-name and last-name fields are enforced.
-
-    The scenario follows the recorded WooCommerce UI flow:
-        authenticated customer
-            -> Account details
-            -> clear required name fields
-            -> save changes
-            -> verify validation errors
+    Verify that Customer C cannot save Account details without required names.
     """
-    # Arrange: Build the account Page Object and confirm the customer is logged in.
-    account_page = CustomerAccountPage(customer_page)
+    # Arrange: Customer C is the dedicated mutable profile profile.
+    account_page = CustomerAccountPage(profile_customer_page)
     account_page.should_be_loaded()
     account_page.should_be_authenticated()
 
@@ -99,7 +86,7 @@ def test_customer_cannot_save_account_details_without_required_names(
     account_page.open_account_details()
 
     # Arrange: Build the Account details Page Object.
-    account_details_page = CustomerAccountDetailsPage(customer_page)
+    account_details_page = CustomerAccountDetailsPage(profile_customer_page)
     account_details_page.should_be_loaded()
 
     # Act: Clear the required first-name and last-name fields.

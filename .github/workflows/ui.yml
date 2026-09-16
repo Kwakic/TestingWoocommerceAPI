@@ -7,7 +7,7 @@ name: UI Tests 🎭
 # Purpose:
 # - Execute Playwright UI tests
 # - Provision the WooCommerce environment
-# - Seed the dedicated UI customer
+# - Seed the dedicated UI customer profiles
 # - Keep UI authentication credentials isolated
 #   from API-only workflows
 #
@@ -130,7 +130,7 @@ jobs:
       setup_woocommerce: true
 
       # --------------------------------------------------
-      # Provision the persistent customer required by
+      # Provision the persistent customer profiles required by
       # authenticated Playwright UI tests.
       # --------------------------------------------------
       seed_ui_users: true
@@ -160,6 +160,14 @@ jobs:
       UI_CUSTOMER_USERNAME: ${{ secrets.UI_CUSTOMER_USERNAME }}
       UI_CUSTOMER_EMAIL: ${{ secrets.UI_CUSTOMER_EMAIL }}
       UI_CUSTOMER_PASSWORD: ${{ secrets.UI_CUSTOMER_PASSWORD }}
+
+      UI_CUSTOMER_NO_ADDRESS_USERNAME: ${{ secrets.UI_CUSTOMER_NO_ADDRESS_USERNAME }}
+      UI_CUSTOMER_NO_ADDRESS_EMAIL: ${{ secrets.UI_CUSTOMER_NO_ADDRESS_EMAIL }}
+      UI_CUSTOMER_NO_ADDRESS_PASSWORD: ${{ secrets.UI_CUSTOMER_NO_ADDRESS_PASSWORD }}
+
+      UI_CUSTOMER_PROFILE_USERNAME: ${{ secrets.UI_CUSTOMER_PROFILE_USERNAME }}
+      UI_CUSTOMER_PROFILE_EMAIL: ${{ secrets.UI_CUSTOMER_PROFILE_EMAIL }}
+      UI_CUSTOMER_PROFILE_PASSWORD: ${{ secrets.UI_CUSTOMER_PROFILE_PASSWORD }}
 
       UI_ADMIN_USERNAME: ${{ secrets.UI_ADMIN_USERNAME }}
       UI_ADMIN_PASSWORD: ${{ secrets.UI_ADMIN_PASSWORD }}

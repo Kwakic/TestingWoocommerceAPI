@@ -20,9 +20,20 @@
 #
 # Expected environment variables
 # ------------------------------
+# Customer A — stable checkout customer
 # UI_CUSTOMER_USERNAME
 # UI_CUSTOMER_EMAIL
 # UI_CUSTOMER_PASSWORD
+#
+# Customer B — no saved billing address
+# UI_CUSTOMER_NO_ADDRESS_USERNAME
+# UI_CUSTOMER_NO_ADDRESS_EMAIL
+# UI_CUSTOMER_NO_ADDRESS_PASSWORD
+#
+# Customer C — mutable profile customer
+# UI_CUSTOMER_PROFILE_USERNAME
+# UI_CUSTOMER_PROFILE_EMAIL
+# UI_CUSTOMER_PROFILE_PASSWORD
 #
 # The values should be supplied by the caller:
 # • local development → .env / Makefile
@@ -69,41 +80,58 @@ WP_HTTP_HOST="localhost:8080"
 : "${UI_CUSTOMER_EMAIL:?UI_CUSTOMER_EMAIL is required}"
 : "${UI_CUSTOMER_PASSWORD:?UI_CUSTOMER_PASSWORD is required}"
 
+: "${UI_CUSTOMER_NO_ADDRESS_USERNAME:?UI_CUSTOMER_NO_ADDRESS_USERNAME is required}"
+: "${UI_CUSTOMER_NO_ADDRESS_EMAIL:?UI_CUSTOMER_NO_ADDRESS_EMAIL is required}"
+: "${UI_CUSTOMER_NO_ADDRESS_PASSWORD:?UI_CUSTOMER_NO_ADDRESS_PASSWORD is required}"
+
+: "${UI_CUSTOMER_PROFILE_USERNAME:?UI_CUSTOMER_PROFILE_USERNAME is required}"
+: "${UI_CUSTOMER_PROFILE_EMAIL:?UI_CUSTOMER_PROFILE_EMAIL is required}"
+: "${UI_CUSTOMER_PROFILE_PASSWORD:?UI_CUSTOMER_PROFILE_PASSWORD is required}"
+
 # --------------------------------------------------
-# Seed customer account
+# Seed customer profiles
+#
+# The seed is idempotent:
+# - Existing users are reused.
+# - Missing users are created.
+# - Existing passwords/profile data are not modified.
 # --------------------------------------------------
 
-echo "🔎 Checking UI test customer: $UI_CUSTOMER_USERNAME"
+seed_customer() {
+    local username="$1"
+    local email="$2"
+    local password="$3"
+    local description="$4"
 
-EXISTING_USER_ID=$(
-    docker compose -f docker-compose.wp.yml run --rm \
-        -e HTTP_HOST="$WP_HTTP_HOST" \
-        wpcli wp user get \
-        "$UI_CUSTOMER_USERNAME" \
-        --field=ID \
-        --allow-root 2>/dev/null || true
-)
+    echo "🔎 Checking $description: $username"
 
-if [ -n "$EXISTING_USER_ID" ]; then
-    echo "✅ UI test customer already exists: $UI_CUSTOMER_USERNAME (ID: $EXISTING_USER_ID)"
-else
-    echo "🌱 Creating UI test customer: $UI_CUSTOMER_USERNAME"
+    local existing_user_id
+    existing_user_id=$(
+        docker compose -f docker-compose.wp.yml run --rm             -e HTTP_HOST="$WP_HTTP_HOST"             wpcli wp user get             "$username"             --field=ID             --allow-root 2>/dev/null || true
+    )
 
-    docker compose -f docker-compose.wp.yml run --rm \
-        -e HTTP_HOST="$WP_HTTP_HOST" \
-        wpcli wp user create \
-        "$UI_CUSTOMER_USERNAME" \
-        "$UI_CUSTOMER_EMAIL" \
-        --user_pass="$UI_CUSTOMER_PASSWORD" \
-        --role=customer \
-        --display_name="$UI_CUSTOMER_USERNAME" \
-        --allow-root
+    if [ -n "$existing_user_id" ]; then
+        echo "✅ $description already exists: $username (ID: $existing_user_id)"
+        return
+    fi
 
-    echo "✅ UI test customer created: $UI_CUSTOMER_USERNAME"
-fi
+    echo "🌱 Creating $description: $username"
+
+    docker compose -f docker-compose.wp.yml run --rm         -e HTTP_HOST="$WP_HTTP_HOST"         wpcli wp user create         "$username"         "$email"         --user_pass="$password"         --role=customer         --display_name="$username"         --allow-root
+
+    echo "✅ $description created: $username"
+}
+
+seed_customer     "$UI_CUSTOMER_USERNAME"     "$UI_CUSTOMER_EMAIL"     "$UI_CUSTOMER_PASSWORD"     "Customer A (stable checkout customer)"
+
+seed_customer     "$UI_CUSTOMER_NO_ADDRESS_USERNAME"     "$UI_CUSTOMER_NO_ADDRESS_EMAIL"     "$UI_CUSTOMER_NO_ADDRESS_PASSWORD"     "Customer B (no-address customer)"
+
+seed_customer     "$UI_CUSTOMER_PROFILE_USERNAME"     "$UI_CUSTOMER_PROFILE_EMAIL"     "$UI_CUSTOMER_PROFILE_PASSWORD"     "Customer C (mutable profile customer)"
 
 echo
 echo "═══════════════════════════════════════════════════════════════"
-echo "👤 UI test users are ready."
+echo "👤 UI customer profiles are ready."
+echo "═══════════════════════════════════════════════════════════════"
+echo
 echo "═══════════════════════════════════════════════════════════════"
 echo
