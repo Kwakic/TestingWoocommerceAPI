@@ -1,2 +1,4 @@
 "Category","FAILED","BROKEN","PASSED","SKIPPED","UNKNOWN"
-"Test defects","0","9","0","0","0"
+"Server Errors (5xx)","3","0","0","0","0"
+"Timeouts","3","0","0","0","0"
+"Test defects","0","1","0","0","0"
