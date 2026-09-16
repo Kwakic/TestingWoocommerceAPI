@@ -190,7 +190,7 @@ def customer_page(page: Page, ui_base_url: str) -> Page:
     Provide Customer A: the stable checkout customer.
 
     Environment variables:
-        UI_CUSTOMER
+        UI_CUSTOMER_USERNAME
         UI_CUSTOMER_PASSWORD
 
     Customer A is intentionally kept stable because checkout tests depend on
@@ -203,7 +203,7 @@ def customer_page(page: Page, ui_base_url: str) -> Page:
     return _login_customer(
         page=page,
         ui_base_url=ui_base_url,
-        username_env="UI_CUSTOMER",
+        username_env="UI_CUSTOMER_USERNAME",
         password_env="UI_CUSTOMER_PASSWORD",
         profile_name="Customer A (stable checkout customer)",
     )
@@ -215,7 +215,7 @@ def customer_without_address_page(page: Page, ui_base_url: str) -> Page:
     Provide Customer B: a customer without a saved billing address.
 
     Environment variables:
-        UI_CUSTOMER_NO_ADDRESS
+        UI_CUSTOMER_NO_ADDRESS_USERNAME
         UI_CUSTOMER_NO_ADDRESS_PASSWORD
 
     This profile is reserved for checkout scenarios that exercise manual
@@ -229,7 +229,7 @@ def customer_without_address_page(page: Page, ui_base_url: str) -> Page:
     return _login_customer(
         page=page,
         ui_base_url=ui_base_url,
-        username_env="UI_CUSTOMER_NO_ADDRESS",
+        username_env="UI_CUSTOMER_NO_ADDRESS_USERNAME",
         password_env="UI_CUSTOMER_NO_ADDRESS_PASSWORD",
         profile_name="Customer B (no saved billing address)",
     )
@@ -241,7 +241,7 @@ def profile_customer_page(page: Page, ui_base_url: str) -> Page:
     Provide Customer C: the mutable profile-testing customer.
 
     Environment variables:
-        UI_CUSTOMER_PROFILE
+        UI_CUSTOMER_PROFILE_USERNAME
         UI_CUSTOMER_PROFILE_PASSWORD
 
     Account-profile tests are allowed to mutate this customer's persisted
@@ -254,7 +254,7 @@ def profile_customer_page(page: Page, ui_base_url: str) -> Page:
     return _login_customer(
         page=page,
         ui_base_url=ui_base_url,
-        username_env="UI_CUSTOMER_PROFILE",
+        username_env="UI_CUSTOMER_PROFILE_USERNAME",
         password_env="UI_CUSTOMER_PROFILE_PASSWORD",
         profile_name="Customer C (mutable profile customer)",
     )
