@@ -1,1 +1,1 @@
-{"total":3,"items":[{"uid":"ebe95be9611623f03032afd381012dd4","name":"Server Errors (5xx)","statistic":{"failed":3,"broken":0,"skipped":0,"passed":0,"unknown":0,"total":3}},{"uid":"397506b19fd92a3993436de3870c631b","name":"Timeouts","statistic":{"failed":3,"broken":0,"skipped":0,"passed":0,"unknown":0,"total":3}},{"uid":"bdbf199525818fae7a8651db9eafe741","name":"Test defects","statistic":{"failed":0,"broken":1,"skipped":0,"passed":0,"unknown":0,"total":1}}]}
+{"total":0,"items":[]}
