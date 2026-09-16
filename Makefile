@@ -15,7 +15,7 @@
 #                                     WooCommerce, API credentials). It
 #                                     never touches .env — it just prints
 #                                     fresh credentials to stdout.
-#   seed_test_products.sh         -> Seed deterministic baseline WooCommerce products.
+#   seed_test_products.sh         -> Seed deterministic baseline WooCommerce catalog.
 #   seed_test_users.sh            -> Seed persistent UI customers.
 #   scripts/write_env_credentials.sh -> the ONLY thing that writes
 #                                     generated API credentials into .env

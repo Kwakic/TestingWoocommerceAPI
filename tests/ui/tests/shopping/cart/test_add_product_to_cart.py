@@ -1,5 +1,5 @@
 """
-UI tests for adding products to the WooCommerce cart.
+UI tests for adding catalog to the WooCommerce cart.
 
 Role selection is handled through the indirect UI role fixture so the same
 test structure can later cover multiple supported storefront roles.
@@ -8,8 +8,8 @@ test structure can later cover multiple supported storefront roles.
 import pytest
 from playwright.sync_api import Page
 
-from tests.ui.pages.cart_page import CartPage
-from tests.ui.pages.home_page import HomePage
+from tests.ui.pages.shopping.cart_page import CartPage
+from tests.ui.pages.common.home_page import HomePage
 
 
 pytestmark = [

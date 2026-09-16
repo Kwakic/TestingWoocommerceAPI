@@ -18,7 +18,9 @@ import os
 import pytest
 from playwright.sync_api import Page
 
-from tests.ui.pages.customer_registration_page import CustomerRegistrationPage
+from tests.ui.pages.authentication.customer_registration_page import (
+    CustomerRegistrationPage,
+)
 
 
 pytestmark = [

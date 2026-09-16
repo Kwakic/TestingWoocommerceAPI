@@ -67,7 +67,7 @@ class ProductPage:
         expect(self.category).to_have_text(expected_category)
 
     def should_show_related_products(self) -> None:
-        """Verify that the Related products section is displayed."""
+        """Verify that the Related catalog section is displayed."""
         expect(self.related_products_heading).to_be_visible()
 
     def select_rating(self, rating: int) -> None:

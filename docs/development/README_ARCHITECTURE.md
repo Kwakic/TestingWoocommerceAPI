@@ -355,7 +355,7 @@ pytest tests/customers --alluredir=reports/customers/allure-results
 Run Product GraphQL tests directly when the environment is already prepared:
 
 ```bash
-pytest tests/products/graphql/ -v
+pytest tests/catalog/graphql/ -v
 ```
 
 Run shared GraphQL contract tests:

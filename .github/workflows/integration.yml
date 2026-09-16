@@ -16,7 +16,7 @@ name: Integration Tests 🔗
 # Each entity runs in isolated matrix jobs:
 # - customers
 # - orders
-# - products
+# - catalog
 # - coupons
 #
 # This preserves:
@@ -161,7 +161,7 @@ jobs:
     # Example:
     # customers failure must NOT cancel:
     # - orders
-    # - products
+    # - catalog
     # - coupons
     #
     # This preserves full diagnostic visibility.
@@ -206,7 +206,7 @@ jobs:
       # Examples:
       # - customers
       # - orders
-      # - products
+      # - catalog
       # - coupons
       #
       # Passed to reusable-test-runner.yml
@@ -241,7 +241,7 @@ jobs:
   # So you'll get for Integration Tests
   # ├── Test • customers
   # ├── Test • orders
-  # ├── Test • products
+  # ├── Test • catalog
   # ├── Test • coupons
   # │
   # └── Integration Quality Gate

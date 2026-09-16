@@ -9,7 +9,7 @@ import pytest
 from playwright.sync_api import Page
 
 from EcommerceAPI.src.utils.generic_utilities import generate_random_string
-from tests.ui.pages.home_page import HomePage
+from tests.ui.pages.common.home_page import HomePage
 
 
 pytestmark = [

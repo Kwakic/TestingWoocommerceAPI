@@ -11,7 +11,7 @@ containing Playwright selectors and implementation details directly.
 """
 
 from playwright.sync_api import Page, expect
-from tests.ui.pages.product_page import ProductPage
+from tests.ui.pages.catalog.product_page import ProductPage
 
 
 class ShopPage:

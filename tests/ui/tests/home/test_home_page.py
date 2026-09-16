@@ -9,7 +9,7 @@ boundary without changing the test implementation.
 import pytest
 from playwright.sync_api import Page
 
-from tests.ui.pages.home_page import HomePage
+from tests.ui.pages.common.home_page import HomePage
 
 
 pytestmark = [

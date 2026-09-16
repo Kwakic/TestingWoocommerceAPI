@@ -112,6 +112,18 @@ class CustomerAddressPage:
         expect(self.zip_code_input).to_be_visible()
         expect(self.save_address_button).to_be_visible()
 
+    def should_be_addresses_page_loaded(self) -> None:
+        """
+        Verify that the customer Addresses summary page is displayed.
+        """
+        expect(
+            self.page.get_by_role(
+                "heading",
+                name="Addresses",
+                exact=True,
+            )
+        ).to_be_visible()
+
     def fill_shipping_address(
         self,
         first_name: str,

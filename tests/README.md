@@ -165,7 +165,7 @@ pytest tests/shared
 Run an entity's GraphQL tests:
 
 ```bash
-pytest tests/products/graphql -v
+pytest tests/catalog/graphql -v
 ```
 
 Run shared GraphQL contract tests:

@@ -1,24 +1,21 @@
 """
-UI authentication tests for the WordPress administrator role.
+UI authentication and authorization tests for WordPress administrator access.
 
-These tests validate the positive administrator authentication contract at the
-business level. Authentication mechanics remain in the admin role fixture and
-AdminLoginPage.
+These tests validate administrator authentication and role-based access to
+the WordPress Dashboard at the business level.
+
+Authentication mechanics remain in the role fixtures and Page Objects.
 """
 
 import pytest
 from playwright.sync_api import Page
 
-from tests.ui.pages.customer_account_page import CustomerAccountPage
-from tests.ui.pages.admin_dashboard_page import AdminDashboardPage
+from tests.ui.pages.account.customer_account_page import CustomerAccountPage
+from tests.ui.pages.admin.admin_dashboard_page import AdminDashboardPage
 
 
-pytestmark = [
-    pytest.mark.ui,
-    pytest.mark.smoke,
-]
-
-
+@pytest.mark.ui
+@pytest.mark.smoke
 def test_admin_can_access_wordpress_dashboard(
     admin_page: Page,
     ui_base_url: str,
@@ -37,9 +34,12 @@ def test_admin_can_access_wordpress_dashboard(
     )
 
     # Assert: Verify that WordPress administrator access was established.
-    dashboard_page.should_be_loaded()
+    dashboard_page.should_have_admin_access()
 
 
+@pytest.mark.ui
+@pytest.mark.smoke
+@pytest.mark.security
 def test_customer_cannot_access_wordpress_dashboard(
     customer_page: Page,
     ui_base_url: str,

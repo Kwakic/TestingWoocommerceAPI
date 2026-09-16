@@ -40,9 +40,27 @@ class AdminDashboardPage:
             wait_until="domcontentloaded",
         )
 
-    def should_be_loaded(self) -> None:
+    def should_have_admin_access(self) -> None:
         """
-        Verify that the authenticated WordPress administrator dashboard is open.
+        Verify that the current user has access to the WordPress administrator
+        dashboard.
+
+        This assertion verifies both the administrator URL and the presence
+        of the Dashboard navigation entry. Keeping these checks in the Page
+        Object prevents tests from exposing Playwright selectors directly.
         """
         expect(self.page).to_have_url(f"{self.base_url.rstrip('/')}/wp-admin/")
         expect(self.dashboard_link).to_be_visible()
+
+    def should_not_have_admin_access(self) -> None:
+        """
+        Verify that the current user does not have access to the WordPress
+        administrator dashboard.
+
+        This assertion intentionally verifies the access boundary rather than
+        a specific redirect destination. The application may redirect a
+        non-administrator to different pages depending on its configuration,
+        but the user must not remain on the WordPress administrator dashboard.
+        """
+        expect(self.page).not_to_have_url(f"{self.base_url.rstrip('/')}/wp-admin/")
+        expect(self.dashboard_link).not_to_be_visible()

@@ -22,8 +22,8 @@ import os
 import pytest
 from playwright.sync_api import Page
 
-from tests.ui.pages.customer_login_page import CustomerLoginPage
-from tests.ui.pages.customer_account_page import CustomerAccountPage
+from tests.ui.pages.authentication.customer_login_page import CustomerLoginPage
+from tests.ui.pages.account.customer_account_page import CustomerAccountPage
 
 
 pytestmark = [

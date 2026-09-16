@@ -11,8 +11,10 @@ from playwright.sync_api import Page
 
 from EcommerceAPI.src.utils.generic_utilities import generate_random_email_and_password
 
-from tests.ui.pages.customer_account_page import CustomerAccountPage
-from tests.ui.pages.customer_registration_page import CustomerRegistrationPage
+from tests.ui.pages.account.customer_account_page import CustomerAccountPage
+from tests.ui.pages.authentication.customer_registration_page import (
+    CustomerRegistrationPage,
+)
 
 
 pytestmark = [

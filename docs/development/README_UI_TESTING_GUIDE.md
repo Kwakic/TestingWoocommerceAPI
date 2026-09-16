@@ -4,9 +4,9 @@
 
 > **Status:** Active development
 > **Scope:** Playwright UI testing with pytest
-> **Current UI coverage:** Guest storefront + authenticated customer flows
+> **Current UI coverage:** Guest storefront + authenticated customer flows + admin authentication
 > **Browser coverage:** Chromium, Firefox, WebKit
-> **Last updated:** 2026-09-13
+> **Last updated:** 2026-09-16
 
 This document is the canonical guide for the browser-based UI test layer.
 
@@ -93,7 +93,7 @@ Page
   │
   ├── customer_page
   │
-  └── admin_page          (planned)
+  └── admin_page
        │
        ▼
    Page Object
@@ -125,7 +125,12 @@ tests/ui/
 │
 ├── config/
 │   └── config_ui.py
-│
+├── fixtures/
+│   ├── browser.py
+│   ├── authentication.py
+│   ├── customers.py
+│   ├── admin.py
+│   └── __init__.py
 ├── pages/
 │   ├── home_page.py
 │   ├── shop_page.py
@@ -172,78 +177,107 @@ For example, a test that validates adding a product to the cart belongs under
 
 # 4. 🧩 Fixture Architecture
 
-`tests/ui/conftest.py` owns test-session browser resources and role-oriented
-fixtures.
+The UI fixture implementation is split by responsibility rather than keeping
+all fixtures in one large `conftest.py`.
 
-The current lifecycle is:
+The repository root `conftest.py` is the single pytest plugin composition
+point. It loads both the framework/API plugins and the UI fixture modules.
+
+UI fixture implementation is organized under `tests/ui/fixtures/`.
+
+```text
+root conftest.py
+       │
+       ├── EcommerceAPI/plugins/
+       │      └── API/framework plugins
+       │
+       └── tests/ui/fixtures/
+              │
+              ├── browser.py
+              │      └── browser context + page lifecycle
+              │
+              ├── authentication.py
+              │      └── shared authentication implementation
+              │
+              ├── customers.py
+              │      └── customer role + customer profiles
+              │
+              └── admin.py
+                     └── administrator authentication
+```
+
+### Browser lifecycle
+
+The `browser` fixture is supplied by `pytest-playwright`. The UI fixture layer
+creates a fresh `BrowserContext` and `Page` for every test.
 
 ```text
 pytest-playwright
       │
       ▼
-    browser
+   browser
       │
       ▼
-    context
+   context       ← fresh per test
       │
       ▼
-     page
-      │
-      ▼
-  guest_page
-      │
-      ▼
-  ui_role_page
+    page         ← fresh per test
 ```
 
-### Browser
+The `BrowserContext` is the primary isolation boundary for cookies, local
+storage, session state, and authentication state.
 
-The `browser` fixture is supplied by `pytest-playwright`.
+### Authentication and access roles
 
-The framework does not manually call `sync_playwright()` or hard-code
-Chromium in the UI fixture layer.
+The framework distinguishes **access roles** from **customer profiles**.
+They answer different questions and must not be mixed.
 
-### Browser Context
-
-The framework creates a new `BrowserContext` for every test.
-
-```python
-@pytest.fixture
-def context(browser: Browser) -> Generator[BrowserContext, None, None]:
-    context = browser.new_context()
-
-    try:
-        yield context
-    finally:
-        context.close()
-```
-
-This provides isolation for cookies, local storage, session state, and future
-authentication state.
-
-### Page
-
-Each test receives a fresh page created from its isolated context.
-
-### Role fixtures
-
-Role fixtures provide the business identity of the browser session.
-
-Current role:
+**Access role:**
 
 ```text
 guest
-```
-
-Future roles:
-
-```text
 customer
 admin
 ```
 
-Tests should use the role abstraction rather than managing authentication
-themselves.
+An access role describes what kind of application actor the browser represents.
+The role router maps these roles to role fixtures.
+
+**Customer profile:**
+
+```text
+checkout_customer_page
+no_address_customer_page
+profile_customer_page
+```
+
+A customer profile is a dedicated test account used for a particular scenario.
+It is test data, not an additional application role.
+
+This separation prevents tests from hiding a concrete customer identity behind
+a generic fixture name. For example, `customer_page` represents the `customer`
+access role, while `checkout_customer_page` explicitly identifies the customer
+profile used for checkout scenarios.
+
+### Fixture responsibilities
+
+| Fixture module | Responsibility |
+|---|---|
+| `browser.py` | Browser context and page lifecycle |
+| `authentication.py` | Shared authentication implementation |
+| `customers.py` | Customer access role and dedicated customer profiles |
+| `admin.py` | Administrator authentication |
+
+Authentication credentials are supplied through environment variables and are
+never embedded in individual tests.
+
+### Scenario state
+
+Profile fixtures authenticate accounts; they do not seed or modify application
+data. When a test requires a particular state, the test should establish that
+state through the appropriate UI flow when the scenario itself is what is being
+validated. This keeps tests independent from hidden setup performed by another
+test.
 
 ---
 
@@ -370,9 +404,12 @@ Those belong in the implementation layer, not in the test organization.
 
 ---
 
-# 8. 👥 Roles
+# 8. 👥 Roles and Customer Profiles
 
-The UI framework is designed around three application roles:
+The UI framework distinguishes **application access roles** from **test
+customer profiles**.
+
+### Access roles
 
 ```text
 Guest
@@ -380,54 +417,50 @@ Customer
 Admin
 ```
 
-### Guest
+| Access role | Fixture | Meaning |
+|---|---|---|
+| Guest | `guest_page` | Unauthenticated storefront user |
+| Customer | `customer_page` | Authenticated WooCommerce customer role |
+| Admin | `admin_page` | Authenticated WordPress/WooCommerce administrator |
 
-Unauthenticated storefront user.
+`customer_page` is a thin role-level fixture. It represents the generic
+`customer` access role and delegates to the default checkout customer profile.
+Tests that require a specific profile should request that profile directly.
 
-This is the currently implemented role.
+### Customer profiles
 
-### Customer
-
-Authenticated WooCommerce customer.
-
-The implemented flow is:
-
-```text
-customer_page
-     │
-     ▼
-Customer Login Page
-     │
-     ▼
-WooCommerce My Account
-```
-
-### Admin
-
-Authenticated WordPress/WooCommerce administrator.
-
-The planned flow is:
+Customer profiles are dedicated accounts used to provide controlled test data
+and avoid coupling unrelated scenarios to the same persisted account state.
 
 ```text
-admin_page
-     │
-     ▼
-WordPress Login
-     │
-     ▼
-WordPress / WooCommerce Admin
+checkout_customer_page
+    → stable customer used by checkout scenarios
+
+no_address_customer_page
+    → customer used by address-entry/address-management scenarios
+
+profile_customer_page
+    → mutable customer used by account/profile-edit scenarios
 ```
 
-Tests should use pytest parametrization where the same business behavior is
-valid for multiple roles instead of duplicating the entire test:
+The profile fixtures only authenticate their accounts. They do not create
+billing addresses, shipping addresses, products, orders, or other application
+state. Tests establish scenario-specific state explicitly when required.
 
-```text
-test_add_product_to_cart[guest]
-test_add_product_to_cart[customer]
+### Role router
+
+The role router supports only access roles:
+
+```python
+UI_ROLE_FIXTURES = {
+    "guest": "guest_page",
+    "customer": "customer_page",
+    "admin": "admin_page",
+}
 ```
 
-Role-specific authentication belongs in the role fixtures, not in individual
-tests.
+Customer profiles deliberately do not appear in this mapping. They are selected
+explicitly by tests according to the state and business scenario being tested.
 
 ---
 
@@ -710,11 +743,11 @@ Current implementations:
 ```text
 guest
 customer
+admin
 ```
 
 Customer authentication uses the WooCommerce My Account flow.
-
-Admin authentication will use the WordPress login flow.
+Admin authentication uses the WordPress login flow.
 
 Authentication-specific mechanics belong in role fixtures and dedicated Login
 Page Objects. Credentials belong in environment configuration and CI secrets,
@@ -832,7 +865,7 @@ The current role coverage is:
 ```text
 Guest      ✅
 Customer   ✅
-Admin      ⏳
+Admin      ✅
 ```
 
 The current browser coverage is:
@@ -844,8 +877,9 @@ WebKit     ✅
 ```
 
 The UI test suite uses role-oriented fixtures and pytest parametrization where
-the same business behavior is valid for multiple roles. Guest and customer are
-currently implemented; admin is the next role planned for UI coverage.
+the same business behavior is valid for multiple roles. Guest, customer and
+admin are implemented. Dedicated customer profiles are selected explicitly for
+scenarios that require particular persisted account state.
 
 ---
 

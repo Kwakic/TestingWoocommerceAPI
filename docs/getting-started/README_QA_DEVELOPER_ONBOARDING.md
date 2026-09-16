@@ -296,7 +296,7 @@ as the rest of the API test suite.
 Run the Product GraphQL suite with:
 
 ```bash
-pytest tests/products/graphql/ -v
+pytest tests/catalog/graphql/ -v
 ```
 
 Run GraphQL contract tests with:

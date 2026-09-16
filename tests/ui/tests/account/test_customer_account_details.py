@@ -1,15 +1,18 @@
 """
-Positive and validation UI tests for the WooCommerce customer Account details area.
+Positive and negative UI tests for the WooCommerce customer Account details
+area.
 
-These tests use Customer C, a dedicated mutable profile profile, so profile
-changes cannot affect Customer A's stable checkout state.
+These tests use Customer C, a dedicated mutable profile, so profile changes
+cannot affect Customer A's stable checkout state.
 """
 
 import pytest
 from playwright.sync_api import Page
 
-from tests.ui.pages.customer_account_page import CustomerAccountPage
-from tests.ui.pages.customer_account_details_page import CustomerAccountDetailsPage
+from tests.ui.pages.account.customer_account_details_page import (
+    CustomerAccountDetailsPage,
+)
+from tests.ui.pages.account.customer_account_page import CustomerAccountPage
 
 
 pytestmark = [
@@ -24,10 +27,10 @@ def test_customer_can_update_account_details(
     """
     Verify that Customer C can update their first and last name.
 
-    The profile profile is intentionally separate from the stable checkout
-    customer, so this test may mutate persisted account data safely.
+    The profile is intentionally separate from the stable checkout customer,
+    so this test may mutate persisted account data safely.
     """
-    # Arrange: Customer C is the mutable profile profile used by account-edit tests.
+    # Arrange: Customer C is the mutable profile used by account-edit tests.
     account_page = CustomerAccountPage(profile_customer_page)
     account_page.should_be_loaded()
     account_page.should_be_authenticated()
@@ -71,13 +74,14 @@ def test_customer_can_update_account_details(
     )
 
 
+@pytest.mark.negative
 def test_customer_cannot_save_account_details_without_required_names(
     profile_customer_page: Page,
 ) -> None:
     """
     Verify that Customer C cannot save Account details without required names.
     """
-    # Arrange: Customer C is the dedicated mutable profile profile.
+    # Arrange: Customer C is the dedicated mutable profile.
     account_page = CustomerAccountPage(profile_customer_page)
     account_page.should_be_loaded()
     account_page.should_be_authenticated()

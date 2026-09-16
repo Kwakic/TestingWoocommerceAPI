@@ -47,7 +47,7 @@
 #     ↓
 # seed_test_products.sh
 #     ↓
-# Baseline products ready
+# Baseline catalog ready
 #     ↓
 # seed_test_users.sh
 #     ↓

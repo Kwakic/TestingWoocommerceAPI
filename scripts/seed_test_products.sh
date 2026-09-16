@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# Seed deterministic baseline WooCommerce products.
+# Seed deterministic baseline WooCommerce catalog.
 #
 # Responsibilities
 # ----------------
-# • Create products required by UI/E2E tests
+# • Create catalog required by UI/E2E tests
 # • Keep seed data stable across test runs
 # • Avoid creating duplicates
-# • Ensure baseline products have featured images
+# • Ensure baseline catalog have featured images
 #
 # This script intentionally does NOT:
 # • create or modify .env
@@ -40,7 +40,7 @@
 #        Import and assign image
 #
 # Running the seed repeatedly is safe:
-# • Existing products are not duplicated
+# • Existing catalog are not duplicated
 # • Existing product images are not re-imported
 # • Missing images are added automatically
 # --------------------------------------------------
@@ -152,7 +152,7 @@ seed_product() {
         echo "✅ Seed product already exists: $name (ID: $existing_id)"
 
         # Important:
-        # Existing products must also receive the image if the
+        # Existing catalog must also receive the image if the
         # image fixture was added after the product was created.
         ensure_product_image \
             "$existing_id" \

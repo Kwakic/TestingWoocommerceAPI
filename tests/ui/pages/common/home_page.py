@@ -13,7 +13,7 @@ containing Playwright selectors and navigation details directly.
 
 from playwright.sync_api import Page, expect
 
-from tests.ui.pages.shop_page import ShopPage
+from tests.ui.pages.catalog.shop_page import ShopPage
 
 
 class HomePage:

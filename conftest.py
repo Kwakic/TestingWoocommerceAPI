@@ -30,4 +30,11 @@ pytest_plugins = [
     "EcommerceAPI.plugins.api.products",
     "EcommerceAPI.plugins.api.orders",
     "EcommerceAPI.plugins.api.coupons",
+    # -----------------------
+    # UI Fixture Layer
+    # -----------------------
+    "tests.ui.fixtures.browser",
+    "tests.ui.fixtures.authentication",
+    "tests.ui.fixtures.customers",
+    "tests.ui.fixtures.admin",
 ]

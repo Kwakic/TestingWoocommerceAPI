@@ -13,7 +13,7 @@ The test covers:
 import pytest
 from playwright.sync_api import Page
 
-from tests.ui.pages.customer_password_recovery_page import (
+from tests.ui.pages.authentication.customer_password_recovery_page import (
     CustomerPasswordRecoveryPage,
 )
 
