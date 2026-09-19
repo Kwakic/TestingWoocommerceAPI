@@ -40,11 +40,6 @@ class ProductPage:
             "button",
             name="Submit",
         )
-        self.review_awaiting_approval = page.get_by_role(
-            "paragraph",
-        ).filter(
-            has_text="Your review is awaiting approval",
-        )
 
     def should_be_loaded(self) -> None:
         """Verify that the Product page is loaded."""
@@ -140,10 +135,8 @@ class ProductPage:
             wait_until="domcontentloaded",
         )
 
-    def should_show_review_awaiting_approval(self) -> None:
-        """Verify that the submitted review is awaiting approval."""
-        expect(self.review_awaiting_approval).to_be_visible()
-
     def should_show_submitted_review(self, review: str) -> None:
         """Verify that the submitted review is displayed."""
-        expect(self.page.get_by_text(review)).to_be_visible()
+        # The review text is unique, so it identifies the review created
+        # by the current test without depending on the surrounding HTML.
+        expect(self.page.get_by_text(review, exact=True)).to_be_visible()

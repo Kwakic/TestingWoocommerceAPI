@@ -315,12 +315,20 @@ not require a separate Docker service or network.
 To fully tear down and start fresh:
 
 ```bash
-docker compose -f docker-compose.wp.yml down -v
+make clean
 ```
 
-This removes the containers **and** the named volumes (DB data, WordPress files), so the next `make run` performs a completely clean install.
+The project uses `./wp-data` as a **bind mount** for the WordPress application files. Therefore, `docker compose down -v` removes containers and Docker-managed volumes, but it does **not** remove the repository's `wp-data` directory.
 
-> ⚠️ Only delete local working files (e.g. a stray `wp-data/` directory or the `woocommerce/` plugin folder) if you've created them yourself outside of Docker's managed volumes. Docker Compose volumes are already handled by `down -v` — don't `rm -rf` paths you're not sure about.
+`make clean` performs the complete reset by:
+
+1. stopping and removing the Docker services;
+2. removing Docker-managed volumes and orphan containers;
+3. deleting the repository's `wp-data` directory.
+
+The next `make run` therefore performs a completely clean WordPress/WooCommerce setup.
+
+> ⚠️ `make down` only stops/removes the running Docker services. It does not delete `wp-data`, so application data and uploaded files remain available for the next `make run`.
 
 ---
 
@@ -357,6 +365,12 @@ This deliberately avoids external image URLs so that:
 * CI does not depend on a third-party image host
 * baseline product images remain deterministic
 * UI/E2E seeding works consistently after make clean
+
+The seed also validates the physical featured-image file, not only the
+WordPress thumbnail metadata. If an attachment record exists but its physical
+file is missing, `seed_test_products.sh` re-imports the repository fixture.
+This allows an existing environment with incomplete upload files to repair its
+baseline product images without creating duplicate baseline products.
 
 ---
 

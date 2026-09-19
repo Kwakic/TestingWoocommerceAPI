@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# Seed deterministic baseline WooCommerce catalog.
+# Seed deterministic baseline WooCommerce products.
 #
 # Responsibilities
 # ----------------
-# • Create catalog required by UI/E2E tests
+# • Create products required by UI/E2E tests
 # • Keep seed data stable across test runs
 # • Avoid creating duplicates
-# • Ensure baseline catalog have featured images
+# • Ensure baseline products have featured images
 #
 # This script intentionally does NOT:
 # • create or modify .env
@@ -40,7 +40,7 @@
 #        Import and assign image
 #
 # Running the seed repeatedly is safe:
-# • Existing catalog are not duplicated
+# • Existing products are not duplicated
 # • Existing product images are not re-imported
 # • Missing images are added automatically
 # --------------------------------------------------
@@ -93,6 +93,8 @@ ensure_product_image() {
     echo "🖼️ Checking featured image: $product_name"
 
     local thumbnail_id
+    local attached_file
+    local attachment_path
 
     thumbnail_id=$(
         docker compose -f docker-compose.wp.yml run --rm \
@@ -104,8 +106,31 @@ ensure_product_image() {
     )
 
     if [ -n "$thumbnail_id" ]; then
-        echo "✅ Featured image already exists: $product_name"
-        return
+        attached_file=$(
+            docker compose -f docker-compose.wp.yml run --rm \
+                -e HTTP_HOST="$WP_HTTP_HOST" \
+                wpcli wp post meta get \
+                "$thumbnail_id" \
+                _wp_attached_file \
+                --allow-root 2>/dev/null || true
+        )
+
+        if [ -n "$attached_file" ]; then
+            attachment_path="/var/www/html/wp-content/uploads/$attached_file"
+
+            if docker compose -f docker-compose.wp.yml run --rm \
+                -e HTTP_HOST="$WP_HTTP_HOST" \
+                wpcli wp eval \
+                "echo file_exists('$attachment_path') ? '1' : '0';" \
+                --allow-root 2>/dev/null | grep -qx '1'; then
+                echo "✅ Featured image already exists: $product_name"
+                return
+            fi
+
+            echo "⚠️ Featured image record exists but file is missing: $product_name"
+        else
+            echo "⚠️ Featured image record exists but attachment metadata is missing: $product_name"
+        fi
     fi
 
     echo "📷 Importing featured image: $product_name"
@@ -152,7 +177,7 @@ seed_product() {
         echo "✅ Seed product already exists: $name (ID: $existing_id)"
 
         # Important:
-        # Existing catalog must also receive the image if the
+        # Existing products must also receive the image if the
         # image fixture was added after the product was created.
         ensure_product_image \
             "$existing_id" \

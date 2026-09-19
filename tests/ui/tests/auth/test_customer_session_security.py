@@ -1,6 +1,5 @@
-# test_customer_logout_returns_to_login
-# test_customer_remember_me_persists_session
-# test_customer_cannot_access_account_after_logout
+# test_customer_can_logout
+# test_customer_session_persistence
 
 """
 UI session-security tests for WooCommerce customer accounts.

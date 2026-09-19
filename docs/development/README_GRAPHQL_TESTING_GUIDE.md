@@ -3,7 +3,7 @@
 * > **Status:** Active development
 * > **Scope:** GraphQL testing with WPGraphQL + WPGraphQL for WooCommerce
 * > **Current entity:** Products
-* > **Last updated:** 2026-08-16
+* > **Last updated:** 2026-09-17
 
 ---
 
@@ -192,7 +192,7 @@ The `wpcli` service uses the same environment type for consistency.
 
 ## 5. 🔐 Credentials
 
-The current local test environment provides:
+The GraphQL client uses the WordPress administrator credentials:
 
 ```text
 WP_ADMIN_USER=admin
@@ -201,9 +201,48 @@ WP_ADMIN_APP_PASSWORD=<application-password>
 
 These values belong in the local `.env` file and must not be committed to the repository.
 
-The application password is currently provisioned manually during development.
+### Local Docker development
 
-Automating Application Password generation as part of `setup.sh` is a possible future improvement, but is intentionally outside the current GraphQL implementation scope.
+For normal local development, GraphQL credentials are provisioned automatically by:
+
+```bash
+make run
+```
+
+The local Docker setup runs `scripts/setup.sh`, which:
+
+1. removes existing Application Passwords for the configured WordPress admin user;
+2. generates a new WordPress Application Password using WP-CLI;
+3. captures the generated password without printing the secret as normal setup output;
+4. writes the generated `WP_ADMIN_APP_PASSWORD` to the local `.env` through `scripts/write_env_credentials.sh`.
+
+Therefore, developers normally **do not need to create the GraphQL Application Password manually**.
+
+### Regenerating credentials
+
+If GraphQL authentication fails because the Application Password stored in `.env` is no longer valid for the current local WordPress installation, regenerate the local credentials with:
+
+```bash
+make setup
+```
+
+This uses the existing Docker WordPress installation and its database, rather than requiring credentials to be created through the WordPress UI.
+
+After regeneration, verify that the variables are available without printing the secret:
+
+```bash
+python -c "import os; from dotenv import load_dotenv; load_dotenv(); print('WP_ADMIN_USER:', os.getenv('WP_ADMIN_USER')); print('WP_ADMIN_APP_PASSWORD:', '<set>' if os.getenv('WP_ADMIN_APP_PASSWORD') else '<missing>')"
+```
+
+Then run the GraphQL tests:
+
+```bash
+pytest -m graphql -v
+```
+
+> **Important:** `WP_ADMIN_APP_PASSWORD` is a WordPress Application Password, not a WooCommerce REST API credential. GraphQL uses `WP_ADMIN_USER` / `WP_ADMIN_APP_PASSWORD` with HTTP Basic Auth, while the REST API uses `WC_KEY` / `WC_SECRET` with the configured REST authentication strategy.
+
+For CI, credentials are supplied by the CI environment/secrets rather than committed to the repository.
 
 ---
 

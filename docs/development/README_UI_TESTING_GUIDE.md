@@ -6,7 +6,7 @@
 > **Scope:** Playwright UI testing with pytest
 > **Current UI coverage:** Guest storefront + authenticated customer flows + admin authentication
 > **Browser coverage:** Chromium, Firefox, WebKit
-> **Last updated:** 2026-09-16
+> **Last updated:** 2026-09-19
 
 This document is the canonical guide for the browser-based UI test layer.
 
@@ -38,8 +38,9 @@ For the API test architecture, see
 15. [API + UI E2E Strategy](#15--api--ui-e2e-strategy)
 16. [Stability and Cross-Browser Rules](#16--stability-and-cross-browser-rules)
 17. [Current Coverage](#17--current-coverage)
-18. [Development Roadmap](#18--development-roadmap)
-19. [Golden Rules](#19--golden-rules)
+18. [Test Review and Maintenance](#18--test-review-and-maintenance)
+19. [Development Roadmap](#19--development-roadmap)
+20. [Golden Rules](#20--golden-rules)
 
 ---
 
@@ -125,44 +126,87 @@ tests/ui/
 │
 ├── config/
 │   └── config_ui.py
+│
 ├── fixtures/
 │   ├── browser.py
 │   ├── authentication.py
 │   ├── customers.py
 │   ├── admin.py
 │   └── __init__.py
+│
 ├── pages/
-│   ├── home_page.py
-│   ├── shop_page.py
-│   ├── product_page.py
-│   ├── customer_login_page.py
-│   ├── customer_account_page.py
-│   ├── customer_address_page.py
-│   ├── customer_account_details_page.py
-│   └── ...
+│   ├── authentication/
+│   │   ├── customer_login_page.py
+│   │   ├── customer_password_recovery_page.py
+│   │   └── customer_registration_page.py
+│   │
+│   ├── account/
+│   │   ├── customer_account_page.py
+│   │   ├── customer_account_details_page.py
+│   │   └── customer_address_page.py
+│   │
+│   ├── catalog/
+│   │   ├── shop_page.py
+│   │   └── product_page.py
+│   │
+│   ├── shopping/
+│   │   ├── cart_page.py
+│   │   ├── checkout_page.py
+│   │   ├── guest_checkout_page.py
+│   │   └── order_confirmation_page.py
+│   │
+│   ├── admin/
+│   │   ├── admin_login_page.py
+│   │   └── admin_dashboard_page.py
+│   │
+│   └── common/
+│       └── home_page.py
 │
 ├── components/
-│   └── ...
+│   └── site_header.py
 │
 ├── data/
-│   ├── images/
-│   │   ├── ui-seed-album.jpg
-│   │   ├── ui-seed-beanie.jpg
-│   │   └── ui-seed-hoodie.jpg
-│   └── ...
+│   └── images/
+│       ├── ui-seed-album.jpg
+│       ├── ui-seed-beanie.jpg
+│       └── ui-seed-hoodie.jpg
 │
 ├── tests/
-│   ├── home/
-│   │   └── test_home_page.py
-│   ├── products/
+│   ├── authentication/
+│   │   ├── test_customer_login.py
+│   │   ├── test_customer_login_security.py
+│   │   ├── test_customer_password_recovery.py
+│   │   ├── test_customer_registration.py
+│   │   ├── test_customer_registration_security.py
+│   │   └── test_customer_session_security.py
+│   │
+│   ├── account/
+│   │   ├── test_customer_account.py
+│   │   ├── test_customer_account_details.py
+│   │   └── test_customer_address.py
+│   │
+│   ├── catalog/
 │   │   ├── test_product_discovery.py
 │   │   └── test_product_review.py
-│   └── cart/
-│       ├── test_add_product_to_cart.py
-│       ├── test_remove_product_from_cart.py
-│       ├── test_update_product_quantity.py
-│       ├── test_apply_coupon.py
-│       └── test_cart_contents.py
+│   │
+│   ├── shopping/
+│   │   ├── cart/
+│   │   │   ├── test_add_product_to_cart.py
+│   │   │   ├── test_apply_coupon.py
+│   │   │   ├── test_cart_contents.py
+│   │   │   ├── test_remove_product_from_cart.py
+│   │   │   └── test_update_cart_quantity.py
+│   │   │
+│   │   └── checkout/
+│   │       ├── test_customer_checkout.py
+│   │       ├── test_guest_can_checkout.py
+│   │       └── test_order_confirmation.py
+│   │
+│   ├── admin/
+│   │   └── test_admin_authentication.py
+│   │
+│   └── home/
+│       └── test_home_page.py
 │
 └── conftest.py
 ```
@@ -279,6 +323,32 @@ state through the appropriate UI flow when the scenario itself is what is being
 validated. This keeps tests independent from hidden setup performed by another
 test.
 
+### Persistent customer-data isolation
+
+The three customer profiles exist because a fresh `BrowserContext` does not
+isolate persistent WooCommerce data.
+
+```text
+Customer A
+  → stable checkout state
+  → must not be mutated by account-edit tests
+
+Customer B
+  → no saved billing address
+  → used for address-entry scenarios
+
+Customer C
+  → mutable account state
+  → used by profile/account-edit scenarios
+```
+
+Account-edit tests must use `profile_customer_page` rather than the stable
+checkout profile. Checkout tests that depend on a saved address must use
+`checkout_customer_page`.
+
+This separation prevents persisted changes in one business scenario from
+changing the starting state of another scenario.
+
 ---
 
 # 5. 📄 Page Objects
@@ -376,19 +446,14 @@ Current intended organization:
 
 ```text
 tests/ui/tests/
-├── home/
-│   └── test_home_page.py
-│
-├── products/
-│   ├── test_product_discovery.py
-│   └── test_product_review.py
-│
-└── cart/
-    ├── test_add_product_to_cart.py
-    ├── test_remove_product_from_cart.py
-    ├── test_update_product_quantity.py
-    ├── test_apply_coupon.py
-    └── test_cart_contents.py
+├── authentication/
+├── account/
+├── catalog/
+├── shopping/
+│   ├── cart/
+│   └── checkout/
+├── admin/
+└── home/
 ```
 
 Avoid creating folders based purely on implementation details such as:
@@ -462,6 +527,21 @@ UI_ROLE_FIXTURES = {
 Customer profiles deliberately do not appear in this mapping. They are selected
 explicitly by tests according to the state and business scenario being tested.
 
+
+Building a permission/capability matrix and test meaningful combinations.
+
+| Action | Guest | Customer | Admin |
+| :--- | :---: | :---: | :---: |
+| **View storefront** | ✓ | ✓ | ? |
+| **View product** | ✓ | ✓ | ? |
+| **Add to cart** | ✓ | ✓ | ? |
+| **Checkout** | ? | ✓ | ? |
+| **View own orders** | ✗ | ✓ | ✗ |
+| **Edit own account** | ✗ | ✓ | ✗ |
+| **Manage products** | ✗ | ✗ | ✓ |
+| **Manage orders** | ✗ | ✗ | ✓ |
+
+
 ---
 
 # 9. 🌱 UI Test Data
@@ -488,8 +568,13 @@ It:
 
 - creates missing baseline products
 - reuses existing products
-- restores missing featured images
+- restores missing or broken featured images
 - avoids duplicate baseline products
+
+For featured images, the seed checks the physical attachment file as well as
+the WordPress thumbnail metadata. If WordPress still has the attachment record
+but the image file is missing, the repository-local fixture is imported again
+and assigned to the product.
 
 ## 🖼️ Local image fixtures
 
@@ -853,12 +938,19 @@ The current UI suite includes browser-tested coverage for:
 - Product discovery
 - Adding a product to the cart
 - Removing a product from the cart
+- Updating cart quantity
+- Applying a coupon
+- Cart contents
 - Product review submission
 - Customer authentication
 - Customer account navigation
 - Customer shipping-address save and modification
 - Customer Account details update
 - Customer Account details required-field validation
+- Guest checkout
+- Authenticated customer checkout with a saved billing address
+- Order confirmation
+- Admin authentication
 
 The current role coverage is:
 
@@ -883,7 +975,36 @@ scenarios that require particular persisted account state.
 
 ---
 
-# 18. 🛣️ Development Roadmap
+# 18. 🔍 Test Review and Maintenance
+
+The UI suite is maintained incrementally. Existing tests are reviewed one at a
+time before new scenarios or abstractions are added.
+
+For each test, verify:
+
+1. **Business purpose** — the test clearly describes the behavior being validated.
+2. **Location** — the test is under the correct business-domain directory.
+3. **Name** — the test name describes the expected user-visible behavior.
+4. **Role** — the test uses the correct access role (`guest`, `customer`, or
+   `admin`).
+5. **Customer profile** — when persistent customer state matters, the test uses
+   the appropriate explicit profile.
+6. **Markers** — the test carries the markers needed for suite classification and
+   execution.
+7. **Comments** — comments explain non-obvious intent or constraints rather than
+   repeating the code.
+8. **Scenario state** — required state is established explicitly rather than
+   relying on another test to run first.
+9. **Assertions** — assertions verify meaningful business outcomes.
+10. **Cross-browser behavior** — the test does not contain unnecessary
+    browser-specific branching.
+
+The goal is not to maximize the number of UI tests. The goal is a small,
+maintainable set of reliable tests that clearly communicate business behavior.
+
+---
+
+# 19. 🛣️ Development Roadmap
 
 The UI layer is being expanded incrementally for learning value and meaningful
 business coverage rather than maximum test count.
@@ -895,15 +1016,24 @@ Current
   │
   ├── Guest storefront coverage
   ├── Customer authentication + account flows
-  ├── Page Objects
+  ├── Admin authentication
+  ├── Feature-based Page Objects
   ├── Browser matrix
-  └── Deterministic UI seed data
+  ├── Deterministic UI seed data
+  └── Customer A/B/C profile isolation
        │
        ▼
-Admin authentication
+Current stabilization work
+       ├── Review each existing test
+       │     ├── correct business-domain location
+       │     ├── explicit test name
+       │     ├── appropriate pytest markers
+       │     ├── useful comments
+       │     ├── correct role/profile fixture
+       │     └── explicit scenario state
        │
        ▼
-Meaningful checkout / order E2E
+Customer B address-entry checkout
        │
        ▼
 CartItem component
@@ -948,7 +1078,7 @@ needed later.
 Add Page Objects, components and fixtures when real test coverage provides a
 clear reason for them.
 
-# 19. 🎯 Golden Rules
+# 20. 🎯 Golden Rules
 
 1. **Tests describe business behavior.**
 2. **Page Objects own page-level UI interaction.**
@@ -962,10 +1092,12 @@ clear reason for them.
 10. **CI keeps PR execution fast and uses the full browser matrix after changes
     reach `main`.**
 11. **UI/E2E baseline data must be deterministic and reproducible.**
-12. **Do not create generic abstractions until real reuse exists.**
-13. **Use API + UI E2E coverage selectively for important cross-layer business
+12. **Customer profiles isolate persistent account state between unrelated scenarios.**
+13. **Tests establish scenario-specific state explicitly when that state is part of the behavior under test.**
+14. **Do not create generic abstractions until real reuse exists.**
+15. **Use API + UI E2E coverage selectively for important cross-layer business
     flows.**
-14. **Keep browser-specific workarounds narrow, evidence-based and local to the
+16. **Keep browser-specific workarounds narrow, evidence-based and local to the
     affected interaction.**
 
 ---
@@ -997,5 +1129,5 @@ clear reason for them.
 tests/ui/
 ```
 
-This document should evolve together with the UI layer as authenticated roles,
-additional business flows, components and E2E scenarios are implemented.
+This document should evolve together with the UI layer as roles, customer
+profiles, business flows, components and E2E scenarios are implemented.

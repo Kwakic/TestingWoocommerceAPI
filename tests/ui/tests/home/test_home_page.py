@@ -52,12 +52,12 @@ def test_home_page_loads(
     "ui_role_page",
     [
         pytest.param("guest", id="guest"),
-        # pytest.param("customer", id="customer"),
+        pytest.param("customer", id="customer"),
         # pytest.param("admin", id="admin"),
     ],
     indirect=True,
 )
-def test_guest_can_navigate_to_shop(
+def test_selected_role_can_navigate_to_shop(
     ui_role_page: Page,
     ui_base_url: str,
 ) -> None:

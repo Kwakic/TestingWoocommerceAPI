@@ -13,7 +13,7 @@ from tests.ui.pages.common.home_page import HomePage
 
 pytestmark = [
     pytest.mark.ui,
-    # pytest.mark.smoke,
+    pytest.mark.smoke,
 ]
 
 
@@ -21,20 +21,19 @@ pytestmark = [
     "ui_role_page",
     [
         pytest.param("guest", id="guest"),
-        # pytest.param("customer", id="customer"),
-        # pytest.param("admin", id="admin"),
+        pytest.param("customer", id="customer"),
     ],
     indirect=True,
 )
-def test_guest_can_open_product(
+def test_selected_role_can_open_product(
     ui_role_page: Page,
     ui_base_url: str,
 ) -> None:
     """
     Verify that the selected storefront role can open a product.
 
-    The current enabled role is guest. Customer and admin coverage can be
-    added to the parameter set when those business scenarios are required.
+    Guest and customer coverage are enabled in the parameter set. Additional
+    supported roles can be added when those business scenarios are required.
     """
 
     product_name = "UI Seed – Album"
