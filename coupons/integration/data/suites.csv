@@ -1,5 +1,5 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Sun Sep 20 19:19:58 UTC 2026","Sun Sep 20 19:19:58 UTC 2026","202","tests.coupons.api","test_create_coupons_smoke","","","","test_create_single_coupon","
+"passed","Sun Sep 20 19:25:15 UTC 2026","Sun Sep 20 19:25:16 UTC 2026","274","tests.coupons.api","test_create_coupons_smoke","","","","test_create_single_coupon","
 Create a coupon using the minimum valid payload.
 
 The `create_valid_coupon` fixture already performs:
