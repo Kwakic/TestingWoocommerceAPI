@@ -24,9 +24,9 @@ Design notes
 ------------
 * This plugin is DOMAIN-SPECIFIC (coupons only).
 * Resource cleanup is owned by the framework-level shared_api_resources fixture.
-* The fixture uses entity_helper() rather than indexing shared_api_resources
-  directly. This avoids coupling domain plugins to the dynamically-generated
-  TypedDict keys in SharedAPIResources.
+* The fixture resolves the domain helper from shared_api_resources, matching
+  the established dynamic entity-discovery architecture.
+* The fixture supplies the minimum required request data for a valid coupon.
 * Follows the "thin fixture, rich helper" principle.
 """
 
@@ -40,6 +40,7 @@ import pytest
 from EcommerceAPI.src.coupons.validators.coupon_validators import (
     assert_valid_coupon_response,
 )
+from EcommerceAPI.src.utils.generic_utilities import generate_random_coupon_code
 
 log = logging.getLogger(__name__)
 
@@ -49,7 +50,6 @@ log = logging.getLogger(__name__)
 # ---------------------------------------
 @pytest.fixture(scope="function")
 def create_valid_coupon(
-    entity_helper,
     shared_api_resources,
 ) -> Callable[..., dict]:
     """
@@ -90,27 +90,36 @@ def create_valid_coupon(
                 Coupon creation fields passed to CouponsHelper.create_coupon().
         """
 
-        # 1. Call Helper and keep the HttpResponse internally so the
+        # 1. Supply the minimum mandatory field when the caller has not
+        #    provided one. The existing project utility keeps coupon-code
+        #    generation consistent with the rest of the framework.
+        if "code" not in kwargs:
+            kwargs["code"] = generate_random_coupon_code(
+                length=10,
+                prefix="test-",
+            )
+
+        # 2. Call Helper and keep the HttpResponse internally so the
         #    fixture can validate transport before consuming the body.
         response = coupon_helper.create_coupon(
             return_http_response=True,
             **kwargs,
         )
 
-        # 2. Transport validation
+        # 3. Transport validation
         assert response.status_code == 201, (
             "POST /coupons creation failed. "
             f"Expected: 201, got {response.status_code}. "
             f"Response: {response.text}"
         )
 
-        # 3. Extract JSON
+        # 4. Extract JSON
         coupon = response.json
 
-        # 4. Structure validation
+        # 5. Structure validation
         assert_valid_coupon_response(coupon)
 
-        # 5. Register for framework-managed teardown
+        # 6. Register for framework-managed teardown
         if not skip_cleanup:
             register("coupons", str(coupon["id"]))
             log.debug(
