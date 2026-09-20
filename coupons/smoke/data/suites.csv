@@ -1,0 +1,21 @@
+"Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
+"passed","Sun Sep 20 19:20:10 UTC 2026","Sun Sep 20 19:20:10 UTC 2026","267","tests.coupons.api","test_create_coupons_smoke","","","","test_create_single_coupon","
+Create a coupon using the minimum valid payload.
+
+The `create_valid_coupon` fixture already performs:
+
+    - POST /coupons
+    - HTTP status code validation (201)
+    - CouponModel/Pydantic response validation
+    - Cleanup registration
+
+Test flow:
+
+    1. Create a valid coupon
+    2. Verify the created coupon is persisted correctly
+       and matches the database record
+    3. Log completion of the full validation flow
+
+The test intentionally keeps assertions and workflow orchestration
+in the appropriate framework layers rather than duplicating them here.
+"
