@@ -14,7 +14,7 @@ from tests.ui.pages.common.home_page import HomePage
 
 pytestmark = [
     pytest.mark.ui,
-    # pytest.mark.smoke,
+    pytest.mark.smoke,
 ]
 
 
@@ -22,8 +22,8 @@ pytestmark = [
     "ui_role_page",
     [
         pytest.param("guest", id="guest"),
-        # pytest.param("customer", id="customer"),
-        # pytest.param("admin", id="admin"),
+        # pytest.param("customer", id="customer"), # No need add customer tests yet unless their workflows
+        # actually become different.
     ],
     indirect=True,
 )
@@ -45,6 +45,8 @@ def test_add_product_to_cart(
     # Arrange: Navigate to the seeded product.
     home_page = HomePage(ui_role_page, ui_base_url)
     home_page.open()
+    home_page.should_be_loaded()
+
     shop_page = home_page.open_shop()
     product_page = shop_page.open_product(product_name)
 
@@ -53,8 +55,7 @@ def test_add_product_to_cart(
     # Act: Add the product to the cart.
     product_page.add_to_cart()
 
-    # Act: Continue using the same role-specific Page Object context to open
-    # the cart from the storefront confirmation.
+    # Act: Open the cart from the product-added confirmation.
     cart_page = CartPage(ui_role_page)
     cart_page.open_from_add_to_cart_notice()
 

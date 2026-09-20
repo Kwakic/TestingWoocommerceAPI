@@ -23,7 +23,48 @@
 # and returning fresh API credentials.
 # --------------------------------------------------
 
+# --------------------------------------------------
+# PATCH LOG (2026-09-20)
+# --------------------------------------------------
+# 1. ensure_plugin() helper — plugin provisioning is now self-healing.
+#    Root cause of the "No generated credential lines received on stdin"
+#    failure: WordPress' DB said wp-graphql was installed/active while
+#    wp-content/plugins held no graphql files at all. `wp plugin install`
+#    trusted the DB ("Plugin already installed"), `--activate` looked at
+#    the filesystem ("could not be found"), WP-CLI exited non-zero with
+#    "Error: No plugins activated", `set -e` killed this script, and the
+#    caller saw only the downstream stdin error.
+#    Every plugin is now gated on is-installed AND is-active, reinstalled
+#    with --force when either is false, and verified active afterwards.
+#
+# 2. Fixed a missing space before a line-continuation backslash in the
+#    WooCommerce is-installed check, which silently turned the service
+#    name into "wp" and made that check fail on every single run.
+#
+# 3. Added -T to every `docker compose run`. Without it Compose allocates
+#    a TTY, and the captured credential output picks up trailing \r that
+#    ends up inside .env values (a classic source of later 401s).
+#
+# 4. Bounded the WooCommerce REST and GraphQL readiness loops. They used
+#    to wait forever, which turns any future breakage into a silent hang
+#    instead of a clear error. Revert the *_WAIT_ATTEMPTS lines if the
+#    old infinite behaviour is preferred.
+#
+# NOT part of this patch, for the record:
+#   - The WC_KEY/WC_SECRET presence check and the empty-password check
+#     in STEP 3.2 below already existed before this patch. They are
+#     unchanged here — this patch did not add credential validation.
+#   - Giving MySQL a named volume (`db-data:/var/lib/mysql` in
+#     docker-compose.wp.yml, alongside the existing wp-data bind mount)
+#     was raised as a possible follow-up but was never made — it isn't
+#     in docker-compose.wp.yml and isn't required by anything in this
+#     file. Today's fix works entirely through ensure_plugin()'s
+#     is-installed && is-active gate, regardless of how MySQL is
+#     persisted.
+# --------------------------------------------------
+
 set -e
+set -o pipefail
 
 
 # ------------------------------------------------------------------
@@ -100,6 +141,86 @@ retry() {
     echo "⚠️ Retry #$i for: $*" >&2
     sleep $((5 * i))
   done
+}
+
+# ------------------------------------------------------------------
+# wpcli helper — one place that knows how to invoke WP-CLI.
+#
+# -T is mandatory here. Without it Compose allocates a TTY whenever
+# this script's stdin is a terminal, and every captured line comes back
+# with a trailing \r. That \r is invisible on screen but lands inside
+# .env values and breaks authentication later in confusing ways.
+# ------------------------------------------------------------------
+wpcli() {
+  docker compose -f docker-compose.wp.yml run --rm -T \
+    -e HTTP_HOST="$WP_HTTP_HOST" \
+    wpcli "$@" --allow-root
+}
+
+# ------------------------------------------------------------------
+# ensure_plugin <slug> <source> [extra wp-cli args...]
+#
+# Guarantees that a plugin is BOTH present on disk AND active, and
+# repairs the state if it isn't.
+#
+# Why this exists
+# ---------------
+# `wp plugin is-installed` verifies that WordPress can discover the
+# plugin from the filesystem (it calls get_plugins(), which scans
+# wp-content/plugins and reads real file headers). `wp plugin is-active`
+# verifies a separate, DB-only fact: whether the plugin's slug is
+# present in WordPress' `active_plugins` option. Those two sources can
+# disagree:
+#
+#   - ./wp-data is a host bind mount, so plugin FILES survive
+#     `docker compose down -v`
+#   - the MySQL volume is Docker-managed, so the DB does NOT
+#   - every wpcli invocation is a brand-new container reading that bind
+#     mount through Docker Desktop's VM file sharing on Windows
+#
+# Delete one half without the other (or interrupt a bootstrap midway)
+# and the DB can still list a plugin as active while its files are gone.
+# The old code only checked is-installed (correctly false) before
+# deciding whether to install, then separately checked is-active (which
+# read the stale DB opinion) before deciding whether to activate — so it
+# tried to activate a plugin whose install step it had just skipped,
+# which failed with "Error: No plugins activated" and — under set -e —
+# took the whole script down before credentials were ever generated.
+#
+# The gate below joins both checks with &&, so the DB-only is-active
+# result is never even consulted unless the filesystem check already
+# passed. When either is false it reinstalls with --force, which always
+# rewrites the files rather than trusting either side's cached opinion.
+# Normal healthy runs still skip the download entirely, so this costs
+# nothing in the common case.
+# ------------------------------------------------------------------
+ensure_plugin() {
+  local slug="$1"
+  local source="$2"
+  shift 2
+
+  if wpcli wp plugin is-installed "$slug" && wpcli wp plugin is-active "$slug"; then
+    echo "✅ $slug already installed and active"
+    return 0
+  fi
+
+  echo "🚀 (Re)provisioning $slug..."
+
+  # --force rewrites the plugin files even when WordPress believes the
+  # plugin is already installed. This is the line that makes a
+  # DB-says-yes / disk-says-no state repair itself instead of failing.
+  retry 5 wpcli wp plugin install "$source" "$@" --force --activate
+
+  # Verify rather than assume. A half-successful provisioning step must
+  # never be allowed to reach credential generation, because the failure
+  # would then surface somewhere far less obvious.
+  if ! wpcli wp plugin is-active "$slug"; then
+    echo "❌ $slug was installed but is not active — aborting."
+    echo "   Inspect with: docker compose -f docker-compose.wp.yml run --rm -T wpcli wp plugin list --allow-root"
+    exit 1
+  fi
+
+  echo "✅ $slug installed and active"
 }
 
 # ------------------------------------------------------------------
@@ -197,13 +318,13 @@ chmod -R 777 /var/www/html/wp-content
 # ------------------------------------------------------------------
 echo "🔧 Checking if WordPress is installed..."
 
-if docker compose -f docker-compose.wp.yml run --rm \
+if docker compose -f docker-compose.wp.yml run --rm -T \
     -e HTTP_HOST="$WP_HTTP_HOST" \
     wpcli wp core is-installed --allow-root; then
   echo "✅ WordPress already installed — skipping"
 else
   echo "🚀 Installing WordPress..."
-  docker compose -f docker-compose.wp.yml run --rm \
+  docker compose -f docker-compose.wp.yml run --rm -T \
     -e HTTP_HOST="$WP_HTTP_HOST" \
     wpcli wp core install \
     --url="$WP_URL" \
@@ -226,26 +347,26 @@ DEFAULT_THEME="twentytwentyfour"
 
 echo "🎨 Checking WordPress default theme..."
 
-if ! docker compose -f docker-compose.wp.yml run --rm \
+if ! docker compose -f docker-compose.wp.yml run --rm -T \
     -e HTTP_HOST="$WP_HTTP_HOST" \
     wpcli wp theme is-installed "$DEFAULT_THEME" --allow-root
 then
     echo "🚀 Installing $DEFAULT_THEME..."
 
-    retry 5 docker compose -f docker-compose.wp.yml run --rm \
+    retry 5 docker compose -f docker-compose.wp.yml run --rm -T \
         -e HTTP_HOST="$WP_HTTP_HOST" \
         wpcli wp theme install "$DEFAULT_THEME" --activate --allow-root
 else
     echo "✅ $DEFAULT_THEME already installed"
 fi
 
-if ! docker compose -f docker-compose.wp.yml run --rm \
+if ! docker compose -f docker-compose.wp.yml run --rm -T \
     -e HTTP_HOST="$WP_HTTP_HOST" \
     wpcli wp theme is-active "$DEFAULT_THEME" --allow-root
 then
     echo "🎨 Activating $DEFAULT_THEME..."
 
-    docker compose -f docker-compose.wp.yml run --rm \
+    docker compose -f docker-compose.wp.yml run --rm -T \
         -e HTTP_HOST="$WP_HTTP_HOST" \
         wpcli wp theme activate "$DEFAULT_THEME" --allow-root
 else
@@ -265,51 +386,24 @@ fi
 
 echo "📦 Checking WooCommerce plugin..."
 
-if ! docker compose -f docker-compose.wp.yml run --rm \
-    -e HTTP_HOST="$WP_HTTP_HOST"\
-    wpcli wp plugin is-installed woocommerce --allow-root
-then
-    echo "🚀 Installing WooCommerce..."
-
-# Run the install inside the container but wrap the host-side call in retries.
-# Use DEBIAN_FRONTEND=noninteractive inside the container to avoid debconf TTY issues.
-retry 5 docker compose -f docker-compose.wp.yml exec -T wordpress bash -c "
-  set -e
-  export DEBIAN_FRONTEND=noninteractive
-  apt-get update -qq &&
-  apt-get install -y -qq unzip curl || true
-
-  cd /var/www/html/wp-content/plugins || exit 1
-
-  rm -rf woocommerce woocommerce.zip || true
-
-  curl --fail -L \
-    --retry 5 \
-    --retry-connrefused \
-    --retry-delay 5 \
-    --connect-timeout 10 \
-    --max-time 120 \
-    -o woocommerce.zip \
-    "https://downloads.wordpress.org/plugin/woocommerce.${WOOCOMMERCE_VERSION}.zip"
-
-  unzip -oq woocommerce.zip && \
-  rm -f woocommerce.zip && \
-  chown -R www-data:www-data woocommerce
-"
-fi
-
-if ! docker compose -f docker-compose.wp.yml run --rm \
-    -e HTTP_HOST="$WP_HTTP_HOST" \
-    wpcli wp plugin is-active woocommerce --allow-root
-then
-    echo "🔌 Activating WooCommerce..."
-
-    docker compose -f docker-compose.wp.yml run --rm \
-    -e HTTP_HOST="$WP_HTTP_HOST" \
-    wpcli wp plugin activate woocommerce --allow-root
-else
-    echo "✅ WooCommerce already active"
-fi
+# CHANGED: this block used to shell into the `wordpress` container and
+# hand-roll the install with apt-get + curl + unzip. Two problems with
+# that:
+#
+#   1. The is-installed guard above it was broken — a missing space
+#      before a line-continuation backslash glued the host value onto
+#      the service name, so Compose was asked for a service called "wp",
+#      the check failed every single run, and WooCommerce was deleted
+#      (rm -rf) and re-downloaded on every bootstrap. A network blip
+#      during that re-download left NO WooCommerce on disk and killed
+#      the script via set -e.
+#
+#   2. It duplicated download/unzip/ownership logic that WP-CLI already
+#      does correctly, and that is proven to work in this exact stack.
+#
+# ensure_plugin covers both, and applies the same installed-AND-active
+# invariant that the graphql plugins now get.
+ensure_plugin woocommerce woocommerce --version="$WOOCOMMERCE_VERSION"
 
 # ------------------------------------------------------------------
 # STEP 2.1 — Enable customer registration on the My Account page
@@ -324,7 +418,7 @@ fi
 # ------------------------------------------------------------------
 echo "👤 Enabling customer registration on My Account..."
 
-docker compose -f docker-compose.wp.yml run --rm \
+docker compose -f docker-compose.wp.yml run --rm -T \
     -e HTTP_HOST="$WP_HTTP_HOST" \
     wpcli wp option update woocommerce_enable_myaccount_registration yes --allow-root
 
@@ -335,11 +429,11 @@ echo "✅ Customer registration on My Account enabled"
 # ------------------------------------------------------------------
 echo "🔧 Configuring permalinks..."
 
-docker compose -f docker-compose.wp.yml run --rm \
+docker compose -f docker-compose.wp.yml run --rm -T \
     -e HTTP_HOST="$WP_HTTP_HOST" \
     wpcli wp rewrite structure '/%postname%/' --allow-root
 
-docker compose -f docker-compose.wp.yml run --rm \
+docker compose -f docker-compose.wp.yml run --rm -T \
     -e HTTP_HOST="$WP_HTTP_HOST" \
     wpcli wp rewrite flush --allow-root
 
@@ -352,7 +446,19 @@ docker compose -f docker-compose.wp.yml run --rm \
 # ------------------------------------------------------------------
 echo -n "⏳ Waiting for WooCommerce REST API"
 
+# CHANGED: bounded instead of infinite. An unbounded loop turns any
+# future breakage into a silent hang with no diagnosis; this fails
+# loudly and points at the logs instead.
+WC_REST_ATTEMPTS=60   # 60 x 3s = 3 minutes
+WC_REST_COUNT=0
 until curl -fsS --max-time 5 http://localhost:8080/wp-json/wc/v3 > /dev/null; do
+    WC_REST_COUNT=$((WC_REST_COUNT + 1))
+    if [ "$WC_REST_COUNT" -ge "$WC_REST_ATTEMPTS" ]; then
+        echo
+        echo "❌ WooCommerce REST API never became ready after $((WC_REST_ATTEMPTS * 3))s."
+        echo "   Check: docker compose -f docker-compose.wp.yml logs wordpress"
+        exit 1
+    fi
     echo -n "."
     sleep 3
 done
@@ -373,70 +479,31 @@ echo "✅ WooCommerce REST API is ready"
 
 echo "📦 Checking WPGraphQL plugin..."
 
-if ! docker compose -f docker-compose.wp.yml run --rm \
-    -e HTTP_HOST="$WP_HTTP_HOST" \
-    wpcli wp plugin is-installed wp-graphql --allow-root
-then
-    echo "🚀 Installing WPGraphQL (pinned to $WPGRAPHQL_VERSION)..."
-
-    # Pinned via WPGRAPHQL_VERSION — see version block above STEP 2.7.
-    retry 5 docker compose -f docker-compose.wp.yml run --rm \
-        -e HTTP_HOST="$WP_HTTP_HOST" \
-        wpcli wp plugin install wp-graphql --version="$WPGRAPHQL_VERSION" --activate --allow-root
-else
-    echo "✅ WPGraphQL already installed"
-fi
-
-if ! docker compose -f docker-compose.wp.yml run --rm \
-    -e HTTP_HOST="$WP_HTTP_HOST" \
-    wpcli wp plugin is-active wp-graphql --allow-root
-then
-    echo "🔌 Activating WPGraphQL..."
-
-    docker compose -f docker-compose.wp.yml run --rm \
-        -e HTTP_HOST="$WP_HTTP_HOST" \
-        wpcli wp plugin activate wp-graphql --allow-root
-else
-    echo "✅ WPGraphQL already active"
-fi
+# This is the exact step that broke the bootstrap. The old code
+# checked plugin state in separate steps. In the broken state,
+# `is-installed` correctly returned false because the plugin files
+# were gone, but the stale DB state still caused the later activation
+# path to be attempted, producing:
+#
+#   Warning: wp-graphql: Plugin already installed.
+#   Warning: The 'wp-graphql' plugin could not be found.
+#   Error: No plugins activated.
+#
+# ...exited non-zero, and set -e ended the script long before STEP 3.
+# The caller then reported the empty-stdin symptom instead of this.
+ensure_plugin wp-graphql wp-graphql --version="$WPGRAPHQL_VERSION"
 
 
 echo "📦 Checking WPGraphQL for WooCommerce plugin..."
 
-if ! docker compose -f docker-compose.wp.yml run --rm \
-    -e HTTP_HOST="$WP_HTTP_HOST" \
-    wpcli wp plugin is-installed wp-graphql-woocommerce --allow-root
-then
-    echo "🚀 Installing WPGraphQL for WooCommerce (pinned to $WPGRAPHQL_WOOCOMMERCE_VERSION)..."
-
-    # Pinned via WPGRAPHQL_WOOCOMMERCE_VERSION — see version block above STEP 2.7.
-    # This follows GitHub's standard release-asset URL pattern
-    # (releases/download/<tag>/<asset>), the same asset filename that
-    # releases/latest/download/... already resolved to in a verified run.
-    # Worth a manual sanity check after a version bump, since GitHub's
-    # asset naming isn't guaranteed to stay identical across releases.
-    retry 5 docker compose -f docker-compose.wp.yml run --rm \
-        -e HTTP_HOST="$WP_HTTP_HOST" \
-        wpcli wp plugin install \
-        "https://github.com/wp-graphql/wp-graphql-woocommerce/releases/download/v${WPGRAPHQL_WOOCOMMERCE_VERSION}/wp-graphql-woocommerce.zip" \
-        --activate \
-        --allow-root
-else
-    echo "✅ WPGraphQL for WooCommerce already installed"
-fi
-
-if ! docker compose -f docker-compose.wp.yml run --rm \
-    -e HTTP_HOST="$WP_HTTP_HOST" \
-    wpcli wp plugin is-active wp-graphql-woocommerce --allow-root
-then
-    echo "🔌 Activating WPGraphQL for WooCommerce..."
-
-    docker compose -f docker-compose.wp.yml run --rm \
-        -e HTTP_HOST="$WP_HTTP_HOST" \
-        wpcli wp plugin activate wp-graphql-woocommerce --allow-root
-else
-    echo "✅ WPGraphQL for WooCommerce already active"
-fi
+# Pinned via WPGRAPHQL_WOOCOMMERCE_VERSION — see version block above.
+# This follows GitHub's standard release-asset URL pattern
+# (releases/download/<tag>/<asset>). Worth a manual sanity check after a
+# version bump, since GitHub's asset naming isn't guaranteed to stay
+# identical across releases — a renamed asset shows up here as a
+# retry-exhausted install, not as a confusing failure three steps later.
+ensure_plugin wp-graphql-woocommerce \
+  "https://github.com/wp-graphql/wp-graphql-woocommerce/releases/download/v${WPGRAPHQL_WOOCOMMERCE_VERSION}/wp-graphql-woocommerce.zip"
 
 
 # ------------------------------------------------------------------
@@ -445,10 +512,14 @@ fi
 # WordPress may report the plugins as active before the GraphQL
 # endpoint is ready to accept requests.
 #
-# This deliberately waits indefinitely, same as the WordPress and
-# WooCommerce REST readiness checks above — no arbitrary attempt
-# ceiling. The script waits until the service is genuinely ready,
-# not until a guess about how long that "should" take.
+# This is deliberately bounded, like the WooCommerce REST readiness
+# check above. A real GraphQL startup failure should fail clearly
+# rather than leaving the bootstrap hanging indefinitely.
+#
+# The 3-minute ceiling is a second line of defence: ensure_plugin()
+# should prevent an invalid plugin state from reaching this point,
+# but this bound prevents an unexpected GraphQL failure from becoming
+# an infinite wait.
 #
 # GraphQL's HTTP 200 does NOT necessarily mean success (see
 # graphql_response.py's contract) — a 200 response can still carry
@@ -466,6 +537,14 @@ fi
 
 echo -n "⏳ Waiting for GraphQL API"
 
+# CHANGED: bounded instead of infinite, same reasoning as the REST
+# probe above. Previously, a wp-graphql plugin that was active in the DB
+# but missing from disk would leave this loop spinning forever with no
+# explanation. ensure_plugin should now prevent that state entirely —
+# this bound is the second line of defence.
+GRAPHQL_WAIT_ATTEMPTS=60   # 60 x 3s = 3 minutes
+GRAPHQL_WAIT_COUNT=0
+
 until RESPONSE=$(curl -s --max-time 5 \
     -H "Content-Type: application/json" \
     -X POST \
@@ -474,6 +553,14 @@ until RESPONSE=$(curl -s --max-time 5 \
     grep -q '"__typename"' <<< "$RESPONSE" &&
     ! grep -q '"errors"' <<< "$RESPONSE"
 do
+    GRAPHQL_WAIT_COUNT=$((GRAPHQL_WAIT_COUNT + 1))
+    if [ "$GRAPHQL_WAIT_COUNT" -ge "$GRAPHQL_WAIT_ATTEMPTS" ]; then
+        echo
+        echo "❌ GraphQL API never became ready after $((GRAPHQL_WAIT_ATTEMPTS * 3))s."
+        echo "   Last response: ${RESPONSE:-<no response>}"
+        echo "   Check: docker compose -f docker-compose.wp.yml run --rm -T wpcli wp plugin list --allow-root"
+        exit 1
+    fi
     echo -n "."
     sleep 3
 done
@@ -505,7 +592,7 @@ echo "✅ GraphQL API is ready"
 echo "🔑 Provisioning WooCommerce API credentials..."
 
 CREDENTIALS=$(
-  docker compose -f docker-compose.wp.yml run --rm \
+  docker compose -f docker-compose.wp.yml run --rm -T \
     -e HTTP_HOST="$WP_HTTP_HOST" \
     wpcli wp eval '
 global $wpdb;
@@ -563,7 +650,7 @@ printf(
     $key,
     $secret
 );
-' --allow-root
+' --allow-root | tr -d '\r'
 )
 
 # ------------------------------------------------------------------
@@ -583,16 +670,16 @@ printf(
 
 echo "🔐 Provisioning GraphQL Application Password..."
 
-docker compose -f docker-compose.wp.yml run --rm \
+docker compose -f docker-compose.wp.yml run --rm -T \
     -e HTTP_HOST="$WP_HTTP_HOST" \
     wpcli wp user application-password delete \
     "$WP_ADMIN_USER" --all --allow-root >/dev/null 2>&1 || true
 
 WP_ADMIN_APP_PASSWORD=$(
-    docker compose -f docker-compose.wp.yml run --rm \
+    docker compose -f docker-compose.wp.yml run --rm -T \
         -e HTTP_HOST="$WP_HTTP_HOST" \
         wpcli wp user application-password create \
-        "$WP_ADMIN_USER" "GraphQL API" --porcelain --allow-root
+        "$WP_ADMIN_USER" "GraphQL API" --porcelain --allow-root | tr -d '\r'
 )
 
 # ------------------------------------------------------------------

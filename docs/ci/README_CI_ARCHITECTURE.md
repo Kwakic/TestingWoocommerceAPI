@@ -279,8 +279,11 @@ pytest
 **setup.sh**
 
 - Installs WordPress
-- Installs WooCommerce
+- Ensures WooCommerce is installed and active
+- Ensures WPGraphQL and WPGraphQL for WooCommerce are installed and active
+- Waits for REST and GraphQL readiness
 - Generates fresh WooCommerce REST API credentials
+- Provisions the WordPress Application Password used for authenticated GraphQL operations
 - Outputs credentials in a machine-readable format
 
 **write_env_credentials.sh**

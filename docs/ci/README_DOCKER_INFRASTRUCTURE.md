@@ -266,13 +266,15 @@ During the bootstrap it:
 
 1. Waits for the infrastructure to become healthy.
 2. Installs WordPress (if needed).
-3. Installs WooCommerce (if needed).
-4. Configures permalinks.
-5. Waits for the REST API to become available.
-6. Generates fresh WooCommerce REST API credentials.
-7. Provisions the WordPress Application Password used by authenticated GraphQL operations.
-8. Emits the generated credentials to stdout in a machine-readable format.
-9. Delegates `.env` updates to `write_env_credentials.sh`.
+3. Ensures WooCommerce is installed and active.
+4. Ensures WPGraphQL and WPGraphQL for WooCommerce are installed and active.
+5. Configures permalinks.
+6. Waits for the REST API to become available.
+7. Waits for the GraphQL API to become available.
+8. Generates fresh WooCommerce REST API credentials.
+9. Provisions the WordPress Application Password used by authenticated GraphQL operations.
+10. Emits the generated credentials to stdout in a machine-readable format.
+11. Delegates `.env` updates to `write_env_credentials.sh`.
 
 This step is **idempotent** — rerunning `make run` skips anything already installed instead of failing or duplicating data.
 
@@ -423,6 +425,8 @@ Makefile                   → single entrypoint tying it all together
 | Tests target the wrong URL | `WC_API_URL` exists in `.env` | Remove `WC_API_URL`. The framework resolves URLs from `API_ENV`. |
 | WordPress installation missing | Bootstrap interrupted | Run `make setup`. |
 | WordPress files missing | `wp-data` bind mount missing | Create `wp-data/` and rerun `make run`. |
+| `wp-graphql` reports “already installed” but cannot be activated | Stale WordPress plugin state / missing plugin files | Run `make run` again. `setup.sh` automatically reinstalls required plugins when they are not both installed and active. |
+| `No generated credential lines received on stdin` | Bootstrap failed before credential generation | Check the setup error immediately above this message; the credential error is a downstream symptom. |
 | Git Bash converts `/var/www/html` into `C:\Program Files\Git\...` | MSYS path conversion | Use `MSYS_NO_PATHCONV=1`. |
 
 ## 🔗 Related Documentation
