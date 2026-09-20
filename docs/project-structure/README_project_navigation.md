@@ -236,7 +236,6 @@ tests/
 ├── products/                         ← Domain: Products (same structure)
 ├── orders/                           ← Domain: Orders (same structure)
 ├── coupons/                          ← Domain: Coupons (same structure)
-│
 ├── shared/                           ← Framework-level tests (run once)
 │   ├── __init__.py
 │   ├── contracts/                             ← Contract testing (response schemas)
@@ -259,21 +258,55 @@ tests/
 │       └── README_PREFLIGHT.md
 │
 ├── ui/                               ← Playwright tests
-│   ├── tests/
-│   │   ├── Login
-│   │   │    └── test_home_page.py   ← First learning test
-│   │   ├── Products
-│   │   │    └── test_home_page.py   ← First learning test
-│   │   ├── Carts
-│   │   │    └── test_home_page.py   ← First learning test
-│   │   └── Checkout
-│   │        └── test_home_page.py   ← First learning test
+│   ├── tests
+│   ├──  __init__.py
 │   │
-│   ├── pages/                        ← Page Objects
-│   ├── components/                   ← Reusable UI components
-│   ├── data/                         ← UI test data
-│   ├── conftest.py                   ← UI-specific fixtures
-│   └── README.md                     ← UI testing guide
+│   ├───account
+│   │   │   test_customer_account.py
+│   │   │   test_customer_account_details.py
+│   │   │   test_customer_address.py
+│   │   └───  __init__.py
+│   │
+│   ├───admin
+│   │   │   test_admin_authentication.py
+│   │   └───  __init__.py
+│   ├───auth
+│   │   │   README Playwright Authentication & Page Object Arch
+│   │   │   test_customer_login.py
+│   │   │   test_customer_login_security.py
+│   │   │   test_customer_password_recovery.py
+│   │   │   test_customer_registration.py
+│   │   │   test_customer_registration_security.py
+│   │   │   test_customer_session_security.py
+│   │   └─── __init__.py
+│   ├───catalog
+│   │   │   test_product_discovery.py
+│   │   │   test_product_review.py
+│   │   └───  __init__.py
+│   ├───home
+│   │   │   test_home_page.py
+│   │   └───  __init__.py
+│   └───shopping
+│       │   __init__.py
+│       │
+│       ├───cart
+│       │   │   test_add_product_to_cart.py
+│       │   │   test_apply_coupon.py
+│       │   │   test_cart_contents.py
+│       │   │   test_remove_product_from_cart.py
+│       │   │   test_update_cart_quantity.py
+│       │   └───  __init__.py
+│       └───checkout
+│            │   test_customer_checkout.py
+│            │   test_guest_can_checkout.py
+│            │   test_order_confirmation.py
+│            └───  __init__.py
+│
+├── pages/                        ← Page Objects
+├── components/                   ← Reusable UI components
+├── data/                         ← UI test data
+├── conftest.py                   ← UI-specific fixtures
+└── README.md                     ← UI testing guide
 │
 ├── __init__.py
 ├── conftest.py                       ← Shared root fixtures
@@ -432,6 +465,8 @@ Shared project utilities and helpers.
 ```
 scripts/
 ├── setup.sh                          ← Project setup script
+├── seed_test_users.sh                ← Seed UI users
+├── seed_test_products.sh             ← Seed UI products
 └── write_env_credentials.sh          ← Environment credential setup
 ```
 
@@ -832,26 +867,62 @@ TestEcommerceAPI (project suite/root)
 │     │       ├── __init__.py
 │     │       └── README_PREFLIGHT.md
 │     │
-│     ├── ui/                               ← Playwright tests
-│     │   ├── tests/
-│     │   │   ├── Login
-│     │   │   │    └── test_home_page.py   ← First learning test
-│     │   │   ├── Products
-│     │   │   │    └── test_home_page.py   ← First learning test
-│     │   │   ├── Carts
-│     │   │   │    └── test_home_page.py   ← First learning test
-│     │   │   └── Checkout
-│     │   │        └── test_home_page.py   ← First learning test
+│     ├── ui/                                        ← Playwright tests
+│     ├── tests
+│     │   ├──  __init__.py
 │     │   │
-│     │   ├── pages/                        ← Page Objects
-│     │   ├── components/                   ← Reusable UI components
-│     │   ├── data/                         ← UI test data
-│     │   ├── conftest.py                   ← UI-specific fixtures
-│     │   └── README.md                     ← UI testing guide
+│     │   ├───account
+│     │   │   │   test_customer_account.py
+│     │   │   │   test_customer_account_details.py
+│     │   │   │   test_customer_address.py
+│     │   │   └───  __init__.py
+│     │   │
+│     │   ├───admin
+│     │   │   │   test_admin_authentication.py
+│     │   │   └───  __init__.py
+│     │   ├───auth
+│     │   │   │   README Playwright Authentication & Page Object Architecture.md
+│     │   │   │   test_customer_login.py
+│     │   │   │   test_customer_login_security.py
+│     │   │   │   test_customer_password_recovery.py
+│     │   │   │   test_customer_registration.py
+│     │   │   │   test_customer_registration_security.py
+│     │   │   │   test_customer_session_security.py
+│     │   │   └─── __init__.py
+│     │   ├───catalog
+│     │   │   │   test_product_discovery.py
+│     │   │   │   test_product_review.py
+│     │   │   └───  __init__.py
+│     │   ├───home
+│     │   │   │   test_home_page.py
+│     │   │   └───  __init__.py
+│     │   └───shopping
+│     │       │   __init__.py
+│     │       │
+│     │       ├───cart
+│     │       │   │   test_add_product_to_cart.py
+│     │       │   │   test_apply_coupon.py
+│     │       │   │   test_cart_contents.py
+│     │       │   │   test_remove_product_from_cart.py
+│     │       │   │   test_update_cart_quantity.py
+│     │       │   └───  __init__.py
+│     │       │
+│     │       └───checkout
+│     │            │   test_customer_checkout.py
+│     │            │   test_guest_can_checkout.py
+│     │            │   test_order_confirmation.py
+│     │            └───  __init__.py
 │     │
-│     ├── __init__.py
-│     ├── conftest.py                                ← Shared root fixtures
-│     └── README.md                                  ← Test suite documentation
+│     ├── pages/                                     ← Page Objects
+│     ├── fixtures/                                  ← UI Fixtures
+│     ├── components/                                ← Reusable UI components
+│     ├── data/                                      ← UI test data
+│     ├── config.py                                  ← UI environment configuration
+│     └── README.md                                  ← UI testing guide
+│
+├── __init__.py
+├── conftest.py                                      ← Shared root fixtures
+└── README.md                                        ← Test suite documentation
 │
 │─── scripts                                         ← Shared setup
 │     ├── setup.sh                                   ← Project setup script
