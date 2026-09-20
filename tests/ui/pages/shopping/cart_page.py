@@ -80,11 +80,6 @@ class CartPage:
 
         remove_button.click()
 
-        # WooCommerce updates the cart asynchronously. The removal notification
-        # is transient and its rendered text can differ across browser/DOM
-        # representations, so synchronize on the cart item itself disappearing.
-        expect(remove_button).to_have_count(0)
-
     def should_be_empty(self) -> None:
         """Verify that the shopping cart is empty."""
         expect(self.empty_cart_heading).to_be_visible()

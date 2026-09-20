@@ -1,182 +1,323 @@
-# """
-# CouponsHelper — wrapper/helper for working with WooCommerce coupons using RequestUtility.
-#
-# Changes / Rationale:
-# - Require injection of the shared RequestUtility instance (best-practice).
-# - Import APIRequestException from centralized exceptions module.
-# - Gracefully handle missing `error_schema` at import time so tests don't crash during collection.
-# - Keep helper methods thin and rely on the injected client for all HTTP operations.
-#
-# """
-# from __future__ import annotations
-#
-# import logging
-# from typing import Optional, Dict, Any, List
-# from jsonschema import validate
-# from jsonschema.exceptions import ValidationError
-#
-# from EcommerceAPI.src.clients.api_client import APIClient
-# from EcommerceAPI.src.utils.exceptions import APIRequestException
-# from EcommerceAPI.src.coupons.dao.coupons_dao import CouponsDAO
-# from tests.shared.contracts.error_schema import error_schema
-#
-# logger = logging.getLogger(__name__)
-#
-#
-# class CouponsHelper:
-#     """
-#     Helper for coupon-related API interactions.
-#
-#     Usage:
-#         helper = CouponsHelper(request_utility=request_utility)
-#         helper.create_coupon({...})
-#         helper.list_coupons()
-#         helper.validate_coupon_response_schema(coupon)
-#     """
-#
-#     ENDPOINT = "coupons"
-#
-#     def __init__(self, request_utility: APIClient):
-#         """
-#         Require a RequestUtility instance for consistent configuration and testability.
-#
-#         Best-practice: do NOT instantiate RequestUtility() here. Always pass the session-scoped
-#         `request_utility` fixture from conftest (discover_entities will inject it).
-#
-#         Raises:
-#             ValueError: if request_utility is None
-#             TypeError: if request_utility is not an instance of RequestUtility
-#         """
-#         if request_utility is None:
-#             raise ValueError(
-#                 "CouponsHelper requires a RequestUtility instance. "
-#                 "Pass `request_utility` from your conftest (session-scoped fixture)."
-#             )
-#         if not isinstance(request_utility, APIClient):
-#             raise TypeError("request_utility must be an instance of RequestUtility")
-#
-#         self.request_utility = request_utility
-#         # Optional DAO instance; helpers can create DAO on demand or use it directly
-#         self.dao = CouponsDAO()
-#
-#     # ------------------------
-#     # CRUD operations
-#     # ------------------------
-#     def create_coupon(self, payload: Dict[str, Any], expected_status_code: int = 201) -> Dict[str, Any]:
-#         """
-#         Create a coupon via POST /coupons and return parsed JSON.
-#         """
-#         logger.debug("🟢 Creating coupon with payload keys: %s", list(payload.keys()))
-#         try:
-#             resp = self.request_utility.post(self.ENDPOINT, payload=payload, expected_status_code=expected_status_code)
-#             logger.info("✅ Coupon created successfully.")
-#             return resp
-#         except APIRequestException as e:
-#             # Attempt to return error body when API returned a non-2xx
-#             logger.warning("⚠️ Coupon creation failed: %s", e)
-#             resp = getattr(e, "response", None)
-#             if resp is not None:
-#                 try:
-#                     return resp.json()
-#                 except Exception as parse_err:
-#                     logger.error("🚫 Failed to parse error response JSON from coupon creation: %s", parse_err)
-#                     raise
-#             raise
-#
-#     def get_coupon(self, coupon_id: int, expected_status_code: int = 200) -> Dict[str, Any]:
-#         logger.debug("🟢 Retrieving coupon id=%s", coupon_id)
-#         return self.request_utility.get(f"{self.ENDPOINT}/{coupon_id}", expected_status_code=expected_status_code)
-#
-#     def delete_coupon(self, coupon_id: int, expected_status_code: int = 200) -> Dict[str, Any]:
-#         logger.debug("🟢 Deleting coupon id=%s", coupon_id)
-#         return self.request_utility.delete(f"{self.ENDPOINT}/{coupon_id}", params={"force": True},
-#                                            expected_status_code=expected_status_code)
-#
-#     def list_coupons(self, params: Optional[Dict[str, Any]] = None, per_page: int = 100,
-#                      max_pages: int = 1000) -> List[Dict[str, Any]]:
-#         """
-#         Returns a (possibly paginated) list of coupons. By default this fetches pages until exhaustion or max_pages.
-#         """
-#         params = params.copy() if params else {}
-#         params.setdefault("per_page", per_page)
-#
-#         all_items: List[Dict[str, Any]] = []
-#         for page in range(1, max_pages + 1):
-#             logger.debug("📦 Fetching coupons page=%d", page)
-#             params["page"] = page
-#             try:
-#                 response = self.request_utility.get(self.ENDPOINT, params=params, expected_status_code=200)
-#             except Exception as e:
-#                 logger.warning("⚠️ Error fetching coupons page %d: %s", page, e)
-#                 break
-#
-#             if not response:
-#                 break
-#
-#             if not isinstance(response, list):
-#                 logger.error("Unexpected coupons list response type: %s", type(response))
-#                 raise AssertionError("Coupons list endpoint did not return a list")
-#
-#             all_items.extend(response)
-#
-#             # If fewer than per_page returned, we exhausted results
-#             if len(response) < params.get("per_page", per_page):
-#                 break
-#         else:
-#             raise Exception(f"❌ Reached max_pages ({max_pages}) without exhausting results. Potential infinite dataset?")
-#
-#         return all_items
-#
-#     # ------------------------
-#     # Validation helpers
-#     # ------------------------
-#     @staticmethod
-#     def validate_coupon_response_schema(coupon: Dict[str, Any]) -> None:
-#         """
-#         Validate a coupon object against coupon_schema. Raises jsonschema.ValidationError on mismatch.
-#         """
-#         if not isinstance(coupon, dict):
-#             raise TypeError(f"Expected coupon to be a dict, got {type(coupon)}")
-#         validate(instance=coupon, schema=coupon_schema)
-#         logger.info("📦 Coupon response schema validated successfully")
-#
-#     @staticmethod
-#     def validate_coupon_error_response_schema(response: Dict[str, Any]) -> None:
-#         """
-#         Validate an error response for coupons.
-#
-#         If an `error_schema` is available in EcommerceAPI.src.models.coupon it will be used for full JSON Schema
-#         validation. Otherwise a minimal structural check (presence of 'code' and 'message') is performed.
-#         """
-#         if not isinstance(response, dict):
-#             raise TypeError(f"Expected error response to be a dict, got {type(response)}")
-#
-#         # Minimal checks
-#         if not response.get("code"):
-#             raise AssertionError("Missing 'code' in error response")
-#         if not response.get("message"):
-#             raise AssertionError("Missing 'message' in error response")
-#
-#         # Optional full schema validation
-#         if error_schema is not None:
-#             try:
-#                 validate(instance=response, schema=error_schema)
-#             except ValidationError as ve:
-#                 logger.warning("Coupon error schema validation failed: %s", ve)
-#                 raise
-#
-#     # ------------------------
-#     # DAO-backed helpers (example)
-#     # ------------------------
-#     def verify_coupon_exists_in_db(self, code: str) -> None:
-#         """
-#         Example helper that uses the DAO to assert the coupon exists in the DB.
-#         """
-#         try:
-#             db_row = self.dao.get_coupon_by_code(code)
-#         except Exception as e:
-#             logger.error("🚨 Failed to query DB for coupon code=%s: %s", code, e)
-#             raise
-#         if not db_row:
-#             raise AssertionError(f"❌ No DB record found for coupon code={code}")
-#
+"""Domain-level orchestration layer for WooCommerce Coupons."""
+
+from __future__ import annotations
+
+import logging
+from typing import Any, Dict, List, Optional
+
+from EcommerceAPI.src.core.http_response import HttpResponse
+from EcommerceAPI.src.coupons.api.coupons_api import CouponsApi
+from EcommerceAPI.src.coupons.validators.coupon_validators import (
+    assert_coupon_exists_and_matches_api,
+)
+from EcommerceAPI.src.utils.exceptions import (
+    UnexpectedStatusCodeError,
+    SchemaValidationError,
+)
+from EcommerceAPI.src.utils.pagination_utils import paginate_all_results
+
+logger = logging.getLogger(__name__)
+
+
+class CouponsHelper:
+    """
+    Domain-level orchestration layer for Coupons.
+
+    Responsibilities
+    ----------------
+    ✔ Build request payloads
+    ✔ Delegate HTTP calls to CouponsApi
+    ✔ Handle happy-path and expected negative flows
+    ✔ Delegate validation to the validator layer
+
+    Return Behavior
+    ---------------
+    Helper methods support two return modes:
+
+    1. Default mode (return_http_response=False):
+       → Returns parsed JSON (dict or list)
+
+    2. Response mode (return_http_response=True):
+       → Returns HttpResponse for access to status, headers and timing.
+
+    Non-Responsibilities
+    --------------------
+    ✘ No raw HTTP calls
+    ✘ No schema validation logic
+    ✘ No database access except through the explicitly supplied DAO in
+      assert_coupon_exists_and_matches_db()
+    ✘ No pytest fixture logic
+    """
+
+    ENDPOINT = "coupons"
+
+    def __init__(self, coupons_api: CouponsApi):
+        """Initialize the helper with the injected CouponsApi."""
+        self.coupons_api = coupons_api
+
+    # ------------------------------------------------------------------
+    # CREATE
+    # ------------------------------------------------------------------
+
+    def create_coupon(
+        self,
+        code: Optional[str] = None,
+        amount: Optional[str] = None,
+        discount_type: Optional[str] = None,
+        individual_use: Optional[bool] = None,
+        product_ids: Optional[List[int]] = None,
+        excluded_product_ids: Optional[List[int]] = None,
+        usage_limit: Optional[int] = None,
+        usage_limit_per_user: Optional[int] = None,
+        limit_usage_to_x_items: Optional[int] = None,
+        free_shipping: Optional[bool] = None,
+        product_categories: Optional[List[int]] = None,
+        excluded_product_categories: Optional[List[int]] = None,
+        exclude_sale_items: Optional[bool] = None,
+        minimum_amount: Optional[str] = None,
+        maximum_amount: Optional[str] = None,
+        email_restrictions: Optional[List[str]] = None,
+        description: Optional[str] = None,
+        date_expires: Optional[str] = None,
+        return_http_response: bool = False,
+        **kwargs: Any,
+    ) -> Dict[str, Any] | HttpResponse:
+        """
+        Create a coupon via CouponsApi.
+
+        Only non-None arguments are included in the request payload.
+        Additional fields can be supplied through **kwargs.
+
+        Returns parsed JSON by default, or HttpResponse when
+        return_http_response=True.
+        """
+        payload: Dict[str, Any] = {}
+
+        fields = {
+            "code": code,
+            "amount": amount,
+            "discount_type": discount_type,
+            "individual_use": individual_use,
+            "product_ids": product_ids,
+            "excluded_product_ids": excluded_product_ids,
+            "usage_limit": usage_limit,
+            "usage_limit_per_user": usage_limit_per_user,
+            "limit_usage_to_x_items": limit_usage_to_x_items,
+            "free_shipping": free_shipping,
+            "product_categories": product_categories,
+            "excluded_product_categories": excluded_product_categories,
+            "exclude_sale_items": exclude_sale_items,
+            "minimum_amount": minimum_amount,
+            "maximum_amount": maximum_amount,
+            "email_restrictions": email_restrictions,
+            "description": description,
+            "date_expires": date_expires,
+        }
+
+        payload.update(
+            {key: value for key, value in fields.items() if value is not None}
+        )
+        payload.update(kwargs)
+
+        logger.debug(
+            "⚙️ Creating coupon with payload keys: %r",
+            list(payload.keys()),
+        )
+
+        try:
+            http_response = self.coupons_api.create_coupon(payload=payload)
+
+            if return_http_response:
+                return http_response
+
+            return http_response.json
+
+        except (UnexpectedStatusCodeError, SchemaValidationError) as e:
+            logger.warning(
+                "⚠️ Coupon creation raised %s: %s",
+                type(e).__name__,
+                e,
+            )
+
+            response_json = getattr(e, "response_json", None)
+            response = getattr(e, "response", None)
+
+            if response_json is None and response is not None:
+                try:
+                    response_json = response.json()
+                except Exception as parse_err:
+                    logger.exception(
+                        "🚫 Failed to parse coupon creation error response: %s",
+                        parse_err,
+                    )
+                    raise
+
+            if return_http_response and response is not None:
+                return response
+
+            if response_json is not None:
+                return response_json
+
+            raise
+
+    # ------------------------------------------------------------------
+    # READ
+    # ------------------------------------------------------------------
+
+    def get_coupon_by_id(
+        self,
+        coupon_id: int,
+        return_http_response: bool = False,
+    ) -> Dict[str, Any] | HttpResponse:
+        """Retrieve a coupon by ID."""
+        logger.debug("🟢 Calling 'Get Coupon' for ID %s.", coupon_id)
+
+        http_response = self.coupons_api.get_coupon(coupon_id)
+
+        if return_http_response:
+            return http_response
+
+        return http_response.json
+
+    def list_coupons_paginated(
+        self,
+        params: Optional[Dict[str, Any]] = None,
+        max_pages: int = 1000,
+    ) -> List[Dict[str, Any]]:
+        """
+        Fetch coupons using the shared pagination utility.
+
+        Additional API query parameters can be supplied through params.
+        """
+        logger.debug("⚙️ Calling 'List All Coupons' via pagination utility")
+
+        params = params.copy() if params else {}
+        params.setdefault("per_page", 100)
+
+        return paginate_all_results(
+            api_client=self.coupons_api.api_client,
+            endpoint=self.coupons_api.ENDPOINT,
+            params=params,
+            max_pages=max_pages,
+        )
+
+    # ------------------------------------------------------------------
+    # UPDATE
+    # ------------------------------------------------------------------
+
+    def update_coupon(
+        self,
+        coupon_id: int,
+        payload: Optional[Dict[str, Any]] = None,
+        return_http_response: bool = False,
+        **kwargs: Any,
+    ) -> Dict[str, Any] | HttpResponse:
+        """
+        Update coupon fields.
+
+        Supports a payload for complex updates and kwargs for simple updates.
+        """
+        final_payload: Dict[str, Any] = {}
+
+        if payload:
+            final_payload.update(payload)
+
+        final_payload.update(kwargs)
+
+        logger.debug(
+            "🟢 Updating coupon %s with payload keys: %r",
+            coupon_id,
+            list(final_payload.keys()),
+        )
+
+        try:
+            http_response = self.coupons_api.update_coupon(
+                coupon_id=coupon_id,
+                payload=final_payload,
+            )
+
+            if return_http_response:
+                return http_response
+
+            return http_response.json
+
+        except (UnexpectedStatusCodeError, SchemaValidationError) as e:
+            logger.warning(
+                "⚠️ Coupon update raised %s: %s",
+                type(e).__name__,
+                e,
+            )
+
+            response_json = getattr(e, "response_json", None)
+            response = getattr(e, "response", None)
+
+            if return_http_response and response is not None:
+                return response
+
+            if response_json is not None:
+                return response_json
+
+            raise
+
+    # ------------------------------------------------------------------
+    # DELETE
+    # ------------------------------------------------------------------
+
+    def delete_coupon(
+        self,
+        coupon_id: int,
+        return_http_response: bool = False,
+    ) -> Dict[str, Any] | HttpResponse:
+        """Hard-delete a coupon by ID using force=true."""
+        logger.debug("🟢 Calling 'Delete Coupon' for ID %s.", coupon_id)
+
+        http_response = self.coupons_api.delete_coupon(
+            coupon_id,
+            force=True,
+        )
+
+        if return_http_response:
+            return http_response
+
+        return http_response.json
+
+    # ------------------------------------------------------------------
+    # API + DATABASE VALIDATION
+    # ------------------------------------------------------------------
+
+    def assert_coupon_exists_and_matches_db(
+        self,
+        coupon_id: int,
+        dao,
+    ) -> None:
+        """
+        Validate that a coupon exists in the API and matches the database.
+
+        The DAO is supplied by the caller, following the same pattern used
+        by the Products and Customers helpers.
+        """
+        logger.debug(
+            "🔎 Validating coupon integrity for ID=%s",
+            coupon_id,
+        )
+
+        # API fetch
+        coupon = self.get_coupon_by_id(coupon_id)
+        coupons = [coupon] if coupon else []
+
+        # DB fetch
+        db_coupon = dao.get_coupon_by_id(coupon_id)
+        db_coupon_meta = dao.get_coupon_metadata(coupon_id)
+
+        # Validation
+        assert_coupon_exists_and_matches_api(
+            coupons,
+            coupon_id,
+            db_coupon,
+            db_coupon_meta,
+        )
+
+        logger.info(
+            "✅ Coupon validated against API and DB (ID=%s)",
+            coupon_id,
+        )
