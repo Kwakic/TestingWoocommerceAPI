@@ -43,6 +43,10 @@ The framework supports:
 
 Playwright is intentionally integrated into the same pytest architecture rather than maintained as a separate UI automation project.
 
+### 💡 What this project demonstrates
+
+The framework demonstrates an enterprise-style approach to QA automation by combining domain-driven test architecture, API and UI automation, database verification, contract testing, CI matrix execution, and automated reporting within a single pytest ecosystem.
+
 ---
 
 ## 🏛️ Architecture at a Glance
@@ -71,7 +75,7 @@ The framework is designed around clear separation of responsibilities and busine
 
 - 🧩 **Metadata-Driven Framework** — Automatically discovers entities, registers pytest plugins, generates CI matrices, and scales as new business domains are added with minimal configuration.
 
-- 📝 **Structured Logging Architecture** — Implements a dual-layer logging system with developer-friendly console output and optional structured JSONL artifacts enriched with test context, correlation IDs, Git metadata, CI metadata, request details, and automatic payload redaction. :contentReference[oaicite:1]{index=1} :contentReference[oaicite:2]{index=2}
+- 📝 **Structured Logging Architecture** — Implements a dual-layer logging system with developer-friendly console output and optional structured JSONL artifacts enriched with test context, correlation IDs, Git metadata, CI metadata, request details, and automatic payload redaction.
 
 - 🔄 **Segmented CI/CD Pipelines** — Independent Smoke, Integration, Regression, Performance, Contract, Security, and Preflight workflows execute in isolation, publish dedicated artifacts, and scale independently.
 
@@ -205,49 +209,9 @@ flowchart TD
     L --> M[Allure Reports]
 ```
 
-The architecture deliberately separates **infrastructure, framework services, domain tests, browser execution, contracts, and reporting** while keeping them connected through a single pytest-based execution model.
+The diagram shows how the main framework components connect through a single pytest-based execution model.
 
 📚 [Architecture Quick Start](./docs/getting-started/README_ARCHITECTURE_QUICK_START.md) · [Architecture Guide](./docs/development/README_ARCHITECTURE.md)
-
----
-
-## 🔄 CI/CD Strategy
-
-The CI/CD architecture is segmented by **quality question**, allowing suites to run and evolve independently.
-
-| Workflow | Primary purpose | Public QA Portal |
-|---|---|:---:|
-| **UI** | Playwright browser validation | ✅ `/ui/` |
-| **Smoke** | Fast critical-path validation | ✅ |
-| **Integration** | Cross-component behavior | ✅ |
-| **Regression** | Broad functional validation | ✅ |
-| **Performance** | Response-time benchmarking | ✅ |
-| **Contract** | REST and GraphQL framework contracts | ❌ |
-| **Security** | Authentication and security validation | ❌ |
-| **Preflight** | Environment and framework readiness | ❌ |
-
-Each workflow executes independently and publishes its own runtime artifacts. Public operational suites feed the QA Portal, while framework-oriented suites remain artifact-only.
-
-GraphQL framework-level contract tests run through the **Contract** workflow under `tests/shared/contracts/graphql/`; a separate GraphQL CI workflow is not required.
-
----
-
-📚 [CI/CD Architecture Guide](./docs/ci/README_CI_ARCHITECTURE.md) · [Allure Reporting Guide](./docs/ci/README_ALLURE.md) · [Environment & CI Guide](./docs/ci/README_ENV_AND_CI.md)
-
-### 🎭 Browser execution policy
-
-The UI workflow uses an explicit browser matrix:
-
-| Execution | Browser coverage | Mode |
-|---|---|---|
-| Pull request | Chromium | Headless |
-| Push to `main` | Chromium + Firefox + WebKit | Headless |
-| Manual workflow | Chromium + Firefox + WebKit | Headless |
-| Local debugging | Developer choice | Headed or headless |
-
-This keeps pull-request feedback fast while providing broader cross-browser coverage after changes reach `main`.
-
-📚 [UI Testing Guide](./docs/development/README_UI_TESTING_GUIDE.md)
 
 ---
 
@@ -286,27 +250,13 @@ git clone https://github.com/Kwakic/TestingWoocommerceAPI.git && cd TestingWooco
 
 ### What `make run` provides
 
-On the first run, the bootstrap process:
-
-- 📁 Creates `.env` from `.env.example` when needed
-- 🐍 Creates the project-local `.venv`
-- 🔍 Verifies that `.venv` uses **Python 3.13+**
-- 📦 Installs `EcommerceAPI[dev]` into `.venv`
-- 🎭 Installs the Playwright browser binaries required by UI tests
-- 🐳 Starts the Docker infrastructure
-- 🌐 Installs WordPress
-- 🛒 Installs WooCommerce
-- 🔑 Generates WooCommerce REST API credentials
-- ⚙️ Configures the local test environment
-- 🌱 Seeds deterministic baseline WooCommerce data used by UI/E2E tests
-- 🧪 Runs the test suite
-
+`make run` bootstraps the local environment, installs the framework and Playwright, starts Docker, provisions WordPress/WooCommerce, generates REST credentials, configures the test environment, seeds deterministic UI data, and runs the test suite.
 
 ### 🔁 Re-running `make run`
 
-The command is designed to be **idempotent**. Subsequent runs reuse valid local state where possible, skip already-installed components, avoid duplicate data creation, preserve the database, and only generate new REST credentials when a fresh WordPress installation requires them.
+The command is designed to be **idempotent**, reusing valid local state where possible and avoiding duplicate setup work.
 
-> You do not need to activate `.venv` manually for `make run`. The Makefile invokes the project-local environment directly. Manual activation is only relevant when running Python, pytest, or other commands directly from your terminal.
+> You do not need to activate `.venv` manually for `make run`. The Makefile invokes the project-local environment directly.
 
 After bootstrap, normal execution is:
 
@@ -371,7 +321,7 @@ This README is the **landing page**. Detailed implementation and operational gui
 | | [UI Testing Guide](./docs/development/README_UI_TESTING_GUIDE.md) | Playwright architecture, fixtures, Page Objects, roles, and browser execution |
 | | [Architecture Guide](./docs/development/README_ARCHITECTURE.md) | Framework internals |
 | | [Validators Guide](./docs/development/README_VALIDATORS.md) | Validation patterns |
-| | [Team Guides](docs/development/team-guides) | Per-entity guides |
+| | [Team Guides](./docs/development/team-guides) | Per-entity testing conventions |
 | | [GraphQL Testing Guide](./docs/development/README_GRAPHQL_TESTING_GUIDE.md) | GraphQL architecture, authentication, contracts, and tests |
 | **Framework** | [Plugins Reference](./docs/framework/README_PLUGINS_REFERENCE.md) | Pytest plugin architecture |
 | | [Environment & Config Guide](./docs/framework/README_ENVIRONMENT_CONFIG_GUIDE.md) | `API_ENV` and configuration resolution |
@@ -425,22 +375,6 @@ tests/shared/preflight/
 The intent is to keep **business-domain validation** separate from **framework- and protocol-level contracts**.
 
 📚 [Full Project Structure](./docs/project-structure/README_project_navigation.md)
-
----
-
-## 📊 Reporting Model
-
-Allure is used as the primary test evidence format.
-
-The reporting model distinguishes between:
-
-- **Operational entity suites** — published to the public QA Portal
-- **Playwright UI reporting** — published under `/ui/`
-- **Framework-level suites** — Contract, Security, and Preflight remain CI artifacts
-
-This separation keeps the public portal focused on operational quality evidence while retaining lower-level framework diagnostics inside CI artifacts.
-
-📚 [Allure Reporting Guide](./docs/ci/README_ALLURE.md)
 
 ---
 
@@ -531,12 +465,6 @@ When invoking Docker Compose manually from Git Bash, apply the same environment 
 | 🚀 CI Architecture | [CI/CD Architecture Guide](./docs/ci/README_CI_ARCHITECTURE.md) |
 | 📊 Allure Guide | [Allure Guide](./docs/ci/README_ALLURE.md) |
 | 🔗 GraphQL Guide | [GraphQL Testing Guide](./docs/development/README_GRAPHQL_TESTING_GUIDE.md) |
-
----
-
-## 🔭 Future Enhancements
-
-- Load testing extensions
 
 ---
 

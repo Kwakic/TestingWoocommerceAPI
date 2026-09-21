@@ -70,7 +70,7 @@ class CartPage:
         expect(self.page.get_by_text(expected_total, exact=True).last).to_be_visible()
 
     def remove_product(self, product_name: str) -> None:
-        """Remove the specified product and wait for its cart row to disappear."""
+        """Remove the specified product from the shopping cart."""
         remove_button_name = f"Remove {product_name}".replace("–", "&#8211;")
 
         remove_button = self.page.get_by_role(
@@ -82,4 +82,4 @@ class CartPage:
 
     def should_be_empty(self) -> None:
         """Verify that the shopping cart is empty."""
-        expect(self.empty_cart_heading).to_be_visible()
+        expect(self.empty_cart_heading).to_be_visible(timeout=10000)
