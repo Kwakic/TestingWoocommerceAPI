@@ -7,9 +7,6 @@ from typing import Any, Dict, List, Optional
 
 from EcommerceAPI.src.core.http_response import HttpResponse
 from EcommerceAPI.src.coupons.api.coupons_api import CouponsApi
-from EcommerceAPI.src.coupons.validators.coupon_validators import (
-    assert_coupon_exists_and_matches_api,
-)
 from EcommerceAPI.src.utils.exceptions import (
     UnexpectedStatusCodeError,
     SchemaValidationError,
@@ -280,44 +277,3 @@ class CouponsHelper:
             return http_response
 
         return http_response.json
-
-    # ------------------------------------------------------------------
-    # API + DATABASE VALIDATION
-    # ------------------------------------------------------------------
-
-    def assert_coupon_exists_and_matches_db(
-        self,
-        coupon_id: int,
-        dao,
-    ) -> None:
-        """
-        Validate that a coupon exists in the API and matches the database.
-
-        The DAO is supplied by the caller, following the same pattern used
-        by the Products and Customers helpers.
-        """
-        logger.debug(
-            "🔎 Validating coupon integrity for ID=%s",
-            coupon_id,
-        )
-
-        # API fetch
-        coupon = self.get_coupon_by_id(coupon_id)
-        coupons = [coupon] if coupon else []
-
-        # DB fetch
-        db_coupon = dao.get_coupon_by_id(coupon_id)
-        db_coupon_meta = dao.get_coupon_metadata(coupon_id)
-
-        # Validation
-        assert_coupon_exists_and_matches_api(
-            coupons,
-            coupon_id,
-            db_coupon,
-            db_coupon_meta,
-        )
-
-        logger.info(
-            "✅ Coupon validated against API and DB (ID=%s)",
-            coupon_id,
-        )

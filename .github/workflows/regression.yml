@@ -18,7 +18,7 @@ name: Regression Tests 🔬
 # Each entity runs in isolated matrix jobs:
 # - customers
 # - orders
-# - catalog
+# - products
 # - coupons
 #
 # This preserves:
@@ -159,7 +159,7 @@ jobs:
     # Example:
     # customers failure must NOT cancel:
     # - orders
-    # - catalog
+    # - products
     # - coupons
     #
     # This preserves full diagnostic visibility.
@@ -194,7 +194,7 @@ jobs:
       # Examples:
       # - customers
       # - orders
-      # - catalog
+      # - products
       # - coupons
       #
       # Passed to reusable-test-runner.yml

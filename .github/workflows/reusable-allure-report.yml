@@ -149,7 +149,7 @@ jobs:
       # Example:
       # - customers -> report generated
       # - orders    -> skipped
-      # - catalog  -> skipped
+      # - products  -> skipped
       # - coupons   -> skipped
       #
       # Missing Allure results are NOT considered

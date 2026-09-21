@@ -91,7 +91,7 @@ on:
       #
       # entity
       #   Executes once for each discovered framework
-      #   entity (customers, orders, catalog...).
+      #   entity (customers, orders, products...).
       #
       # shared
       #   Executes once for the entire framework.
@@ -310,7 +310,7 @@ jobs:
       #
       #   customers -> tests/customers
       #   orders    -> tests/orders
-      #   catalog  -> tests/catalog
+      #   products  -> tests/products
       #   coupons   -> tests/coupons
       #
       # shared
@@ -596,7 +596,7 @@ jobs:
       #
       # API entity suites:
       #   customers-smoke-allure-results
-      #   catalog-integration-allure-results
+      #   products-integration-allure-results
       #
       # UI browser matrix:
       #   ui-chromium-allure-results

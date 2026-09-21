@@ -2,15 +2,15 @@ import pytest
 import logging
 
 from jsonschema import validate
-from json import loads
 
 from tests.shared.contracts.rest.error_schema import error_schema
 
 from EcommerceAPI.src.customers.validators.customer_validators import (
     assert_customer_not_found_error,
-    assert_customer_retrieved_successfully,
+    assert_valid_customer_response,
     assert_customer_identity,
     assert_single_customer_by_email,
+    assert_customer_exists_and_matches_api,
 )
 
 logger = logging.getLogger(__name__)
@@ -70,6 +70,8 @@ def test_get_customer_by_email(customer_helper, customers_dao, create_valid_cust
     # -------------------------------------------
     # 🚦 Step 3 — Transport validation (FAIL FAST)
     # -------------------------------------------
+    # When the test has an HttpResponse because it explicitly needs to verify transport behavior, we want to fail
+    # immediately on an unexpected HTTP status before trying to validate the response body.
     assert (
         response.status_code == 200
     ), f"Expected 200, got {response.status_code}. Response: {response.text}"
@@ -98,11 +100,14 @@ def test_get_customer_by_email(customer_helper, customers_dao, create_valid_cust
     # -------------------------------------------
     # 🗄 Step 7 — API vs DB consistency validation
     # -------------------------------------------
-    # Helper orchestrates:
-    #   - API fetch
-    #   - DB lookup
-    #   - API ↔ DB validation
-    customer_helper.assert_customer_exists_and_matches_db(email, customers_dao)
+    api_customers = customer_helper.list_customers_paginated(email=email)
+    db_customer = customers_dao.get_customer_by_email(email=email)
+
+    assert_customer_exists_and_matches_api(
+        api_customers,
+        email,
+        db_customer,
+    )
 
     logger.info("🎯 Full validation complete for customers ID: %r", customer_id)
 
@@ -152,12 +157,22 @@ def test_get_customer_by_id(customer_helper, customers_dao, create_valid_custome
     )
 
     # -------------------------------------------
-    # 🚦 Step 3 — Validate status code + response structure
+    # 🚦 Step 3 — Transport validation (FAIL FAST)
     # -------------------------------------------
-    customer_model = assert_customer_retrieved_successfully(response)
+    # The test owns the HTTP status assertion because GET /customers/{id}
+    # is the operation under test.
+    assert response.status_code == 200, (
+        f"Expected 200, got {response.status_code}. " f"Response: {response.text}"
+    )
 
     # -------------------------------------------
-    # 🔍 Step 4 — Business validation
+    # 📦 Step 4 — Response body validation
+    # -------------------------------------------
+    # Validators validate response data; they do not own HTTP status assertions.
+    customer_model = assert_valid_customer_response(response.json)
+
+    # -------------------------------------------
+    # 🔍 Step 5 — Business validation
     # -------------------------------------------
     # Ensure we retrieved the correct customers
     assert_customer_identity(customer_model, customer_id, email)
@@ -166,13 +181,16 @@ def test_get_customer_by_id(customer_helper, customers_dao, create_valid_custome
         "✅ Fetched customers matches created one: ID=%s, Email=%s", customer_id, email
     )
     # -------------------------------------------
-    # 🗄 Step 5 — API vs DB consistency validation
+    # 🗄 Step 6 — API vs DB consistency validation
     # -------------------------------------------
-    # Helper orchestrates:
-    #   - GET /customers list
-    #   - DB lookup via DAO
-    #   - API vs DB validation
-    customer_helper.assert_customer_exists_and_matches_db(email, customers_dao)
+    api_customers = customer_helper.list_customers_paginated(email=email)
+    db_customer = customers_dao.get_customer_by_email(email=email)
+
+    assert_customer_exists_and_matches_api(
+        api_customers,
+        email,
+        db_customer,
+    )
 
     logger.info("🎯 Full validation complete for customers ID: %r", customer_id)
 
@@ -181,7 +199,7 @@ def test_get_customer_by_id(customer_helper, customers_dao, create_valid_custome
 @pytest.mark.negative
 @pytest.mark.contract
 @pytest.mark.regression  # not fast / edge → regression
-def test_get_customer_not_found(customer_helper, customers_dao, create_valid_customer):
+def test_get_customer_not_found(customer_helper):
     """
     Negative test for retrieving a non-existing customers.
 
@@ -198,14 +216,25 @@ def test_get_customer_not_found(customer_helper, customers_dao, create_valid_cus
 
     logger.info(f"🚫 Retrieving non-existent customers ID: {non_existing_id}")
 
-    # Without return_http_response=True because the validator expects the JSON error payload. Just keep it consistent
-    # across negative tests.
-    response = customer_helper.get_customer_by_id(customer_id=non_existing_id)
+    # Request the HttpResponse because the expected HTTP status is part
+    # of the operation being tested.
+    response = customer_helper.get_customer_by_id(
+        customer_id=non_existing_id,
+        return_http_response=True,
+    )
 
-    # Normalize response to dictionary
-    response = loads(response) if isinstance(response, str) else response
-    # Validate API error response
-    assert_customer_not_found_error(response)
+    # -------------------------------------------
+    # 🚦 Step 2 — Transport validation (FAIL FAST)
+    # -------------------------------------------
+    assert response.status_code == 404, (
+        f"Expected 404, got {response.status_code}. " f"Response: {response.text}"
+    )
 
-    validate(instance=response, schema=error_schema)
+    # -------------------------------------------
+    # 📦 Step 3 — Error response validation
+    # -------------------------------------------
+    error = response.json
+    assert_customer_not_found_error(error)
+
+    validate(instance=error, schema=error_schema)
     logger.info("✅ Error response schema validated for non-existent customers fetch")

@@ -60,15 +60,20 @@ def test_customer_deletion_removes_resource(
     # Step 2 — Delete customers
     logger.info(f"🧹 Deleting customers ID={customer_id}")
 
-    # By setting flag "return_http_response=True" it returns HttpResponse necessary to validate status_code, headers...
+    # Request HttpResponse because DELETE is the operation under test
+    # and the test must validate its HTTP status.
     delete_response = customer_helper.delete_customer(
-        customer_id, return_http_response=True
+        customer_id,
+        return_http_response=True,
     )
 
-    # Validate HTTP response
-    assert delete_response.status_code == 200
+    # Transport validation — owned by the test.
+    assert delete_response.status_code == 200, (
+        f"Expected 200, got {delete_response.status_code}. "
+        f"Response: {delete_response.text}"
+    )
 
-    # # Extract response body
+    # Response body validation.
     delete_data = delete_response.json
 
     assert (
@@ -81,12 +86,19 @@ def test_customer_deletion_removes_resource(
 
     # Step 3 — Verify API returns 404 after deletion
     logger.info(f"🔎 Verifying GET after deletion returns 404 for ID={customer_id}")
-    response = customer_helper.get_customer_by_id(customer_id=customer_id)
-    # Validating deleted customers's error message"
 
-    assert_customer_not_found_error(
-        response
-    )  # It validates: data: status 404, code, error message
+    response = customer_helper.get_customer_by_id(
+        customer_id=customer_id,
+        return_http_response=True,
+    )
+
+    # Transport validation — the test owns the GET operation.
+    assert response.status_code == 404, (
+        f"Expected 404, got {response.status_code}. " f"Response: {response.text}"
+    )
+
+    # Error body validation.
+    assert_customer_not_found_error(response.json)
 
     # Then reuse across deletion-related tests.
     logger.info(
@@ -150,15 +162,19 @@ def test_deleted_customer_not_in_created_after_filter(
 
     # Step 3 — Delete customers
     logger.info(f"🧹 Deleting customers ID={customer_id}")
-    # By setting flag "return_http_response=True" it returns HttpResponse necessary to validate status_code, headers...
+    # Request HttpResponse because DELETE is the operation under test.
     delete_response = customer_helper.delete_customer(
-        customer_id, return_http_response=True
+        customer_id,
+        return_http_response=True,
     )
 
-    # Transport validation (FAIL FAST) Status validated BEFORE JSON
-    assert delete_response.status_code == 200
+    # Transport validation — owned by the test.
+    assert delete_response.status_code == 200, (
+        f"Expected 200, got {delete_response.status_code}. "
+        f"Response: {delete_response.text}"
+    )
 
-    # Extract JSON to validate body
+    # Response body validation.
     delete_data = delete_response.json
 
     assert (

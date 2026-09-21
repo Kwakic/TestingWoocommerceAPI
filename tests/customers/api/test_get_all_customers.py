@@ -24,7 +24,6 @@ pytestmark = [pytest.mark.integration]
 @pytest.mark.smoke
 def test_get_all_customers_list_not_empty_and_valid_schema(
     customer_helper,
-    customers_dao,
     create_valid_customer,
 ):
     """
@@ -76,9 +75,7 @@ def test_get_all_customers_list_not_empty_and_valid_schema(
 @pytest.mark.tcid("TCID-013")
 @pytest.mark.regression
 @pytest.mark.contract
-def test_get_all_customers_pagination_boundary(
-    customer_helper, customers_dao, create_valid_customer
-):
+def test_get_all_customers_pagination_boundary(customer_helper, create_valid_customer):
     """
     Verify pagination behavior for GET /customers using an isolated test dataset (no dependency on global DB state)..
 
@@ -175,7 +172,7 @@ def test_get_all_customers_pagination_boundary(
 
 @pytest.mark.tcid("TCID-014")
 @pytest.mark.regression
-def test_get_all_customers_empty_list_with_mock(customer_helper, customers_dao):
+def test_get_all_customers_empty_list_with_mock(customer_helper):
     """
     Verify that GET /customers handles an empty dataset.
 
@@ -208,7 +205,7 @@ def test_get_all_customers_empty_list_with_mock(customer_helper, customers_dao):
 @pytest.mark.negative
 @pytest.mark.regression
 def test_list_customers_created_in_the_future_returns_empty(
-    customer_helper, customers_dao
+    customer_helper,
 ):
     """
     Verify that no customers are returned with a future creation timestamp.

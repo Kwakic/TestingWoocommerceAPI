@@ -1,5 +1,5 @@
 """
-UI tests for removing catalog from the WooCommerce cart.
+UI tests for removing products from the WooCommerce cart.
 
 Role selection is handled through the indirect UI role fixture so the same
 test structure can later cover multiple supported storefront roles.

@@ -1,5 +1,5 @@
 """
-UI tests for adding catalog to the WooCommerce cart.
+UI tests for adding products to the WooCommerce cart.
 
 Role selection is handled through the indirect UI role fixture so the same
 test structure can later cover multiple supported storefront roles.

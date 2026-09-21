@@ -11,6 +11,13 @@ Goals:
 - ✅ Clear separation of concerns
 - ✅ Easy debugging & observability
 
+### Related guides
+
+- **Test development:** `README_TEST_DEVELOPMENT_GUIDE.md`
+- **Environment configuration:** `docs/framework/README_ENVIRONMENT_CONFIG_GUIDE.md`
+- **Preflight:** `README_PREFLIGHT.md`
+- **GraphQL testing:** `docs/development/README_GRAPHQL_TESTING_GUIDE.md`
+
 ---
 
 # 🧱 Architecture
@@ -297,7 +304,7 @@ pytest
 Test File (e.g. test_create_customer.py)
 │
 ▼
-Fixture (e.g. create_valid_customer / raw_customer_api)
+Fixture (e.g. create_valid_customer / customer_api_raw)
 │
 ▼
 CustomersHelper (business-friendly layer)
@@ -400,11 +407,11 @@ directly through the shared `graphql_client` fixture.
 # 🚨 Environment Validation (Framework-Level)
 
 The API client is used by a session-scoped pytest fixture that performs a
-one-time environment validation before tests run.
+one-time live API/environment validation before environment-dependent tests run.
 
-This is not part of the request lifecycle itself. It is a framework-level
-safety mechanism that prevents tests from running against an invalid or
-incomplete environment.
+This is separate from the `preflight` test suite and is not part of the
+request lifecycle itself. It is a framework-level safety mechanism that
+prevents tests from running against an invalid or incomplete environment.
 
 ---
 
@@ -413,10 +420,15 @@ incomplete environment.
 After a protocol-specific response object is returned, validation happens
 outside the transport layer.
 
+For REST, the test owns the HTTP status assertion for the operation under test.
+Validators validate the supplied response body/data.
+
 ## REST
 
 ```text
 HttpResponse
+     ↓
+Test → HTTP status assertion
      ↓
 Validators
      ↓
@@ -471,14 +483,18 @@ tests/shared/
 
 ## Preflight tests
 
-Verify the test environment and framework configuration before executing the
+Verify the test harness and framework configuration before executing the
 full test suite.
+
+Preflight is intentionally lightweight and does **not** call live APIs or
+require WooCommerce, Docker, OAuth credentials, or a database.
 
 Examples:
 
-- API connectivity
 - logging configuration
-- environment validation
+- correlation ID and nodeid propagation
+- structured logging
+- pytest configuration, markers, and CLI flags
 
 ## Security tests
 
@@ -630,7 +646,7 @@ resp, elapsed = APIClient.request_raw(...)
 ## 🔹 Debug unexpected API error
 
 ```python
-resp, _ = raw_customer_api.request_raw(
+resp, _ = customer_api_raw.request_raw(
     method="post",
     endpoint="customers",
     payload={"email": "bad"}
@@ -645,7 +661,7 @@ assert resp.status_code == 400
 ## 🔹 Inspect request details
 
 ```python
-resp, _ = raw_customer_api.request_raw(
+resp, _ = customer_api_raw.request_raw(
     method="post",
     endpoint="customers",
     payload={"email": "bad"}
@@ -659,7 +675,7 @@ print("REQUEST BODY:", resp.request.body)
 ## 🔹 Handle non-JSON response
 
 ```python
-resp, _ = raw_customer_api.request_raw(
+resp, _ = customer_api_raw.request_raw(
     method="get",
     endpoint="customers?invalid_param=%%%"
 )
@@ -675,8 +691,8 @@ except Exception:
 ## 🔹 Compare raw vs wrapped
 
 ```python
-raw_resp, _ = raw_customer_api.request_raw("get", "customers")
-wrapped_resp = raw_customer_api.get("customers")
+raw_resp, _ = customer_api_raw.request_raw("get", "customers")
+wrapped_resp = customer_api_raw.get("customers")
 
 print("RAW json():", raw_resp.json())
 print("WRAPPED json:", wrapped_resp.json)
@@ -759,7 +775,8 @@ HttpClient ──────────────┤
                          └── GraphQLClient ─ GraphQLResponse
 
 Helper → business/domain operations
-Test   → validation + assertions
+Validator → response/data validation
+Test   → HTTP status + business assertions
 ```
 
 The important rule is:

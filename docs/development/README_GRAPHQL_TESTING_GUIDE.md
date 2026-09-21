@@ -805,13 +805,13 @@ Temporary diagnostic tests used during GraphQL authentication investigation have
 Run an individual Product GraphQL test:
 
 ```bash
-pytest tests/catalog/graphql/test_create_product.py -v
+pytest tests/products/graphql/test_create_product.py -v
 ```
 
 Run the complete Product GraphQL suite:
 
 ```bash
-pytest tests/catalog/graphql/ -v
+pytest tests/products/graphql/ -v
 ```
 
 Run all GraphQL tests:

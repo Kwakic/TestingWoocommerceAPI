@@ -6,6 +6,7 @@ from EcommerceAPI.src.customers.validators.customer_validators import (
     assert_valid_customer_response,
     assert_single_customer_by_email,
     assert_customer_identity,
+    assert_customer_exists_and_matches_api,
 )
 from EcommerceAPI.src.utils.date_timestamp_utils import get_customers_in_window
 
@@ -95,7 +96,14 @@ def test_list_customers_created_within_time_range_with_db_check(
     logger.info("📦 All customers in filtered list passed schema validation")
 
     # Step 7 — Verify API data matches database
-    customer_helper.assert_customer_exists_and_matches_db(customer_email, customers_dao)
+    api_customers = customer_helper.list_customers_paginated(email=customer_email)
+    db_customer = customers_dao.get_customer_by_email(email=customer_email)
+
+    assert_customer_exists_and_matches_api(
+        api_customers,
+        customer_email,
+        db_customer,
+    )
 
     logger.info("🎯 Full validation complete for customers ID: %r", customer_id)
 
@@ -104,7 +112,7 @@ def test_list_customers_created_within_time_range_with_db_check(
 @pytest.mark.negative
 @pytest.mark.regression
 def test_customer_should_not_returned_when_filtered_outside_creation_time(
-    customer_helper, customers_dao, create_valid_customer
+    customer_helper, create_valid_customer
 ):
     """
     Verify that a customers is NOT returned when filtering outside

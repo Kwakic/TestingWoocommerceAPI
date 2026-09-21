@@ -1,5 +1,9 @@
 import pytest
 
+from EcommerceAPI.src.customers.validators.customer_validators import (
+    assert_customer_exists_and_matches_api,
+)
+
 pytestmark = [pytest.mark.integration]
 
 
@@ -17,7 +21,14 @@ def test_customer_full_lifecycle(
     email = customer["email"]
 
     # VERIFY CREATED (API + DB)
-    customer_helper.assert_customer_exists_and_matches_db(email, customers_dao)
+    api_customers = customer_helper.list_customers_paginated(email=email)
+    db_customer = customers_dao.get_customer_by_email(email=email)
+
+    assert_customer_exists_and_matches_api(
+        api_customers,
+        email,
+        db_customer,
+    )
 
     # -------------------------------------------
     # 🔁 STEP 2 — UPDATE
@@ -34,7 +45,14 @@ def test_customer_full_lifecycle(
     ), f"Update failed: {update_response.status_code} → {update_response.text}"
 
     # VERIFY UPDATED (API + DB)
-    customer_helper.assert_customer_exists_and_matches_db(updated_email, customers_dao)
+    api_customers = customer_helper.list_customers_paginated(email=updated_email)
+    db_customer = customers_dao.get_customer_by_email(email=updated_email)
+
+    assert_customer_exists_and_matches_api(
+        api_customers,
+        updated_email,
+        db_customer,
+    )
 
     # -------------------------------------------
     # 🧹 STEP 3 — DELETE

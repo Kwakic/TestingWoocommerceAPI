@@ -11,6 +11,7 @@ Responsibilities
 • Validate dataset responses (list endpoints)
 • Validate business rules
 • Validate API + database consistency
+• Validate response/error data contracts
 
 Important design rule:
 Validators ONLY validate data.
@@ -42,7 +43,6 @@ assert_single_customer_by_email → API validation (DATASET)
 assert_customer_creation_failed → error validation (SCENARIOS)
 assert_customer_not_found_error → error validation (SCENARIOS)
 assert_customer_error_response → error validation (BASE)
-assert_customer_retrieved_successfully → Transport validation (TRANSPORT)
 assert_customer_exists_and_matches_api → API + DB validation (INTEGRATION)
 assert_customer_identity() → Identity validation (BUSINESS)
 
@@ -51,7 +51,6 @@ assert_customer_identity() → Identity validation (BUSINESS)
 from typing import List, Dict, Any
 import logging
 
-from EcommerceAPI.src.core.http_response import HttpResponse
 from EcommerceAPI.src.customers.validators.customer_db_validators import (
     assert_customer_matches_db,
 )
@@ -229,30 +228,6 @@ def assert_customer_not_found_error(response):
     # assert response["message"].strip(), "Error message must not be empty"
 
 
-def assert_customer_retrieved_successfully(response: HttpResponse) -> CustomerModel:
-    """
-    Validate successful GET /customers/{id} response.
-
-    Steps:
-        1. Validate HTTP status code
-        2. Validate response structure using Pydantic
-
-    Returns:
-        CustomerModel
-    """
-
-    assert (
-        response.status_code == 200
-    ), f"GET /customers fetching failed. Expected 200, got {response.status_code}. Response: {response.text}"
-
-    data = response.json
-
-    # 🔒 Structure validation via Pydantic
-    customer_model = assert_valid_customer_response(data)
-
-    return customer_model
-
-
 def assert_customer_exists_and_matches_api(
     customers: List[Dict[str, Any]],
     email: str,
@@ -396,7 +371,8 @@ def assert_customer_error_response(
             Parsed JSON error response returned by the API.
 
         expected_status:
-            Optional expected HTTP status code (e.g. 400, 404).
+            Optional embedded error status in the response body. The actual
+            HTTP status code must be asserted by the test.
 
     Raises:
         AssertionError if the error structure is invalid.
@@ -419,7 +395,7 @@ def assert_customer_error_response(
     assert response["message"], "❌ Error 'message' must not be empty"
 
     # -------------------------------------------------------
-    # Check HTTP status
+    # Check the embedded status in the error payload
     # -------------------------------------------------------
     assert (
         "status" in response["data"]

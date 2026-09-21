@@ -1,6 +1,8 @@
 
 # 🧪 Customers Team Guide
 
+This is the domain guide for working with Customers inside the EcommerceAPI test framework.
+
 This guide documents the customer-specific conventions, fixtures, and testing patterns used by the Customers domain.
 
 It complements the framework documentation and intentionally avoids repeating framework-wide concepts such as validators, markers, fixtures, or CI strategy.
@@ -23,7 +25,7 @@ For all customer tests prefer the domain-scoped fixtures provided by the `custom
 Example (pytest style):
 ```python
 def test_update_customer(customer_helper, customers_dao, create_valid_customer):
-    customer = create_valid_customer  # fixture returns a validated customers object
+    customer = create_valid_customer()  # validated customer dict
     updated = customer_helper.update_customer(customer["id"], {"name": "New"})
     assert updated["name"] == "New"
     assert customers_dao.exists(customer["id"])
@@ -153,9 +155,6 @@ When in doubt, default to `customer_helper`.
 - If you think you need low-level access, ask first — the framework likely already supports your use case.
 
 ---
-
-Need examples or help? See the pytest docs: [pytest documentation](https://docs.pytest.org/en/stable/) or ask the
-framework maintainers on the team channel. 😊
 
 ---
 

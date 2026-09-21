@@ -237,6 +237,9 @@ pytest_plugins = [
 
 Order matters: logging must load first so all log records are created with the custom factory and redaction rules.
 
+When adding a new entity plugin, add its module to this `pytest_plugins` list so
+pytest loads the entity fixtures and helpers.
+
 ---
 
 ### 🧩 API Plugin Layer — REST and GraphQL
@@ -303,7 +306,7 @@ tests/shared/contracts/graphql/
 This layer provides **entity-scoped pytest fixtures** and is responsible for:
 
 - Creating domain-specific test data (e.g. `create_valid_customer`)
-- Providing helpers (`customers_helper`, `products_helper`)
+- Providing entity helpers (for example, `customer_helper`, `products_helper`)
 - Abstracting API interactions from test code
 
 It acts as the bridge between:
@@ -355,7 +358,7 @@ pytest tests/customers --alluredir=reports/customers/allure-results
 Run Product GraphQL tests directly when the environment is already prepared:
 
 ```bash
-pytest tests/catalog/graphql/ -v
+pytest tests/products/graphql/ -v
 ```
 
 Run shared GraphQL contract tests:
@@ -377,18 +380,6 @@ This assumes:
 Otherwise results will be unreliable.
 
 ---
-
-# 🧠 Why this matters
-
-Right now your doc says:
-
-> “Here’s how to run tests”
-
-But in reality:
-
-> “Here’s how to bypass the system safely (if you know what you're doing)”
-
-That’s a **big difference in architecture maturity**.
 
 ---
 
@@ -712,17 +703,26 @@ reports/
 
 ---
 
-## Adding a new microservice (team)
+## Adding a new entity
 
-1. Create `tests/<new_service>/` and follow the established layout:
-   - `conftest.py`, `configs/`, `constants/`, `helpers/`, `api/`, `schemas/`, etc.
-2. No change needed to shared plugins—discovery and CI will pick up the folder automatically.
-3. For local Docker/matrix runs add the profile name if you want to run via `docker-compose` (optional).
+When adding a new API entity, keep the entity structure consistent with the
+existing domains.
 
-If the new microservice exposes GraphQL, follow the same domain structure:
+1. Create `tests/<entity>/` and follow the established layout used by the
+   existing entity suites.
+2. Add the entity API plugin under `EcommerceAPI/plugins/api/<entity>.py`.
+3. Register the new entity plugin in the top-level `conftest.py`
+   `pytest_plugins` list.
+4. Add the entity to the framework's entity metadata/discovery configuration
+   where required so matrix-driven CI can discover it.
+5. If the entity needs a local Docker/matrix profile, add the corresponding
+   profile configuration.
+6. Add entity-specific tests under `tests/<entity>/`.
+
+If the entity exposes GraphQL, follow the same domain structure:
 
 ```text
-tests/<new_service>/
+tests/<entity>/
 ├── api/                         ← REST behavior
 ├── graphql/                     ← GraphQL behavior
 └── ...
@@ -774,14 +774,13 @@ tests/shared/contracts/graphql/
   ```
 
 ---
-## 🔐 Golden Rules (NOT violate these)
+## 🔐 Golden Rules
 
-1. Plugins must not import from tests/ at runtime
-(TYPE_CHECKING hack is OK — you already do this correctly)
-2. Fixtures own lifecycle & path (happy vs raw)
-3. Helpers do NOT manage fixtures
-4. Tests do NOT import helpers
-5. Rollback must be trivial (git revert one file)
+1. Plugins must not import from `tests/` at runtime.
+2. Fixtures own test-data lifecycle and provide the appropriate test interface.
+3. Helpers orchestrate API/domain workflows; they do not manage fixture lifecycle.
+4. Tests use the public fixture/Helper interfaces rather than internal framework layers.
+5. Keep entity-specific changes isolated and consistent with the existing architecture.
 
 ---
 ## 🔗 REST and GraphQL — Architecture Summary
@@ -826,8 +825,7 @@ GraphQL mutations use WordPress Application Passwords through Basic Auth.
 
 ## Final note
 
-The framework is designed for multi-team scale: independent microservice test folders, shared plugins for consistent behavior, and CI matrix support for fast, isolated feedback. Keeping Allure generation optional and CI-installed (rather than baked into images) yields smaller images and more reproducible CI runs.
-
-If you want, I can:
-- Add a small `scripts/` helper (e.g., `scripts/generate_allure.sh`) to standardize local HTML generation.
-- Add a short `workflow_dispatch` input to GitHub Actions for `SERVICE` to make single-service runs easier from the Actions UI.
+The framework is designed for multi-team scale: independent entity test folders,
+shared plugins for consistent behavior, and CI matrix support for fast, isolated
+feedback. Keeping Allure generation optional and CI-installed (rather than baked
+into images) yields smaller images and more reproducible CI runs.

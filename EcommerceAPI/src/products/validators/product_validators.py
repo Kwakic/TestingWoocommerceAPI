@@ -152,23 +152,20 @@ def assert_single_product_by_id(
 
 def assert_product_creation_failed(response: dict):
     """
-    Validate products creation failure (business + contract level).
+    Validate product creation failure (business + contract level).
 
     IMPORTANT:
-    - This function expects a parsed JSON dict (NOT HttpResponse)
-    - Status code must be validated BEFORE calling this function
+    - This function expects a parsed JSON dict (NOT HttpResponse).
+    - The HTTP status code must be validated by the test before calling
+      this validator.
 
     Validates:
-        - error code
-        - error message
-        - response data structure
+        - standard WooCommerce error response structure
+        - embedded error status
 
-    Expected response structure:
-    {
-        "code": "...",
-        "message": "...",
-        "data": {"status": 400}
-    }
+    This validator intentionally does not hardcode a specific error code
+    or message because different product creation failures can return
+    different WooCommerce errors.
     """
 
     # Base error contract validation
@@ -178,13 +175,6 @@ def assert_product_creation_failed(response: dict):
         response["data"]["status"] == 400
     ), f"Expected status 400, got {response['data']['status']}"
 
-    assert response["code"] == "registration-error-email-exists", (
-        f"Invalid Error code. Current: '{response['code']}', "
-        f"Expected: 'registration-error-email-exists'"
-    )
-
-    assert "An account is already registered" in str(response["message"])
-
 
 def assert_product_not_found_error(response):
     """
@@ -192,13 +182,14 @@ def assert_product_not_found_error(response):
     """
 
     VALID_ERROR_CODES = {
-        "wc_user_invalid_id",
+        "woocommerce_rest_product_invalid_id",
         "woocommerce_rest_invalid_id",
     }
 
     VALID_MESSAGES = {
-        "Invalid user ID.",
+        "Invalid ID.",
         "Invalid resource ID.",
+        "Invalid user ID.",
     }
 
     assert_product_error_response(response)

@@ -8,6 +8,7 @@ from faker import (
 from EcommerceAPI.src.utils.bulk_ops import bulk_create_and_validate_resources
 from EcommerceAPI.src.customers.validators.customer_validators import (
     assert_customer_creation_failed,
+    assert_customer_exists_and_matches_api,
 )
 from jsonschema import validate
 from tests.shared.contracts.rest.error_schema import error_schema
@@ -158,9 +159,17 @@ def test_bulk_create_customers(
             3. Compare both records
         """
 
-        # API Fetch + API VALIDATION + DB FETCH + DB VALIDATION
-        customer_helper.assert_customer_exists_and_matches_db(
-            email=email, dao=customers_dao
+        # API fetch
+        api_customers = customer_helper.list_customers_paginated(email=email)
+
+        # DB fetch
+        db_customer = customers_dao.get_customer_by_email(email=email)
+
+        # API + DB validation
+        assert_customer_exists_and_matches_api(
+            api_customers,
+            email,
+            db_customer,
         )
 
     # -------------------------------------------------------
@@ -228,9 +237,17 @@ def test_bulk_create_customers_edge_cases(
         Args:
             email (str): Unique identifier used to search for the customers
         """
-        # API Fetch + API VALIDATION + DB FETCH + DB VALIDATION
-        customer_helper.assert_customer_exists_and_matches_db(
-            email=email, dao=customers_dao
+        # API fetch
+        api_customers = customer_helper.list_customers_paginated(email=email)
+
+        # DB fetch
+        db_customer = customers_dao.get_customer_by_email(email=email)
+
+        # API + DB validation
+        assert_customer_exists_and_matches_api(
+            api_customers,
+            email,
+            db_customer,
         )
 
     # -------------------------------------------------------
@@ -280,8 +297,17 @@ def test_create_single_customer_with_email_and_password_only(
     email = customer["email"]
 
     # Step 2 — Verify API response matches database record
-    customer_helper.assert_customer_exists_and_matches_db(
-        email=email, dao=customers_dao
+    # API fetch
+    api_customers = customer_helper.list_customers_paginated(email=email)
+
+    # DB fetch
+    db_customer = customers_dao.get_customer_by_email(email=email)
+
+    # API + DB validation
+    assert_customer_exists_and_matches_api(
+        api_customers,
+        email,
+        db_customer,
     )
 
     logger.info("🎯 Full validation complete for customers ID: %r", customer_id)
@@ -375,8 +401,17 @@ def test_create_customer_with_varied_addresses(
     email = customer["email"]
 
     # Verify API response matches database record
-    customer_helper.assert_customer_exists_and_matches_db(
-        email=email, dao=customers_dao
+    # API fetch
+    api_customers = customer_helper.list_customers_paginated(email=email)
+
+    # DB fetch
+    db_customer = customers_dao.get_customer_by_email(email=email)
+
+    # API + DB validation
+    assert_customer_exists_and_matches_api(
+        api_customers,
+        email,
+        db_customer,
     )
 
     logger.info("🎯 Full validation complete for customers ID: %r", customer_id)
@@ -388,7 +423,7 @@ def test_create_customer_with_varied_addresses(
 @pytest.mark.regression  # not quick → regression
 @pytest.mark.parametrize("payload, expected_status_code", INVALID_EMAIL_PAYLOADS)
 def test_create_customer_email_field_validation(
-    customer_helper, customers_dao, customer_api_raw, payload, expected_status_code
+    customer_api_raw, payload, expected_status_code
 ):
     """
     Negative test for invalid email values during customers creation.
@@ -508,9 +543,17 @@ def test_create_customer_fail_for_existing_email(
 
     response = http_response.json
 
-    # API Fetch + API VALIDATION + DB FETCH + DB VALIDATION
-    customer_helper.assert_customer_exists_and_matches_db(
-        email=email, dao=customers_dao
+    # API fetch
+    api_customers = customer_helper.list_customers_paginated(email=email)
+
+    # DB fetch
+    db_customer = customers_dao.get_customer_by_email(email=email)
+
+    # API + DB validation
+    assert_customer_exists_and_matches_api(
+        api_customers,
+        email,
+        db_customer,
     )
 
     # --------------------------------------------

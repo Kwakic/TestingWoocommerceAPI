@@ -214,16 +214,16 @@ runs:
         exit 1
 
     # --------------------------------------------------
-    # 4. Seed deterministic baseline WooCommerce catalog
+    # 4. Seed deterministic baseline WooCommerce products
     #
-    # Creates the catalog required by UI/E2E tests and
+    # Creates the products required by UI/E2E tests and
     # ensures their featured images are available.
     #
     # The seed is idempotent:
-    # existing catalog are reused and missing images
+    # existing products are reused and missing images
     # are restored.
     # --------------------------------------------------
-    - name: Seed WooCommerce test catalog
+    - name: Seed WooCommerce test products
       shell: bash
       run: |
         bash scripts/seed_test_products.sh

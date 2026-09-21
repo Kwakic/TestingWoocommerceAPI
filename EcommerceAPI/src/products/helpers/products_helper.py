@@ -54,9 +54,6 @@ from EcommerceAPI.src.utils.pagination_utils import paginate_all_results
 from EcommerceAPI.src.utils.date_timestamp_utils import safe_parse_utc_datetime
 from EcommerceAPI.src.core.http_response import HttpResponse
 from EcommerceAPI.src.products.api.products_api import ProductsApi
-from EcommerceAPI.src.products.validators.product_validators import (
-    assert_product_exists_and_matches_api,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -469,39 +466,3 @@ class ProductsHelper(object):
         discount_amount = regular_price * (discount_percentage / 100.0)
         sale_price_value = regular_price - discount_amount
         return str(round(sale_price_value, 2)), discount_percentage
-
-    # -------- VALIDATION HELPERS --------
-
-    def assert_product_exists_and_matches_db(self, product_id: int, dao) -> None:
-        """
-        High-level helper that validates that a product exists
-        in the API and matches the database record.
-
-        Responsibilities:
-            - Fetch product from API
-            - Fetch product record from DB
-            - Call validation layer
-
-        This keeps tests clean and avoids repeated boilerplate.
-
-        Args:
-            product_id (int): Product ID
-            dao: Product DAO instance.
-        """
-        logger.debug("🔎 Validating product integrity for ID=%s", product_id)
-
-        # --------- API fetch (wrap in list to match validator signature) ---------
-        product = self.get_product_by_id(product_id)
-        products = [product] if product else []
-
-        # --------- DB fetch ---------
-        db_product = dao.get_product_by_id(product_id)
-
-        # --------- Assertion layer ---------
-        assert_product_exists_and_matches_api(
-            products,
-            product_id,
-            db_product,
-        )
-
-        logger.info("✅ Product validated against API and DB (ID=%s)", product_id)

@@ -8,6 +8,7 @@ from EcommerceAPI.src.customers.validators.customer_validators import (
     assert_customer_identity,
     assert_valid_customer_response,
     assert_customer_error_response,
+    assert_customer_exists_and_matches_api,
 )
 from EcommerceAPI.src.utils.generic_utilities import generate_random_email_and_password
 
@@ -62,9 +63,7 @@ INVALID_UPDATE_PAYLOADS = [
 @pytest.mark.tcid("TCID-021")
 @pytest.mark.smoke
 @pytest.mark.contract
-def test_update_customer_first_name(
-    customer_helper, customers_dao, create_valid_customer
-):
+def test_update_customer_first_name(customer_helper, create_valid_customer):
     """
     Verify that a customers can be updated successfully.
 
@@ -108,7 +107,7 @@ def test_update_customer_first_name(
 
     assert response.status_code == 200, (
         f"PUT /customers updating failed. "
-        f"Expected 201, got {response.status_code}. "
+        f"Expected 200, got {response.status_code}. "
         f"Response: {response.text}"
     )
 
@@ -209,15 +208,22 @@ def test_update_customer_invalid_inputs(
     response = customer_helper.update_customer(
         customer_id,
         payload=payload,
-        expected_status_code=expected_status,
+        return_http_response=True,
+    )
+
+    assert response.status_code == expected_status, (
+        f"PUT /customers invalid update returned unexpected status. "
+        f"Expected {expected_status}, got {response.status_code}. "
+        f"Response: {response.text}"
     )
 
     # ------------------------------------------------------------------
     # Step 5 — Validate error response structure
     # ------------------------------------------------------------------
-    assert_customer_error_response(response)
+    error_response = response.json
+    assert_customer_error_response(error_response)
 
-    validate(instance=response, schema=error_schema)
+    validate(instance=error_response, schema=error_schema)
 
     # ------------------------------------------------------------------
     # Step 6 — Verify database record was NOT modified
@@ -303,8 +309,13 @@ def test_validate_date_modified_and_date_modified_gmt(
     # -------------------------------------------------------------
     # Step 2 — Verify API ↔ DB consistency (sanity check)
     # -------------------------------------------------------------
-    customer_helper.assert_customer_exists_and_matches_db(
-        email=email, dao=customers_dao
+    api_customers = customer_helper.list_customers_paginated(email=email)
+    db_customer = customers_dao.get_customer_by_email(email=email)
+
+    assert_customer_exists_and_matches_api(
+        api_customers,
+        email,
+        db_customer,
     )
 
     logger.info("🎯 Initial validation complete for customer ID: %r", customer_id)

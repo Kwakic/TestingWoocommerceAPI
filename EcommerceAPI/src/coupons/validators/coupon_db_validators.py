@@ -158,9 +158,9 @@ def _normalize_boolean(value: Any) -> str:
 
 
 def _normalize_numeric(value: Any) -> str:
-    """Normalize numeric values such as '0', '0.00' and '10.00'."""
+    """Normalize numeric values such as '10', '10.00' and 10."""
 
     try:
-        return format(Decimal(str(value)), "f").rstrip("0").rstrip(".") or "0"
+        return str(Decimal(str(value)).normalize())
     except (InvalidOperation, ValueError):
         return str(value).strip()

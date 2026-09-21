@@ -1,10 +1,8 @@
 import pytest
 import logging
-from faker import Faker
 
 from EcommerceAPI.src.utils.filtering_utils import filter_out_soft_deleted
 
-faker = Faker()
 logger = logging.getLogger(__name__)
 #  logger.setLevel(logging.DEBUG)  # already set in pytest.ini
 
@@ -42,8 +40,7 @@ def test_soft_deleted_customer_is_still_returned_by_api(
     # To keep the customers in the DB (i.e., skip deletion),set: customers = create_customer_for_test(skip_cleanup=True)
     customer = (
         create_valid_customer()
-    )  # Default: skip_cleanup=False, validate_response=True
-    # No need to assert ID/email. The fixture already does it: customer_helper.assert_valid_customer_response(customers)
+    )  # Fixture creates and validates the customer and registers cleanup.
 
     customer_id = customer["id"]
     customer_email = customer["email"]
