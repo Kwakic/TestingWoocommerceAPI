@@ -1,5 +1,5 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Mon Sep 21 19:21:47 UTC 2026","Mon Sep 21 19:21:47 UTC 2026","232","tests.coupons.api","test_get_coupon","","","","test_get_coupon_by_id","
+"passed","Mon Sep 21 20:56:10 UTC 2026","Mon Sep 21 20:56:10 UTC 2026","316","tests.coupons.api","test_get_coupon","","","","test_get_coupon_by_id","
 Verify that a coupon can be retrieved by ID.
 
 Endpoint tested:
@@ -17,7 +17,7 @@ Test flow:
     3. Validate response status and structure
     4. Verify returned coupon identity
 "
-"passed","Mon Sep 21 19:21:46 UTC 2026","Mon Sep 21 19:21:47 UTC 2026","832","tests.coupons.api","test_create_coupons","","","","test_create_single_coupon","
+"passed","Mon Sep 21 20:56:09 UTC 2026","Mon Sep 21 20:56:09 UTC 2026","270","tests.coupons.api","test_create_coupons","","","","test_create_single_coupon","
 Create a coupon using the minimum valid payload.
 
 The `create_valid_coupon` fixture already performs:
