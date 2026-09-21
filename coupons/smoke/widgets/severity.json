@@ -1,1 +1,1 @@
-[{"uid":"a34ec67cc10bbe2a","name":"test_create_single_coupon","time":{"start":1789932318157,"stop":1789932318427,"duration":270},"status":"passed","severity":"normal"}]
+[{"uid":"867526e216c499ad","name":"test_get_coupon_by_id","time":{"start":1790018507468,"stop":1790018507700,"duration":232},"status":"passed","severity":"normal"},{"uid":"31efa17ed8e5e76c","name":"test_create_single_coupon","time":{"start":1790018506492,"stop":1790018507324,"duration":832},"status":"passed","severity":"normal"}]
