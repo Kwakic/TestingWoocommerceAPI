@@ -1,0 +1,8 @@
+DEBUG    EcommerceAPI.src.products.helpers.products_helper:products_helper.py:336 ⚙️ Creating product with payload keys: ['name', 'status', 'regular_price', 'sale_price']
+DEBUG    EcommerceAPI.src.products.api.products_api:products_api.py:74 📡 POST /products payload_keys=['name', 'status', 'regular_price', 'sale_price']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/products → Status code: 201 (completed in 0.197s)
+INFO     EcommerceAPI.src.products.validators.product_validators:product_validators.py:99 ✅ Product structure valid: id=28, name=Price Product 49.99, sku=None
+DEBUG    EcommerceAPI.plugins.api.products:products.py:140 ℹ️ Registered product with ID=28 for cleanup.
+DEBUG    EcommerceAPI.src.products.helpers.products_helper:products_helper.py:98 🟢 Calling 'Get Product' for ID 28.
+DEBUG    EcommerceAPI.src.products.api.products_api:products_api.py:88 📡 GET /products/28
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/products/28 → Status code: 200 (completed in 0.107s)
