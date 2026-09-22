@@ -30,6 +30,19 @@ class CartPage:
         self.product_price = page.get_by_text("$").first
         self.quantity_input = page.get_by_role("spinbutton").first
 
+        self.add_coupon_button = page.get_by_role(
+            "button",
+            name="Add a coupon",
+        )
+        self.coupon_code_input = page.get_by_role(
+            "textbox",
+            name="Coupon code",
+        )
+        self.apply_coupon_button = page.get_by_role(
+            "button",
+            name="Apply coupon",
+        )
+
     def should_be_loaded(self) -> None:
         """Verify that the shopping cart page is displayed."""
         expect(self.cart_heading).to_be_visible()
@@ -83,3 +96,18 @@ class CartPage:
     def should_be_empty(self) -> None:
         """Verify that the shopping cart is empty."""
         expect(self.empty_cart_heading).to_be_visible(timeout=10000)
+
+    def add_coupon(self, coupon_code: str) -> None:
+        """Apply a coupon through the cart UI."""
+        self.add_coupon_button.click()
+        expect(self.coupon_code_input).to_be_visible()
+        self.coupon_code_input.fill(coupon_code)
+        self.apply_coupon_button.click()
+
+    def should_show_coupon(self, coupon_code: str) -> None:
+        """Verify that the applied coupon is displayed in the cart."""
+        expect(self.page.get_by_text(coupon_code, exact=True)).to_be_visible()
+
+    def should_show_discount(self, discount: str) -> None:
+        """Verify that the expected coupon discount is displayed."""
+        expect(self.page.get_by_text(discount, exact=True)).to_be_visible()

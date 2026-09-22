@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Seed deterministic baseline WooCommerce products.
-#
+
 # Responsibilities
 # ----------------
 # • Create products required by UI/E2E tests
@@ -19,6 +19,7 @@
 
 # --------------------------------------------------
 # Idempotent baseline seeding
+# Uses WP-CLI inside the Docker environment
 #
 # setup.sh
 #     ↓
