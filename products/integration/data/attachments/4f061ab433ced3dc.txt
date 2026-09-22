@@ -1,0 +1,23 @@
+DEBUG    EcommerceAPI.plugins.entities:entities.py:459 ✅ [coupons] Loaded API client: CouponsApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:468 ✅ [coupons] Instantiated helper with API client
+DEBUG    EcommerceAPI.src.coupons.dao.coupons_dao:coupons_dao.py:50 🗄️ CouponsDAO initialized: posts=wordpress.wp_posts, postmeta=wordpress.wp_postmeta
+DEBUG    EcommerceAPI.plugins.entities:entities.py:459 ✅ [customers] Loaded API client: CustomersApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:468 ✅ [customers] Instantiated helper with API client
+DEBUG    EcommerceAPI.plugins.entities:entities.py:459 ✅ [products] Loaded API client: ProductsApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:468 ✅ [products] Instantiated helper with API client
+DEBUG    EcommerceAPI.src.products.dao.products_dao:products_dao.py:45 🗄️ ProductsDAO initialized: table=wordpress.wp_posts
+INFO     EcommerceAPI.plugins.entities:entities.py:532 🔍 ENTITY DISCOVERY SUMMARY
+INFO     EcommerceAPI.plugins.entities:entities.py:534    coupons      | ✅  READY
+INFO     EcommerceAPI.plugins.entities:entities.py:534    customers    | ✅  READY
+INFO     EcommerceAPI.plugins.entities:entities.py:534    orders       | ⏭️ SKIPPED (missing API module)
+INFO     EcommerceAPI.plugins.entities:entities.py:534    products     | ✅  READY
+DEBUG    EcommerceAPI.src.products.helpers.products_helper:products_helper.py:336 ⚙️ Creating product with payload keys: ['status']
+DEBUG    EcommerceAPI.src.products.api.products_api:products_api.py:74 📡 POST /products payload_keys=['status']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/products → Status code: 201 (completed in 0.141s)
+INFO     EcommerceAPI.src.products.validators.product_validators:product_validators.py:99 ✅ Product structure valid: id=32, name=Product, sku=None
+DEBUG    EcommerceAPI.plugins.api.products:products.py:140 ℹ️ Registered product with ID=32 for cleanup.
+DEBUG    EcommerceAPI.src.products.helpers.products_helper:products_helper.py:98 🟢 Calling 'Get Product' for ID 32.
+DEBUG    EcommerceAPI.src.products.api.products_api:products_api.py:88 📡 GET /products/32
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/products/32 → Status code: 200 (completed in 0.073s)
+INFO     EcommerceAPI.src.products.validators.product_validators:product_validators.py:99 ✅ Product structure valid: id=32, name=Product, sku=None
+INFO     EcommerceAPI.src.products.validators.product_validators:product_validators.py:357 ✅ Product identity verified (ID=32)

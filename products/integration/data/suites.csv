@@ -1,31 +1,83 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Tue Sep 22 14:18:02 UTC 2026","Tue Sep 22 14:18:03 UTC 2026","461","tests.products.graphql","test_get_product","","","","test_get_product","
-Verify that a product created by the test can be retrieved by database ID.
-
-The test creates its own product, captures its database ID, queries that
-exact product, and verifies the returned product data.
-"
-"passed","Tue Sep 22 14:18:03 UTC 2026","Tue Sep 22 14:18:03 UTC 2026","446","tests.products.graphql","test_search_product","","","","test_search_product","
-Verify that a product can be found through the GraphQL product search.
-
-The test creates its own product, searches for a unique part of its name,
-and verifies that the created product is returned by the search.
-"
-"passed","Tue Sep 22 14:17:53 UTC 2026","Tue Sep 22 14:17:53 UTC 2026","307","tests.products.api","test_get_products","","","","test_get_product_with_populated_fields","
-Verify that GET by ID returns the populated product fields supplied at creation.
-
-Only fields confirmed by the product fixture/model should be asserted here.
-"
-"passed","Tue Sep 22 14:17:48 UTC 2026","Tue Sep 22 14:17:48 UTC 2026","319","tests.products.api","test_create_products","","","","test_create_product_with_populated_fields","
-Verify that commonly used product fields are accepted and persisted.
-"
-"passed","Tue Sep 22 14:17:46 UTC 2026","Tue Sep 22 14:17:46 UTC 2026","192","tests.products.api","test_create_products","","","","test_create_multiple_products[1]","
+"passed","Tue Sep 22 14:46:34 UTC 2026","Tue Sep 22 14:46:34 UTC 2026","712","tests.products.api","test_create_products","","","","test_create_multiple_products[5]","
 Verify that multiple valid products can be created successfully.
 
 Each product is created through the shared factory fixture, which owns
 POST status validation, response validation and cleanup registration.
 "
-"passed","Tue Sep 22 14:18:04 UTC 2026","Tue Sep 22 14:18:04 UTC 2026","698","tests.products.graphql","test_update_product","","","","test_update_product","
+"passed","Tue Sep 22 14:46:40 UTC 2026","Tue Sep 22 14:46:40 UTC 2026","321","tests.products.graphql","test_filter_products","","","","test_filter_product_by_sku","
+Verify that products can be filtered by SKU through GraphQL.
+
+The test creates its own product with a unique SKU, filters the product
+collection by that SKU, and verifies that the created product is returned.
+"
+"passed","Tue Sep 22 14:46:38 UTC 2026","Tue Sep 22 14:46:38 UTC 2026","216","tests.products.api","test_get_products","","","","test_get_product_by_id","
+Verify that a product can be retrieved successfully by ID.
+"
+"passed","Tue Sep 22 14:46:36 UTC 2026","Tue Sep 22 14:46:36 UTC 2026","74","tests.products.api","test_create_products","","","","test_create_product_with_invalid_type","
+Negative test: an unsupported product type should be rejected
+by WooCommerce.
+"
+"passed","Tue Sep 22 14:46:35 UTC 2026","Tue Sep 22 14:46:35 UTC 2026","217","tests.products.api","test_create_products","","","","test_create_product_with_valid_prices[49.99-39.99]","
+Verify that valid regular and sale prices are accepted during creation.
+"
+"passed","Tue Sep 22 14:46:40 UTC 2026","Tue Sep 22 14:46:41 UTC 2026","442","tests.products.graphql","test_filter_products","","","","test_filter_product_by_category","
+Verify that products can be filtered by product category through GraphQL.
+
+The test creates its own product category, creates a product assigned to
+that category, filters the product collection by the category ID, and
+verifies that the created product is returned.
+"
+"passed","Tue Sep 22 14:46:33 UTC 2026","Tue Sep 22 14:46:34 UTC 2026","443","tests.products.api","test_create_products","","","","test_create_multiple_products[3]","
+Verify that multiple valid products can be created successfully.
+
+Each product is created through the shared factory fixture, which owns
+POST status validation, response validation and cleanup registration.
+"
+"passed","Tue Sep 22 14:46:36 UTC 2026","Tue Sep 22 14:46:36 UTC 2026","216","tests.products.api","test_create_products","","","","test_create_product_with_duplicate_sku","
+Negative test: creating a second product with an existing SKU
+should be rejected by WooCommerce.
+
+The raw API fixture is used because this test must inspect the
+actual HTTP response from the failing POST.
+"
+"passed","Tue Sep 22 14:46:46 UTC 2026","Tue Sep 22 14:46:46 UTC 2026","311","tests.products.graphql","test_search_product","","","","test_search_product","
+Verify that a product can be found through the GraphQL product search.
+
+The test creates its own product, searches for a unique part of its name,
+and verifies that the created product is returned by the search.
+"
+"passed","Tue Sep 22 14:46:38 UTC 2026","Tue Sep 22 14:46:38 UTC 2026","75","tests.products.api","test_get_products","","","","test_get_nonexistent_product","
+Verify that requesting a product ID that does not exist returns 404
+with the expected WooCommerce error response.
+"
+"passed","Tue Sep 22 14:46:35 UTC 2026","Tue Sep 22 14:46:35 UTC 2026","221","tests.products.api","test_create_products","","","","test_create_product_with_valid_prices[100.00-79.99]","
+Verify that valid regular and sale prices are accepted during creation.
+"
+"passed","Tue Sep 22 14:46:38 UTC 2026","Tue Sep 22 14:46:38 UTC 2026","238","tests.products.api","test_get_products","","","","test_get_product_by_id_matches_db","
+Verify that a product retrieved through the API matches its database record.
+"
+"passed","Tue Sep 22 14:46:39 UTC 2026","Tue Sep 22 14:46:40 UTC 2026","512","tests.products.graphql","test_delete_product","","","","test_delete_product","
+Verify that a product can be permanently deleted through GraphQL.
+
+The test creates its own product to avoid relying on pre-existing
+database state, permanently deletes it using ``force: true``, and
+verifies that the product can no longer be retrieved by its database ID.
+
+The final lookup intentionally expects a GraphQL error indicating that
+the product does not exist. WPGraphQL returns HTTP 200 with
+``data.product = null`` and an error entry for this expected condition,
+so the final assertion validates the response data rather than using
+``GraphQLResponse.ok``.
+
+Args:
+    graphql_client: Authenticated GraphQL client fixture.
+"
+"passed","Tue Sep 22 14:46:35 UTC 2026","Tue Sep 22 14:46:36 UTC 2026","226","tests.products.api","test_create_products","","","","test_create_product_with_unique_sku","
+Verify that a product can be created with a unique SKU and that the
+SKU is persisted through the API and database.
+"
+"passed","Tue Sep 22 14:46:46 UTC 2026","Tue Sep 22 14:46:46 UTC 2026","469","tests.products.graphql","test_update_product","","","","test_update_product","
 Verify that a product can be updated through the GraphQL API.
 
 The test creates its own product, captures its database ID, updates
@@ -35,24 +87,16 @@ the same product again to confirm that the updated state was persisted.
 This ensures the test does not depend on pre-existing database data
 and validates both the mutation response and the resulting resource state.
 "
-"passed","Tue Sep 22 14:17:49 UTC 2026","Tue Sep 22 14:17:49 UTC 2026","300","tests.products.api","test_create_products","","","","test_create_product_with_unique_sku","
-Verify that a product can be created with a unique SKU and that the
-SKU is persisted through the API and database.
-"
-"passed","Tue Sep 22 14:17:53 UTC 2026","Tue Sep 22 14:17:53 UTC 2026","103","tests.products.api","test_get_products","","","","test_get_nonexistent_product","
-Verify that requesting a product ID that does not exist returns 404
-with the expected WooCommerce error response.
-"
-"passed","Tue Sep 22 14:17:49 UTC 2026","Tue Sep 22 14:17:49 UTC 2026","299","tests.products.api","test_create_products","","","","test_create_product_with_valid_prices[100.00-79.99]","
+"passed","Tue Sep 22 14:46:35 UTC 2026","Tue Sep 22 14:46:35 UTC 2026","227","tests.products.api","test_create_products","","","","test_create_product_with_valid_prices[10.00-None]","
 Verify that valid regular and sale prices are accepted during creation.
 "
-"passed","Tue Sep 22 14:17:54 UTC 2026","Tue Sep 22 14:17:54 UTC 2026","277","tests.products.graphql","test_create_product","","","","test_create_product","
+"passed","Tue Sep 22 14:46:39 UTC 2026","Tue Sep 22 14:46:39 UTC 2026","199","tests.products.graphql","test_create_product","","","","test_create_product","
 Verify that an authenticated GraphQL mutation creates a real product.
 
 The test creates the product through GraphQL and verifies that the
 response contains a valid database ID and the expected product name.
 "
-"passed","Tue Sep 22 14:17:46 UTC 2026","Tue Sep 22 14:17:46 UTC 2026","348","tests.products.api","test_create_products","","","","test_create_single_simple_product","
+"passed","Tue Sep 22 14:46:33 UTC 2026","Tue Sep 22 14:46:33 UTC 2026","266","tests.products.api","test_create_products","","","","test_create_single_simple_product","
 Create a simple product using the minimum valid payload.
 
 The fixture `create_valid_product` already performs:
@@ -68,13 +112,21 @@ Test flow:
     2. Fetch product via API
     3. Verify API data matches database record
 "
-"passed","Tue Sep 22 14:17:55 UTC 2026","Tue Sep 22 14:17:56 UTC 2026","454","tests.products.graphql","test_filter_products","","","","test_filter_product_by_sku","
-Verify that products can be filtered by SKU through GraphQL.
+"passed","Tue Sep 22 14:46:38 UTC 2026","Tue Sep 22 14:46:39 UTC 2026","230","tests.products.api","test_get_products","","","","test_get_product_with_populated_fields","
+Verify that GET by ID returns the populated product fields supplied at creation.
 
-The test creates its own product with a unique SKU, filters the product
-collection by that SKU, and verifies that the created product is returned.
+Only fields confirmed by the product fixture/model should be asserted here.
 "
-"passed","Tue Sep 22 14:17:57 UTC 2026","Tue Sep 22 14:18:00 UTC 2026","3781","tests.products.graphql","test_get_all_products","","","","test_get_all_products_pagination","
+"passed","Tue Sep 22 14:46:34 UTC 2026","Tue Sep 22 14:46:35 UTC 2026","241","tests.products.api","test_create_products","","","","test_create_product_with_populated_fields","
+Verify that commonly used product fields are accepted and persisted.
+"
+"passed","Tue Sep 22 14:46:33 UTC 2026","Tue Sep 22 14:46:33 UTC 2026","144","tests.products.api","test_create_products","","","","test_create_multiple_products[1]","
+Verify that multiple valid products can be created successfully.
+
+Each product is created through the shared factory fixture, which owns
+POST status validation, response validation and cleanup registration.
+"
+"passed","Tue Sep 22 14:46:41 UTC 2026","Tue Sep 22 14:46:44 UTC 2026","2667","tests.products.graphql","test_get_all_products","","","","test_get_all_products_pagination","
 Verify cursor-based pagination for the GraphQL Product collection.
 
 The test creates a controlled dataset so that pagination does not depend
@@ -97,61 +149,9 @@ GraphQL pagination uses cursors rather than the REST API's page/per_page
 parameters, so this test intentionally exercises GraphQL's native
 connection pagination instead of the REST pagination utility.
 "
-"passed","Tue Sep 22 14:17:49 UTC 2026","Tue Sep 22 14:17:50 UTC 2026","306","tests.products.api","test_create_products","","","","test_create_product_with_duplicate_sku","
-Negative test: creating a second product with an existing SKU
-should be rejected by WooCommerce.
+"passed","Tue Sep 22 14:46:45 UTC 2026","Tue Sep 22 14:46:45 UTC 2026","314","tests.products.graphql","test_get_product","","","","test_get_product","
+Verify that a product created by the test can be retrieved by database ID.
 
-The raw API fixture is used because this test must inspect the
-actual HTTP response from the failing POST.
-"
-"passed","Tue Sep 22 14:17:48 UTC 2026","Tue Sep 22 14:17:49 UTC 2026","307","tests.products.api","test_create_products","","","","test_create_product_with_valid_prices[49.99-39.99]","
-Verify that valid regular and sale prices are accepted during creation.
-"
-"passed","Tue Sep 22 14:17:53 UTC 2026","Tue Sep 22 14:17:53 UTC 2026","343","tests.products.api","test_get_products","","","","test_get_product_by_id_matches_db","
-Verify that a product retrieved through the API matches its database record.
-"
-"passed","Tue Sep 22 14:17:50 UTC 2026","Tue Sep 22 14:17:50 UTC 2026","105","tests.products.api","test_create_products","","","","test_create_product_with_invalid_type","
-Negative test: an unsupported product type should be rejected
-by WooCommerce.
-"
-"passed","Tue Sep 22 14:17:47 UTC 2026","Tue Sep 22 14:17:48 UTC 2026","981","tests.products.api","test_create_products","","","","test_create_multiple_products[5]","
-Verify that multiple valid products can be created successfully.
-
-Each product is created through the shared factory fixture, which owns
-POST status validation, response validation and cleanup registration.
-"
-"passed","Tue Sep 22 14:17:54 UTC 2026","Tue Sep 22 14:17:55 UTC 2026","697","tests.products.graphql","test_delete_product","","","","test_delete_product","
-Verify that a product can be permanently deleted through GraphQL.
-
-The test creates its own product to avoid relying on pre-existing
-database state, permanently deletes it using ``force: true``, and
-verifies that the product can no longer be retrieved by its database ID.
-
-The final lookup intentionally expects a GraphQL error indicating that
-the product does not exist. WPGraphQL returns HTTP 200 with
-``data.product = null`` and an error entry for this expected condition,
-so the final assertion validates the response data rather than using
-``GraphQLResponse.ok``.
-
-Args:
-    graphql_client: Authenticated GraphQL client fixture.
-"
-"passed","Tue Sep 22 14:17:48 UTC 2026","Tue Sep 22 14:17:48 UTC 2026","308","tests.products.api","test_create_products","","","","test_create_product_with_valid_prices[10.00-None]","
-Verify that valid regular and sale prices are accepted during creation.
-"
-"passed","Tue Sep 22 14:17:46 UTC 2026","Tue Sep 22 14:17:47 UTC 2026","590","tests.products.api","test_create_products","","","","test_create_multiple_products[3]","
-Verify that multiple valid products can be created successfully.
-
-Each product is created through the shared factory fixture, which owns
-POST status validation, response validation and cleanup registration.
-"
-"passed","Tue Sep 22 14:17:56 UTC 2026","Tue Sep 22 14:17:56 UTC 2026","668","tests.products.graphql","test_filter_products","","","","test_filter_product_by_category","
-Verify that products can be filtered by product category through GraphQL.
-
-The test creates its own product category, creates a product assigned to
-that category, filters the product collection by the category ID, and
-verifies that the created product is returned.
-"
-"passed","Tue Sep 22 14:17:52 UTC 2026","Tue Sep 22 14:17:53 UTC 2026","316","tests.products.api","test_get_products","","","","test_get_product_by_id","
-Verify that a product can be retrieved successfully by ID.
+The test creates its own product, captures its database ID, queries that
+exact product, and verifies the returned product data.
 "
