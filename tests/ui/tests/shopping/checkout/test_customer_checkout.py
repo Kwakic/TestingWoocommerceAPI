@@ -20,7 +20,7 @@ pytestmark = [
 ]
 
 
-@pytest.mark.xfail(reason="Must be changed its profile")
+# @pytest.mark.xfail(reason="Must be changed its profile")
 def test_customer_can_complete_checkout(
     customer_page: Page,
     ui_base_url: str,
