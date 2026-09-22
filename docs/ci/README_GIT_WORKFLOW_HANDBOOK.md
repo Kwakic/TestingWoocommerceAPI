@@ -2189,6 +2189,11 @@ Just want the list of changed files?
 git diff --name-only main...feature/GitHub_CI
 ```
 
+When you modify the file, check the change before the commit:
+```bash
+git diff -- tests/ui/pages/shopping/cart_page.py
+```
+
 Just want a short summary (files changed, lines added/removed)?
 
 ```bash
