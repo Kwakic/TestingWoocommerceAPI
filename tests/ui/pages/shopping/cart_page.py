@@ -36,11 +36,12 @@ class CartPage:
         )
         self.coupon_code_input = page.get_by_role(
             "textbox",
-            name="Coupon code",
+            name="Enter code",
         )
+
         self.apply_coupon_button = page.get_by_role(
             "button",
-            name="Apply coupon",
+            name="Apply",
         )
 
     def should_be_loaded(self) -> None:
