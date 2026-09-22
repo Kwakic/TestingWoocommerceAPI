@@ -106,7 +106,9 @@ class CartPage:
         self.apply_coupon_button.click()
 
         applying_coupon = self.page.get_by_text("Applying coupon…", exact=True)
-        expect(applying_coupon).not_to_be_visible(timeout=10000)  # "Wait until the Applying coupon… no longer
+        expect(applying_coupon).not_to_be_visible(
+            timeout=10000
+        )  # "Wait until the Applying coupon… no longer
         # visible. Keep checking until this becomes visible, for up to 10 seconds."
 
     def should_show_coupon(self, coupon_code: str) -> None:
