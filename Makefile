@@ -199,6 +199,9 @@ install: venv
 	@echo "[INSTALL] Installing EcommerceAPI framework..."
 	$(VENV_PYTHON) -m pip install --upgrade pip
 	$(VENV_PYTHON) -m pip install -e "./EcommerceAPI[dev]"
+	# Install the repository Git hook so fresh clones automatically run pre-commit.
+	@echo "[PRE-COMMIT] Installing Git hooks..."
+	$(VENV_PYTHON) -m pre_commit install
 	# Playwright is installed as a Python dev dependency above, but its
 	# browser binaries are a separate installation. Keep this in the
 	# project bootstrap so developers do not need to run it manually.
