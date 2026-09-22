@@ -1,0 +1,15 @@
+DEBUG    EcommerceAPI.src.coupons.helpers.coupons_helper:coupons_helper.py:119 ⚙️ Creating coupon with payload keys: ['code', 'usage_limit', 'usage_limit_per_user', 'limit_usage_to_x_items']
+DEBUG    EcommerceAPI.src.coupons.api.coupons_api:coupons_api.py:69 📡 POST /coupons payload_keys=['code', 'usage_limit', 'usage_limit_per_user', 'limit_usage_to_x_items']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/coupons → Status code: 201 (completed in 0.119s)
+INFO     EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:46 ✅ Coupon structure valid: id=35 code=test-krwgitlpgp
+DEBUG    EcommerceAPI.plugins.api.coupons:coupons.py:125 Registered coupon with ID=35 for cleanup.
+DEBUG    EcommerceAPI.src.coupons.helpers.coupons_helper:coupons_helper.py:170 🟢 Calling 'Get Coupon' for ID 35.
+DEBUG    EcommerceAPI.src.coupons.api.coupons_api:coupons_api.py:91 📡 GET /coupons/35
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/coupons/35 → Status code: 200 (completed in 0.099s)
+DEBUG    EcommerceAPI.src.coupons.dao.coupons_dao:coupons_dao.py:104 ℹ️ Found coupon for ID=35: {'ID': 35, 'post_author': 1, 'post_date': datetime.datetime(2026, 9, 22, 19, 40, 6), 'post_date_gmt': datetime.datetime(2026, 9, 22, 19, 40, 6), 'post_content': '', 'post_title': 'test-krwgitlpgp', 'post_excerpt': '', 'post_status': 'publish', 'comment_status': 'closed', 'ping_status': 'closed', 'post_password': '', 'post_name': 'test-krwgitlpgp', 'to_ping': '', 'pinged': '', 'post_modified': datetime.datetime(2026, 9, 22, 19, 40, 6), 'post_modified_gmt': datetime.datetime(2026, 9, 22, 19, 40, 6), 'post_content_filtered': '', 'post_parent': 0, 'guid': 'http://localhost:8080/?post_type=shop_coupon&p=35', 'menu_order': 0, 'post_type': 'shop_coupon', 'post_mime_type': '', 'comment_count': 0}
+INFO     EcommerceAPI.src.coupons.dao.coupons_dao:coupons_dao.py:354 ✅ Retrieved 10 metadata record(s) for coupon=35
+DEBUG    EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:149 ⚙️ Validating coupon by ID=35
+INFO     EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:46 ✅ Coupon structure valid: id=35 code=test-krwgitlpgp
+INFO     EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:88 ✅ Coupon found in dataset: id=35 code=test-krwgitlpgp
+INFO     EcommerceAPI.src.coupons.validators.coupon_db_validators:coupon_db_validators.py:64 ✅ API coupon matches DB records: ID=35 code=test-krwgitlpgp
+INFO     EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:165 ✅ Coupon matches database record (ID=35)
