@@ -1,0 +1,11 @@
+DEBUG    EcommerceAPI.src.coupons.helpers.coupons_helper:coupons_helper.py:170 🟢 Calling 'Get Coupon' for ID 999999999.
+DEBUG    EcommerceAPI.src.coupons.api.coupons_api:coupons_api.py:91 📡 GET /coupons/999999999
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/coupons/999999999 → Status code: 404 (completed in 0.090s)
+DEBUG    EcommerceAPI.src.clients.api_client:api_client.py:625 {
+                                                                 "code": "woocommerce_rest_shop_coupon_invalid_id",
+                                                                 "message": "Invalid ID.",
+                                                                 "data": {
+                                                                   "status": 404
+                                                                 }
+                                                               }
+INFO     EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:266 ✅ Valid coupon error response: code=woocommerce_rest_shop_coupon_invalid_id status=404
