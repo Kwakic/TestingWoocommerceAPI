@@ -1,23 +1,5 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Tue Sep 22 14:46:56 UTC 2026","Tue Sep 22 14:46:57 UTC 2026","235","tests.coupons.api","test_get_coupon","","","","test_get_coupon_by_id","
-Verify that a coupon can be retrieved by ID.
-
-Endpoint tested:
-    GET /coupons/{id}
-
-Fixture responsibilities:
-    - POST /coupons
-    - response validation (Pydantic)
-    - cleanup registration
-
-Test flow:
-
-    1. Create a valid coupon
-    2. Retrieve the coupon by ID
-    3. Validate response status and structure
-    4. Verify returned coupon identity
-"
-"passed","Tue Sep 22 14:46:56 UTC 2026","Tue Sep 22 14:46:56 UTC 2026","287","tests.coupons.api","test_create_coupons","","","","test_create_single_coupon","
+"passed","Tue Sep 22 17:01:41 UTC 2026","Tue Sep 22 17:01:41 UTC 2026","196","tests.coupons.api","test_create_coupons","","","","test_create_single_coupon","
 Create a coupon using the minimum valid payload.
 
 The `create_valid_coupon` fixture already performs:
@@ -37,4 +19,22 @@ Test flow:
 API/DB validation is intentionally explicit in the test:
 the helper fetches API data, the DAO fetches database data, and the
 validator compares the already-fetched data.
+"
+"passed","Tue Sep 22 17:01:41 UTC 2026","Tue Sep 22 17:01:42 UTC 2026","168","tests.coupons.api","test_get_coupon","","","","test_get_coupon_by_id","
+Verify that a coupon can be retrieved by ID.
+
+Endpoint tested:
+    GET /coupons/{id}
+
+Fixture responsibilities:
+    - POST /coupons
+    - response validation (Pydantic)
+    - cleanup registration
+
+Test flow:
+
+    1. Create a valid coupon
+    2. Retrieve the coupon by ID
+    3. Validate response status and structure
+    4. Verify returned coupon identity
 "
