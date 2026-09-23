@@ -1,5 +1,5 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Wed Sep 23 18:50:25 UTC 2026","Wed Sep 23 18:50:25 UTC 2026","273","tests.coupons.api","test_create_coupons","","","","test_create_single_coupon","
+"passed","Wed Sep 23 19:03:55 UTC 2026","Wed Sep 23 19:03:55 UTC 2026","264","tests.coupons.api","test_create_coupons","","","","test_create_single_coupon","
 Create a coupon using the minimum valid payload.
 
 The `create_valid_coupon` fixture already performs:
@@ -20,7 +20,7 @@ API/DB validation is intentionally explicit in the test:
 the helper fetches API data, the DAO fetches database data, and the
 validator compares the already-fetched data.
 "
-"passed","Wed Sep 23 18:50:25 UTC 2026","Wed Sep 23 18:50:25 UTC 2026","227","tests.coupons.api","test_get_coupon","","","","test_get_coupon_by_id","
+"passed","Wed Sep 23 19:03:55 UTC 2026","Wed Sep 23 19:03:56 UTC 2026","230","tests.coupons.api","test_get_coupon","","","","test_get_coupon_by_id","
 Verify that a coupon can be retrieved by ID.
 
 Endpoint tested:
