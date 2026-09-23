@@ -493,11 +493,31 @@ if [[ -z "$SHIPPING_ZONE_ID" ]]; then
     SHIPPING_ZONE_ID="$(
         wpcli wp wc shipping_zone create             --name="Test Shipping"             --user="$WP_ADMIN_USER"             --porcelain
     )"
-
-    wpcli wp wc shipping_zone location "$SHIPPING_ZONE_ID"         --code=ES         --user="$WP_ADMIN_USER"
 else
     echo "✅ Test Shipping zone already exists (ID: $SHIPPING_ZONE_ID)"
 fi
+
+# Configure the Spain location through WooCommerce PHP APIs.
+# The WP-CLI shipping_zone command does not expose a "location"
+# subcommand in the WP-CLI version used by this project.
+wpcli wp eval '
+    $zone_id = (int) "'$SHIPPING_ZONE_ID'";
+    $zone = new WC_Shipping_Zone($zone_id);
+
+    $locations = $zone->get_zone_locations();
+    $has_spain = false;
+
+    foreach ($locations as $location) {
+        if ($location->type === "country" && $location->code === "ES") {
+            $has_spain = true;
+            break;
+        }
+    }
+
+    if (!$has_spain) {
+        $zone->add_location("ES", "country");
+    }
+'
 
 if ! wpcli wp wc shipping_zone_method list "$SHIPPING_ZONE_ID"     --user="$WP_ADMIN_USER"     --fields=method_id     --format=csv     | grep -qx "flat_rate"; then
 
@@ -508,13 +528,25 @@ else
 fi
 
 # Keep the method deterministic for UI tests:
-# tax status = none, cost = 0.
+# title = Flat rate, tax status = none, cost = 0.
 FLAT_RATE_INSTANCE_ID="$(
     wpcli wp wc shipping_zone_method list "$SHIPPING_ZONE_ID"         --user="$WP_ADMIN_USER"         --fields=instance_id,method_id         --format=csv         | awk -F',' '$2 == "flat_rate" {print $1; exit}'
 )"
 
 if [[ -n "$FLAT_RATE_INSTANCE_ID" ]]; then
-    wpcli wp wc shipping_zone_method update         "$SHIPPING_ZONE_ID"         "$FLAT_RATE_INSTANCE_ID"         --title="Flat rate"         --settings='{"tax_status":"none","cost":"0"}'         --user="$WP_ADMIN_USER" >/dev/null
+    wpcli wp eval '
+        $zone_id = (int) "'$SHIPPING_ZONE_ID'";
+        $instance_id = (int) "'$FLAT_RATE_INSTANCE_ID'";
+        $zone = new WC_Shipping_Zone($zone_id);
+        $methods = $zone->get_shipping_methods(true);
+
+        if (isset($methods[$instance_id])) {
+            $method = $methods[$instance_id];
+            $method->update_option("title", "Flat rate");
+            $method->update_option("tax_status", "none");
+            $method->update_option("cost", "0");
+        }
+    '
 fi
 
 echo "✅ Spain shipping zone configured with Flat Rate at 0.00"
