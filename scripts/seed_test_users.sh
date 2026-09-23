@@ -124,6 +124,51 @@ seed_customer() {
 
 seed_customer     "$UI_CUSTOMER_USERNAME"     "$UI_CUSTOMER_EMAIL"     "$UI_CUSTOMER_PASSWORD"     "Customer A (stable checkout customer)"
 
+# --------------------------------------------------
+# Customer A — baseline checkout address
+# --------------------------------------------------
+# Customer A is the stable checkout profile. Its saved billing and shipping
+# addresses are environment prerequisites for checkout UI tests.
+#
+# The address is provisioned here rather than by another UI test so that
+# checkout tests do not depend on state created by a previous test run.
+# The operation is idempotent: running the seed again simply converges the
+# existing Customer A profile to the expected baseline address.
+# --------------------------------------------------
+echo "🏠 Provisioning Customer A billing and shipping addresses..."
+
+CUSTOMER_A_ID="$(
+    docker compose -f docker-compose.wp.yml run --rm -T         -e HTTP_HOST="$WP_HTTP_HOST"         wpcli wp user get         "$UI_CUSTOMER_USERNAME"         --field=ID         --allow-root
+)"
+
+docker compose -f docker-compose.wp.yml run --rm -T     -e HTTP_HOST="$WP_HTTP_HOST"     wpcli wp eval '
+        $customer = new WC_Customer((int) "'$CUSTOMER_A_ID'");
+
+        // Billing address used by the checkout tests.
+        $customer->set_billing_first_name("John");
+        $customer->set_billing_last_name("Beck");
+        $customer->set_billing_address_1("Pl.del Pueblo,10");
+        $customer->set_billing_postcode("28100");
+        $customer->set_billing_city("Madrid");
+        $customer->set_billing_state("M");
+        $customer->set_billing_country("ES");
+        $customer->set_billing_phone("753357753");
+
+        // Shipping starts with the same baseline address.
+        // The checkout test then changes it to a different address.
+        $customer->set_shipping_first_name("John");
+        $customer->set_shipping_last_name("Beck");
+        $customer->set_shipping_address_1("Pl.del Pueblo,10");
+        $customer->set_shipping_postcode("28100");
+        $customer->set_shipping_city("Madrid");
+        $customer->set_shipping_state("M");
+        $customer->set_shipping_country("ES");
+
+        $customer->save();
+    '     --allow-root
+
+echo "✅ Customer A billing and shipping addresses configured"
+
 seed_customer     "$UI_CUSTOMER_NO_ADDRESS_USERNAME"     "$UI_CUSTOMER_NO_ADDRESS_EMAIL"     "$UI_CUSTOMER_NO_ADDRESS_PASSWORD"     "Customer B (no-address customer)"
 
 seed_customer     "$UI_CUSTOMER_PROFILE_USERNAME"     "$UI_CUSTOMER_PROFILE_EMAIL"     "$UI_CUSTOMER_PROFILE_PASSWORD"     "Customer C (mutable profile customer)"
