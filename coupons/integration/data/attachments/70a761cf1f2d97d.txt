@@ -1,0 +1,45 @@
+DEBUG    EcommerceAPI.src.coupons.helpers.coupons_helper:coupons_helper.py:119 ⚙️ Creating coupon with payload keys: ['code']
+DEBUG    EcommerceAPI.src.coupons.api.coupons_api:coupons_api.py:69 📡 POST /coupons payload_keys=['code']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/coupons → Status code: 201 (completed in 0.124s)
+INFO     EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:46 ✅ Coupon structure valid: id=18 code=test-sxweasnuuu
+DEBUG    EcommerceAPI.plugins.api.coupons:coupons.py:125 Registered coupon with ID=18 for cleanup.
+DEBUG    EcommerceAPI.src.coupons.helpers.coupons_helper:coupons_helper.py:119 ⚙️ Creating coupon with payload keys: ['code']
+DEBUG    EcommerceAPI.src.coupons.api.coupons_api:coupons_api.py:69 📡 POST /coupons payload_keys=['code']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/coupons → Status code: 201 (completed in 0.124s)
+INFO     EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:46 ✅ Coupon structure valid: id=19 code=test-dzfcragkqc
+DEBUG    EcommerceAPI.plugins.api.coupons:coupons.py:125 Registered coupon with ID=19 for cleanup.
+DEBUG    EcommerceAPI.src.coupons.helpers.coupons_helper:coupons_helper.py:119 ⚙️ Creating coupon with payload keys: ['code']
+DEBUG    EcommerceAPI.src.coupons.api.coupons_api:coupons_api.py:69 📡 POST /coupons payload_keys=['code']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/coupons → Status code: 201 (completed in 0.149s)
+INFO     EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:46 ✅ Coupon structure valid: id=20 code=test-inhjltqrdw
+DEBUG    EcommerceAPI.plugins.api.coupons:coupons.py:125 Registered coupon with ID=20 for cleanup.
+DEBUG    EcommerceAPI.src.coupons.helpers.coupons_helper:coupons_helper.py:170 🟢 Calling 'Get Coupon' for ID 18.
+DEBUG    EcommerceAPI.src.coupons.api.coupons_api:coupons_api.py:91 📡 GET /coupons/18
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/coupons/18 → Status code: 200 (completed in 0.100s)
+DEBUG    EcommerceAPI.src.coupons.dao.coupons_dao:coupons_dao.py:104 ℹ️ Found coupon for ID=18: {'ID': 18, 'post_author': 1, 'post_date': datetime.datetime(2026, 9, 23, 19, 10, 50), 'post_date_gmt': datetime.datetime(2026, 9, 23, 19, 10, 50), 'post_content': '', 'post_title': 'test-sxweasnuuu', 'post_excerpt': '', 'post_status': 'publish', 'comment_status': 'closed', 'ping_status': 'closed', 'post_password': '', 'post_name': 'test-sxweasnuuu', 'to_ping': '', 'pinged': '', 'post_modified': datetime.datetime(2026, 9, 23, 19, 10, 50), 'post_modified_gmt': datetime.datetime(2026, 9, 23, 19, 10, 50), 'post_content_filtered': '', 'post_parent': 0, 'guid': 'http://localhost:8080/?post_type=shop_coupon&p=18', 'menu_order': 0, 'post_type': 'shop_coupon', 'post_mime_type': '', 'comment_count': 0}
+INFO     EcommerceAPI.src.coupons.dao.coupons_dao:coupons_dao.py:354 ✅ Retrieved 10 metadata record(s) for coupon=18
+DEBUG    EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:149 ⚙️ Validating coupon by ID=18
+INFO     EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:46 ✅ Coupon structure valid: id=18 code=test-sxweasnuuu
+INFO     EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:88 ✅ Coupon found in dataset: id=18 code=test-sxweasnuuu
+INFO     EcommerceAPI.src.coupons.validators.coupon_db_validators:coupon_db_validators.py:64 ✅ API coupon matches DB records: ID=18 code=test-sxweasnuuu
+INFO     EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:165 ✅ Coupon matches database record (ID=18)
+DEBUG    EcommerceAPI.src.coupons.helpers.coupons_helper:coupons_helper.py:170 🟢 Calling 'Get Coupon' for ID 19.
+DEBUG    EcommerceAPI.src.coupons.api.coupons_api:coupons_api.py:91 📡 GET /coupons/19
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/coupons/19 → Status code: 200 (completed in 0.098s)
+DEBUG    EcommerceAPI.src.coupons.dao.coupons_dao:coupons_dao.py:104 ℹ️ Found coupon for ID=19: {'ID': 19, 'post_author': 1, 'post_date': datetime.datetime(2026, 9, 23, 19, 10, 50), 'post_date_gmt': datetime.datetime(2026, 9, 23, 19, 10, 50), 'post_content': '', 'post_title': 'test-dzfcragkqc', 'post_excerpt': '', 'post_status': 'publish', 'comment_status': 'closed', 'ping_status': 'closed', 'post_password': '', 'post_name': 'test-dzfcragkqc', 'to_ping': '', 'pinged': '', 'post_modified': datetime.datetime(2026, 9, 23, 19, 10, 50), 'post_modified_gmt': datetime.datetime(2026, 9, 23, 19, 10, 50), 'post_content_filtered': '', 'post_parent': 0, 'guid': 'http://localhost:8080/?post_type=shop_coupon&p=19', 'menu_order': 0, 'post_type': 'shop_coupon', 'post_mime_type': '', 'comment_count': 0}
+INFO     EcommerceAPI.src.coupons.dao.coupons_dao:coupons_dao.py:354 ✅ Retrieved 10 metadata record(s) for coupon=19
+DEBUG    EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:149 ⚙️ Validating coupon by ID=19
+INFO     EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:46 ✅ Coupon structure valid: id=19 code=test-dzfcragkqc
+INFO     EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:88 ✅ Coupon found in dataset: id=19 code=test-dzfcragkqc
+INFO     EcommerceAPI.src.coupons.validators.coupon_db_validators:coupon_db_validators.py:64 ✅ API coupon matches DB records: ID=19 code=test-dzfcragkqc
+INFO     EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:165 ✅ Coupon matches database record (ID=19)
+DEBUG    EcommerceAPI.src.coupons.helpers.coupons_helper:coupons_helper.py:170 🟢 Calling 'Get Coupon' for ID 20.
+DEBUG    EcommerceAPI.src.coupons.api.coupons_api:coupons_api.py:91 📡 GET /coupons/20
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/coupons/20 → Status code: 200 (completed in 0.100s)
+DEBUG    EcommerceAPI.src.coupons.dao.coupons_dao:coupons_dao.py:104 ℹ️ Found coupon for ID=20: {'ID': 20, 'post_author': 1, 'post_date': datetime.datetime(2026, 9, 23, 19, 10, 50), 'post_date_gmt': datetime.datetime(2026, 9, 23, 19, 10, 50), 'post_content': '', 'post_title': 'test-inhjltqrdw', 'post_excerpt': '', 'post_status': 'publish', 'comment_status': 'closed', 'ping_status': 'closed', 'post_password': '', 'post_name': 'test-inhjltqrdw', 'to_ping': '', 'pinged': '', 'post_modified': datetime.datetime(2026, 9, 23, 19, 10, 50), 'post_modified_gmt': datetime.datetime(2026, 9, 23, 19, 10, 50), 'post_content_filtered': '', 'post_parent': 0, 'guid': 'http://localhost:8080/?post_type=shop_coupon&p=20', 'menu_order': 0, 'post_type': 'shop_coupon', 'post_mime_type': '', 'comment_count': 0}
+INFO     EcommerceAPI.src.coupons.dao.coupons_dao:coupons_dao.py:354 ✅ Retrieved 10 metadata record(s) for coupon=20
+DEBUG    EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:149 ⚙️ Validating coupon by ID=20
+INFO     EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:46 ✅ Coupon structure valid: id=20 code=test-inhjltqrdw
+INFO     EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:88 ✅ Coupon found in dataset: id=20 code=test-inhjltqrdw
+INFO     EcommerceAPI.src.coupons.validators.coupon_db_validators:coupon_db_validators.py:64 ✅ API coupon matches DB records: ID=20 code=test-inhjltqrdw
+INFO     EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:165 ✅ Coupon matches database record (ID=20)
