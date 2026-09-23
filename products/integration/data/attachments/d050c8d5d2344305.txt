@@ -1,0 +1,16 @@
+DEBUG    EcommerceAPI.src.products.helpers.products_helper:products_helper.py:336 ⚙️ Creating product with payload keys: ['name', 'sku', 'status']
+DEBUG    EcommerceAPI.src.products.api.products_api:products_api.py:74 📡 POST /products payload_keys=['name', 'sku', 'status']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/products → Status code: 201 (completed in 0.191s)
+INFO     EcommerceAPI.src.products.validators.product_validators:product_validators.py:99 ✅ Product structure valid: id=31, name=Original SKU Product, sku=DUPLICATE-SKU-001
+DEBUG    EcommerceAPI.plugins.api.products:products.py:140 ℹ️ Registered product with ID=31 for cleanup.
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/products → Status code: 400 (completed in 0.102s)
+DEBUG    EcommerceAPI.src.clients.api_client:api_client.py:625 {
+                                                                 "code": "product_invalid_sku",
+                                                                 "message": "Invalid or duplicated SKU.",
+                                                                 "data": {
+                                                                   "status": 400,
+                                                                   "resource_id": 31,
+                                                                   "unique_sku": "DUPLICATE-SKU-001-1"
+                                                                 }
+                                                               }
+INFO     EcommerceAPI.src.products.validators.product_validators:product_validators.py:418 ✅ Valid error response received (code=product_invalid_sku status=400)
