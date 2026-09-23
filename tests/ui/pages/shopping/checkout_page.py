@@ -22,11 +22,20 @@ class CheckoutPage:
 
         # Saved billing details are displayed as a summary until the customer
         # explicitly chooses to edit the address.
-        # WooCommerce displays saved billing information as a summary inside
-        # the Billing address section until the customer chooses "Edit address".
         self.billing_address_section = page.get_by_role(
             "group",
             name="Billing address",
+        )
+
+        # The Checkout Block exposes shipping and billing as separate groups
+        # once "Use same address for billing" is unchecked.
+        self.shipping_address_section = page.get_by_role(
+            "group",
+            name="Shipping address",
+        )
+        self.use_same_address_for_billing = page.get_by_role(
+            "checkbox",
+            name="Use same address for billing",
         )
 
         # Payment method recorded during the successful checkout flow.
@@ -58,7 +67,7 @@ class CheckoutPage:
     def should_be_loaded(self) -> None:
         """Verify that the authenticated checkout page is displayed."""
         expect(self.email_input).to_be_visible()
-        expect(self.billing_address_section).to_be_visible()
+        expect(self.shipping_address_section).to_be_visible()
         expect(self.place_order_button).to_be_visible()
 
     def should_have_saved_billing_address(
@@ -82,6 +91,39 @@ class CheckoutPage:
         expect(self.billing_address_section).to_contain_text(province)
         expect(self.billing_address_section).to_contain_text(country)
         expect(self.billing_address_section).to_contain_text(phone)
+
+    def uncheck_use_same_address_for_billing(self) -> None:
+        """Show separate billing and shipping address forms."""
+        self.use_same_address_for_billing.uncheck()
+
+    def edit_shipping_address(self) -> None:
+        """Open the shipping address form from the saved address summary."""
+        self.shipping_address_section.get_by_label("Edit address").click()
+
+    def fill_shipping_address(
+        self,
+        first_name: str,
+        last_name: str,
+        street_address: str,
+        postal_code: str,
+        city: str,
+    ) -> None:
+        """Fill the shipping address shown in the Checkout Block."""
+        self.shipping_address_section.get_by_label("First name").fill(first_name)
+        self.shipping_address_section.get_by_label("Last name").fill(last_name)
+        self.shipping_address_section.get_by_label("Address", exact=True).fill(
+            street_address
+        )
+        self.shipping_address_section.get_by_label("Postal code", exact=True).fill(
+            postal_code
+        )
+        self.shipping_address_section.get_by_label("City").fill(city)
+
+    def should_have_shipping_option(self) -> None:
+        """Verify that the configured flat-rate shipping option is available."""
+        expect(
+            self.page.get_by_role("radio", name=re.compile(r"Flat rate", re.I))
+        ).to_be_visible()
 
     def select_cash_on_delivery(self) -> None:
         """Select Cash on delivery as the checkout payment method."""

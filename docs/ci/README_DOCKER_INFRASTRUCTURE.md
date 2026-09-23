@@ -293,7 +293,8 @@ During the bootstrap it:
 3. Ensures WooCommerce is installed and active.
 4. Ensures WPGraphQL and WPGraphQL for WooCommerce are installed and active.
 5. Configures the checkout shipping destination to use the customer's shipping address.
-6. Configures permalinks.
+6. Configures the `Test Shipping` zone for Spain with a deterministic Flat Rate shipping method (`0.00`, no tax).
+7. Configures permalinks.
 7. Waits for the REST API to become available.
 8. Waits for the GraphQL API to become available.
 9. Generates fresh WooCommerce REST API credentials.

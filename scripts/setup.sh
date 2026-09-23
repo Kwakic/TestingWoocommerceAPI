@@ -464,6 +464,62 @@ docker compose -f docker-compose.wp.yml run --rm -T \
 echo "✅ WooCommerce shipping destination set to customer shipping address"
 
 # ------------------------------------------------------------------
+# STEP 2.3 — Configure UI test shipping zone and Flat Rate method
+#
+# Checkout UI tests require a deterministic shipping option.
+# The zone is limited to Spain because the UI test data uses Spanish
+# customer addresses.
+#
+# The configuration is applied through the WooCommerce REST API so the
+# bootstrap remains idempotent: an existing matching zone/method is
+# reused, while missing configuration is created.
+# ------------------------------------------------------------------
+echo "🚚 Configuring Spain shipping zone and Flat Rate method..."
+
+SHIPPING_ZONE_ID="$(
+    wpcli wp eval '
+        $zones = WC_Shipping_Zones::get_zones();
+        foreach ($zones as $zone) {
+            if ($zone["zone_name"] === "Test Shipping") {
+                echo $zone["zone_id"];
+                exit;
+            }
+        }
+    '
+)"
+
+if [[ -z "$SHIPPING_ZONE_ID" ]]; then
+    echo "➕ Creating Test Shipping zone for Spain..."
+    SHIPPING_ZONE_ID="$(
+        wpcli wp wc shipping_zone create             --name="Test Shipping"             --user="$WP_ADMIN_USER"             --porcelain
+    )"
+
+    wpcli wp wc shipping_zone location "$SHIPPING_ZONE_ID"         --code=ES         --user="$WP_ADMIN_USER"
+else
+    echo "✅ Test Shipping zone already exists (ID: $SHIPPING_ZONE_ID)"
+fi
+
+if ! wpcli wp wc shipping_zone_method list "$SHIPPING_ZONE_ID"     --user="$WP_ADMIN_USER"     --fields=method_id     --format=csv     | grep -qx "flat_rate"; then
+
+    echo "➕ Adding Flat Rate shipping method..."
+    wpcli wp wc shipping_zone_method create         "$SHIPPING_ZONE_ID"         --method_id=flat_rate         --user="$WP_ADMIN_USER"
+else
+    echo "✅ Flat Rate shipping method already exists"
+fi
+
+# Keep the method deterministic for UI tests:
+# tax status = none, cost = 0.
+FLAT_RATE_INSTANCE_ID="$(
+    wpcli wp wc shipping_zone_method list "$SHIPPING_ZONE_ID"         --user="$WP_ADMIN_USER"         --fields=instance_id,method_id         --format=csv         | awk -F',' '$2 == "flat_rate" {print $1; exit}'
+)"
+
+if [[ -n "$FLAT_RATE_INSTANCE_ID" ]]; then
+    wpcli wp wc shipping_zone_method update         "$SHIPPING_ZONE_ID"         "$FLAT_RATE_INSTANCE_ID"         --title="Flat rate"         --settings='{"tax_status":"none","cost":"0"}'         --user="$WP_ADMIN_USER" >/dev/null
+fi
+
+echo "✅ Spain shipping zone configured with Flat Rate at 0.00"
+
+# ------------------------------------------------------------------
 # STEP 2.5 — 🔥 CRITICAL FIX: Permalinks (REST API routing)
 # ------------------------------------------------------------------
 echo "🔧 Configuring permalinks..."
