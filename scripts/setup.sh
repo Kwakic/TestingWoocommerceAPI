@@ -406,7 +406,23 @@ echo "📦 Checking WooCommerce plugin..."
 ensure_plugin woocommerce woocommerce --version="$WOOCOMMERCE_VERSION"
 
 # ------------------------------------------------------------------
-# STEP 2.1 — Enable customer registration on the My Account page
+# STEP 2.1 — Enable Cash on Delivery for UI checkout tests
+#
+# Checkout tests depend on at least one payment method being available.
+# Cash on Delivery is an environment prerequisite, so it is configured
+# here during bootstrap rather than inside individual Playwright tests.
+#
+# The update is idempotent, so repeated local/CI bootstrap runs safely
+# converge on the same enabled payment-gateway state.
+# ------------------------------------------------------------------
+echo "💳 Enabling Cash on Delivery payment method..."
+
+wpcli wp wc payment_gateway update cod     --enabled=true     --user="$WP_ADMIN_USER"
+
+echo "✅ Cash on Delivery payment method enabled"
+
+# ------------------------------------------------------------------
+# STEP 2.2 — Enable customer registration on the My Account page
 #
 # UI registration tests depend on WooCommerce exposing the customer
 # registration form from /my-account/. This is part of the test

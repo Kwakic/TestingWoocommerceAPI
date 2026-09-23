@@ -3,9 +3,9 @@ name: Setup WooCommerce Environment
 description: >
   Starts the Docker-based WooCommerce stack,
   waits for MySQL readiness, bootstraps WooCommerce,
-  captures dynamic API credentials, configures database
-  environment variables, and optionally provisions
-  persistent UI test users.
+  configures checkout prerequisites, captures dynamic API
+  credentials, configures database environment variables,
+  and optionally provisions persistent UI test users.
 
 inputs:
   # --------------------------------------------------
@@ -142,6 +142,8 @@ runs:
     # - Prints stderr tail on failure for fast debugging
     #
     # Contract with setup.sh:
+    # - setup.sh provisions the WooCommerce environment prerequisites,
+    #   including the payment method required by UI checkout tests
     # - setup.sh prints WC_KEY
     # - setup.sh prints WC_SECRET
     # - setup.sh prints WP_ADMIN_APP_PASSWORD
