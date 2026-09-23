@@ -1,0 +1,13 @@
+DEBUG    EcommerceAPI.src.coupons.helpers.coupons_helper:coupons_helper.py:119 ⚙️ Creating coupon with payload keys: ['code']
+DEBUG    EcommerceAPI.src.coupons.api.coupons_api:coupons_api.py:69 📡 POST /coupons payload_keys=['code']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/coupons → Status code: 201 (completed in 0.091s)
+INFO     EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:46 ✅ Coupon structure valid: id=30 code=test-lftstiwnbk
+DEBUG    EcommerceAPI.plugins.api.coupons:coupons.py:125 Registered coupon with ID=30 for cleanup.
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/coupons → Status code: 400 (completed in 0.068s)
+DEBUG    EcommerceAPI.src.clients.api_client:api_client.py:625 {
+                                                                 "code": "woocommerce_rest_coupon_code_already_exists",
+                                                                 "message": "The coupon code already exists",
+                                                                 "data": {
+                                                                   "status": 400
+                                                                 }
+                                                               }
