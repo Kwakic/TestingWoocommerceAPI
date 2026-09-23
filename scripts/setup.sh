@@ -441,6 +441,29 @@ docker compose -f docker-compose.wp.yml run --rm -T \
 echo "✅ Customer registration on My Account enabled"
 
 # ------------------------------------------------------------------
+# STEP 2.2 — Configure checkout shipping destination
+#
+# UI checkout scenarios require WooCommerce to support a shipping
+# destination separate from the customer's billing address.
+#
+# `shipping` means:
+#   • WooCommerce defaults checkout shipping to the customer's
+#     saved shipping address.
+#   • Checkout can use a shipping address different from billing.
+#
+# This is environment configuration, not test logic, so it belongs
+# in the provisioning layer and is applied consistently locally and
+# in CI.
+# ------------------------------------------------------------------
+echo "🚚 Configuring WooCommerce shipping destination..."
+
+docker compose -f docker-compose.wp.yml run --rm -T \
+    -e HTTP_HOST="$WP_HTTP_HOST" \
+    wpcli wp option update woocommerce_ship_to_destination shipping --allow-root
+
+echo "✅ WooCommerce shipping destination set to customer shipping address"
+
+# ------------------------------------------------------------------
 # STEP 2.5 — 🔥 CRITICAL FIX: Permalinks (REST API routing)
 # ------------------------------------------------------------------
 echo "🔧 Configuring permalinks..."

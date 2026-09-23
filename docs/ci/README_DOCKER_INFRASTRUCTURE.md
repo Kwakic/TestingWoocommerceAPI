@@ -53,6 +53,9 @@ This document describes the Docker layer of the [TestingWoocommerceAPI](https://
 
 The same infrastructure is used locally and in GitHub Actions.
 
+Both environments execute the same `scripts/setup.sh` bootstrap, so WooCommerce
+checkout configuration is applied consistently in local development and CI.
+
 Running tests against the same Dockerized services
 helps ensure consistency between local development
 and CI execution.
@@ -179,19 +182,38 @@ Makefile
 docker compose up -d
    ↓
 scripts/setup.sh
+   │
+   ├── WordPress + WooCommerce
+   ├── Cash on Delivery
+   ├── customer registration
+   ├── checkout shipping destination
+   ├── REST / GraphQL
+   └── API credentials
+   ↓
+write_env_credentials.sh
    ↓
 seed_test_products.sh
+   ↓
+seed_test_users.sh
    ↓
 pip install -e "./EcommerceAPI[dev]"
    ↓
 Playwright browser installation
+   ↓
+pre-commit Git hook installation
    ↓
 pytest
 ```
 
 Nothing needs to be run manually — no separate `docker compose up`, no manual WordPress install screen, no manually generated API keys.
 
-`make run` orchestrates the complete local setup, including infrastructure startup, environment bootstrap, framework installation and test execution.
+`make run` orchestrates the complete local setup, including infrastructure startup,
+environment bootstrap, framework installation, Playwright browser installation,
+and the repository Git pre-commit hook.
+
+The hook installation is a **local developer setup step**. It does not configure
+Git hooks inside GitHub Actions; CI runs its validation directly through the
+workflow commands.
 
 ---
 
@@ -236,10 +258,12 @@ The local bootstrap process intentionally separates responsibilities across mult
 
 | Component | Responsibility |
 |-----------|----------------|
-| Makefile | Orchestrates the complete local workflow. |
+| Makefile | Orchestrates the complete local workflow and installs the repository Git pre-commit hook. |
 | docker-compose.wp.yml | Starts the Docker infrastructure. |
-| setup.sh | Installs and configures WordPress and WooCommerce. |
+| setup.sh | Installs/configures WordPress and WooCommerce, including the COD payment prerequisite and checkout shipping-destination configuration required by UI tests. |
 | write_env_credentials.sh | Updates the generated REST and GraphQL authentication credentials inside `.env`. |
+| seed_test_products.sh | Creates/repairs deterministic baseline UI/E2E products. |
+| seed_test_users.sh | Creates/reuses the persistent UI test customer profiles. |
 | EcommerceAPI | Executes the test suite. |
 
 Following the Single Responsibility Principle (SRP), each component owns one specific task. This keeps the bootstrap
@@ -268,13 +292,14 @@ During the bootstrap it:
 2. Installs WordPress (if needed).
 3. Ensures WooCommerce is installed and active.
 4. Ensures WPGraphQL and WPGraphQL for WooCommerce are installed and active.
-5. Configures permalinks.
-6. Waits for the REST API to become available.
-7. Waits for the GraphQL API to become available.
-8. Generates fresh WooCommerce REST API credentials.
-9. Provisions the WordPress Application Password used by authenticated GraphQL operations.
-10. Emits the generated credentials to stdout in a machine-readable format.
-11. Delegates `.env` updates to `write_env_credentials.sh`.
+5. Configures the checkout shipping destination to use the customer's shipping address.
+6. Configures permalinks.
+7. Waits for the REST API to become available.
+8. Waits for the GraphQL API to become available.
+9. Generates fresh WooCommerce REST API credentials.
+10. Provisions the WordPress Application Password used by authenticated GraphQL operations.
+11. Emits the generated credentials to stdout in a machine-readable format.
+12. Delegates `.env` updates to `write_env_credentials.sh`.
 
 This step is **idempotent** — rerunning `make run` skips anything already installed instead of failing or duplicating data.
 

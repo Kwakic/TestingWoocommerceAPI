@@ -2,16 +2,15 @@
 End-to-end UI test for completing a WooCommerce customer checkout.
 
 The scenario validates the complete customer purchase journey through the real
-storefront and checkout UI. Customer A provides the authenticated checkout
-identity; the test establishes the billing data through the checkout UI.
+storefront and checkout UI using Customer A's previously saved billing data.
 """
 
 import pytest
 from playwright.sync_api import Page
 
-from tests.ui.pages.common.home_page import HomePage
 from tests.ui.pages.shopping.cart_page import CartPage
 from tests.ui.pages.shopping.checkout_page import CheckoutPage
+from tests.ui.pages.common.home_page import HomePage
 from tests.ui.pages.shopping.order_confirmation_page import OrderConfirmationPage
 
 
@@ -21,7 +20,7 @@ pytestmark = [
 ]
 
 
-@pytest.mark.xfail(reason="Fixing this bug in setup.sh payment method required")
+@pytest.mark.xfail(reason="Must be changed its profile")
 def test_customer_can_complete_checkout(
     customer_page: Page,
     ui_base_url: str,
@@ -35,51 +34,37 @@ def test_customer_can_complete_checkout(
             -> add product to cart
             -> Cart
             -> Checkout
-            -> enter billing details
+            -> verify saved billing details
             -> select Cash on delivery
             -> add order note
             -> place order
             -> verify order confirmation
-
-    Customer A is used as the stable checkout customer profile. The test does
-    not depend on Customer A having a pre-existing billing address; the billing
-    state required by this checkout scenario is established through the real
-    checkout UI.
     """
     product_name = "UI Seed – Album"
     order_note = "Be smily"
 
-    # -----------------------------------------------------------------------
-    # Arrange: Open the storefront using the isolated authenticated customer.
-    # -----------------------------------------------------------------------
+    # Arrange: Customer A is the stable checkout profile with a saved
+    # billing address. Open the storefront using that isolated account.
     home_page = HomePage(customer_page, ui_base_url)
     home_page.open()
 
-    # -----------------------------------------------------------------------
-    # Act: Add the seeded product to the shopping cart.
-    # -----------------------------------------------------------------------
+    # Act: Add the seeded product to the cart.
     shop_page = home_page.open_shop()
     product_page = shop_page.open_product(product_name)
     product_page.should_be_loaded()
     product_page.add_to_cart()
 
-    # -----------------------------------------------------------------------
     # Act: Open the cart from the add-to-cart confirmation.
-    # -----------------------------------------------------------------------
     cart_page = CartPage(customer_page)
     cart_page.open_from_add_to_cart_notice()
     cart_page.should_be_loaded()
     cart_page.should_contain_product(product_name)
 
-    # -----------------------------------------------------------------------
-    # Act: Open checkout and enter the billing information required for this
-    # purchase. The customer account is authenticated, but the scenario does
-    # not rely on a pre-seeded billing address.
-    # -----------------------------------------------------------------------
+    # Act: Open Checkout and verify Customer A's saved billing information.
     checkout_page = CheckoutPage(customer_page, ui_base_url)
     checkout_page.open()
     checkout_page.should_be_loaded()
-    checkout_page.fill_billing_address(
+    checkout_page.should_have_saved_billing_address(
         first_name="John",
         last_name="Beck",
         street_address="Pl.del Pueblo,10",
@@ -90,21 +75,14 @@ def test_customer_can_complete_checkout(
         phone="753357753",
     )
 
-    # -----------------------------------------------------------------------
     # Act: Select the available payment method and add an order note.
-    # -----------------------------------------------------------------------
     checkout_page.select_cash_on_delivery()
     checkout_page.add_order_note(order_note)
 
-    # -----------------------------------------------------------------------
     # Act: Place the order.
-    # -----------------------------------------------------------------------
     checkout_page.place_order()
 
-    # -----------------------------------------------------------------------
-    # Assert: Verify that WooCommerce created the order and displayed the
-    # expected confirmation details.
-    # -----------------------------------------------------------------------
+    # Assert: Verify WooCommerce created and displayed the order confirmation.
     confirmation_page = OrderConfirmationPage(customer_page)
     confirmation_page.should_be_loaded()
     confirmation_page.should_contain_product(product_name)

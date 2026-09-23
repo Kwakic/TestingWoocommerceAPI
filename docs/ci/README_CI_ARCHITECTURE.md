@@ -19,6 +19,7 @@ Your custom Allure integration implements many advanced reporting concepts.
 The easiest way to understand the repository is to follow the path from a
 developer's local commit to the protected `main` branch.
 
+
 ```text
 Developer
      │
@@ -275,11 +276,15 @@ pytest
 - Creates `.env` from `.env.example` when necessary
 - Starts Docker
 - Orchestrates the complete bootstrap process
+- Installs the repository Git pre-commit hook so fresh clones automatically
+  enable the local pre-commit checks
 
 **setup.sh**
 
 - Installs WordPress
 - Ensures WooCommerce is installed and active
+- Enables Cash on Delivery as the payment method required by checkout UI tests
+- Enables WooCommerce customer registration
 - Ensures WPGraphQL and WPGraphQL for WooCommerce are installed and active
 - Waits for REST and GraphQL readiness
 - Generates fresh WooCommerce REST API credentials
@@ -293,6 +298,48 @@ pytest
 - Never modifies endpoint configuration
 
 This separation allows the same bootstrap script to be reused unchanged by both local development and GitHub Actions.
+
+### Local bootstrap sequence
+
+The responsibilities are deliberately split between the Makefile and `setup.sh`:
+
+```text
+make run
+   │
+   ├── ensure-env
+   │      └── create .env from .env.example if needed
+   │
+   ├── docker compose up
+   │
+   ├── make setup
+   │      │
+   │      ├── scripts/setup.sh
+   │      │      ├── WordPress
+   │      │      ├── WooCommerce
+   │      │      ├── Cash on Delivery
+   │      │      ├── customer registration
+   │      │      ├── permalinks
+   │      │      ├── REST / GraphQL
+   │      │      └── API credentials
+   │      │
+   │      ├── write_env_credentials.sh
+   │      ├── seed_test_products.sh
+   │      └── seed_test_users.sh
+   │
+   ├── install
+   │      ├── Python development dependencies
+   │      ├── Playwright browsers
+   │      └── pre-commit Git hook
+   │
+   └── test
+```
+
+The **Git hook installation is developer tooling**, not WooCommerce
+environment provisioning. The hook is installed by the Makefile so a fresh
+clone does not require the developer to run `pre-commit install` manually.
+
+The **Cash on Delivery configuration is test-environment provisioning**, so
+it belongs in `setup.sh` and is therefore applied both locally and in CI.
 
 ---
 

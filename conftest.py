@@ -37,4 +37,5 @@ pytest_plugins = [
     "tests.ui.fixtures.authentication",
     "tests.ui.fixtures.customers",
     "tests.ui.fixtures.admin",
+    "tests.ui.fixtures.resources",
 ]

@@ -26,6 +26,8 @@ pytestmark = [
 def test_customer_can_register_with_new_email(
     page: Page,
     ui_base_url: str,
+    customer_resource_helper,
+    ui_resources,
 ) -> None:
     """
     Verify that a new customer can successfully register from My Account.
@@ -55,6 +57,11 @@ def test_customer_can_register_with_new_email(
 
     # Act: Submit a new customer registration through the real UI.
     registration_page.register(email=unique_email)
+
+    # Arrange: Resolve the customer created by the UI and register only that
+    # resource for function-scoped teardown.
+    created_customer = customer_resource_helper.get_customer_by_email(unique_email)
+    ui_resources("customers", str(created_customer["id"]))
 
     # Assert: Verify that registration resulted in an authenticated customer
     # session with access to the My Account area.

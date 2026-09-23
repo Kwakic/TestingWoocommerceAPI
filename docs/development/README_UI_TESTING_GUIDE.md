@@ -6,7 +6,7 @@
 > **Scope:** Playwright UI testing with pytest
 > **Current UI coverage:** Guest storefront + authenticated customer flows + admin authentication
 > **Browser coverage:** Chromium, Firefox, WebKit
-> **Last updated:** 2026-09-19
+> **Last updated:** 2026-09-22
 
 This document is the canonical guide for the browser-based UI test layer.
 
@@ -330,21 +330,21 @@ isolate persistent WooCommerce data.
 
 ```text
 Customer A
-  → stable checkout state
-  → must not be mutated by account-edit tests
+  → stable checkout customer
+  → used by checkout E2E scenarios
+  → must not be mutated by unrelated account-management tests
 
 Customer B
-  → no saved billing address
-  → used for address-entry scenarios
+  → dedicated address-management customer
+  → used for shipping-address entry/edit scenarios
 
 Customer C
-  → mutable account state
+  → mutable account/profile customer
   → used by profile/account-edit scenarios
 ```
 
 Account-edit tests must use `profile_customer_page` rather than the stable
-checkout profile. Checkout tests that depend on a saved address must use
-`checkout_customer_page`.
+checkout profile. Authenticated checkout tests use `checkout_customer_page`; the checkout test enters its billing details.
 
 This separation prevents persisted changes in one business scenario from
 changing the starting state of another scenario.
@@ -492,25 +492,163 @@ Admin
 `customer` access role and delegates to the default checkout customer profile.
 Tests that require a specific profile should request that profile directly.
 
-### Customer profiles
+### 🪪 Customer profiles
 
-Customer profiles are dedicated accounts used to provide controlled test data
-and avoid coupling unrelated scenarios to the same persisted account state.
+Customer profiles are three separate WooCommerce customer accounts. They are
+not different application roles. All three fixtures do the same technical job:
+they log in as a specific customer and return an authenticated Playwright page.
+
+The reason for having three accounts is **test-data isolation**. Different UI
+scenarios can change persistent customer data, so unrelated tests should not
+share the same WooCommerce account.
+
+| Profile | Fixture | What it is used for | What the test does |
+|---|---|---|---|
+| **Customer A** | `checkout_customer_page` | Checkout E2E scenarios | Enters **billing details on the Checkout page**, selects a payment method, places an order, and completes the checkout journey |
+| **Customer B** | `no_address_customer_page` | Account address-management scenarios | Enters or changes the customer's **shipping address** through My Account → Addresses |
+| **Customer C** | `profile_customer_page` | Account/profile-management scenarios | Changes customer account/profile information through My Account → Account Details |
+
+---
+
+#### 🔹 Customer A — `checkout_customer_page`
+
+`checkout_customer_page` logs in as Customer A.
+
+Customer A is the stable customer account reserved for **checkout E2E scenarios**. The
+checkout test owns the billing state because entering billing details is part of the
+checkout journey being tested.
+
+For example:
 
 ```text
-checkout_customer_page
-    → stable customer used by checkout scenarios
-
-no_address_customer_page
-    → customer used by address-entry/address-management scenarios
-
-profile_customer_page
-    → mutable customer used by account/profile-edit scenarios
+Customer A
+    ↓
+Login
+    ↓
+Shop → Product → Cart
+    ↓
+Checkout
+    ↓
+Enter billing details
+    ↓
+Select Cash on Delivery
+    ↓
+Place order
+    ↓
+Order confirmation
 ```
 
-The profile fixtures only authenticate their accounts. They do not create
-billing addresses, shipping addresses, products, orders, or other application
-state. Tests establish scenario-specific state explicitly when required.
+The fixture does **not** create a billing address. The test establishes the billing
+details through the Checkout UI as part of the E2E flow.
+
+> **Important:** Customer A could technically also manage an address through My Account.
+> The profile is kept dedicated to checkout so that address-management tests do not
+> mutate the persistent customer state used by checkout scenarios.
+
+---
+
+#### 🔹 Customer B — `no_address_customer_page`
+
+`no_address_customer_page` logs in as Customer B.
+
+Customer B is a dedicated customer account for **account address-management scenarios**.
+The current coverage uses this account to create and modify a **shipping address**
+through **My Account → Addresses**.
+
+For example:
+
+```text
+Customer B
+    ↓
+Login
+    ↓
+My Account
+    ↓
+Addresses
+    ↓
+Enter / edit shipping address
+    ↓
+Save
+    ↓
+Verify the shipping address
+    ↓
+Verify persistence
+```
+
+The fixture itself does not remove, create, or verify an address. The test owns the
+shipping-address operation and establishes the state it needs through the UI.
+
+This account is kept separate from Customer A so that address-management tests do not
+modify the persistent customer account used by checkout E2E scenarios.
+
+> **Important:** Customer B is not a different WooCommerce role or capability.
+> It is simply a dedicated test account whose persistent data is isolated for
+> address-management scenarios.
+
+---
+
+#### 🔹 Customer C — `profile_customer_page`
+
+`profile_customer_page` logs in as Customer C.
+
+Customer C is a dedicated customer account for **account/profile-management scenarios**,
+such as editing customer information through **My Account → Account Details**.
+
+For example:
+
+```text
+Customer C
+    ↓
+Login
+    ↓
+My Account
+    ↓
+Account Details
+    ↓
+Change profile information
+    ↓
+Save
+    ↓
+Verify the updated information
+```
+
+Customer C is separate because these tests are expected to mutate persistent customer
+profile information.
+
+---
+
+### 🤔 What the profile fixtures actually do
+
+All three customer-profile fixtures follow the same pattern:
+
+```text
+fixture
+   ↓
+read that customer's credentials from environment variables
+   ↓
+open the customer login page
+   ↓
+log in
+   ↓
+return authenticated Page
+```
+
+They do **not**:
+
+- create or delete users
+- create billing or shipping addresses
+- create products
+- create orders
+- reset customer data
+- prepare scenario-specific application state
+
+The test is responsible for performing the business operation it is intended
+to validate.
+
+This gives us a simple rule:
+
+> **The fixture chooses the customer account. The test performs the business
+> scenario.**
 
 ### Role router
 
@@ -546,7 +684,17 @@ Building a permission/capability matrix and test meaningful combinations.
 
 # 9. 🌱 UI Test Data
 
-UI/E2E tests use deterministic baseline WooCommerce products.
+UI/E2E tests use deterministic baseline WooCommerce products and dedicated
+persistent customer accounts.
+
+The framework separates **environment prerequisites** from **test data**:
+
+- `scripts/setup.sh` configures the WooCommerce application and required
+  environment capabilities, including Cash on Delivery for checkout.
+- `scripts/seed_test_products.sh` provisions deterministic baseline products.
+- `scripts/seed_test_users.sh` provisions the persistent UI customer accounts.
+- Individual tests create or modify only the scenario-specific state they are
+  responsible for validating.
 
 Current baseline products:
 
@@ -592,12 +740,71 @@ The seed script imports these local files into WordPress through WP-CLI.
 This deliberately avoids external image URLs and makes clean local and CI
 bootstrap reproducible.
 
+### Persistent customer profiles
+
+The UI seed also provisions the dedicated customer accounts used by the fixture
+architecture:
+
+```text
+Customer A → checkout_customer_page
+Customer B → no_address_customer_page
+Customer C → profile_customer_page
+```
+
+These accounts are environment-level test prerequisites. The seed script creates
+missing users or reuses existing users and does not create billing addresses,
+orders, products, or other scenario state.
+
+A test establishes scenario-specific state through the UI when that state is
+part of the behavior being validated. For example, the authenticated checkout
+flow enters billing details during the checkout scenario rather than depending
+on a pre-seeded billing address.
+
+This deliberately avoids external image URLs and makes clean local and CI
+bootstrap reproducible.
+
 A clean environment can therefore be rebuilt with:
 
 ```bash
 make clean
 make run
 ```
+
+### Environment prerequisites for UI checkout
+
+Some UI scenarios depend on WooCommerce configuration rather than test data.
+Cash on Delivery (COD) is enabled by `scripts/setup.sh` during WooCommerce
+bootstrap so checkout tests have a deterministic payment method available.
+
+The payment method is therefore an **environment prerequisite**, not something
+configured by a Playwright test, fixture, or Page Object.
+
+The baseline setup flow is:
+
+```text
+make run
+  │
+  ├── Docker / WooCommerce bootstrap
+  │     ├── WordPress
+  │     ├── WooCommerce
+  │     ├── Cash on Delivery
+  │     ├── customer registration
+  │     └── REST / GraphQL configuration
+  │
+  ├── seed_test_products.sh
+  ├── seed_test_users.sh
+  ├── framework + Playwright installation
+  ├── pre-commit Git hook installation
+  └── pytest
+```
+
+The repository Git hook is installed automatically during the local installation
+flow. Developers do not need to run `pre-commit install` manually after a fresh
+clone.
+
+The local Git hook and CI validation are separate concerns: the hook provides
+fast developer feedback, while GitHub Actions executes the authoritative CI
+checks directly.
 
 ---
 
@@ -653,8 +860,13 @@ make run
 ```
 
 This prepares the Dockerized WooCommerce environment, installs the framework
-dependencies and Playwright browser binaries, seeds the deterministic UI/E2E
-data, and runs pytest.
+dependencies and Playwright browser binaries, provisions the required UI/E2E
+environment and baseline data, installs the repository pre-commit Git hook, and
+runs pytest.
+
+The WooCommerce bootstrap also enables Cash on Delivery so checkout tests have
+a deterministic payment method available. The Git hook is a local developer
+tool; CI does not depend on `.git/hooks` and runs its checks directly.
 
 After the environment is prepared, browser-specific UI runs can be executed
 directly:
@@ -948,7 +1160,7 @@ The current UI suite includes browser-tested coverage for:
 - Customer Account details update
 - Customer Account details required-field validation
 - Guest checkout
-- Authenticated customer checkout with a saved billing address
+- Authenticated customer checkout with billing details entered during the flow
 - Order confirmation
 - Admin authentication
 
@@ -1033,7 +1245,13 @@ Current stabilization work
        │     └── explicit scenario state
        │
        ▼
-Customer B address-entry checkout
+Customer checkout stabilization
+       ├── environment payment prerequisites
+       ├── billing-address entry
+       └── cross-browser checkout validation
+       │
+       ▼
+Customer B address-management scenarios
        │
        ▼
 CartItem component
@@ -1099,6 +1317,10 @@ clear reason for them.
     flows.**
 16. **Keep browser-specific workarounds narrow, evidence-based and local to the
     affected interaction.**
+17. **Keep application environment prerequisites in bootstrap/setup, not in UI
+    tests or Page Objects.**
+18. **Keep persistent baseline data in seed scripts and establish scenario-specific
+    state inside the test when that state is part of the behavior under test.**
 
 ---
 
