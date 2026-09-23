@@ -1,8 +1,5 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Tue Sep 22 19:40:26 UTC 2026","Tue Sep 22 19:40:26 UTC 2026","293","tests.products.api","test_get_products","","","","test_get_product_by_id","
-Verify that a product can be retrieved successfully by ID.
-"
-"passed","Tue Sep 22 19:40:26 UTC 2026","Tue Sep 22 19:40:26 UTC 2026","329","tests.products.api","test_create_products","","","","test_create_single_simple_product","
+"passed","Wed Sep 23 18:46:51 UTC 2026","Wed Sep 23 18:46:53 UTC 2026","2435","tests.products.api","test_create_products","","","","test_create_single_simple_product","
 Create a simple product using the minimum valid payload.
 
 The fixture `create_valid_product` already performs:
@@ -17,4 +14,7 @@ Test flow:
     1. Create a simple product
     2. Fetch product via API
     3. Verify API data matches database record
+"
+"passed","Wed Sep 23 18:46:54 UTC 2026","Wed Sep 23 18:46:56 UTC 2026","1976","tests.products.api","test_get_products","","","","test_get_product_by_id","
+Verify that a product can be retrieved successfully by ID.
 "
