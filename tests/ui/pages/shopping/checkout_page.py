@@ -29,13 +29,6 @@ class CheckoutPage:
             name="Billing address",
         )
 
-        # Shipping-address section used when checkout requires a destination
-        # different from the customer's saved billing address.
-        self.shipping_address_section = page.get_by_role(
-            "group",
-            name="Shipping address",
-        )
-
         # Payment method recorded during the successful checkout flow.
         self.cash_on_delivery = page.get_by_text(
             "Cash on delivery",
@@ -89,49 +82,6 @@ class CheckoutPage:
         expect(self.billing_address_section).to_contain_text(province)
         expect(self.billing_address_section).to_contain_text(country)
         expect(self.billing_address_section).to_contain_text(phone)
-
-    def fill_shipping_address(
-        self,
-        first_name: str,
-        last_name: str,
-        street_address: str,
-        city: str,
-        postal_code: str,
-    ) -> None:
-        """Fill the checkout shipping address with a destination different from billing."""
-        self.shipping_address_section.get_by_role(
-            "textbox",
-            name="First name *",
-        ).fill(first_name)
-        self.shipping_address_section.get_by_role(
-            "textbox",
-            name="Last name *",
-        ).fill(last_name)
-        self.shipping_address_section.get_by_role(
-            "textbox",
-            name="Street address *",
-        ).fill(street_address)
-        self.shipping_address_section.get_by_role(
-            "textbox",
-            name="Town / City *",
-        ).fill(city)
-        self.shipping_address_section.locator("#shipping_postcode").fill(postal_code)
-
-    def should_have_shipping_address(
-        self,
-        first_name: str,
-        last_name: str,
-        street_address: str,
-        city: str,
-        postal_code: str,
-    ) -> None:
-        """Verify that the requested shipping address is displayed at checkout."""
-        expect(self.shipping_address_section).to_contain_text(
-            f"{first_name} {last_name}"
-        )
-        expect(self.shipping_address_section).to_contain_text(street_address)
-        expect(self.shipping_address_section).to_contain_text(city)
-        expect(self.shipping_address_section).to_contain_text(postal_code)
 
     def select_cash_on_delivery(self) -> None:
         """Select Cash on delivery as the checkout payment method."""
