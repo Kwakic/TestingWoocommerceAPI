@@ -51,6 +51,10 @@ A typical development session looks like this:
 git pull
     ↓
 make run
+    │
+    ├── bootstrap WooCommerce test environment
+    ├── install Playwright browsers
+    └── install repository pre-commit Git hook
     ↓
 Implement changes
     ↓
@@ -239,6 +243,10 @@ During the bootstrap process, WooCommerce automatically generates
 a fresh pair of REST API credentials for the newly provisioned
 WordPress installation. These credentials are then merged into
 `.env` by `write_env_credentials.sh`.
+
+The WooCommerce bootstrap also enables **Cash on Delivery**. This is an
+environment prerequisite for the checkout UI tests, so the payment method is
+configured by `setup.sh` rather than by individual Playwright tests.
 
 The same `make run` bootstrap also installs the project's Python
 development dependencies and Playwright browser binaries.

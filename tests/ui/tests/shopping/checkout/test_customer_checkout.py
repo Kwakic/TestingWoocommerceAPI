@@ -20,7 +20,6 @@ pytestmark = [
 ]
 
 
-@pytest.mark.xfail(reason="Must be changed its profile")
 def test_customer_can_complete_checkout(
     customer_page: Page,
     ui_base_url: str,
@@ -43,8 +42,8 @@ def test_customer_can_complete_checkout(
     product_name = "UI Seed – Album"
     order_note = "Be smily"
 
-    # Arrange: Customer A is the stable checkout profile with a saved
-    # billing address. Open the storefront using that isolated account.
+    # Arrange: Customer A is the stable checkout profile used for checkout
+    # E2E scenarios. Open the storefront using that isolated account.
     home_page = HomePage(customer_page, ui_base_url)
     home_page.open()
 
@@ -73,6 +72,81 @@ def test_customer_can_complete_checkout(
         province="Madrid",
         country="Spain",
         phone="753357753",
+    )
+
+    # Act: Select the available payment method and add an order note.
+    checkout_page.select_cash_on_delivery()
+    checkout_page.add_order_note(order_note)
+
+    # Act: Place the order.
+    checkout_page.place_order()
+
+    # Assert: Verify WooCommerce created and displayed the order confirmation.
+    confirmation_page = OrderConfirmationPage(customer_page)
+    confirmation_page.should_be_loaded()
+    confirmation_page.should_contain_product(product_name)
+    confirmation_page.should_show_order_note(order_note)
+
+
+@pytest.mark.xfail(reason="Must enable shipping within the setup")
+def test_customer_can_complete_checkout_with_different_shipping_address(
+    customer_page: Page,
+    ui_base_url: str,
+) -> None:
+    """
+    Verify that an authenticated customer can complete checkout using a
+    shipping address different from the saved billing address.
+    """
+    product_name = "UI Seed – Album"
+    order_note = "Different shipping address"
+
+    # Arrange: Customer A is the stable checkout profile used for checkout
+    # E2E scenarios. Open the storefront using that isolated account.
+    home_page = HomePage(customer_page, ui_base_url)
+    home_page.open()
+
+    # Act: Add the seeded product to the cart.
+    shop_page = home_page.open_shop()
+    product_page = shop_page.open_product(product_name)
+    product_page.should_be_loaded()
+    product_page.add_to_cart()
+
+    # Act: Open the cart from the add-to-cart confirmation.
+    cart_page = CartPage(customer_page)
+    cart_page.open_from_add_to_cart_notice()
+    cart_page.should_be_loaded()
+    cart_page.should_contain_product(product_name)
+
+    # Act: Open Checkout and verify the saved billing address.
+    checkout_page = CheckoutPage(customer_page, ui_base_url)
+    checkout_page.open()
+    checkout_page.should_be_loaded()
+    checkout_page.should_have_saved_billing_address(
+        first_name="John",
+        last_name="Beck",
+        street_address="Pl.del Pueblo,10",
+        postal_code="28100",
+        city="Madrid",
+        province="Madrid",
+        country="Spain",
+        phone="753357753",
+    )
+
+    # Act: Enter a shipping destination that differs from the saved billing
+    # address and verify that the requested shipping details are displayed.
+    checkout_page.fill_shipping_address(
+        first_name="John",
+        last_name="Beck",
+        street_address="Calle de la Prueba,25",
+        city="Alcobendas",
+        postal_code="28109",
+    )
+    checkout_page.should_have_shipping_address(
+        first_name="John",
+        last_name="Beck",
+        street_address="Calle de la Prueba,25",
+        city="Alcobendas",
+        postal_code="28109",
     )
 
     # Act: Select the available payment method and add an order note.

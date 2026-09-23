@@ -305,12 +305,9 @@ tests/
 ├── pages/                        ← Page Objects
 ├── components/                   ← Reusable UI components
 ├── data/                         ← UI test data
-├── conftest.py                   ← UI-specific fixtures
+├── fixtures.py                   ← UI-specific fixtures
 └── README.md                     ← UI testing guide
-│
-├── __init__.py
-├── conftest.py                       ← Shared root fixtures
-└── README.md                         ← Test suite documentation
+
 ```
 
 ### 📋 Test Types per Domain
@@ -914,9 +911,9 @@ TestEcommerceAPI (project suite/root)
 │     │            └───  __init__.py
 │     │
 │     ├── pages/                                     ← Page Objects
-│     ├── fixtures/                                  ← UI Fixtures
+│     ├── fixtures/                                  ← UI pytest lifecycle/authentication fixtures
 │     ├── components/                                ← Reusable UI components
-│     ├── data/                                      ← UI test data
+│     ├── data/                                      ← UI test data/assets
 │     ├── config.py                                  ← UI environment configuration
 │     └── README.md                                  ← UI testing guide
 │
