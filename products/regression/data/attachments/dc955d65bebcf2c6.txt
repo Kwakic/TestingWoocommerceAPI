@@ -1,0 +1,14 @@
+DEBUG    EcommerceAPI.src.products.helpers.products_helper:products_helper.py:336 ⚙️ Creating product with payload keys: ['name', 'description', 'sku', 'status', 'type', 'regular_price', 'short_description']
+DEBUG    EcommerceAPI.src.products.api.products_api:products_api.py:74 📡 POST /products payload_keys=['name', 'description', 'sku', 'status', 'type', 'regular_price', 'short_description']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/products → Status code: 201 (completed in 0.145s)
+INFO     EcommerceAPI.src.products.validators.product_validators:product_validators.py:99 ✅ Product structure valid: id=25, name=Created Populated Product, sku=CREATE-POPULATED-001
+DEBUG    EcommerceAPI.plugins.api.products:products.py:140 ℹ️ Registered product with ID=25 for cleanup.
+DEBUG    EcommerceAPI.src.products.helpers.products_helper:products_helper.py:98 🟢 Calling 'Get Product' for ID 25.
+DEBUG    EcommerceAPI.src.products.api.products_api:products_api.py:88 📡 GET /products/25
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/products/25 → Status code: 200 (completed in 0.095s)
+DEBUG    EcommerceAPI.src.products.dao.products_dao:products_dao.py:83 ℹ️ Found product for ID=25: {'ID': 25, 'post_author': 1, 'post_date': datetime.datetime(2026, 9, 23, 7, 40, 10), 'post_date_gmt': datetime.datetime(2026, 9, 23, 7, 40, 10), 'post_content': 'Product created with populated fields.', 'post_title': 'Created Populated Product', 'post_excerpt': 'Populated product test.', 'post_status': 'publish', 'comment_status': 'open', 'ping_status': 'closed', 'post_password': '', 'post_name': 'created-populated-product', 'to_ping': '', 'pinged': '', 'post_modified': datetime.datetime(2026, 9, 23, 7, 40, 10), 'post_modified_gmt': datetime.datetime(2026, 9, 23, 7, 40, 10), 'post_content_filtered': '', 'post_parent': 0, 'guid': 'http://localhost:8080/product/created-populated-product/', 'menu_order': 0, 'post_type': 'product', 'post_mime_type': '', 'comment_count': 0}
+DEBUG    EcommerceAPI.src.products.validators.product_validators:product_validators.py:289 ⚙️ Validating product by ID=25
+INFO     EcommerceAPI.src.products.validators.product_validators:product_validators.py:99 ✅ Product structure valid: id=25, name=Created Populated Product, sku=CREATE-POPULATED-001
+INFO     EcommerceAPI.src.products.validators.product_validators:product_validators.py:144 ✅ Product found in dataset: id=25 name=Created Populated Product
+INFO     EcommerceAPI.src.products.validators.product_validators:product_validators.py:299 ✅ Product found in API response (id=25, name=Created Populated Product)
+INFO     EcommerceAPI.src.products.validators.product_validators:product_validators.py:311 ✅ Product matches database record (ID=25)
