@@ -1,8 +1,8 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Wed Sep 23 22:40:16 UTC 2026","Wed Sep 23 22:40:16 UTC 2026","292","tests.products.api","test_get_products","","","","test_get_product_by_id","
+"passed","Thu Sep 24 16:02:08 UTC 2026","Thu Sep 24 16:02:08 UTC 2026","219","tests.products.api","test_get_products","","","","test_get_product_by_id","
 Verify that a product can be retrieved successfully by ID.
 "
-"passed","Wed Sep 23 22:40:15 UTC 2026","Wed Sep 23 22:40:15 UTC 2026","323","tests.products.api","test_create_products","","","","test_create_single_simple_product","
+"passed","Thu Sep 24 16:02:07 UTC 2026","Thu Sep 24 16:02:07 UTC 2026","267","tests.products.api","test_create_products","","","","test_create_single_simple_product","
 Create a simple product using the minimum valid payload.
 
 The fixture `create_valid_product` already performs:
