@@ -299,6 +299,12 @@ pytest
 
 This separation allows the same bootstrap script to be reused unchanged by both local development and GitHub Actions.
 
+The shared bootstrap also provisions deterministic UI customer state through
+`seed_test_users.sh`. Customer A's saved billing and shipping address is part
+of that baseline because the authenticated checkout UI tests depend on it.
+Therefore a clean CI environment does not rely on a previous UI test to create
+Customer A's checkout address.
+
 ### Local bootstrap sequence
 
 The responsibilities are deliberately split between the Makefile and `setup.sh`:

@@ -263,7 +263,7 @@ The local bootstrap process intentionally separates responsibilities across mult
 | setup.sh | Installs/configures WordPress and WooCommerce, including the COD payment prerequisite and checkout shipping-destination configuration required by UI tests. |
 | write_env_credentials.sh | Updates the generated REST and GraphQL authentication credentials inside `.env`. |
 | seed_test_products.sh | Creates/repairs deterministic baseline UI/E2E products. |
-| seed_test_users.sh | Creates/reuses the persistent UI test customer profiles. |
+| seed_test_users.sh | Creates/reuses the persistent UI test customer profiles and provisions Customer A's baseline billing/shipping address required by checkout UI tests. |
 | EcommerceAPI | Executes the test suite. |
 
 Following the Single Responsibility Principle (SRP), each component owns one specific task. This keeps the bootstrap
@@ -365,11 +365,25 @@ The next `make run` therefore performs a completely clean WordPress/WooCommerce 
 A clean reset removes the WooCommerce application data used by the UI/E2E
 suite.
 
-The next `make run` therefore recreates the deterministic baseline products
-required by Playwright UI/E2E tests before pytest starts.
+The next `make run` therefore recreates the deterministic baseline UI/E2E
+state required by Playwright before pytest starts:
 
-The seed operation is idempotent, so running `make run` against an existing
-environment does not create duplicate baseline products.
+- baseline products are provisioned by `seed_test_products.sh`;
+- Customer A, Customer B, and Customer C are provisioned by
+  `seed_test_users.sh`;
+- Customer A's baseline billing and shipping address is provisioned by
+  `seed_test_users.sh` because checkout tests depend on that saved customer
+  state;
+- Customer B remains the dedicated address-management customer whose shipping
+  address is established by its own UI tests;
+- Customer C remains the dedicated mutable profile customer.
+
+This keeps checkout prerequisites in the environment bootstrap instead of
+depending on another UI test having created the state first.
+
+The seed operations are idempotent: repeated `make run` executions reuse
+existing users/products and converge Customer A's baseline checkout address
+to the expected values.
 
 ### 🖼️ Repository-local UI image fixtures
 

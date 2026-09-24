@@ -504,7 +504,7 @@ share the same WooCommerce account.
 
 | Profile | Fixture | What it is used for | What the test does |
 |---|---|---|---|
-| **Customer A** | `checkout_customer_page` | Checkout E2E scenarios | Enters **billing details on the Checkout page**, selects a payment method, places an order, and completes the checkout journey |
+| **Customer A** | `checkout_customer_page` | Checkout E2E scenarios | Uses the seeded **saved billing/shipping baseline**, applies checkout-specific shipping changes when required, selects a payment method, places an order, and completes the checkout journey |
 | **Customer B** | `no_address_customer_page` | Account address-management scenarios | Enters or changes the customer's **shipping address** through My Account → Addresses |
 | **Customer C** | `profile_customer_page` | Account/profile-management scenarios | Changes customer account/profile information through My Account → Account Details |
 
@@ -514,14 +514,20 @@ share the same WooCommerce account.
 
 `checkout_customer_page` logs in as Customer A.
 
-Customer A is the stable customer account reserved for **checkout E2E scenarios**. The
-checkout test owns the billing state because entering billing details is part of the
-checkout journey being tested.
+Customer A is the stable customer account reserved for **checkout E2E scenarios**.
+Its baseline billing and shipping address is provisioned by
+`scripts/seed_test_users.sh` as environment-level test data.
+
+The checkout test does **not** create that prerequisite through My Account. This
+prevents the checkout scenario from depending on another UI test having created
+the customer address first.
 
 For example:
 
 ```text
-Customer A
+Bootstrap
+    ↓
+Customer A + saved billing/shipping address
     ↓
 Login
     ↓
@@ -529,7 +535,9 @@ Shop → Product → Cart
     ↓
 Checkout
     ↓
-Enter billing details
+Use the saved billing/shipping state
+    ↓
+Apply checkout-specific address changes when required
     ↓
 Select Cash on Delivery
     ↓
@@ -538,12 +546,12 @@ Place order
 Order confirmation
 ```
 
-The fixture does **not** create a billing address. The test establishes the billing
-details through the Checkout UI as part of the E2E flow.
+The fixture still only authenticates Customer A. It does not seed or modify the
+address at test time.
 
-> **Important:** Customer A could technically also manage an address through My Account.
-> The profile is kept dedicated to checkout so that address-management tests do not
-> mutate the persistent customer state used by checkout scenarios.
+> **Important:** Customer A's address is an environment prerequisite, not a
+> business action being tested by checkout. Address-management behavior remains
+> isolated to Customer B's My Account → Addresses scenarios.
 
 ---
 
@@ -692,7 +700,8 @@ The framework separates **environment prerequisites** from **test data**:
 - `scripts/setup.sh` configures the WooCommerce application and required
   environment capabilities, including Cash on Delivery for checkout.
 - `scripts/seed_test_products.sh` provisions deterministic baseline products.
-- `scripts/seed_test_users.sh` provisions the persistent UI customer accounts.
+- `scripts/seed_test_users.sh` provisions the persistent UI customer accounts
+  and Customer A's baseline billing/shipping address required by checkout.
 - Individual tests create or modify only the scenario-specific state they are
   responsible for validating.
 
@@ -752,8 +761,10 @@ Customer C → profile_customer_page
 ```
 
 These accounts are environment-level test prerequisites. The seed script creates
-missing users or reuses existing users and does not create billing addresses,
-orders, products, or other scenario state.
+missing users or reuses existing users. It also provisions Customer A's baseline
+billing and shipping address because that saved state is a prerequisite for the
+checkout E2E scenarios. It does not create orders, products, or other
+scenario-specific state.
 
 A test establishes scenario-specific state through the UI when that state is
 part of the behavior being validated. For example, the authenticated checkout
@@ -1160,7 +1171,8 @@ The current UI suite includes browser-tested coverage for:
 - Customer Account details update
 - Customer Account details required-field validation
 - Guest checkout
-- Authenticated customer checkout with billing details entered during the flow
+- Authenticated customer checkout using seeded saved billing/shipping data and
+  checkout-specific address changes
 - Order confirmation
 - Admin authentication
 

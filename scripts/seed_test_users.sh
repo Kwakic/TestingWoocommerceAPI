@@ -94,7 +94,7 @@ WP_HTTP_HOST="localhost:8080"
 # The seed is idempotent:
 # - Existing users are reused.
 # - Missing users are created.
-# - Existing passwords/profile data are not modified.
+# - Existing credentials are reconciled from the environment.
 # --------------------------------------------------
 
 seed_customer() {
@@ -111,7 +111,12 @@ seed_customer() {
     )
 
     if [ -n "$existing_user_id" ]; then
-        echo "✅ $description already exists: $username (ID: $existing_user_id)"
+        echo "🔄 $description already exists: $username (ID: $existing_user_id)"
+        echo "   Reconciling credentials with environment..."
+
+        docker compose -f docker-compose.wp.yml run --rm             -e HTTP_HOST="$WP_HTTP_HOST"             wpcli wp user update             "$username"             --user_email="$email"             --user_pass="$password"             --display_name="$username"             --allow-root
+
+        echo "✅ $description credentials updated: $username"
         return
     fi
 
