@@ -38,19 +38,13 @@ class CheckoutPage:
             name="Use same address for billing",
         )
 
-        # Payment method recorded during the successful checkout flow.
-        self.cash_on_delivery = page.get_by_text(
-            "Cash on delivery",
-            exact=True,
-        )
-
         self.add_order_note_checkbox = page.get_by_role(
             "checkbox",
             name="Add a note to your order",
         )
         self.order_note_input = page.get_by_role(
             "textbox",
-            name="Notes about your order.",
+            name="Notes about your order, e.g.",
         )
         self.place_order_button = page.get_by_role(
             "button",
@@ -92,6 +86,10 @@ class CheckoutPage:
         expect(self.billing_address_section).to_contain_text(country)
         expect(self.billing_address_section).to_contain_text(phone)
 
+    def check_use_same_address_for_billing(self) -> None:
+        """Use the shipping address as the billing address."""
+        self.use_same_address_for_billing.check()
+
     def uncheck_use_same_address_for_billing(self) -> None:
         """Show separate billing and shipping address forms."""
         self.use_same_address_for_billing.uncheck()
@@ -108,8 +106,19 @@ class CheckoutPage:
         postal_code: str,
         city: str,
     ) -> None:
-        """Fill the shipping address shown in the Checkout Block."""
-        self.shipping_address_section.get_by_label("First name").fill(first_name)
+        """
+        Fill the shipping address shown in the Checkout Block.
+
+        WooCommerce may display a saved shipping address as a summary
+        instead of showing the editable fields. When that happens, open
+        the shipping address form before entering the supplied address.
+        """
+        first_name_input = self.shipping_address_section.get_by_label("First name")
+
+        if not first_name_input.is_visible():
+            self.edit_shipping_address()
+
+        first_name_input.fill(first_name)
         self.shipping_address_section.get_by_label("Last name").fill(last_name)
         self.shipping_address_section.get_by_label("Address", exact=True).fill(
             street_address
@@ -124,10 +133,6 @@ class CheckoutPage:
         expect(
             self.page.get_by_role("radio", name=re.compile(r"Flat rate", re.I))
         ).to_be_visible()
-
-    def select_cash_on_delivery(self) -> None:
-        """Select Cash on delivery as the checkout payment method."""
-        self.cash_on_delivery.click()
 
     def add_order_note(self, note: str) -> None:
         """Enable the order-note field and enter the supplied note."""

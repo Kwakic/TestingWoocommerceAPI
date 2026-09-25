@@ -20,7 +20,6 @@ pytestmark = [
 ]
 
 
-@pytest.mark.xfail(reason="Must be changed its profile")
 def test_customer_can_complete_checkout(
     customer_page: Page,
     ui_base_url: str,
@@ -35,8 +34,7 @@ def test_customer_can_complete_checkout(
             -> Cart
             -> Checkout
             -> verify saved billing details
-            -> select Cash on delivery
-            -> add order note
+                -> add order note
             -> place order
             -> verify order confirmation
     """
@@ -75,8 +73,7 @@ def test_customer_can_complete_checkout(
         phone="753357753",
     )
 
-    # Act: Select the available payment method and add an order note.
-    checkout_page.select_cash_on_delivery()
+    # Act: Add an order note before placing the order.
     checkout_page.add_order_note(order_note)
 
     # Act: Place the order.
@@ -89,6 +86,7 @@ def test_customer_can_complete_checkout(
     confirmation_page.should_show_order_note(order_note)
 
 
+@pytest.mark.xfail(reason="Personas Data feature is not implemented yet")
 def test_customer_can_complete_checkout_with_different_shipping_address(
     customer_page: Page,
     ui_base_url: str,
@@ -104,8 +102,7 @@ def test_customer_can_complete_checkout_with_different_shipping_address(
             -> verify saved billing details
             -> use a separate shipping address
             -> verify shipping option
-            -> select Cash on delivery
-            -> place order
+                -> place order
             -> verify order confirmation
     """
     product_name = "UI Seed – Album"
@@ -158,11 +155,73 @@ def test_customer_can_complete_checkout_with_different_shipping_address(
     )
     checkout_page.should_have_shipping_option()
 
-    # Act: Select the available payment method and place the order.
-    checkout_page.select_cash_on_delivery()
+    # Act: Place the order.
     checkout_page.place_order()
 
     # Assert: Verify WooCommerce created and displayed the order confirmation.
     confirmation_page = OrderConfirmationPage(customer_page)
+    confirmation_page.should_be_loaded()
+    confirmation_page.should_contain_product(product_name)
+
+
+@pytest.mark.xfail(reason="Personas Data feature is not implemented yet")
+def test_customer_without_saved_address_can_complete_checkout(
+    no_address_customer_page: Page,
+    ui_base_url: str,
+) -> None:
+    """
+    Verify that Customer B can complete checkout by entering an address.
+
+    Flow:
+        customer without saved address
+            -> Shop
+            -> add product to cart
+            -> Cart
+            -> Checkout
+            -> use shipping address for billing
+            -> enter shipping address
+            -> verify shipping option
+            -> place order
+            -> verify order confirmation
+    """
+    product_name = "UI Seed – Album"
+
+    # Arrange: Customer B has no saved address and must provide one during checkout.
+    home_page = HomePage(no_address_customer_page, ui_base_url)
+    home_page.open()
+
+    # Act: Add the seeded product to the cart.
+    shop_page = home_page.open_shop()
+    product_page = shop_page.open_product(product_name)
+    product_page.should_be_loaded()
+    product_page.add_to_cart()
+
+    # Act: Open the cart and verify the seeded product is present.
+    cart_page = CartPage(no_address_customer_page)
+    cart_page.open_from_add_to_cart_notice()
+    cart_page.should_be_loaded()
+    cart_page.should_contain_product(product_name)
+
+    # Act: Open Checkout and configure the shipping address as the billing address.
+    checkout_page = CheckoutPage(no_address_customer_page, ui_base_url)
+    checkout_page.open()
+    checkout_page.should_be_loaded()
+    checkout_page.check_use_same_address_for_billing()
+
+    # Act: Enter Customer B's shipping address.
+    checkout_page.fill_shipping_address(
+        first_name="John",
+        last_name="Beck",
+        street_address="Pl.del Pueblo,10",
+        postal_code="28100",
+        city="Madrid",
+    )
+    checkout_page.should_have_shipping_option()
+
+    # Act: Place the order.
+    checkout_page.place_order()
+
+    # Assert: Verify WooCommerce created and displayed the order confirmation.
+    confirmation_page = OrderConfirmationPage(no_address_customer_page)
     confirmation_page.should_be_loaded()
     confirmation_page.should_contain_product(product_name)

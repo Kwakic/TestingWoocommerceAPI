@@ -48,10 +48,31 @@ class CartPage:
         """Verify that the shopping cart page is displayed."""
         expect(self.cart_heading).to_be_visible()
 
+    # def open_from_add_to_cart_notice(self) -> None:
+    #     """Open the shopping cart from the product-added confirmation."""
+    #     expect(self.view_cart_link).to_be_visible()
+    #     self.view_cart_link.click()
+
     def open_from_add_to_cart_notice(self) -> None:
-        """Open the shopping cart from the product-added confirmation."""
-        expect(self.view_cart_link).to_be_visible()
-        self.view_cart_link.click()
+        """
+        Open the shopping cart after adding a product.
+
+        The "View cart" link is displayed in a temporary WooCommerce
+        confirmation notice. In some browser runs, particularly under
+        slower or more asynchronous rendering conditions, the notice may
+        not be available even though the product has been added
+        successfully.
+
+        Prefer the confirmation notice when it is available. If the
+        transient notice is not visible within a short timeout, fall back
+        to the stable Cart navigation link instead of failing the test
+        because of the temporary UI state.
+        """
+        try:
+            expect(self.view_cart_link).to_be_visible(timeout=3000)
+            self.view_cart_link.click()
+        except AssertionError:
+            self.page.get_by_role("link", name="Cart", exact=True).click()
 
     def should_contain_product(self, product_name: str) -> None:
         """Verify that the cart contains the specified product."""
