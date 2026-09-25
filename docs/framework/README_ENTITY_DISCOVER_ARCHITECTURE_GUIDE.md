@@ -465,7 +465,45 @@ Provides:
 - Helpers
 - DAOs
 - API Clients
-- Cleanup Registration
+- Explicit resource ownership registration
+- Cleanup integration
+
+### Resource ownership and cleanup
+
+The fixture uses `ResourceOwnershipRegistry` to record resources that were
+**explicitly created and registered by the current fixture lifecycle**.
+
+```text
+Test / Fixture
+      │
+      │ register_resource("customers", customer_id)
+      ▼
+ResourceOwnershipRegistry
+      │
+      │ identifies owned resources
+      ▼
+Existing entity cleanup
+      │
+      │ delete_method
+      ▼
+cleanup_items()
+```
+
+The ownership registry is responsible for **ownership state**, not deletion.
+The existing `cleanup_items()` implementation remains responsible for the
+actual deletion operation.
+
+This distinction is intentional:
+
+- A resource is cleaned only when it was explicitly registered.
+- Duplicate registration is ignored.
+- A resource already deleted during the test can be marked as deleted.
+- Seeded/shared resources are not automatically claimed as owned.
+- Actual deletion continues to use the framework's existing cleanup mechanism.
+
+The current `shared_api_resources` fixture remains **module-scoped**, so its
+ownership registry is also associated with the module-level fixture lifecycle.
+This change does not alter the existing cleanup scope.
 
 Examples:
 
@@ -478,6 +516,39 @@ or
 ```python
 all_resources.customers.helper
 ```
+
+---
+
+# 🎭 UI Test Resource Cleanup
+
+UI tests have a dedicated `ui_resources` fixture because UI-created
+application resources require **function-scoped cleanup**.
+
+The fixture:
+- tracks only resources explicitly created by the current UI test
+- cleans those resources at the end of that test
+- reuses the framework's standard `cleanup_items()` deletion mechanism
+- never discovers or deletes seeded/shared UI data automatically
+
+This is intentionally different from the current API resource lifecycle,
+where `shared_api_resources` is module-scoped.
+
+The ownership model is the same in principle:
+
+    UI test
+        ↓
+    explicit resource registration
+        ↓
+    UI resource lifecycle
+        ↓
+    cleanup_items()
+        ↓
+    entity delete method
+
+The UI-specific fixture exists to preserve function-level isolation while
+the framework's ownership architecture continues to evolve toward a
+common ownership model.
+
 
 ---
 

@@ -131,7 +131,7 @@ EcommerceAPI/
 │   │   │   ├── customer_validators.py
 │   │   │   └── __init__.py
 │   │   ├── models/                   ← Pydantic models (runtime validation)
-│   │   │   ├── customer_model.py
+│   │   │   ├── customer_model.py     ← canonical Customer model
 │   │   │   └── __init__.py
 │   │   └── helpers/                  ← Business & API logic
 │   │       ├── customers_helper.py
@@ -724,7 +724,7 @@ TestEcommerceAPI (project suite/root)
 │     │   │   ├── customer_validators.py
 │     │   │   └── __init__.py
 │     │   ├── models/                                ← Pydantic models (runtime validation)
-│     │   │   ├── customer_model.py
+│     │   │   ├── customer_model.py                  ← canonical Customer model
 │     │   │   └── __init__.py
 │     │   └── helpers/                               ← Business & API logic
 │     │       ├── customers_helper.py

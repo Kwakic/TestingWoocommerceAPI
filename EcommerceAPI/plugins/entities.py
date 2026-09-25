@@ -106,7 +106,6 @@ import logging
 import os
 import pytest
 from typing import Callable, TypedDict, Any, Dict, Optional, Mapping, cast
-from collections import defaultdict
 from collections.abc import Iterator
 import importlib
 import pkgutil
@@ -126,6 +125,9 @@ import EcommerceAPI.src
 
 from EcommerceAPI.src.clients.api_client import APIClient
 from EcommerceAPI.src.utils.entities_registry import EntitiesRegistry
+from EcommerceAPI.src.test_data.ownership.resource_ownership import (
+    ResourceOwnershipRegistry,
+)
 
 log = logging.getLogger(__name__)
 
@@ -652,25 +654,26 @@ def shared_api_resources(
         if incomplete:
             raise RuntimeError(f"❌ Incomplete entity bundles discovered: {incomplete}")
 
-    # log.debug(f"Entity registry keys: {list(entity_registry.keys())}")
-    # Internal tracking for created and deleted resources
-    tracked_resources = defaultdict(list)
-    deleted_resources = defaultdict(set)
+    # Ownership is tracked explicitly. The registry records which resources
+    # belong to this fixture lifecycle; it does not perform deletion itself.
+    ownership_registry = ResourceOwnershipRegistry()
 
     def register_resource(res_type: str, resource_id: str):
-        """Register a resource ID created during the test for cleanup later."""
-        if resource_id not in tracked_resources[res_type]:
-            tracked_resources[res_type].append(resource_id)
-        else:
+        """Register a resource as explicitly owned by this test lifecycle."""
+        before = ownership_registry.counts().get(res_type, 0)
+        ownership_registry.register(res_type, resource_id)
+        after = ownership_registry.counts().get(res_type, 0)
+
+        if after == before:
             log.warning(
                 "⚠️ Duplicate %s ID %s already registered — ignoring.",
-                res_type[:-1],
+                res_type[:-1] if res_type.endswith("s") else res_type,
                 resource_id,
             )
 
     def mark_resource_deleted(res_type: str, resource_id: str):
-        """Mark a resource as already deleted manually — will be skipped during teardown."""
-        deleted_resources[res_type].add(resource_id)
+        """Mark an owned resource as already deleted so cleanup skips it."""
+        ownership_registry.mark_deleted(res_type, resource_id)
 
     # Wrap the registry in an EntitiesRegistry immediately
     wrapped_registry = EntitiesRegistry.from_dict(entity_registry)
@@ -711,48 +714,57 @@ def shared_api_resources(
     # ------------------------------
     # Conditional teardown (run only if something was created)
     # ------------------------------
-    if any(tracked_resources.values()):
+    if ownership_registry.has_resources():
         log.info("🔧 Starting teardown of created test resources...")
         summary_log = []
-        for resource_type, resource_ids in tracked_resources.items():
+
+        for resource_type, registered_ids in ownership_registry.snapshot().items():
+            resource_ids = [resource.resource_id for resource in registered_ids]
             if not resource_ids:
                 continue
+
             bundle = entity_registry.get(resource_type)
             if not bundle:
                 log.warning(
-                    f"No entity bundle for {resource_type} — skipping teardown."
+                    "No entity bundle for %s — skipping teardown.",
+                    resource_type,
                 )
                 continue
+
             delete_func = bundle.delete_method
-            already_deleted_ids = deleted_resources.get(resource_type, set())
+            already_deleted_ids = {
+                resource.resource_id for resource in registered_ids if resource.deleted
+            }
             total_created = len(set(resource_ids))
-            # Import cleanup_items only when needed (to avoid import cycles)
+
+            # Import cleanup_items only when needed (to avoid import cycles).
+            # The ownership registry decides WHAT is owned; cleanup_items()
+            # remains responsible for HOW the resource is deleted.
             from EcommerceAPI.src.shared.helpers.cleanup_helpers import cleanup_items
 
             cleanup_items(
                 resource_type=resource_type,
                 resource_ids=resource_ids,
                 delete_method=delete_func,
-                label=resource_type[:-1],
+                label=(
+                    resource_type[:-1] if resource_type.endswith("s") else resource_type
+                ),
                 summary_log=summary_log,
                 total_created=total_created,
                 already_deleted_ids=already_deleted_ids,
             )
 
-        # Print teardown summary
-        created_counts = {
-            rtype: len(set(ids)) for rtype, ids in tracked_resources.items()
-        }
+        created_counts = ownership_registry.counts()
         log.info(
             "\n\n🧹 ====================================== CLEANUP SUMMARY ======================================"
         )
-        log.info(f"📊 Created during test run: {created_counts}")
+        log.info("📊 Created during test run: %s", created_counts)
         log.info("🧾 Cleanup total summary:")
         for line in summary_log:
-            log.info(f"   • {line}")
+            log.info("   • %s", line)
         log.info("✅ All test data cleanup completed.\n")
     else:
-        # No resources were created — skip all teardown logs
+        # No resources were registered — skip all teardown logs.
         log.debug("🧹 No test data created — skipping teardown.")
 
 
