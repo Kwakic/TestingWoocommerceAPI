@@ -15,40 +15,275 @@ from typing import (
 logger = logging.getLogger(__name__)
 
 
-def generate_random_email_and_password(
-    domain: Optional[str] = None, email_prefix: Optional[str] = None
-) -> Dict[str, str]:
+def generate_random_email(
+    domain: Optional[str] = None,
+    email_prefix: Optional[str] = None,
+) -> str:
     """
-    Generate a random email and password with optional custom domain and prefix.
+    Generate a random email address for test data.
 
     Args:
-        domain (Optional[str]): The domain to use in the email address. Defaults to 'supersqa.com'.
-        email_prefix (Optional[str]): The prefix before the email's random string. Defaults to 'testuser'.
+        domain:
+            Email domain. Defaults to ``supersqa.com`` for backward
+            compatibility with the existing utility.
+        email_prefix:
+            Prefix before the random portion. Defaults to ``testuser``.
 
     Returns:
-        Dict[str, str]: Dictionary containing 'email' and 'password' keys.
+        str:
+            A syntactically valid test email address.
     """
+    domain = domain or "supersqa.com"
+    email_prefix = email_prefix or "testuser"
 
+    random_string = "".join(random.choices(string.ascii_lowercase, k=10))
+    return f"{email_prefix}_{random_string}@{domain}"
+
+
+def generate_random_password(length: int = 20) -> str:
+    """
+    Generate a random password suitable for test users.
+
+    The password contains letters, digits, and punctuation.
+
+    Args:
+        length:
+            Password length. Must be greater than zero.
+
+    Returns:
+        str:
+            A random password.
+
+    Raises:
+        ValueError:
+            If ``length`` is not positive.
+    """
+    if length <= 0:
+        raise ValueError("'length' must be a positive integer")
+
+    password_chars = string.ascii_letters + string.digits + string.punctuation
+    return "".join(random.choices(password_chars, k=length))
+
+
+def generate_random_email_and_password(
+    domain: Optional[str] = None,
+    email_prefix: Optional[str] = None,
+) -> Dict[str, str]:
+    """
+    Generate random credentials using the smaller reusable generators.
+
+    This function is kept as the backward-compatible convenience API used
+    by existing tests and framework code.
+    """
     logger.debug("📝 Generating random email and password.")
 
-    # Below, we set our defaults, so that the user doesn't need to provide a domain
-    if domain is None:
-        domain = "supersqa.com"
-    if email_prefix is None:
-        email_prefix = "testuser"
+    credentials = {
+        "email": generate_random_email(
+            domain=domain,
+            email_prefix=email_prefix,
+        ),
+        "password": generate_random_password(),
+    }
 
-    #
-    random_string = "".join(random.choices(string.ascii_lowercase, k=10))
-    email = f"{email_prefix}_{random_string}@{domain}"
-
-    #
-    password_chars = string.ascii_letters + string.digits + string.punctuation
-    password = "".join(random.choices(password_chars, k=20))
-
-    credentials = {"email": email, "password": password}
-    logger.debug(f"📝 Generated credentials email and password: {credentials}")
+    # Never log the actual password. Test credentials should not appear in logs.
+    logger.debug("📝 Generated test credentials for email: %s", credentials["email"])
 
     return credentials
+
+
+# ---------------------------------------------------------------------------
+# Generic human/address data generators
+# ---------------------------------------------------------------------------
+# These functions intentionally generate primitive values only. They do not
+# know anything about WooCommerce customers, pytest fixtures, API calls, or
+# cleanup. Domain factories compose these values into domain-specific payloads.
+
+
+_FIRST_NAMES = (
+    "Alex",
+    "Daniel",
+    "David",
+    "Elena",
+    "Emma",
+    "James",
+    "John",
+    "Laura",
+    "Lucas",
+    "Maria",
+    "Michael",
+    "Natalia",
+    "Oliver",
+    "Paula",
+    "Peter",
+    "Sarah",
+    "Sofia",
+    "Thomas",
+    "Victor",
+    "William",
+)
+
+_LAST_NAMES = (
+    "Anderson",
+    "Baker",
+    "Brown",
+    "Carter",
+    "Clark",
+    "Davis",
+    "Evans",
+    "Garcia",
+    "Gomez",
+    "Harris",
+    "Johnson",
+    "Lewis",
+    "Martin",
+    "Miller",
+    "Moore",
+    "Parker",
+    "Robinson",
+    "Smith",
+    "Taylor",
+    "Wilson",
+)
+
+_SPANISH_CITIES = (
+    "Madrid",
+    "Barcelona",
+    "Valencia",
+    "Seville",
+    "Malaga",
+    "Bilbao",
+    "Alicante",
+    "Murcia",
+    "Zaragoza",
+    "Valladolid",
+    "Vigo",
+    "Cordoba",
+    "Granada",
+    "Toledo",
+    "Salamanca",
+)
+
+_SPANISH_STATE_CODES = (
+    "M",
+    "B",
+    "V",
+    "SE",
+    "MA",
+    "BI",
+    "A",
+    "MU",
+    "Z",
+    "VA",
+    "PO",
+    "CO",
+    "GR",
+    "TO",
+    "SA",
+)
+
+_STREET_NAMES = (
+    "Main Street",
+    "Oak Street",
+    "Maple Street",
+    "Gran Via",
+    "Calle Mayor",
+    "Calle Real",
+    "Avenida Central",
+    "Calle Sol",
+    "Calle Luna",
+    "Calle Nueva",
+    "Calle Norte",
+    "Calle Sur",
+)
+
+
+def generate_random_first_name() -> str:
+    """Return a random first name suitable for generic test data."""
+    return random.choice(_FIRST_NAMES)
+
+
+def generate_random_last_name() -> str:
+    """Return a random last name suitable for generic test data."""
+    return random.choice(_LAST_NAMES)
+
+
+def generate_random_username(
+    first_name: Optional[str] = None,
+    last_name: Optional[str] = None,
+) -> str:
+    """
+    Generate a readable username from optional name components.
+
+    The random suffix prevents collisions while keeping the username
+    understandable in test reports and debugging output.
+    """
+    first = first_name or generate_random_first_name()
+    last = last_name or generate_random_last_name()
+    suffix = generate_random_combination(length=6, prefix="")
+    return f"{first.lower()}.{last.lower()}.{suffix.lower()}"
+
+
+def generate_random_phone(country: str = "ES") -> str:
+    """
+    Generate a random phone number for a supported country.
+
+    Currently Spain is supported explicitly. The function keeps the country
+    argument so country-specific formats can be added without changing the
+    factory API later.
+    """
+    if country != "ES":
+        raise ValueError(f"Unsupported phone country: {country}")
+
+    # Spanish mobile numbers commonly begin with 6 or 7 and contain 9 digits.
+    return f"{random.choice('67')}{random.randint(10000000, 99999999)}"
+
+
+def generate_random_city(country: str = "ES") -> str:
+    """Generate a random city name for the requested supported country."""
+    if country != "ES":
+        raise ValueError(f"Unsupported city country: {country}")
+    return random.choice(_SPANISH_CITIES)
+
+
+def generate_random_state_code(country: str = "ES") -> str:
+    """Generate a random province/state code for the requested country."""
+    if country != "ES":
+        raise ValueError(f"Unsupported state country: {country}")
+    return random.choice(_SPANISH_STATE_CODES)
+
+
+def generate_random_postcode(country: str = "ES") -> str:
+    """Generate a valid-looking postal code for the requested country."""
+    if country != "ES":
+        raise ValueError(f"Unsupported postcode country: {country}")
+    return f"{random.randint(1000, 52999):05d}"
+
+
+def generate_random_street_address() -> str:
+    """Generate a simple, API-safe street address."""
+    return f"{random.choice(_STREET_NAMES)} {random.randint(1, 200)}"
+
+
+def generate_random_address(
+    country: str = "ES",
+) -> Dict[str, str]:
+    """
+    Generate a complete generic address dictionary.
+
+    This is still a data-generation utility, not a WooCommerce-specific
+    helper. A domain factory can add domain-specific fields such as email.
+    """
+    if country != "ES":
+        raise ValueError(f"Unsupported address country: {country}")
+
+    return {
+        "address_1": generate_random_street_address(),
+        "city": generate_random_city(country),
+        "state": generate_random_state_code(country),
+        "postcode": generate_random_postcode(country),
+        "country": country,
+        "phone": generate_random_phone(country),
+    }
 
 
 def generate_random_string(
@@ -227,42 +462,3 @@ def generate_random_coupon_code(length=10, prefix="", suffix=""):
 #     pprint(generate_random_string(prefix="Test_", suffix="_End"))
 #     # pprint(generate_random_combination(prefix='Item-', suffix='-XYZ'))
 #     # pprint(generate_random_coupon_code(suffix='2025'))
-
-
-# 📘 Code Explanation
-# 1. Optional[str] = None:
-
-#    - Why: This makes parameters optional and allows users to call the function with fewer arguments.
-#    - Handled inside: We check if the argument is None, then assign a default manually (cleaner logic).
-
-# 2. generate_random_email_and_password(...):
-#     - Creates a random email like: testuser_xazcbeqpye@supersqa.com
-#     - Creates a secure password with 20 characters using letters, digits, symbols
-#     - Logs the output for debugging
-
-# 3. generate_random_string(...):
-#     - Generates alphabet-only string (e.g., abcdEFGh)
-#     - Supports optional prefix/suffix (e.g., ID_abcdEFGh_XYZ)
-
-# 4. generate_random_alphanumeric_string(...):
-#     - Uses both letters and digits (e.g., ab9C5vZ3)
-#     - Also supports optional prefix/suffix
-
-# 5. generate_random_coupon_code(...):
-#     - Generates uppercase letters only (e.g., QWERZXCVTY)
-#     - Often used for discount or promo codes
-
-
-# ✅ from typing import Optional, Dict
-# This line is included because of type hints in the function signatures:
-# Example:
-# def generate_random_email_and_password(domain: Optional[str] = None, ...) -> Dict[str, str]:
-
-#     "Optional[str]" = means the argument can be a str or None
-#     "Dict[str, str]" = means the function returns a dictionary with both keys and values as strings
-
-# 📌 Why it's useful:
-#     - Improves readability
-#     - Helps IDEs and tools like mypy for type checking
-#     - Makes it easier for other developers to understand input/output
-# If you don’t use type hints, you can remove that import. It's optional, but considered good practice in modern Python.
