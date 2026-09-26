@@ -1,0 +1,77 @@
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/products → Status code: 400 (completed in 0.075s)
+DEBUG    EcommerceAPI.src.clients.api_client:api_client.py:625 {
+                                                                 "code": "rest_invalid_param",
+                                                                 "message": "Invalid parameter(s): type",
+                                                                 "data": {
+                                                                   "status": 400,
+                                                                   "params": {
+                                                                     "type": "type is not one of simple, grouped, external, and variable."
+                                                                   },
+                                                                   "details": {
+                                                                     "type": {
+                                                                       "code": "rest_not_in_enum",
+                                                                       "message": "type is not one of simple, grouped, external, and variable.",
+                                                                       "data": null
+                                                                     }
+                                                                   }
+                                                                 }
+                                                               }
+INFO     EcommerceAPI.src.products.validators.product_validators:product_validators.py:418 ✅ Valid error response received (code=rest_invalid_param status=400)
+INFO     EcommerceAPI.plugins.entities:entities.py:718 🔧 Starting teardown of created test resources...
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up product(s)... (16 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 16
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/16?force=True → Status code: 200 (completed in 0.121s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 16
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 17
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/17?force=True → Status code: 200 (completed in 0.113s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 17
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 18
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/18?force=True → Status code: 200 (completed in 0.109s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 18
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 19
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/19?force=True → Status code: 200 (completed in 0.108s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 19
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 20
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/20?force=True → Status code: 200 (completed in 0.109s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 20
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 21
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/21?force=True → Status code: 200 (completed in 0.112s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 21
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 22
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/22?force=True → Status code: 200 (completed in 0.114s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 22
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 23
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/23?force=True → Status code: 200 (completed in 0.118s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 23
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 24
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/24?force=True → Status code: 200 (completed in 0.111s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 24
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 25
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/25?force=True → Status code: 200 (completed in 0.112s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 25
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 26
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/26?force=True → Status code: 200 (completed in 0.115s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 26
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 27
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/27?force=True → Status code: 200 (completed in 0.125s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 27
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 28
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/28?force=True → Status code: 200 (completed in 0.115s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 28
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 29
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/29?force=True → Status code: 200 (completed in 0.110s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 29
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 30
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/30?force=True → Status code: 200 (completed in 0.122s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 30
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 31
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/31?force=True → Status code: 200 (completed in 0.116s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 31
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for product(s).
+INFO     EcommerceAPI.plugins.entities:entities.py:758 
+
+🧹 ====================================== CLEANUP SUMMARY ======================================
+INFO     EcommerceAPI.plugins.entities:entities.py:761 📊 Created during test run: {'products': 16}
+INFO     EcommerceAPI.plugins.entities:entities.py:762 🧾 Cleanup total summary:
+INFO     EcommerceAPI.plugins.entities:entities.py:764    • product: 16 deleted (16 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:765 ✅ All test data cleanup completed.
