@@ -131,54 +131,71 @@ For the complete UI architecture, see:
 ------------------------------------------------------------------
 # 🔄 REST End-to-End Execution Flow
 
-The following flow describes the REST API execution path.
-GraphQL uses the same low-level `HttpClient` transport but
-has its own `GraphQLClient` and `GraphQLResponse` layers.
+The following flow describes the REST API execution path, including the
+current valid-test-data lifecycle.
 
-Typical positive test execution:
+GraphQL uses the same low-level `HttpClient` transport but has its own
+`GraphQLClient` and `GraphQLResponse` layers.
 
-```
+### Valid setup + operation under test
+
+```text
 pytest
  │
  ▼
 Test
  │
  ▼
-Fixture (factory pattern)
+Fixture
  │
- ▼
-Helper
+ ├── Builder
+ │      ↓
+ │   Factory
+ │      ↓
+ │   prepared in-memory data
  │
- ▼
-API Layer
- │
- ▼
-APIClient
- │
- ▼
-HttpClient
- │
- ▼
-requests.Session
- │
- ▼
-🌐 Server
- │
- ▼
-requests.Response
- │
- ▼
-HttpResponse
- │
- ▼
-Validators
- │
- ▼
-Pydantic Model
- │
- ▼
-Business Assertions
+ └── Provisioner
+        ↓
+     Helper
+        ↓
+     API Layer
+        ↓
+     APIClient
+        ↓
+     HttpClient
+        ↓
+     requests.Session
+        ↓
+     🌐 Server
+        ↓
+     requests.Response
+        ↓
+     HttpResponse
+        ↓
+     fixture validates setup + response body
+        ↓
+     ownership registration
+        ↓
+     clean test data
+        │
+        ▼
+     Test operation
+        ↓
+     Helper → API → APIClient → HttpClient
+        ↓
+     HttpResponse
+        ↓
+     Test status assertion
+        ↓
+     Validator / Pydantic
+        ↓
+     Business assertions
 ```
+
+The important distinction is that **test-data preparation and the operation
+under test are separate flows**. The Fixture/Builder/Factory/Provisioner path
+creates valid state; the Test then exercises the behavior it is actually
+testing.
 
 
 ------------------------------------------------------------------
@@ -260,15 +277,23 @@ OrdersHelper
 
 Responsibilities:
 
-- orchestrate API calls
+- orchestrate domain/API calls
 - simplify common workflows
-- prepare data for tests
+- combine API and DAO/DB operations where needed
+- return parsed data or `HttpResponse`, depending on the caller's need
 
 Helpers may:
 
 - fetch API data
 - fetch DB data
-- call validators
+- participate in provisioning through the Provisioner
+
+Helpers do **not** generate random test data, build scenario payloads, own
+pytest lifecycle, register cleanup, or assert test expectations.
+
+Test-data preparation belongs to the **Factory + Builder** layer. Real system
+creation belongs to the **Provisioner**, which delegates the domain operation
+to the Helper/API layers.
 
 
 ------------------------------------------------------------------
@@ -357,15 +382,20 @@ customer_helper.assert_customer_exists_and_matches_db(
 ------------------------------------------------------------------
 # 🧱 Fixture Responsibilities
 
-Fixtures act as **gatekeepers**.
+Fixtures act as **pytest-facing gatekeepers for test data and lifecycle**.
 
-They:
+For valid setup data they:
 
-✔ call helpers
-✔ validate status codes
-✔ validate response structure
-✔ register cleanup
-✔ return safe data to tests
+✔ obtain scenario data through the Builder/Factory path
+✔ pass prepared data to the Provisioner
+✔ receive the provisioning `HttpResponse`
+✔ validate the setup status code
+✔ validate the response structure
+✔ register ownership for cleanup
+✔ return safe, validated data to tests
+
+The fixture is the connection point between **test-data preparation** and
+**real system state**. It does not become the data factory itself.
 
 
 ------------------------------------------------------------------
@@ -493,13 +523,18 @@ Benefits:
 # 🧠 Mental Model
 
 ```text
+Factory          → generate valid test data
+Builder          → customize scenario data
+Provisioner      → create real system state
 HttpClient       → send HTTP request
 APIClient        → manage REST request lifecycle
 GraphQLClient    → manage GraphQL request lifecycle
 HttpResponse     → represent REST response
 GraphQLResponse  → represent GraphQL response
-Helper           → orchestrate REST workflows
-Validator        → validate data
+API Layer        → map domain endpoints
+Helper           → orchestrate domain/API workflows
+Validator        → validate supplied data
+Fixture          → manage setup lifecycle + ownership
 Test             → assert behaviour
 ```
 
@@ -507,11 +542,14 @@ Test             → assert behaviour
 ------------------------------------------------------------------
 # 📌 Golden Rules
 
-1️⃣ Tests own validation logic
-2️⃣ Validators only validate data
-3️⃣ Helpers orchestrate workflows
-4️⃣ Transport layers never perform validation
-5️⃣ Structure validation happens via Pydantic models
+1️⃣ Tests own the HTTP status assertion for the operation they are testing
+2️⃣ Validators only validate supplied data/response content
+3️⃣ Factories generate valid data; Builders customize it
+4️⃣ Provisioners create real system state from prepared data
+5️⃣ Helpers orchestrate workflows; they do not generate test data or assert
+6️⃣ Fixtures validate valid setup and register ownership
+7️⃣ Transport layers never perform business validation
+8️⃣ Structure validation happens via Pydantic models
 
 
 ------------------------------------------------------------------
@@ -521,13 +559,17 @@ If you are unsure where code belongs:
 
 | Task | Location |
 |------|----------|
+| Generate valid test data | Factory |
+| Customize scenario data | Builder |
+| Create real test resource | Provisioner |
 | Send HTTP request | HttpClient |
 | Manage REST request | APIClient |
 | Manage GraphQL request | GraphQLClient |
 | Wrap REST response | HttpResponse |
 | Wrap GraphQL response | GraphQLResponse |
 | Call REST endpoints | API layer |
-| Orchestrate REST workflow | Helper |
+| Orchestrate REST/domain workflow | Helper |
+| Manage pytest setup + ownership | Fixture |
 | Validate data | Validators |
 | Assert behaviour | Tests |
 

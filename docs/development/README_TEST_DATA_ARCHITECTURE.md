@@ -187,7 +187,7 @@ responsibilities in one fixture or helper.
 
 # The Complete Pipeline
 
-At a high level:
+At a high level, valid test-data creation follows this lifecycle:
 
 ```text
                          TEST
@@ -230,14 +230,40 @@ At a high level:
                         CLEANUP
 ```
 
-The important boundary is between **data preparation** and **system state**.
+The important architectural boundary is between **data preparation** and
+**real system state**.
+
+The test-data layer prepares the data:
+
+```text
+Builder → Factory
+```
+
+The provisioning/API layer creates real state:
+
+```text
+Provisioner → Helper → API → WooCommerce
+```
+
+The pytest fixture connects these responsibilities and owns the setup
+lifecycle:
+
+```text
+Fixture → Builder → Factory → Provisioner → Helper/API
+                         ↓
+                  validated response
+                         ↓
+                  ownership registration
+                         ↓
+                     clean dict
+```
 
 ---
-
-# The Three-Layer Core Flow
+# The Core Creation Flow
 
 For a customer, the fundamental creation flow can be understood as three
-major stages.
+major responsibilities: data preparation, system provisioning, and pytest
+lifecycle management.
 
 | Layer | Responsibility | Network Call? | Output |
 |---|---|---:|---|
@@ -397,6 +423,77 @@ factory.
 
 This allows tests to remain expressive without manually constructing the
 entire payload.
+
+## Customer Builder vs Customer State Builder
+
+The customer domain has two intentionally different builder concepts.
+
+### `CustomerBuilder`
+
+`CustomerBuilder` prepares **complete creation data for a new customer**.
+It works with `CustomerFactory` so unspecified fields receive valid defaults.
+
+```python
+customer_data = (
+    CustomerBuilder()
+    .with_email("known@example.com")
+    .build()
+)
+```
+
+```text
+CustomerBuilder
+      ↓
+CustomerFactory
+      ↓
+complete creation payload
+      ↓
+CustomerProvisioner
+      ↓
+new customer
+```
+
+### `CustomerStateBuilder`
+
+`CustomerStateBuilder` prepares **partial state changes for an existing
+customer**. It does not call a factory and does not generate unrelated fields.
+
+```python
+customer_state = (
+    CustomerStateBuilder()
+    .with_first_name("QAUpdated")
+    .with_email("updated@example.com")
+    .build()
+)
+```
+
+Result:
+
+```python
+{
+    "first_name": "QAUpdated",
+    "email": "updated@example.com",
+}
+```
+
+```text
+CustomerStateBuilder
+      ↓
+partial state/change
+      ↓
+CustomerStateProvisioner
+      ↓
+existing customer
+```
+
+The distinction is deliberate:
+
+> **CustomerBuilder answers: "What should this new customer look like?"**
+
+> **CustomerStateBuilder answers: "What should change on this existing customer?"**
+
+A state builder must not silently generate a complete customer or overwrite
+fields that the scenario did not ask to change.
 
 ### Why use a Builder?
 
@@ -569,7 +666,7 @@ state.
 
 Its job is to answer:
 
-> "Take this test data and make it exist in the system in the required state."
+> "Take this already-prepared test data and make it exist in the system in the required state."
 
 For example:
 
@@ -587,19 +684,22 @@ CustomersApi
 WooCommerce
 ```
 
-The provisioner may eventually support operations such as:
+The provisioner:
 
-- create
-- update
-- create related resources
-- establish required state
-- provision cross-domain data
+- accepts data already prepared by the Factory/Builder;
+- delegates the creation operation to the existing domain Helper/API layers;
+- returns the framework `HttpResponse` to the fixture;
+- does not generate or customize test data;
+- does not validate the HTTP status;
+- does not validate the response schema;
+- does not register cleanup;
+- does not access pytest fixtures or the database.
 
-The provisioner should use the existing domain/API architecture rather than
-creating a second HTTP implementation.
+The **fixture** remains the gatekeeper for setup validation and ownership
+registration.
 
-For example, the customer provisioner should not perform raw HTTP requests
-when `CustomersHelper` / `CustomersApi` already provide that capability.
+The Provisioner deliberately does not perform raw HTTP requests when the
+domain Helper/API already provide that capability.
 
 ---
 
@@ -768,6 +868,37 @@ register_for_cleanup(...)
 
 The fixture is the lifecycle boundary between pytest and the underlying
 test-data architecture.
+
+For the current customer implementation, `create_valid_customer` performs:
+
+```text
+Fixture
+   ↓
+CustomerBuilder
+   ↓
+CustomerFactory
+   ↓
+CustomerProvisioner
+   ↓
+CustomersHelper
+   ↓
+CustomersApi
+   ↓
+WooCommerce
+   ↓
+HttpResponse
+   ↓
+201 validation
+   ↓
+response-body/domain validation
+   ↓
+ownership registration
+   ↓
+validated customer dict
+```
+
+The fixture does not generate customer data itself and does not rely on
+`CustomersHelper` to generate credentials.
 
 ---
 
@@ -987,42 +1118,69 @@ test receives verified data
 
 # Current Package Structure
 
-The test-data package is being organized around clear responsibilities:
+The test-data package is organized by responsibility and, where appropriate,
+by domain:
 
 ```text
 EcommerceAPI/src/test_data/
 ├── __init__.py
 │
 ├── builders/
-│   ├── __init__.py
-│   ├── coupon_builder.py
-│   ├── customer_builder.py
-│   ├── order_builder.py
-│   └── product_builder.py
+│   ├── customers/
+│   │   ├── __init__.py
+│   │   ├── customer_builder.py
+│   │   └── customer_state_builder.py
+│   ├── coupons/
+│   │   ├── __init__.py
+│   │   └── coupon_builder.py
+│   ├── orders/
+│   │   ├── __init__.py
+│   │   └── order_builder.py
+│   └── products/
+│       ├── __init__.py
+│       └── product_builder.py
 │
 ├── factories/
 │   ├── __init__.py
 │   ├── base.py
-│   ├── coupon_factory.py
-│   ├── customer_factory.py
-│   ├── order_factory.py
-│   └── product_factory.py
+│   ├── customers/
+│   │   ├── __init__.py
+│   │   └── customer_factory.py
+│   ├── coupons/
+│   │   ├── __init__.py
+│   │   └── coupon_factory.py
+│   ├── orders/
+│   │   ├── __init__.py
+│   │   └── order_factory.py
+│   └── products/
+│       ├── __init__.py
+│       └── product_factory.py
 │
 ├── ownership/
-│   └── __init__.py
+│   ├── __init__.py
+│   └── resource_ownership.py
 │
 ├── provisioning/
-│   ├── __init__.py
-│   ├── coupon_provisioner.py
-│   ├── customer_provisioner.py
-│   ├── order_provisioner.py
-│   └── product_provisioner.py
+│   ├── customers/
+│   │   ├── __init__.py
+│   │   ├── customer_provisioner.py
+│   │   └── customer_state_provisioner.py
+│   ├── coupons/
+│   │   ├── __init__.py
+│   │   └── coupon_provisioner.py
+│   ├── orders/
+│   │   ├── __init__.py
+│   │   └── order_provisioner.py
+│   └── products/
+│       ├── __init__.py
+│       └── product_provisioner.py
 │
 └── seeds/
     └── __init__.py
 ```
 
-The structure is intentionally domain-oriented.
+The structure is intentionally domain-oriented. Shared infrastructure such as
+`factories/base.py` and ownership remains at the test-data layer root.
 
 Not every component needs to become sophisticated immediately. We will add
 behavior as the corresponding test-data requirements become real.
@@ -1225,49 +1383,90 @@ domain model already represents the relevant API contract.
 The customer domain is currently the reference implementation for this
 architecture.
 
-The Customer Factory, Builder, Provisioner, and Ownership integration are in
-place, and the existing `create_valid_customer` fixture is being migrated
-without changing its public test-facing contract.
+The following pieces are now implemented and verified by the existing REST
+customer test suite:
 
-The migration is intentionally incremental: the existing CustomersHelper
-remains compatible during the transition and will be simplified only after the
-new provisioning path is verified by the existing customer test suite.
+- Customer Factory
+- Customer Builder
+- Customer Provisioner
+- Ownership / cleanup integration
+- `create_valid_customer` fixture integration
+- `CustomersHelper` refactored so it no longer generates test data
+
+The public test-facing contract of `create_valid_customer` remains unchanged:
+
+```python
+customer = create_valid_customer()
+```
+
+The fixture returns a validated customer dictionary and owns setup validation
+and cleanup registration.
+
+The `CustomersHelper` is now responsible only for customer API/domain
+orchestration. Test-data generation belongs to the Factory/Builder layer, and
+system provisioning belongs to the Provisioner.
 
 ---
 
 # Development Strategy
 
-The architecture should be implemented incrementally.
+The architecture is implemented incrementally.
 
-The intended progression is:
+The customer reference implementation has now completed the initial lifecycle:
 
 ```text
-1. Architecture contract
+1. Architecture contract                    ✅
        ↓
-2. Customer Factory
+2. Customer Factory                         ✅
        ↓
-3. Customer Builder
+3. Customer Builder                         ✅
        ↓
-4. Customer Provisioner
+4. Customer Provisioner                     ✅
        ↓
-5. Ownership / Cleanup integration
+5. Ownership / Cleanup integration          ✅
        ↓
-6. Customer fixture redesign
+6. Customer fixture integration             ✅
        ↓
-7. Customer state provisioning
+7. CustomersHelper refactor                 ✅
        ↓
-8. Product test data
+8. Customer State Builder                   ✅
        ↓
-9. Coupon test data
+9. Customer State Provisioner               ✅
        ↓
-10. Order and cross-domain test data
+10. First real test migration               ✅
        ↓
-11. REST / GraphQL / UI cross-system scenarios
+11. Product test data
+       ↓
+12. Coupon test data
+       ↓
+13. Order and cross-domain test data
+       ↓
+14. REST / GraphQL / UI cross-system scenarios
 ```
 
-Each stage should build on the previous one.
+The customer state pattern is now established by a real update test.
 
-We should avoid creating large speculative abstractions before there is a
+The important distinction is:
+
+```text
+CustomerBuilder
+    → complete creation data for a new customer
+
+CustomerStateBuilder
+    → partial state/change for an existing customer
+
+CustomerProvisioner
+    → create a new customer
+
+CustomerStateProvisioner
+    → establish state on an existing customer
+```
+
+The operation under test must remain visible in the test. A test for customer
+update behavior should not hide the PUT operation inside a state provisioner
+when that PUT is the behavior being verified.
+
+We should continue to avoid large speculative abstractions before there is a
 real requirement for them.
 
 ---
@@ -1284,7 +1483,7 @@ When deciding where new code belongs, ask:
 generate_random_phone()
 ```
 
-### "I need a valid Customer."
+### "I need a valid Customer creation payload."
 
 → **Factory**
 
@@ -1292,7 +1491,7 @@ generate_random_phone()
 CustomerFactory().build()
 ```
 
-### "I need a Customer with one special condition."
+### "I need a Customer payload with one special condition."
 
 → **Builder**
 
@@ -1300,12 +1499,36 @@ CustomerFactory().build()
 CustomerBuilder().without_billing().build()
 ```
 
+### "I need to change specific fields on an existing Customer."
+
+→ **Customer State Builder**
+
+```python
+(
+    CustomerStateBuilder()
+    .with_first_name("QAUpdated")
+    .with_email("updated@example.com")
+    .build()
+)
+```
+
+This produces only the state that should change. It does not generate a new
+customer.
+
 ### "I need that Customer to actually exist in WooCommerce."
 
 → **Provisioner**
 
 ```python
 customer_provisioner.provision(customer_data)
+```
+
+### "I need a valid customer through the normal pytest setup lifecycle."
+
+→ **Fixture**
+
+```python
+customer = create_valid_customer()
 ```
 
 ### "I need to know whether the test is responsible for deleting it."

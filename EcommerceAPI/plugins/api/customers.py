@@ -64,8 +64,11 @@ import pytest
 from EcommerceAPI.src.customers.validators.customer_validators import (
     assert_valid_customer_response,
 )
-from EcommerceAPI.src.test_data.builders.customer_builder import CustomerBuilder
-from EcommerceAPI.src.test_data.provisioning.customer_provisioner import (
+
+from EcommerceAPI.src.test_data.builders.customers.customer_builder import (
+    CustomerBuilder,
+)
+from EcommerceAPI.src.test_data.provisioning.customers.customer_provisioner import (
     CustomerProvisioner,
 )
 

@@ -2,7 +2,7 @@
 
 **How to write API tests in this framework — what to use, where to use it, and why.**
 
-This guide explains how to build API tests using the framework's existing layers: fixtures, Helpers, `HttpResponse`, Validators, and `request_raw()`. It focuses on **test development**, not on the internal implementation of the HTTP client.
+This guide explains how to build API tests using the framework's existing layers: fixtures, Builders, Factories, Provisioners, Helpers, `HttpResponse`, Validators, and `request_raw()`. It focuses on **test development**, not on the internal implementation of the HTTP client.
 
 **Audience:** QA engineers, developers adding API tests, and contributors who need to understand the framework's testing patterns.
 
@@ -25,7 +25,7 @@ This guide explains how to build API tests using the framework's existing layers
 5. Which Interface to Use for Each HTTP Method
 6. Debugging with `request_raw()`
 7. Core Rules
-8. Fixtures (Factory Pattern)
+8. Fixtures — Test Data Lifecycle
 9. Validators
 10. Helpers
 11. Test Structure & Organization
@@ -60,8 +60,9 @@ def test_get_customer_by_id(customer_helper, create_valid_customer):
 
     # ARRANGE
     # Create valid test data.
-    # The fixture performs the POST, validates the expected 201 response,
-    # validates the response body, and registers cleanup.
+    # The fixture builds the payload, provisions the customer through the
+    # Provisioner → Helper/API path, validates the expected 201 response
+    # and response body, and registers cleanup.
     customer = create_valid_customer()
 
     # ACT
@@ -74,15 +75,32 @@ def test_get_customer_by_id(customer_helper, create_valid_customer):
     assert customer_data["email"] == customer["email"]
 ```
 
-The important point is that the fixture does **more than create data**.
+The important point is that the fixture does **more than create data**. It
+connects test-data preparation with real system provisioning and owns the
+pytest lifecycle for the resource.
 
-Its internal flow is:
+Its current internal flow is:
 
 ```text
 create_valid_customer()
         │
         ▼
-    Helper
+CustomerBuilder
+        │
+        ▼
+CustomerFactory
+        │
+        ▼
+prepared in-memory data
+        │
+        ▼
+CustomerProvisioner
+        │
+        ▼
+CustomersHelper / CustomersApi
+        │
+        ▼
+   WooCommerce
         │
         ▼
   HttpResponse
@@ -96,7 +114,7 @@ create_valid_customer()
  Pydantic / domain validation
         │
         ▼
- cleanup registration
+ ownership registration
         │
         ▼
  clean validated dict
@@ -104,6 +122,11 @@ create_valid_customer()
         ▼
        Test
 ```
+
+The Factory and Builder prepare data without network calls. The Provisioner
+takes that prepared data across the system boundary. The Helper/API performs
+the domain operation. The fixture validates the setup contract, registers
+ownership, and exposes only the clean data to the consuming test.
 
 So when the test receives:
 
@@ -323,9 +346,9 @@ Tests should be:
 
 - ✅ Readable and focused on the behaviour being verified
 - ✅ Stable in CI
-- ✅ Responsible for creating their own test data
+- ✅ Responsible for the test data they create, while delegating data preparation and provisioning to the framework
 - ✅ Focused on business behaviour rather than framework internals
-- ✅ Built from the framework's existing fixtures, Helpers, and Validators
+- ✅ Built from the framework's existing fixtures, Builders, Factories, Provisioners, Helpers, and Validators
 
 Tests should **not**:
 
@@ -336,11 +359,16 @@ Tests should **not**:
 
 And the framework layers have clear responsibilities:
 
-- ✅ Fixtures prepare valid test data and act as gatekeepers
+- ✅ Factories generate valid default test data in memory
+- ✅ Builders customize creation data for a specific scenario
+- ✅ State Builders prepare partial state changes for existing resources
+- ✅ Provisioners create real system state from already-prepared creation data
+- ✅ State Provisioners apply already-prepared state to existing resources
+- ✅ Fixtures provide the pytest lifecycle, validate setup, register ownership, and return clean data
 - ❌ `HttpClient` / `APIClient` / API layers do not perform business validation
 - ✅ `HttpResponse` provides the normalized HTTP response to the layers that need it
 - ✅ Validators validate response/data contracts; they do not fetch data or own HTTP status assertions
-- ✅ Helpers orchestrate API/domain workflows; they do not assert
+- ✅ Helpers orchestrate API/domain workflows; they do not generate test data or assert
 - ✅ Tests verify the behaviour and business outcome
 
 ---
@@ -400,21 +428,120 @@ See the framework architecture documentation for *Failure Handling & Data Integr
 ## 3. 🧱 Architecture & Layer Responsibilities
 
 ```text
-HttpClient → APIClient → HttpResponse → API layer → Helper
-                                      ↘
-                                        Test / Fixture
+Test
+  │
+  ▼
+Fixture
+  │
+  ├── Builder → Factory → prepared data
+  │
+  └── Provisioner → Helper → API → HttpResponse
+                                      │
+                                      ▼
+                                  WooCommerce
 ```
 
 | Layer | Responsibility |
 |---|---|
+| `Factory` | Generates valid default creation data in memory; no network, DB, pytest, or cleanup |
+| `Builder` | Customizes creation data from the Factory for a scenario; no network, DB, pytest, or cleanup |
+| `State Builder` | Prepares partial state changes for an existing resource; no network, DB, pytest, or cleanup |
+| `Provisioner` | Takes already-prepared creation data and creates real system state through the domain Helper/API |
+| `State Provisioner` | Applies already-prepared state to an existing resource through the domain Helper/API |
 | `HttpClient` | Sends raw HTTP requests; owns transport + timeout |
 | `APIClient` | Orchestrates requests: retries, backoff, logging; returns `HttpResponse` |
 | `HttpResponse` | Parsed and normalized HTTP response object, including response metadata and body |
 | API layer | Endpoint mapping — thin, no business logic |
-| Helper | Calls the API layer and orchestrates workflows (optionally combining API + DAO/DB) |
+| Helper | Calls the API layer and orchestrates workflows; does not generate test data or assert |
 | Validator | Validates response/data structure, business rules, and DB consistency; does not own HTTP status assertions |
-| Fixture | Calls Helper + Validator, validates setup, registers cleanup, returns clean validated data |
+| Fixture | Connects Builder/Factory to Provisioner, validates setup, registers ownership, and returns clean validated data |
 | Test | Arranges data, performs the operation under test, and asserts behaviour |
+
+### Test-data preparation vs system provisioning
+
+These responsibilities are intentionally separate:
+
+```text
+Need a new valid resource
+    ↓
+Factory
+    ↓
+Builder (when creation customization is needed)
+    ↓
+complete creation data
+
+Need an existing resource in a specific state
+    ↓
+State Builder
+    ↓
+partial state/change data
+
+Need creation data to exist in WooCommerce
+    ↓
+Provisioner
+    ↓
+Helper / API
+    ↓
+WooCommerce
+
+Need prepared state applied to an existing resource
+    ↓
+State Provisioner
+    ↓
+Helper / API
+    ↓
+WooCommerce
+```
+
+The Factory and Builder never call the API. The Provisioner never generates
+random data. The Helper no longer acts as a test-data factory.
+
+The standard valid-creation setup path is therefore:
+
+```text
+Fixture
+  ↓
+Builder
+  ↓
+Factory
+  ↓
+Provisioner
+  ↓
+Helper / API
+  ↓
+HttpResponse
+  ↓
+fixture validates setup
+  ↓
+ownership registration
+  ↓
+clean dict
+  ↓
+Test
+```
+
+For an existing resource that must be placed into a specific state before the
+operation under test:
+
+```text
+Test / Fixture
+  ↓
+State Builder
+  ↓
+partial state
+  ↓
+State Provisioner
+  ↓
+Helper / API
+  ↓
+existing resource updated
+  ↓
+operation under test
+```
+
+The state-preparation path must remain separate from the operation under test.
+If the test is specifically testing a PUT/update operation, that PUT should
+remain visible in the test rather than being hidden inside the state provisioner.
 
 *(Full internals of `HttpClient` / `APIClient` / `HttpResponse` live in `README_API_CLIENT.md`.)*
 
@@ -423,9 +550,14 @@ HttpClient → APIClient → HttpResponse → API layer → Helper
 ```text
 ARRANGE
    │
-   └── Fixture → valid setup data
-                  │
-                  ▼
+   └── Fixture
+          │
+          ├── Builder → Factory
+          │
+          └── Provisioner → Helper → API → HttpResponse
+                                             │
+                                             ▼
+                                      validated setup dict
 ACT
    │
    └── Helper → API → HttpResponse
@@ -442,7 +574,133 @@ The test does not need to know how `HttpClient` performs retries, timeouts, auth
 
 ---
 
+## Customer State Preparation
+
+Creation data and existing-resource state are deliberately different concepts.
+
+Use `CustomerBuilder` when the test needs a **new customer**:
+
+```python
+customer_data = (
+    CustomerBuilder()
+    .with_email("known@example.com")
+    .build()
+)
+```
+
+Use `CustomerStateBuilder` when an **existing customer** needs a specific
+partial state:
+
+```python
+customer_state = (
+    CustomerStateBuilder()
+    .with_first_name("QAUpdated")
+    .with_email("updated@example.com")
+    .build()
+)
+```
+
+The state builder returns only the fields that should change:
+
+```python
+{
+    "first_name": "QAUpdated",
+    "email": "updated@example.com",
+}
+```
+
+It does not call the API, generate unrelated customer fields, or create a new
+customer.
+
+When that state must be applied to an existing customer, use
+`CustomerStateProvisioner`:
+
+```text
+CustomerStateBuilder
+        ↓
+partial state
+        ↓
+CustomerStateProvisioner
+        ↓
+CustomersHelper
+        ↓
+CustomersApi
+        ↓
+existing customer state
+```
+
+### Important testing rule
+
+Do not use `CustomerStateProvisioner` to hide the operation that the test is
+supposed to verify.
+
+If the test is specifically verifying `PUT /customers/{id}`, the PUT remains
+the **Act** step:
+
+```python
+customer = create_valid_customer()
+
+customer_state = (
+    CustomerStateBuilder()
+    .with_first_name("QAUpdated")
+    .with_email("updated@example.com")
+    .build()
+)
+
+# ACT — this is the operation under test.
+response = customer_helper.update_customer(
+    customer["id"],
+    payload=customer_state,
+    return_http_response=True,
+)
+```
+
+Use the State Provisioner when another test needs to **establish a prerequisite
+state** on an existing resource before exercising a different operation.
+
+---
+
 ## 4. 🧪 Writing Tests
+
+### 4.0 Example — update an existing customer
+
+When the test itself is verifying a customer update, use
+`CustomerStateBuilder` to keep the update payload readable, but call the
+Helper directly for the operation under test.
+
+```python
+def test_update_customer_first_name(
+    customer_helper,
+    create_valid_customer,
+):
+
+    # ARRANGE
+    customer = create_valid_customer()
+
+    customer_state = (
+        CustomerStateBuilder()
+        .with_first_name("QAUpdated")
+        .with_email("updated@example.com")
+        .build()
+    )
+
+    # ACT — PUT /customers/{id} is the operation under test.
+    response = customer_helper.update_customer(
+        customer["id"],
+        payload=customer_state,
+        return_http_response=True,
+    )
+
+    # ASSERT
+    assert response.status_code == 200
+
+    customer_model = assert_valid_customer_response(response.json)
+
+    assert customer_model.first_name == customer_state["first_name"]
+    assert customer_model.email == customer_state["email"]
+```
+
+The Builder prepares the data; the test still performs and verifies the update.
 
 ### 4.1 Arrange → Act → Assert — what each part means
 
@@ -513,9 +771,10 @@ def test_get_customer_by_id(customer_helper, create_valid_customer):
     # ARRANGE
     # Create valid setup data.
     #
-    # The fixture builds and provisions the customer, validates
-    # the expected 201 response and response body, and registers
-    # cleanup. The test receives only a clean customer dict.
+    # The fixture builds and provisions the customer through the
+    # Builder → Factory → Provisioner path, validates the expected
+    # 201 response and response body, registers ownership, and
+    # returns only a clean customer dict.
     # ============================================================
     customer = create_valid_customer()
 
@@ -558,9 +817,11 @@ POST /customers
     ↓
 fixture setup
     ↓
-Builder → Provisioner → Helper/API
+Builder → Factory → Provisioner → Helper/API
     ↓
 status + body validation happens inside fixture
+    ↓
+ownership registration
     ↓
 clean customer dict
     ↓
@@ -709,7 +970,8 @@ Therefore:
 
 ```text
 Fixture:
-    POST setup → assert expected 201 → validate body → return dict
+    Builder → Factory → Provisioner → POST setup
+    → assert expected 201 → validate body → register ownership → return dict
 
 Test:
     GET/PUT/DELETE/POST under test → assert expected status → validate body
@@ -904,11 +1166,17 @@ The fixture performs:
 ```text
 create_valid_customer()
         │
+        ├── Builder → Factory
+        │      ↓
+        │   prepared data
+        │      ↓
+        │   Provisioner → Helper/API
+        │      ↓
         └── POST /customers
               │
               ├── assert 201       ← FIXTURE
               ├── validate body    ← VALIDATOR
-              ├── register cleanup
+              ├── register ownership
               └── return dict
 ```
 
@@ -1118,7 +1386,10 @@ Fixtures like `create_valid_customer`:
 
 - ALWAYS return a `dict`
 - ALWAYS return valid data
+- ALWAYS prepare data through the Builder/Factory path
+- ALWAYS provision through the Provisioner path
 - ALWAYS validate the expected creation status before returning
+- ALWAYS register ownership for created test resources
 - NEVER return an `HttpResponse`
 - NEVER return invalid objects
 
@@ -1192,27 +1463,34 @@ customer_model = assert_customer_retrieved_successfully(response)
 
 ### Rule 7 — Keep responsibilities separate
 
-- Helpers orchestrate; they do not assert.
+- Factories generate valid data; they do not make network calls.
+- Builders customize data; they do not make network calls or own lifecycle.
+- Provisioners create real system state from prepared data.
+- Helpers orchestrate; they do not generate test data or assert.
 - Validators validate data; they do not fetch it.
-- Fixtures create validated test data and handle cleanup.
+- Fixtures connect the test-data and provisioning layers, validate setup, register ownership, and return clean data.
 - Tests verify behaviour and business outcomes.
 - `request_raw()` is for low-level debugging, not normal test design.
 
 ---
 
-## 8. 📦 Fixtures (Factory Pattern)
+## 8. 📦 Fixtures — Test Data Lifecycle
 
-Fixtures act as **gatekeepers for test data**.
+Fixtures act as **pytest-facing gatekeepers for test data and lifecycle**.
 
 A fixture that creates a valid resource should:
 
-1. Call the Helper
-2. Receive an `HttpResponse`
-3. Validate the expected transport status
-4. Extract JSON
-5. Validate the response structure/domain rules
-6. Register cleanup
-7. Return a clean `dict`
+1. Prepare data through the Builder/Factory path
+2. Pass the prepared data to the Provisioner
+3. Receive the `HttpResponse` produced by provisioning
+4. Validate the expected transport status
+5. Extract JSON
+6. Validate the response structure/domain rules
+7. Register ownership for cleanup
+8. Return a clean `dict`
+
+The fixture is the connection point between **test-data preparation** and
+**real system provisioning**.
 
 Example flow:
 
@@ -1220,7 +1498,19 @@ Example flow:
 fixture
    │
    ▼
-Helper
+Builder
+   │
+   ▼
+Factory
+   │
+   ▼
+prepared data
+   │
+   ▼
+Provisioner
+   │
+   ▼
+Helper / API
    │
    ▼
 HttpResponse
@@ -1234,7 +1524,7 @@ response.json
 Pydantic / domain validation
    │
    ▼
-cleanup registration
+ownership registration
    │
    ▼
 clean dict
@@ -1247,9 +1537,14 @@ The fixture's contract is:
 ```text
 ALWAYS → valid data
 ALWAYS → clean dict
-NEVER  → HttpResponse
+ALWAYS → register ownership for created test resources
+NEVER  → HttpResponse to the consuming test
 NEVER  → invalid data
 ```
+
+The fixture also does **not** become the test-data generator itself. Data
+generation/customization belongs to the Factory/Builder layer; real resource
+creation belongs to the Provisioner.
 
 This does not mean fixtures are only for "simple" or "junior" tests. They are the standard way to prepare valid test state.
 
@@ -1315,11 +1610,20 @@ The important distinction is:
 Helpers are responsible for:
 
 - Calling APIs
-- Orchestrating workflows
+- Orchestrating domain workflows
 - Combining API + DAO/DB logic where needed
 - Providing either a clean parsed result or the `HttpResponse`, depending on `return_http_response`
 
-Helpers must **not** assert.
+Helpers must **not**:
+
+- generate random test data;
+- decide test-data ownership;
+- manage pytest lifecycle;
+- assert test expectations.
+
+Test data is prepared by the Factory/Builder layer and real system state is
+created by the Provisioner. The Helper remains the domain/API orchestration
+layer.
 
 For example:
 
@@ -1335,6 +1639,12 @@ response = customer_helper.get_customer_by_id(
 ```
 
 The Helper decides which representation to return; the test or Validator decides how the returned data should be validated.
+
+For valid test-data setup, the Provisioner calls the Helper in response mode
+and returns the resulting `HttpResponse` to the fixture. The fixture owns the
+setup-status assertion and ownership registration. For the operation under
+test, the test may request `return_http_response=True` directly from the
+Helper.
 
 ## 11. 📁 Test Structure & Organization (MANDATORY)
 
@@ -1495,22 +1805,27 @@ while GraphQL business behavior remains under the corresponding entity's
 
 ## 17. 🎯 Golden Rules
 
-1. Fixtures return validated data
-2. Helpers orchestrate — they don't assert
-3. Validators validate response/data — they don't fetch data or own HTTP status assertions
-4. Tests validate the HTTP status of the operation under test and verify business logic
-5. Keep tests simple
+1. Factories generate valid test data; Builders customize it for scenarios
+2. Provisioners create real system state from already-prepared data
+3. Fixtures connect test-data preparation to provisioning, validate setup, register ownership, and return validated data
+4. Helpers orchestrate — they don't generate test data or assert
+5. Validators validate response/data — they don't fetch data or own HTTP status assertions
+6. Tests validate the HTTP status of the operation under test and verify business logic
+7. Keep tests simple
 
 Before adding anything new, ask: **"Does this help me write better tests, faster?"** If not, skip it.
 
 ```
-HttpClient   → raw
-APIClient    → orchestrate
-HttpResponse → safe
-Helper       → workflow
-Validator    → checks
-Fixture      → validated
-Test         → assert
+Factory       → generate valid data
+Builder        → customize scenario data
+Provisioner    → create real system state
+HttpClient     → raw transport
+APIClient      → orchestrate transport
+HttpResponse   → normalized response
+Helper         → domain/API workflow
+Validator      → checks
+Fixture        → lifecycle + validated setup
+Test           → assert operation behaviour
 ```
 
 This framework is ready, scalable, and cleanly designed. Focus on writing tests, not refactoring the framework.

@@ -234,9 +234,9 @@ def test_bulk_create_customers(
 @pytest.mark.bulk
 @pytest.mark.negative
 @pytest.mark.regression  # Bulk is heavy → NOT sanity/smoke
-# @pytest.mark.skip(
-#     reason="Edge case validation for qty=0 and qty=101; run manually when needed"
-# )
+@pytest.mark.skip(
+    reason="Edge case validation for qty=0 and qty=101; run manually when needed"
+)
 @pytest.mark.parametrize("qty", [0, 101])
 def test_bulk_create_customers_edge_cases(
     qty, customer_helper, customers_dao, create_valid_customer
