@@ -1,0 +1,12 @@
+Session ID: 36244657404
+ENV: ci
+
+Duration: 2m 38s
+
+Total tests: 39
+Passed: 37
+Failed: 0
+Skipped: 2
+
+Failures by team:
+None 🎉
