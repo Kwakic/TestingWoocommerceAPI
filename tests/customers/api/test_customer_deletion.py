@@ -48,7 +48,7 @@ def test_customer_deletion_removes_resource(
     mark_deleted = all_resources.mark_deleted
 
     # Step 1 — Create customers
-    logger.info("🛠 Creating a test customers via factory fixture for deletion.")
+    logger.info("🛠 Creating a test customer for deletion.")
     # To keep the customers in the DB (i.e., skip deletion), pass: customers = create_customer_for_test(skip_cleanup=True)
     customer = (
         create_valid_customer()
@@ -150,7 +150,7 @@ def test_deleted_customer_not_in_created_after_filter(
     """
 
     # Step 1 — Create customers
-    logger.info("🛠 Creating a test customers via factory fixture.")
+    logger.info("🛠 Creating a test customer.")
     customer = create_valid_customer(skip_cleanup=True)
     # skip_cleanup=True because the test deletes the resource manually
     customer_id = customer["id"]
