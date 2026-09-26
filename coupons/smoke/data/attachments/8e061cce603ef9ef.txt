@@ -1,0 +1,41 @@
+DEBUG    EcommerceAPI.plugins.entities:entities.py:461 ✅ [coupons] Loaded API client: CouponsApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:470 ✅ [coupons] Instantiated helper with API client
+DEBUG    EcommerceAPI.src.coupons.dao.coupons_dao:coupons_dao.py:50 🗄️ CouponsDAO initialized: posts=wordpress.wp_posts, postmeta=wordpress.wp_postmeta
+DEBUG    EcommerceAPI.plugins.entities:entities.py:461 ✅ [customers] Loaded API client: CustomersApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:470 ✅ [customers] Instantiated helper with API client
+DEBUG    EcommerceAPI.plugins.entities:entities.py:461 ✅ [products] Loaded API client: ProductsApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:470 ✅ [products] Instantiated helper with API client
+DEBUG    EcommerceAPI.src.products.dao.products_dao:products_dao.py:45 🗄️ ProductsDAO initialized: table=wordpress.wp_posts
+INFO     EcommerceAPI.plugins.entities:entities.py:534 🔍 ENTITY DISCOVERY SUMMARY
+INFO     EcommerceAPI.plugins.entities:entities.py:536    coupons      | ✅  READY
+INFO     EcommerceAPI.plugins.entities:entities.py:536    customers    | ✅  READY
+INFO     EcommerceAPI.plugins.entities:entities.py:536    orders       | ⏭️ SKIPPED (missing API module)
+INFO     EcommerceAPI.plugins.entities:entities.py:536    products     | ✅  READY
+INFO     tests.coupons.api.test_get_coupon:test_get_coupon.py:59 🛠 Creating a test coupon via factory fixture.
+DEBUG    EcommerceAPI.src.coupons.helpers.coupons_helper:coupons_helper.py:119 ⚙️ Creating coupon with payload keys: ['code']
+DEBUG    EcommerceAPI.src.coupons.api.coupons_api:coupons_api.py:69 📡 POST /coupons payload_keys=['code']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/coupons → Status code: 201 (completed in 0.122s)
+INFO     EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:46 ✅ Coupon structure valid: id=17 code=test-vhodozxmep
+DEBUG    EcommerceAPI.plugins.api.coupons:coupons.py:125 Registered coupon with ID=17 for cleanup.
+INFO     tests.coupons.api.test_get_coupon:test_get_coupon.py:66 🎟 Created coupon ID=17, code='test-vhodozxmep'
+INFO     tests.coupons.api.test_get_coupon:test_get_coupon.py:75 🔎 Fetching coupon by ID: 17
+DEBUG    EcommerceAPI.src.coupons.helpers.coupons_helper:coupons_helper.py:170 🟢 Calling 'Get Coupon' for ID 17.
+DEBUG    EcommerceAPI.src.coupons.api.coupons_api:coupons_api.py:91 📡 GET /coupons/17
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/coupons/17 → Status code: 200 (completed in 0.102s)
+INFO     EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:46 ✅ Coupon structure valid: id=17 code=test-vhodozxmep
+INFO     EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:201 ✅ Coupon identity verified: id=17 code=test-vhodozxmep
+INFO     tests.coupons.api.test_get_coupon:test_get_coupon.py:107 ✅ Retrieved coupon matches created coupon: ID=17, code=test-vhodozxmep
+INFO     tests.coupons.api.test_get_coupon:test_get_coupon.py:113 🎯 Coupon GET-by-ID validation complete for ID=17.
+INFO     EcommerceAPI.plugins.entities:entities.py:718 🔧 Starting teardown of created test resources...
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up coupon(s)... (1 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting coupon ID: 17
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/coupons/17?force=True → Status code: 200 (completed in 0.117s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted coupon ID: 17
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for coupon(s).
+INFO     EcommerceAPI.plugins.entities:entities.py:758 
+
+🧹 ====================================== CLEANUP SUMMARY ======================================
+INFO     EcommerceAPI.plugins.entities:entities.py:761 📊 Created during test run: {'coupons': 1}
+INFO     EcommerceAPI.plugins.entities:entities.py:762 🧾 Cleanup total summary:
+INFO     EcommerceAPI.plugins.entities:entities.py:764    • coupon: 1 deleted (1 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:765 ✅ All test data cleanup completed.
