@@ -54,7 +54,7 @@ def test_create_single_simple_product(
     # -------------------------------------------
     # Step 1 — Create product
     # -------------------------------------------
-    logger.info("🛠 Creating a test product via factory fixture.")
+    logger.info("🛠 Creating a test product.")
 
     product = create_valid_product()
 

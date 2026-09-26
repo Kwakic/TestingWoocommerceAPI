@@ -84,10 +84,7 @@ def test_update_customer_first_name(customer_helper, create_valid_customer):
 
     # Step 1 — Create customers (POST handled by fixture)
     logger.info("🛠 Creating a test customers for updating name and email.")
-    # To keep the customers in the DB (i.e.,skip deletion), set: customers = create_customer_for_test(skip_cleanup=True)
-    customer = (
-        create_valid_customer()
-    )  # Default: skip_cleanup=False, validate_response=True
+    customer = create_valid_customer()
 
     customer_id = customer["id"]
     # original_email = customers["email"]

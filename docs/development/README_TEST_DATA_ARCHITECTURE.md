@@ -1,6 +1,6 @@
-# Test Data Architecture
+# 🧪 Test Data Architecture
 
-## Overview
+## 📖 Overview
 
 The `test_data` package is the dedicated test-data preparation layer of the
 EcommerceAPI framework.
@@ -28,7 +28,7 @@ The key principle is:
 
 ---
 
-# Why Do We Need a Test Data Layer?
+# 🎯 Why Do We Need a Test Data Layer?
 
 Without a dedicated test-data architecture, tests quickly become filled with
 large, repetitive payloads.
@@ -98,11 +98,11 @@ This follows the **"Only Care About What Matters"** principle:
 
 ---
 
-# Architectural Principles
+# 🧱 Architectural Principles
 
 The `test_data` architecture follows several important principles.
 
-## 1. Data generation is separate from system interaction
+## 1. 🧪 Data generation is separate from system interaction
 
 Factories and builders prepare data **in memory**.
 
@@ -131,7 +131,7 @@ A useful mental model is:
 
 ---
 
-## 2. Domain models remain domain models
+## 2. 🧩 Domain models remain domain models
 
 Pydantic models belong to their respective domain.
 
@@ -165,7 +165,7 @@ domain model.
 
 ---
 
-# Test Data Architecture
+# 🧪 Test Data Architecture
 
 The architecture is composed of the following responsibilities:
 
@@ -259,7 +259,7 @@ Fixture → Builder → Factory → Provisioner → Helper/API
 ```
 
 ---
-# The Core Creation Flow
+# 🔄 The Core Creation Flow
 
 For a customer, the fundamental creation flow can be understood as three
 major responsibilities: data preparation, system provisioning, and pytest
@@ -345,7 +345,7 @@ The test therefore does not need to understand raw HTTP response handling.
 
 ---
 
-# Factory
+# 🏭 Factory
 
 ## Responsibility
 
@@ -387,7 +387,7 @@ The result is data in memory.
 
 ---
 
-# Builder
+# 🧩 Builder
 
 ## Responsibility
 
@@ -424,7 +424,7 @@ factory.
 This allows tests to remain expressive without manually constructing the
 entire payload.
 
-## Customer Builder vs Customer State Builder
+## 🧩 Customer Builder vs Customer State Builder
 
 The customer domain has two intentionally different builder concepts.
 
@@ -495,7 +495,7 @@ The distinction is deliberate:
 A state builder must not silently generate a complete customer or overwrite
 fields that the scenario did not ask to change.
 
-### Why use a Builder?
+### 💡 Why use a Builder?
 
 Imagine a test for duplicate email handling.
 
@@ -519,7 +519,7 @@ Those are implementation details of the default test data.
 
 ---
 
-# "Only Care About What Matters"
+# 🎯 "Only Care About What Matters"
 
 This is one of the most important principles in the architecture.
 
@@ -561,7 +561,7 @@ This becomes especially valuable as the test suite grows.
 
 ---
 
-# Generic Data Utilities
+# 🧰 Generic Data Utilities
 
 Generic random-data generation belongs in the shared utility layer.
 
@@ -624,7 +624,7 @@ That domain composition belongs in the factories.
 
 ---
 
-# Builder + Factory Relationship
+# 🧩 Builder + Factory Relationship
 
 The relationship can be visualized as:
 
@@ -657,7 +657,7 @@ This separation keeps both components reusable.
 
 ---
 
-# Provisioner
+# 🚀 Provisioner
 
 ## Responsibility
 
@@ -703,7 +703,7 @@ domain Helper/API already provide that capability.
 
 ---
 
-# Ownership
+# 👤 Ownership
 
 ## Responsibility
 
@@ -745,7 +745,7 @@ Ownership is particularly important for:
 
 ---
 
-# Cleanup
+# 🧹 Cleanup
 
 ## Principle
 
@@ -798,7 +798,7 @@ Stable environment seeds remain untouched.
 
 ---
 
-# Seeds
+# 🌱 Seeds
 
 ## Responsibility
 
@@ -827,7 +827,7 @@ These are stable personas used by UI scenarios.
 
 They should survive normal test cleanup.
 
-### Seed vs Dynamic Data
+#### 🌱 Seed vs Dynamic Data
 
 | Data | Purpose | Lifecycle |
 |---|---|---|
@@ -841,7 +841,7 @@ that the UI suite depends on.
 
 ---
 
-# Fixtures
+# 🧪 Fixtures
 
 ## Responsibility
 
@@ -902,7 +902,7 @@ The fixture does not generate customer data itself and does not rely on
 
 ---
 
-# Fixtures Are Not the Factory
+# 🧪 Fixtures Are Not the Factory
 
 A common architectural mistake is to put everything into `conftest.py`.
 
@@ -954,7 +954,7 @@ remain responsible for data preparation.
 
 ---
 
-# Negative Testing
+# ❌ Negative Testing
 
 The separation is especially valuable for negative tests.
 
@@ -983,7 +983,7 @@ a "valid customer" fixture.
 
 ---
 
-# Reuse Across REST, GraphQL and UI
+# 🌐 Reuse Across REST, GraphQL and UI
 
 One of the major benefits of keeping factories and builders independent from
 the network is reuse.
@@ -1026,7 +1026,7 @@ logic.
 
 ---
 
-# Cross-System Test Data
+# 🔄 Cross-System Test Data
 
 This architecture also supports tests where one interface prepares the data
 and another interface consumes it.
@@ -1054,7 +1054,7 @@ generation itself to either REST or UI.
 
 ---
 
-# Example: Customer Creation
+# 👤 Example: Customer Creation
 
 A simplified conceptual flow:
 
@@ -1116,78 +1116,59 @@ test receives verified data
 
 ---
 
-# Current Package Structure
+# 📁 Current Package Structure
 
-The test-data package is organized by responsibility and, where appropriate,
-by domain:
+The currently implemented test-data structure is centered on the **Customer
+reference implementation**.
+
+The following components are confirmed as part of the current Customer
+test-data architecture:
 
 ```text
 EcommerceAPI/src/test_data/
-├── __init__.py
-│
 ├── builders/
-│   ├── customers/
-│   │   ├── __init__.py
-│   │   ├── customer_builder.py
-│   │   └── customer_state_builder.py
-│   ├── coupons/
-│   │   ├── __init__.py
-│   │   └── coupon_builder.py
-│   ├── orders/
-│   │   ├── __init__.py
-│   │   └── order_builder.py
-│   └── products/
-│       ├── __init__.py
-│       └── product_builder.py
+│   └── customers/
+│       ├── customer_builder.py
+│       └── customer_state_builder.py
 │
 ├── factories/
-│   ├── __init__.py
-│   ├── base.py
-│   ├── customers/
-│   │   ├── __init__.py
-│   │   └── customer_factory.py
-│   ├── coupons/
-│   │   ├── __init__.py
-│   │   └── coupon_factory.py
-│   ├── orders/
-│   │   ├── __init__.py
-│   │   └── order_factory.py
-│   └── products/
-│       ├── __init__.py
-│       └── product_factory.py
+│   └── customers/
+│       └── customer_factory.py
 │
 ├── ownership/
-│   ├── __init__.py
 │   └── resource_ownership.py
 │
 ├── provisioning/
-│   ├── customers/
-│   │   ├── __init__.py
-│   │   ├── customer_provisioner.py
-│   │   └── customer_state_provisioner.py
-│   ├── coupons/
-│   │   ├── __init__.py
-│   │   └── coupon_provisioner.py
-│   ├── orders/
-│   │   ├── __init__.py
-│   │   └── order_provisioner.py
-│   └── products/
-│       ├── __init__.py
-│       └── product_provisioner.py
+│   └── customers/
+│       ├── customer_provisioner.py
+│       └── customer_state_provisioner.py
 │
 └── seeds/
-    └── __init__.py
 ```
 
-The structure is intentionally domain-oriented. Shared infrastructure such as
-`factories/base.py` and ownership remains at the test-data layer root.
+This is the **implemented reference structure**, not a declaration that every
+future domain already has the same components.
 
-Not every component needs to become sophisticated immediately. We will add
-behavior as the corresponding test-data requirements become real.
+Products, Coupons, and Orders are the next domains to investigate. Their
+Factory, Builder, Provisioner, or State components should be added only when
+their real test-data requirements justify them.
 
----
+That distinction is intentional:
 
-# Relationship With Domain Code
+```text
+Implemented Customer architecture
+            ↓
+        Reference
+            ↓
+Investigate next domain
+            ↓
+Add only the components actually required
+```
+
+This keeps the test-data architecture consistent without creating speculative
+abstractions.
+
+# 🔌 Relationship With Domain Code
 
 The test-data layer sits beside, rather than inside, the domain model layer.
 
@@ -1231,11 +1212,11 @@ Generic Utilities
 
 ---
 
-# Object Mother vs Factory + Builder
+# 🧠 Object Mother vs Factory + Builder
 
 The terminology is worth understanding.
 
-## Object Mother
+## 👩‍🔧 Object Mother
 
 An **Object Mother** is a test-data pattern where reusable methods provide
 preconfigured objects for common scenarios.
@@ -1254,7 +1235,7 @@ customer = TestCustomers.customer_without_address()
 
 This can be very useful when a test suite has well-known personas.
 
-## Factory
+## 🏭 Factory
 
 A **Factory** focuses on creating valid objects/data.
 
@@ -1264,7 +1245,7 @@ customer = CustomerFactory().build()
 
 The factory usually owns the defaults and valid-data generation rules.
 
-## Builder
+## 🧩 Builder
 
 A **Builder** provides fluent or structured customization.
 
@@ -1300,7 +1281,7 @@ The patterns are not mutually exclusive.
 
 ---
 
-# What Each Layer Must Not Do
+# 🚫 What Each Layer Must Not Do
 
 Keeping boundaries explicit is important.
 
@@ -1320,7 +1301,7 @@ These boundaries prevent responsibilities from slowly leaking between layers.
 
 ---
 
-# Design Rules
+# 📐 Design Rules
 
 The following rules should guide future development.
 
@@ -1378,22 +1359,23 @@ domain model already represents the relevant API contract.
 
 ---
 
-# Current Implementation Status
+# 📊 Current Implementation Status
 
-The customer domain is currently the reference implementation for this
-architecture.
+The **Customer domain is the reference implementation** for this architecture.
 
-The following pieces are now implemented and verified by the existing REST
-customer test suite:
+The following components are implemented and established:
 
 - Customer Factory
 - Customer Builder
+- Customer State Builder
 - Customer Provisioner
+- Customer State Provisioner
 - Ownership / cleanup integration
 - `create_valid_customer` fixture integration
 - `CustomersHelper` refactored so it no longer generates test data
+- Real customer update-test usage of `CustomerStateBuilder`
 
-The public test-facing contract of `create_valid_customer` remains unchanged:
+The public test-facing contract of `create_valid_customer` remains:
 
 ```python
 customer = create_valid_customer()
@@ -1402,17 +1384,40 @@ customer = create_valid_customer()
 The fixture returns a validated customer dictionary and owns setup validation
 and cleanup registration.
 
-The `CustomersHelper` is now responsible only for customer API/domain
-orchestration. Test-data generation belongs to the Factory/Builder layer, and
-system provisioning belongs to the Provisioner.
+The Customer architecture now has two distinct preparation paths:
 
----
+```text
+New resource
+    ↓
+CustomerBuilder
+    ↓
+CustomerFactory
+    ↓
+CustomerProvisioner
+    ↓
+WooCommerce
 
-# Development Strategy
+Existing resource state
+    ↓
+CustomerStateBuilder
+    ↓
+CustomerStateProvisioner
+    ↓
+WooCommerce
+```
+
+The operation under test remains visible in the test. In particular, when a test
+verifies customer update behavior, the actual `PUT` operation is performed by
+the test rather than hidden inside `CustomerStateProvisioner`.
+
+The Customer domain is therefore complete enough to serve as the reference
+implementation for the next domain investigation.
+
+# 🛣️ Development Strategy
 
 The architecture is implemented incrementally.
 
-The customer reference implementation has now completed the initial lifecycle:
+The **Customer reference implementation is now complete**:
 
 ```text
 1. Architecture contract                    ✅
@@ -1433,9 +1438,9 @@ The customer reference implementation has now completed the initial lifecycle:
        ↓
 9. Customer State Provisioner               ✅
        ↓
-10. First real test migration               ✅
+10. First real state-update test migration  ✅
        ↓
-11. Product test data
+11. Product test-data investigation         ← next
        ↓
 12. Coupon test data
        ↓
@@ -1444,7 +1449,7 @@ The customer reference implementation has now completed the initial lifecycle:
 14. REST / GraphQL / UI cross-system scenarios
 ```
 
-The customer state pattern is now established by a real update test.
+The Customer state pattern is now established by a real update test.
 
 The important distinction is:
 
@@ -1459,19 +1464,21 @@ CustomerProvisioner
     → create a new customer
 
 CustomerStateProvisioner
-    → establish state on an existing customer
+    → establish prerequisite state on an existing customer
 ```
 
 The operation under test must remain visible in the test. A test for customer
-update behavior should not hide the PUT operation inside a state provisioner
-when that PUT is the behavior being verified.
+update behavior should not hide the `PUT` operation inside a state provisioner
+when that `PUT` is the behavior being verified.
+
+The next step is to **investigate the Product entity before designing its
+test-data components**. We should not assume that Product requires exactly the
+same architecture as Customer.
 
 We should continue to avoid large speculative abstractions before there is a
 real requirement for them.
 
----
-
-# Example Mental Model for New Contributors
+# 🧠 Example Mental Model for New Contributors
 
 When deciding where new code belongs, ask:
 
@@ -1523,6 +1530,17 @@ customer.
 customer_provisioner.provision(customer_data)
 ```
 
+### "I need an existing Customer to have prerequisite state."
+
+→ **Customer State Provisioner**
+
+```python
+customer_state_provisioner.provision(
+    customer_id,
+    customer_state,
+)
+```
+
 ### "I need a valid customer through the normal pytest setup lifecycle."
 
 → **Fixture**
@@ -1554,7 +1572,7 @@ experienced engineers and newcomers.
 
 ---
 
-# Summary
+# 📌 Summary
 
 The `test_data` architecture exists to solve a fundamental automation problem:
 

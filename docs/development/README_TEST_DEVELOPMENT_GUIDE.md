@@ -371,6 +371,50 @@ And the framework layers have clear responsibilities:
 - ✅ Helpers orchestrate API/domain workflows; they do not generate test data or assert
 - ✅ Tests verify the behaviour and business outcome
 
+### 🎯 Generic test data vs scenario-specific data
+
+Not every value used by a test belongs in a Factory or Builder.
+
+Use the test-data layer when the value represents **reusable resource data**:
+
+- common valid defaults;
+- reusable creation fields;
+- reusable partial state for an existing resource;
+- data that would otherwise be generated repeatedly across many tests.
+
+Keep values in the **test** when they exist only to express that test's scenario:
+
+- pagination-specific identifiers such as a `test_run_id`;
+- intentionally invalid values;
+- boundary values;
+- IDs that deliberately must not exist;
+- one-off business inputs used only to exercise a particular behaviour.
+
+For example, a pagination test may create a controlled set with a test-local identifier:
+
+```python
+test_run_id = generate_random_string()
+
+customer = create_valid_customer(
+    email=f"test_{test_run_id}_{index}@example.com"
+)
+```
+
+The important distinction is:
+
+```text
+Reusable resource data
+    → Factory / Builder
+
+Scenario-specific input
+    → Test
+
+Existing-resource prerequisite state
+    → State Builder / State Provisioner
+```
+
+Do not move every random string, payload, or test-specific value into the Factory just to make the test look "cleaner". The goal is **clear ownership of responsibility**, not maximum abstraction.
+
 ---
 
 ## 2.5 🚨 Environment Gate (Session-Level Safety Check — Separate from Preflight)
@@ -657,6 +701,45 @@ response = customer_helper.update_customer(
 
 Use the State Provisioner when another test needs to **establish a prerequisite
 state** on an existing resource before exercising a different operation.
+
+### 🧭 Final Customer state-setup pattern
+
+The Customer implementation now provides two deliberately separate paths:
+
+```text
+NEW CUSTOMER
+    ↓
+CustomerBuilder
+    ↓
+CustomerFactory
+    ↓
+CustomerProvisioner
+    ↓
+real Customer
+```
+
+and:
+
+```text
+EXISTING CUSTOMER
+    ↓
+CustomerStateBuilder
+    ↓
+CustomerStateProvisioner
+    ↓
+existing Customer in required state
+```
+
+The second path is **not** a replacement for the first. It solves a different problem:
+creation data describes a new resource, while state data describes a change or prerequisite
+state for a resource that already exists.
+
+Use the State Builder/Provisioner only when the state needs to be established **before**
+the operation under test. If the state-changing API call is itself what the test verifies,
+keep that call in the test's **Act** step.
+
+This is the current Customer reference pattern and should be reused as a model for future
+entities only when their test scenarios demonstrate the same need.
 
 ---
 
@@ -1805,30 +1888,36 @@ while GraphQL business behavior remains under the corresponding entity's
 
 ## 17. 🎯 Golden Rules
 
-1. Factories generate valid test data; Builders customize it for scenarios
-2. Provisioners create real system state from already-prepared data
-3. Fixtures connect test-data preparation to provisioning, validate setup, register ownership, and return validated data
-4. Helpers orchestrate — they don't generate test data or assert
-5. Validators validate response/data — they don't fetch data or own HTTP status assertions
-6. Tests validate the HTTP status of the operation under test and verify business logic
-7. Keep tests simple
+1. Factories generate valid reusable test data; Builders customize it for scenarios
+2. State Builders prepare partial state for existing resources; they do not create resources
+3. Provisioners create real system state from already-prepared data
+4. State Provisioners establish prerequisite state on existing resources; they do not hide the operation under test
+5. Scenario-specific inputs stay in the test when they are not reusable test-data concerns
+6. Fixtures connect test-data preparation to provisioning, validate setup, register ownership, and return validated data
+7. Helpers orchestrate — they don't generate test data or assert
+8. Validators validate response/data — they don't fetch data or own HTTP status assertions
+9. Tests validate the HTTP status of the operation under test and verify business logic
+10. Keep tests simple
 
 Before adding anything new, ask: **"Does this help me write better tests, faster?"** If not, skip it.
 
 ```
-Factory       → generate valid data
-Builder        → customize scenario data
-Provisioner    → create real system state
-HttpClient     → raw transport
-APIClient      → orchestrate transport
-HttpResponse   → normalized response
-Helper         → domain/API workflow
-Validator      → checks
-Fixture        → lifecycle + validated setup
-Test           → assert operation behaviour
+Factory              → generate valid reusable data
+Builder              → customize creation data
+State Builder        → prepare partial state for an existing resource
+Provisioner           → create real system state
+State Provisioner     → establish prerequisite state on an existing resource
+Scenario-specific     → stay in the test when not reusable
+HttpClient            → raw transport
+APIClient             → orchestrate transport
+HttpResponse          → normalized response
+Helper                → domain/API workflow
+Validator             → checks
+Fixture               → lifecycle + validated setup
+Test                  → assert operation behaviour
 ```
 
-This framework is ready, scalable, and cleanly designed. Focus on writing tests, not refactoring the framework.
+The Customer test-data architecture is now a complete reference implementation. Use it to guide future entities, but investigate each entity's actual test-data needs before introducing matching layers. Focus on writing tests, not refactoring the framework.
 
 ---
 

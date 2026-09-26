@@ -46,10 +46,7 @@ def test_list_customers_created_within_time_range_with_db_check(
 
     # Step 1 — Create customers (fixture performs POST validation)
     logger.info("🛠 Creating a test customer.")
-    # To keep the customers in the DB (i.e., skip deletion),set: customers = create_customer_for_test(skip_cleanup=True)
-    customer = (
-        create_valid_customer()
-    )  # Default: skip_cleanup=False, validate_response=True
+    customer = create_valid_customer()
 
     customer_id = customer["id"]
     customer_email = customer["email"]
@@ -130,10 +127,7 @@ def test_customer_should_not_returned_when_filtered_outside_creation_time(
 
     # Step 1 — Create customers
     logger.info("🛠 Creating a test customer.")
-    # To keep the customers in the DB (i.e., skip deletion),set: customers = create_customer_for_test(skip_cleanup=True)
-    customer = (
-        create_valid_customer()
-    )  # Default: skip_cleanup=False, validate_response=True
+    customer = create_valid_customer()
 
     customer_id = customer["id"]
 
