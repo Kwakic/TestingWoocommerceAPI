@@ -1,0 +1,25 @@
+DEBUG    EcommerceAPI.src.products.helpers.products_helper:products_helper.py:336 ⚙️ Creating product with payload keys: ['name', 'status']
+DEBUG    EcommerceAPI.src.products.api.products_api:products_api.py:74 📡 POST /products payload_keys=['name', 'status']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/products → Status code: 201 (completed in 0.177s)
+INFO     EcommerceAPI.src.products.validators.product_validators:product_validators.py:99 ✅ Product structure valid: id=21, name=Bulk Product 1, sku=None
+DEBUG    EcommerceAPI.plugins.api.products:products.py:140 ℹ️ Registered product with ID=21 for cleanup.
+DEBUG    EcommerceAPI.src.products.helpers.products_helper:products_helper.py:336 ⚙️ Creating product with payload keys: ['name', 'status']
+DEBUG    EcommerceAPI.src.products.api.products_api:products_api.py:74 📡 POST /products payload_keys=['name', 'status']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/products → Status code: 201 (completed in 0.184s)
+INFO     EcommerceAPI.src.products.validators.product_validators:product_validators.py:99 ✅ Product structure valid: id=22, name=Bulk Product 2, sku=None
+DEBUG    EcommerceAPI.plugins.api.products:products.py:140 ℹ️ Registered product with ID=22 for cleanup.
+DEBUG    EcommerceAPI.src.products.helpers.products_helper:products_helper.py:336 ⚙️ Creating product with payload keys: ['name', 'status']
+DEBUG    EcommerceAPI.src.products.api.products_api:products_api.py:74 📡 POST /products payload_keys=['name', 'status']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/products → Status code: 201 (completed in 0.204s)
+INFO     EcommerceAPI.src.products.validators.product_validators:product_validators.py:99 ✅ Product structure valid: id=23, name=Bulk Product 3, sku=None
+DEBUG    EcommerceAPI.plugins.api.products:products.py:140 ℹ️ Registered product with ID=23 for cleanup.
+DEBUG    EcommerceAPI.src.products.helpers.products_helper:products_helper.py:336 ⚙️ Creating product with payload keys: ['name', 'status']
+DEBUG    EcommerceAPI.src.products.api.products_api:products_api.py:74 📡 POST /products payload_keys=['name', 'status']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/products → Status code: 201 (completed in 0.185s)
+INFO     EcommerceAPI.src.products.validators.product_validators:product_validators.py:99 ✅ Product structure valid: id=24, name=Bulk Product 4, sku=None
+DEBUG    EcommerceAPI.plugins.api.products:products.py:140 ℹ️ Registered product with ID=24 for cleanup.
+DEBUG    EcommerceAPI.src.products.helpers.products_helper:products_helper.py:336 ⚙️ Creating product with payload keys: ['name', 'status']
+DEBUG    EcommerceAPI.src.products.api.products_api:products_api.py:74 📡 POST /products payload_keys=['name', 'status']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/products → Status code: 201 (completed in 0.180s)
+INFO     EcommerceAPI.src.products.validators.product_validators:product_validators.py:99 ✅ Product structure valid: id=25, name=Bulk Product 5, sku=None
+DEBUG    EcommerceAPI.plugins.api.products:products.py:140 ℹ️ Registered product with ID=25 for cleanup.
