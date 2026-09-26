@@ -57,7 +57,7 @@ def test_create_single_coupon(
     # -------------------------------------------
     # Step 1 — Create coupon
     # -------------------------------------------
-    logger.info("🛠 Creating a test coupon via factory fixture.")
+    logger.info("🛠 Creating a test coupon.")
 
     coupon = create_valid_coupon()
 

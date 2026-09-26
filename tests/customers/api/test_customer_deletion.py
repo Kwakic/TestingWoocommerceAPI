@@ -49,10 +49,7 @@ def test_customer_deletion_removes_resource(
 
     # Step 1 — Create customers
     logger.info("🛠 Creating a test customer for deletion.")
-    # To keep the customers in the DB (i.e., skip deletion), pass: customers = create_customer_for_test(skip_cleanup=True)
-    customer = (
-        create_valid_customer()
-    )  # Default: skip_cleanup=False, validate_response=True
+    customer = create_valid_customer()
 
     customer_id = customer["id"]
     email = customer["email"]

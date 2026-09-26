@@ -37,10 +37,7 @@ def test_soft_deleted_customer_is_still_returned_by_api(
 
     # Step 1 — Create customers (POST /customers handled by fixture)
     logger.info("🛠 Creating a test customer.")
-    # To keep the customers in the DB (i.e., skip deletion),set: customers = create_customer_for_test(skip_cleanup=True)
-    customer = (
-        create_valid_customer()
-    )  # Fixture creates and validates the customer and registers cleanup.
+    customer = create_valid_customer()
 
     customer_id = customer["id"]
     customer_email = customer["email"]
@@ -92,11 +89,7 @@ def test_soft_deleted_customers_are_excluded_by_custom_filter(
 
     # Step 1 — Create customers
     logger.info("🛠 Creating a test customer.")
-    # To keep the customers in the DB (i.e., skip deletion),set: customers = create_customer_for_test(skip_cleanup=True)
-    customer = (
-        create_valid_customer()
-    )  # Default: skip_cleanup=False, validate_response=True
-    # No need to assert ID/email. The fixture already does it: customer_helper.assert_valid_customer_response(customers)
+    customer = create_valid_customer()
 
     customer_id = customer["id"]
     email = customer["email"]

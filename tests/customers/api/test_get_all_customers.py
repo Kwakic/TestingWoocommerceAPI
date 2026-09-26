@@ -107,7 +107,8 @@ def test_get_all_customers_pagination_boundary(customer_helper, create_valid_cus
     )
 
     for i in range(qty):
-        create_valid_customer(email=f"test_{test_run_id}_{i}@supersqa.com")
+        customer_email = f"test_{test_run_id}_{i}@supersqa.com"
+        create_valid_customer(email=customer_email)
 
     logger.info(
         f"🟢 Testing pagination boundary with per_page={per_page}, max_pages={max_pages}"
