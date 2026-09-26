@@ -46,7 +46,7 @@ def test_get_customer_by_email(customer_helper, customers_dao, create_valid_cust
     # -------------------------------------------
     # 🛠 Step 1 — Create a valid customers
     # -------------------------------------------
-    logger.info("🛠 Creating a test customers via factory fixture.")
+    logger.info("🛠 Creating a test customer.")
 
     # Fixture handles:
     #   - POST /customers
@@ -138,7 +138,7 @@ def test_get_customer_by_id(customer_helper, customers_dao, create_valid_custome
     # -------------------------------------------
     # 🛠 Step 1 — Create a valid customers
     # -------------------------------------------
-    logger.info("🛠 Creating a test customers via factory fixture.")
+    logger.info("🛠 Creating a test customer.")
 
     # The fixture already validates POST response and registers cleanup.
     customer = create_valid_customer()

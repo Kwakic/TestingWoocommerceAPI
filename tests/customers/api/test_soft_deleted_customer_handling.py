@@ -36,7 +36,7 @@ def test_soft_deleted_customer_is_still_returned_by_api(
     """
 
     # Step 1 — Create customers (POST /customers handled by fixture)
-    logger.info("🛠 Creating a test customers via factory fixture.")
+    logger.info("🛠 Creating a test customer.")
     # To keep the customers in the DB (i.e., skip deletion),set: customers = create_customer_for_test(skip_cleanup=True)
     customer = (
         create_valid_customer()
@@ -91,7 +91,7 @@ def test_soft_deleted_customers_are_excluded_by_custom_filter(
     """
 
     # Step 1 — Create customers
-    logger.info("🛠 Creating a test customers via factory fixture.")
+    logger.info("🛠 Creating a test customer.")
     # To keep the customers in the DB (i.e., skip deletion),set: customers = create_customer_for_test(skip_cleanup=True)
     customer = (
         create_valid_customer()
