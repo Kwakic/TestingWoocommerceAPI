@@ -1,0 +1,48 @@
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/system_status → Status code: 200 (completed in 0.841s)
+INFO     EcommerceAPI.plugins.api.shared_api:shared_api.py:181 ✅ Environment validation passed (API reachable, auth OK). Base URL: http://localhost:8080/wp-json/wc/v3/
+DEBUG    EcommerceAPI.plugins.entities:entities.py:461 ✅ [coupons] Loaded API client: CouponsApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:470 ✅ [coupons] Instantiated helper with API client
+DEBUG    EcommerceAPI.src.coupons.dao.coupons_dao:coupons_dao.py:50 🗄️ CouponsDAO initialized: posts=wordpress.wp_posts, postmeta=wordpress.wp_postmeta
+DEBUG    EcommerceAPI.plugins.entities:entities.py:461 ✅ [customers] Loaded API client: CustomersApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:470 ✅ [customers] Instantiated helper with API client
+DEBUG    EcommerceAPI.plugins.entities:entities.py:461 ✅ [products] Loaded API client: ProductsApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:470 ✅ [products] Instantiated helper with API client
+DEBUG    EcommerceAPI.src.products.dao.products_dao:products_dao.py:45 🗄️ ProductsDAO initialized: table=wordpress.wp_posts
+INFO     EcommerceAPI.plugins.entities:entities.py:534 🔍 ENTITY DISCOVERY SUMMARY
+INFO     EcommerceAPI.plugins.entities:entities.py:536    coupons      | ✅  READY
+INFO     EcommerceAPI.plugins.entities:entities.py:536    customers    | ✅  READY
+INFO     EcommerceAPI.plugins.entities:entities.py:536    orders       | ⏭️ SKIPPED (missing API module)
+INFO     EcommerceAPI.plugins.entities:entities.py:536    products     | ✅  READY
+INFO     EcommerceAPI.plugins.allure_autogen:allure_autogen.py:520 📎 Framework configuration attached to Allure
+INFO     tests.coupons.api.test_create_coupons:test_create_coupons.py:60 🛠 Creating a test coupon via factory fixture.
+DEBUG    EcommerceAPI.src.coupons.helpers.coupons_helper:coupons_helper.py:119 ⚙️ Creating coupon with payload keys: ['code']
+DEBUG    EcommerceAPI.src.coupons.api.coupons_api:coupons_api.py:69 📡 POST /coupons payload_keys=['code']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/coupons → Status code: 201 (completed in 0.095s)
+INFO     EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:46 ✅ Coupon structure valid: id=16 code=test-ieedgxwdmu
+DEBUG    EcommerceAPI.plugins.api.coupons:coupons.py:125 Registered coupon with ID=16 for cleanup.
+INFO     tests.coupons.api.test_create_coupons:test_create_coupons.py:66 🎟 Created coupon ID=16, code='test-ieedgxwdmu'
+INFO     tests.coupons.api.test_create_coupons:test_create_coupons.py:75 🔍 Verifying coupon ID=16 against the database.
+DEBUG    EcommerceAPI.src.coupons.helpers.coupons_helper:coupons_helper.py:170 🟢 Calling 'Get Coupon' for ID 16.
+DEBUG    EcommerceAPI.src.coupons.api.coupons_api:coupons_api.py:91 📡 GET /coupons/16
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/coupons/16 → Status code: 200 (completed in 0.069s)
+DEBUG    EcommerceAPI.src.coupons.dao.coupons_dao:coupons_dao.py:104 ℹ️ Found coupon for ID=16: {'ID': 16, 'post_author': 1, 'post_date': datetime.datetime(2026, 9, 26, 20, 29), 'post_date_gmt': datetime.datetime(2026, 9, 26, 20, 29), 'post_content': '', 'post_title': 'test-ieedgxwdmu', 'post_excerpt': '', 'post_status': 'publish', 'comment_status': 'closed', 'ping_status': 'closed', 'post_password': '', 'post_name': 'test-ieedgxwdmu', 'to_ping': '', 'pinged': '', 'post_modified': datetime.datetime(2026, 9, 26, 20, 29), 'post_modified_gmt': datetime.datetime(2026, 9, 26, 20, 29), 'post_content_filtered': '', 'post_parent': 0, 'guid': 'http://localhost:8080/?post_type=shop_coupon&p=16', 'menu_order': 0, 'post_type': 'shop_coupon', 'post_mime_type': '', 'comment_count': 0}
+INFO     EcommerceAPI.src.coupons.dao.coupons_dao:coupons_dao.py:354 ✅ Retrieved 10 metadata record(s) for coupon=16
+DEBUG    EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:149 ⚙️ Validating coupon by ID=16
+INFO     EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:46 ✅ Coupon structure valid: id=16 code=test-ieedgxwdmu
+INFO     EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:88 ✅ Coupon found in dataset: id=16 code=test-ieedgxwdmu
+INFO     EcommerceAPI.src.coupons.validators.coupon_db_validators:coupon_db_validators.py:64 ✅ API coupon matches DB records: ID=16 code=test-ieedgxwdmu
+INFO     EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:165 ✅ Coupon matches database record (ID=16)
+INFO     tests.coupons.api.test_create_coupons:test_create_coupons.py:96 🎯 Full coupon creation validation complete for ID=16.
+INFO     EcommerceAPI.plugins.entities:entities.py:718 🔧 Starting teardown of created test resources...
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up coupon(s)... (1 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting coupon ID: 16
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/coupons/16?force=True → Status code: 200 (completed in 0.079s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted coupon ID: 16
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for coupon(s).
+INFO     EcommerceAPI.plugins.entities:entities.py:758 
+
+🧹 ====================================== CLEANUP SUMMARY ======================================
+INFO     EcommerceAPI.plugins.entities:entities.py:761 📊 Created during test run: {'coupons': 1}
+INFO     EcommerceAPI.plugins.entities:entities.py:762 🧾 Cleanup total summary:
+INFO     EcommerceAPI.plugins.entities:entities.py:764    • coupon: 1 deleted (1 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:765 ✅ All test data cleanup completed.
