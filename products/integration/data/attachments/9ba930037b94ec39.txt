@@ -1,0 +1,11 @@
+DEBUG    EcommerceAPI.src.products.helpers.products_helper:products_helper.py:98 🟢 Calling 'Get Product' for ID 999999999.
+DEBUG    EcommerceAPI.src.products.api.products_api:products_api.py:88 📡 GET /products/999999999
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/products/999999999 → Status code: 404 (completed in 0.098s)
+DEBUG    EcommerceAPI.src.clients.api_client:api_client.py:625 {
+                                                                 "code": "woocommerce_rest_product_invalid_id",
+                                                                 "message": "Invalid ID.",
+                                                                 "data": {
+                                                                   "status": 404
+                                                                 }
+                                                               }
+INFO     EcommerceAPI.src.products.validators.product_validators:product_validators.py:418 ✅ Valid error response received (code=woocommerce_rest_product_invalid_id status=404)

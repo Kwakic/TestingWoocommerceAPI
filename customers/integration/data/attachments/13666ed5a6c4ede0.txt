@@ -1,0 +1,3 @@
+INFO     root:bulk_ops.py:34 🧪 Starting bulk create+validate for 0 customer_edge_case_0(s)
+INFO     root:bulk_ops.py:59 🔍 Validating 0 created customer_edge_case_0(s)
+INFO     root:bulk_ops.py:77 ✅ All 0 customer_edge_case_0(s) created and validated successfully
