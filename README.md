@@ -38,6 +38,7 @@ The framework supports:
 - **🗄️ Database verification** through MySQL / DAO checks
 - **🐳 Reproducible infrastructure** through Docker
 - **📊 Automated reporting** with Allure and GitHub Pages
+- **🧪 Enterprise-style test data architecture** with Factory, Builder, Provisioner, Ownership, Seeds, and pytest lifecycle integration
 - **🔁 Segmented CI/CD** through independent GitHub Actions workflows
 - **⚙️ One-command setup** (`make run`)
 
@@ -59,6 +60,7 @@ The framework is designed around clear separation of responsibilities and busine
 | **Framework** | Clients, configuration, helpers, validators, plugins and data access | Python, pytest, Pydantic, DAO |
 | **API** | REST and GraphQL communication and validation | WooCommerce API, WPGraphQL / WooGraphQL |
 | **UI** | End-to-end browser workflows | Playwright, Chromium, Firefox, WebKit |
+| **Test Data** | Data generation, scenario customization, provisioning, ownership and cleanup | Factory, Builder, Provisioner, pytest fixtures |
 | **Tests** | Domain and framework-level quality validation | pytest |
 | **Reporting** | Test evidence and public QA visibility | Allure, GitHub Pages |
 | **CI/CD** | Independent execution and artifact management | GitHub Actions |
@@ -77,6 +79,8 @@ The framework is designed around clear separation of responsibilities and busine
 
 - 📝 **Structured Logging Architecture** — Implements a dual-layer logging system with developer-friendly console output and optional structured JSONL artifacts enriched with test context, correlation IDs, Git metadata, CI metadata, request details, and automatic payload redaction.
 
+- 🧪 **Test Data Architecture** — Separates test-data generation, scenario customization, system provisioning, resource ownership, stable seed data, cleanup, and pytest lifecycle management through Factory, Builder, Provisioner, Ownership, and Fixture layers. The same data-preparation model is designed for REST, GraphQL, and Playwright UI scenarios.
+
 - 🔄 **Segmented CI/CD Pipelines** — Independent Smoke, Integration, Regression, Performance, Contract, Security, and Preflight workflows execute in isolation, publish dedicated artifacts, and scale independently.
 
 - 📊 **Automated QA Reporting** — Generates interactive Allure reports and publishes a dynamic GitHub Pages QA Portal that automatically grows as new entity reports become available.
@@ -84,6 +88,36 @@ The framework is designed around clear separation of responsibilities and busine
 - 🎭 **Multi-Layer Test Automation** — Combines REST API, GraphQL API, database validation, and Playwright browser testing in a single pytest-based automation framework.
 
 - 🔐 **Multi-Protocol Authentication** — Uses WooCommerce OAuth1 for REST API tests and WordPress Application Passwords over HTTP Basic Auth for authenticated GraphQL mutations, while keeping authentication independent from endpoint configuration.
+
+### 🧪 Test Data Architecture
+
+Test data is treated as an architectural concern rather than being embedded inside individual tests.
+
+```text
+Test
+  ↓
+Fixture
+  ↓
+Builder
+  ↓
+Factory
+  ↓
+In-memory test data
+  ↓
+Provisioner
+  ↓
+Domain Helper / API
+  ↓
+WooCommerce
+  ↓
+Ownership + Cleanup
+```
+
+Tests express only the data that matters to a scenario while the framework supplies valid defaults, provisions real system state, and cleans up only resources owned by the test.
+
+The architecture also distinguishes **stable environment seeds** from **dynamic test-owned data**, protecting seeded UI personas and other baseline resources from normal test cleanup.
+
+📚 [Test Data Architecture](./README_TEST_DATA_ARCHITECTURE.md)
 
 ---
 
@@ -319,6 +353,7 @@ This README is the **landing page**. Detailed implementation and operational gui
 | **Development** | [Test Development Guide](./docs/development/README_TEST_DEVELOPMENT_GUIDE.md) ⭐ | Canonical guide for writing tests |
 | | [API Client Guide](./docs/development/README_API_CLIENT.md) | API client design and usage |
 | | [UI Testing Guide](./docs/development/README_UI_TESTING_GUIDE.md) | Playwright architecture, fixtures, Page Objects, roles, and browser execution |
+| | [Test Data Architecture](./README_TEST_DATA_ARCHITECTURE.md) ⭐ | Factory, Builder, Provisioner, Ownership, Seeds, and cleanup |
 | | [Architecture Guide](./docs/development/README_ARCHITECTURE.md) | Framework internals |
 | | [Validators Guide](./docs/development/README_VALIDATORS.md) | Validation patterns |
 | | [Team Guides](./docs/development/team-guides) | Per-entity testing conventions |
@@ -345,8 +380,9 @@ New to the framework? Start here:
 
 1. [Framework Overview](./docs/getting-started/README_FRAMEWORK_OVERVIEW.md)
 2. [Project Navigation Guide](./docs/project-structure/README_project_navigation.md)
-3. [Test Development Guide](./docs/development/README_TEST_DEVELOPMENT_GUIDE.md)
-4. [UI Testing Guide](./docs/development/README_UI_TESTING_GUIDE.md)
+3. [Test Data Architecture](./README_TEST_DATA_ARCHITECTURE.md)
+4. [Test Development Guide](./docs/development/README_TEST_DEVELOPMENT_GUIDE.md)
+5. [UI Testing Guide](./docs/development/README_UI_TESTING_GUIDE.md)
 
 This path explains **what the framework does, how it is structured, and how to extend both API and UI automation**.
 

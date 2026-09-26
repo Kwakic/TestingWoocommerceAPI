@@ -513,7 +513,7 @@ def test_get_customer_by_id(customer_helper, create_valid_customer):
     # ARRANGE
     # Create valid setup data.
     #
-    # The fixture handles the POST /customers request, validates
+    # The fixture builds and provisions the customer, validates
     # the expected 201 response and response body, and registers
     # cleanup. The test receives only a clean customer dict.
     # ============================================================
@@ -557,6 +557,8 @@ Notice the important distinction:
 POST /customers
     ↓
 fixture setup
+    ↓
+Builder → Provisioner → Helper/API
     ↓
 status + body validation happens inside fixture
     ↓
@@ -637,6 +639,15 @@ return_http_response=True
 ```
 
 ### 4.4 Where should HTTP status validation live?
+
+There are two different response-mode situations:
+
+- **Test operation:** the test requests `return_http_response=True` from the Helper
+  when it needs to inspect the operation's HTTP response.
+- **Valid setup fixture:** the fixture receives the `HttpResponse` from the
+  Provisioner. The fixture does not need to request response mode from the
+  Helper directly because provisioning already returns the response needed to
+  validate the setup contract.
 
 Use one consistent rule:
 

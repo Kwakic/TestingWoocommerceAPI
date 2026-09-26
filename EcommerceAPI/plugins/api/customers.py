@@ -64,6 +64,10 @@ import pytest
 from EcommerceAPI.src.customers.validators.customer_validators import (
     assert_valid_customer_response,
 )
+from EcommerceAPI.src.test_data.builders.customer_builder import CustomerBuilder
+from EcommerceAPI.src.test_data.provisioning.customer_provisioner import (
+    CustomerProvisioner,
+)
 
 # from EcommerceAPI.src.clients.api_client import APIClient
 
@@ -76,21 +80,25 @@ log = logging.getLogger(__name__)
 @pytest.fixture(scope="function")
 def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
     """
-    This fixture acts as a "Gatekeeper" between the HTTP layer and tests.
+    This fixture acts as the test-facing "Gatekeeper" between the
+    test-data/provisioning layers and tests.
 
     It:
-    ✔ Calls helper (which returns HttpResponse)
-    ✔ Validates transport (status_code)
-    ✔ Extracts JSON safely
-    ✔ Validates schema + domain rules
-    ✔ Returns a clean dict for tests
+    ✔ Builds valid customer creation data through CustomerBuilder
+    ✔ Provisions the customer through CustomerProvisioner
+    ✔ Receives the HttpResponse from the provisioning flow
+    ✔ Validates the setup transport status (201)
+    ✔ Extracts and validates the response body
+    ✔ Registers the created resource for cleanup
+    ✔ Returns a clean dict to the test
 
-    WHY:
-    ----
-    - Prevents tests from dealing with HTTP details
-    - Ensures consistent validation across all tests
-    - Fails fast on API issues
-    - Guarantees that returned object is always valid
+    IMPORTANT:
+    ----------
+    Helper response mode (return_http_response=True) is still used by
+    tests when they need to inspect the HTTP response of the operation
+    under test. The valid-data fixture receives its HttpResponse from
+    CustomerProvisioner instead of requesting response mode directly
+    from CustomersHelper.
 
     RETURN CONTRACT:
     ----------------
@@ -109,17 +117,24 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
     assert customers["email"]
 
     Args:
-        shared_api_resources (dict): Injected resources containing helper, DAO, and cleanup registry.
+        shared_api_resources (dict): Injected resources containing helper,
+            DAO, and cleanup registry.
 
     Returns:
-        Callable[..., dict]: A function to create a customers with custom fields.
+        Callable[..., dict]: A function to create a customer with custom fields.
 
     How it works:
-        Inside fixture: response = customer_helper.create_customer(return_response=True) --> returns HttpResponse
-        Then: customers = response.json
-              return customers --> So the FINAL output of fixture is: dict
-        - Inside fixture → HttpResponse (temporary)
-        - Outside fixture → dict (final contract)
+        CustomerBuilder
+            ↓
+        CustomerProvisioner
+            ↓
+        CustomersHelper / API
+            ↓
+        HttpResponse
+            ↓
+        Fixture validation + ownership registration
+            ↓
+        validated customer dict
     """
     customer_helper = shared_api_resources["customers_helper"]
     register = shared_api_resources["register_resource"]
@@ -138,13 +153,18 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
 
         FLOW:
         -----
-        1. Call helper → returns HttpResponse
-        2. Validate status_code (fail-fast)
-        3. Extract JSON
-        4. Validate schema + domain
-        5. Register cleanup
+        1. Build valid creation data
+        2. Provision through CustomerProvisioner
+        3. Validate setup status_code == 201
+        4. Extract JSON
+        5. Validate schema + domain
+        6. Register cleanup
 
-            helper
+            Builder
+              ↓
+        CustomerProvisioner
+              ↓
+        CustomersHelper / API
               ↓
         HttpResponse
               ↓
@@ -152,11 +172,9 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
               ↓
         response.json
               ↓
-        Pydantic validation
+        Pydantic / domain validation
               ↓
-        business validation
-              ↓
-        cleanup registration  -> Register cleanup
+        cleanup registration
               ↓
         return dict to test
 
@@ -171,8 +189,9 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
                 Custom payload fields (email, password, etc.)
 
         Returns:
-            dict: Validated customers object
-                  Internally uses HttpResponse but never exposes it (for status code)
+            dict: Validated customer object.
+                  The fixture uses the HttpResponse internally to validate
+                  the setup contract but never exposes it to the test.
 
         Raises:
             AssertionError:
@@ -182,13 +201,18 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
                 If schema is invalid
         """
         # -----------------------------------------
-        # 1️⃣ Call helper → HttpResponse
-        # By setting flag "return_http_response=True" it returns HttpResponse necessary to validate status_code...
+        # 1️⃣ Build and provision customer
         # -----------------------------------------
-        response = customer_helper.create_customer(return_http_response=True, **kwargs)
+        # CustomerBuilder generates valid creation data in memory.
+        # CustomerProvisioner crosses the system boundary through the
+        # existing CustomersHelper/API architecture and returns the
+        # HttpResponse needed by this fixture's setup contract.
+        customer_data = CustomerBuilder().with_fields(**kwargs).build()
+        customer_provisioner = CustomerProvisioner(customer_helper)
+        response = customer_provisioner.provision(customer_data)
 
         # -----------------------------------------------------------------
-        # 2️⃣ Transport validation (FAIL FAST) Status validated BEFORE JSON
+        # 2️⃣ Transport validation (FAIL FAST) — setup contract
         # -----------------------------------------------------------------
         assert response.status_code == 201, (
             "POST /customers creation failed. "

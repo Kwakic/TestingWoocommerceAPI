@@ -126,6 +126,18 @@ class CustomerBuilder:
         self._overrides["shipping"] = shipping
         return self
 
+    def with_fields(self, **fields: Any) -> CustomerBuilder:
+        """
+        Override arbitrary customer creation fields.
+
+        This is useful while the fixture API supports additional Customer API
+        fields that do not yet have a dedicated fluent builder method.
+        Dedicated ``with_*`` methods remain preferable for commonly used
+        scenario fields because they make tests self-documenting.
+        """
+        self._overrides.update(fields)
+        return self
+
     def without_billing(self) -> CustomerBuilder:
         """
         Set billing data to an empty dictionary.

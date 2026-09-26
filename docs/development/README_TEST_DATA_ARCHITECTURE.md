@@ -242,8 +242,8 @@ major stages.
 | Layer | Responsibility | Network Call? | Output |
 |---|---|---:|---|
 | **1. Builder / Factory** | Generate and customize valid creation data | ❌ No | Python dictionary |
-| **2. Helper / API** | Execute the request against WooCommerce | ✅ Yes | `HttpResponse` / API response |
-| **3. Fixture** | Validate, register ownership, and expose clean data to the test | Indirectly | Verified Python dictionary |
+| **2. Provisioner → Helper / API** | Cross the system boundary and execute the request against WooCommerce | ✅ Yes | `HttpResponse` / API response |
+| **3. Fixture** | Validate setup, register ownership, and expose clean data to the test | Indirectly | Verified Python dictionary |
 
 ### Layer 1 — Builder / Factory
 
@@ -276,14 +276,22 @@ The result is simply data:
 }
 ```
 
-### Layer 2 — Helper / API
+### Layer 2 — Provisioner → Helper / API
 
-The provisioned data crosses the system boundary.
+The prepared data crosses the system boundary through the **Provisioner**.
 
-The domain helper delegates to the API layer, which performs the actual HTTP
-request.
+The provisioner receives the Builder/Factory output, delegates the actual
+domain operation to the existing Helper/API architecture, and returns the
+resulting `HttpResponse` to the fixture.
 
 Conceptually:
+
+```python
+customer_data = CustomerBuilder().build()
+response = customer_provisioner.provision(customer_data)
+```
+
+Internally, the Provisioner delegates to the existing domain helper:
 
 ```python
 response = customer_helper.create_customer(
@@ -300,7 +308,7 @@ The pytest fixture acts as the test-facing gatekeeper.
 
 It can:
 
-1. trigger creation
+1. build and provision the required valid data
 2. verify the expected HTTP status
 3. extract the response JSON
 4. validate the resulting domain object
@@ -927,7 +935,7 @@ customer_data = (
     .build()
 )
 
-customer = customer_provisioner.create(customer_data)
+customer = customer_provisioner.provision(customer_data)
 ```
 
 Internally:
@@ -1212,6 +1220,21 @@ domain model already represents the relevant API contract.
 
 ---
 
+# Current Implementation Status
+
+The customer domain is currently the reference implementation for this
+architecture.
+
+The Customer Factory, Builder, Provisioner, and Ownership integration are in
+place, and the existing `create_valid_customer` fixture is being migrated
+without changing its public test-facing contract.
+
+The migration is intentionally incremental: the existing CustomersHelper
+remains compatible during the transition and will be simplified only after the
+new provisioning path is verified by the existing customer test suite.
+
+---
+
 # Development Strategy
 
 The architecture should be implemented incrementally.
@@ -1282,7 +1305,7 @@ CustomerBuilder().without_billing().build()
 → **Provisioner**
 
 ```python
-customer_provisioner.create(customer_data)
+customer_provisioner.provision(customer_data)
 ```
 
 ### "I need to know whether the test is responsible for deleting it."
