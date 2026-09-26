@@ -1,0 +1,30 @@
+INFO     tests.customers.api.test_update_customer:test_update_customer.py:184 🛠 Creating a baseline customers for update test
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:162 ⚙️ Creating customer with payload keys: ['auto_generate', 'email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['auto_generate', 'email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.241s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=41, email=testuser_uzvxhxjmuj@supersqa.com
+DEBUG    EcommerceAPI.plugins.api.customers:customers.py:248 ℹ️ Registered customers with ID: 41 for cleanup.
+INFO     tests.customers.api.test_update_customer:test_update_customer.py:204 🚫 Attempting invalid update for customer_id=41 payload={'email': 'dty@not-an-email'}
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:244 🟢 Updating customers 41 with payload keys: ['email']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:158 📡 PUT /customers/41 payload_keys=['email']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ PUT /wp-json/wc/v3/customers/41 → Status code: 400 (completed in 0.103s)
+DEBUG    EcommerceAPI.src.clients.api_client:api_client.py:625 {
+                                                                 "code": "rest_invalid_param",
+                                                                 "message": "Invalid parameter(s): email",
+                                                                 "data": {
+                                                                   "status": 400,
+                                                                   "params": {
+                                                                     "email": "Invalid email address."
+                                                                   },
+                                                                   "details": {
+                                                                     "email": {
+                                                                       "code": "rest_invalid_email",
+                                                                       "message": "Invalid email address.",
+                                                                       "data": null
+                                                                     }
+                                                                   }
+                                                                 }
+                                                               }
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:404 ✅ Valid error response received (code=rest_invalid_param status=400)
+DEBUG    EcommerceAPI.src.customers.dao.customers_dao:customers_dao.py:66 ℹ️ Found customers for email 'testuser_uzvxhxjmuj@supersqa.com': {'ID': 41, 'user_login': 'alex.parker.snehvi', 'user_pass': '***', 'user_nicename': 'alex-parker-snehvi', 'user_email': 'testuser_uzvxhxjmuj@supersqa.com', 'user_url': '', 'user_registered': datetime.datetime(2026, 9, 26, 21, 10, 34), 'user_activation_key': '1790457034:$generic$I3SwzobK3P0XPy7HhGv4Hwr7Eq7tmdR34AP47aED', 'user_status': 0, 'display_name': 'alex.parker.snehvi'}
+INFO     tests.customers.api.test_update_customer:test_update_customer.py:254 ✅ Database record remains unchanged after rejected update (customer_id=41)

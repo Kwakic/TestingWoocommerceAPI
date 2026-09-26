@@ -1,0 +1,21 @@
+INFO     tests.customers.api.test_customer_deletion:test_customer_deletion.py:150 🛠 Creating a test customer.
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:162 ⚙️ Creating customer with payload keys: ['auto_generate', 'email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['auto_generate', 'email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.238s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=16, email=testuser_tubgmiuupa@supersqa.com
+DEBUG    EcommerceAPI.plugins.api.customers:customers.py:250 ℹ️ Skipped registering customers 16 for cleanup.
+INFO     tests.customers.api.test_customer_deletion:test_customer_deletion.py:161 🧹 Deleting customers ID=16
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:346 🟢 Calling 'Delete Customer' for ID 16.
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:145 📡 DELETE /customers/16 force=True
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/16?force=True → Status code: 200 (completed in 0.155s)
+INFO     EcommerceAPI.src.utils.date_timestamp_utils:date_timestamp_utils.py:120 🔍 Filtering customers using window: created_after=2026-09-26T21:09:20, created_before=2026-09-26T21:11:20, negative=False
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:396 ⚙️ Calling 'List All Customers' via pagination utility
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:70 🧰 Starting paginated fetch for '/customers'
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:84 📦 Fetching /customers page 1 (attempt 1/3)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/customers?per_page=100&page=1 → Status code: 200 (completed in 0.114s)
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:111 📄 Pagination request OK: endpoint=/customers page=1 status=200
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:122 ⛔ Stop pagination (no more results at page 1)
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:123 📊 Total pages fetched: 0
+INFO     EcommerceAPI.src.utils.date_timestamp_utils:date_timestamp_utils.py:129 📞 API returned 0 customers in the filtered window.
+INFO     tests.customers.api.test_customer_deletion:test_customer_deletion.py:200 ✅ Deleted customers ID 16 correctly excluded from filtered API list
+INFO     tests.customers.api.test_customer_deletion:test_customer_deletion.py:209 📦 All customers in filtered list passed structure validation
