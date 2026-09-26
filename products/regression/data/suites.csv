@@ -1,17 +1,33 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Fri Sep 25 07:34:33 UTC 2026","Fri Sep 25 07:34:33 UTC 2026","187","tests.products.api","test_create_products","","","","test_create_multiple_products[1]","
+"passed","Sat Sep 26 07:28:18 UTC 2026","Sat Sep 26 07:28:19 UTC 2026","254","tests.products.api","test_create_products","","","","test_create_product_with_valid_prices[10.00-None]","
+Verify that valid regular and sale prices are accepted during creation.
+"
+"passed","Sat Sep 26 07:28:17 UTC 2026","Sat Sep 26 07:28:17 UTC 2026","482","tests.products.api","test_create_products","","","","test_create_multiple_products[3]","
 Verify that multiple valid products can be created successfully.
 
 Each product is created through the shared factory fixture, which owns
 POST status validation, response validation and cleanup registration.
 "
-"passed","Fri Sep 25 07:34:34 UTC 2026","Fri Sep 25 07:34:35 UTC 2026","1644","tests.products.api","test_create_products","","","","test_create_multiple_products[5]","
+"passed","Sat Sep 26 07:28:17 UTC 2026","Sat Sep 26 07:28:18 UTC 2026","819","tests.products.api","test_create_products","","","","test_create_multiple_products[5]","
 Verify that multiple valid products can be created successfully.
 
 Each product is created through the shared factory fixture, which owns
 POST status validation, response validation and cleanup registration.
 "
-"passed","Fri Sep 25 07:34:40 UTC 2026","Fri Sep 25 07:34:42 UTC 2026","2696","tests.products.graphql","test_get_all_products","","","","test_get_all_products_pagination","
+"passed","Sat Sep 26 07:28:19 UTC 2026","Sat Sep 26 07:28:19 UTC 2026","261","tests.products.api","test_create_products","","","","test_create_product_with_valid_prices[49.99-39.99]","
+Verify that valid regular and sale prices are accepted during creation.
+"
+"passed","Sat Sep 26 07:28:19 UTC 2026","Sat Sep 26 07:28:20 UTC 2026","257","tests.products.api","test_create_products","","","","test_create_product_with_duplicate_sku","
+Negative test: creating a second product with an existing SKU
+should be rejected by WooCommerce.
+
+The raw API fixture is used because this test must inspect the
+actual HTTP response from the failing POST.
+"
+"passed","Sat Sep 26 07:28:19 UTC 2026","Sat Sep 26 07:28:19 UTC 2026","251","tests.products.api","test_create_products","","","","test_create_product_with_valid_prices[100.00-79.99]","
+Verify that valid regular and sale prices are accepted during creation.
+"
+"passed","Sat Sep 26 07:28:22 UTC 2026","Sat Sep 26 07:28:25 UTC 2026","3139","tests.products.graphql","test_get_all_products","","","","test_get_all_products_pagination","
 Verify cursor-based pagination for the GraphQL Product collection.
 
 The test creates a controlled dataset so that pagination does not depend
@@ -34,36 +50,20 @@ GraphQL pagination uses cursors rather than the REST API's page/per_page
 parameters, so this test intentionally exercises GraphQL's native
 connection pagination instead of the REST pagination utility.
 "
-"passed","Fri Sep 25 07:34:37 UTC 2026","Fri Sep 25 07:34:38 UTC 2026","348","tests.products.api","test_create_products","","","","test_create_product_with_duplicate_sku","
-Negative test: creating a second product with an existing SKU
-should be rejected by WooCommerce.
-
-The raw API fixture is used because this test must inspect the
-actual HTTP response from the failing POST.
+"passed","Sat Sep 26 07:28:20 UTC 2026","Sat Sep 26 07:28:20 UTC 2026","84","tests.products.api","test_create_products","","","","test_create_product_with_invalid_type","
+Negative test: an unsupported product type should be rejected
+by WooCommerce.
 "
-"passed","Fri Sep 25 07:34:37 UTC 2026","Fri Sep 25 07:34:37 UTC 2026","297","tests.products.api","test_create_products","","","","test_create_product_with_unique_sku","
+"passed","Sat Sep 26 07:28:19 UTC 2026","Sat Sep 26 07:28:19 UTC 2026","262","tests.products.api","test_create_products","","","","test_create_product_with_unique_sku","
 Verify that a product can be created with a unique SKU and that the
 SKU is persisted through the API and database.
 "
-"passed","Fri Sep 25 07:34:33 UTC 2026","Fri Sep 25 07:34:34 UTC 2026","706","tests.products.api","test_create_products","","","","test_create_multiple_products[3]","
+"passed","Sat Sep 26 07:28:17 UTC 2026","Sat Sep 26 07:28:17 UTC 2026","169","tests.products.api","test_create_products","","","","test_create_multiple_products[1]","
 Verify that multiple valid products can be created successfully.
 
 Each product is created through the shared factory fixture, which owns
 POST status validation, response validation and cleanup registration.
 "
-"passed","Fri Sep 25 07:34:37 UTC 2026","Fri Sep 25 07:34:37 UTC 2026","311","tests.products.api","test_create_products","","","","test_create_product_with_valid_prices[100.00-79.99]","
-Verify that valid regular and sale prices are accepted during creation.
-"
-"passed","Fri Sep 25 07:34:38 UTC 2026","Fri Sep 25 07:34:38 UTC 2026","189","tests.products.api","test_create_products","","","","test_create_product_with_invalid_type","
-Negative test: an unsupported product type should be rejected
-by WooCommerce.
-"
-"passed","Fri Sep 25 07:34:36 UTC 2026","Fri Sep 25 07:34:37 UTC 2026","488","tests.products.api","test_create_products","","","","test_create_product_with_valid_prices[49.99-39.99]","
-Verify that valid regular and sale prices are accepted during creation.
-"
-"passed","Fri Sep 25 07:34:36 UTC 2026","Fri Sep 25 07:34:36 UTC 2026","272","tests.products.api","test_create_products","","","","test_create_product_with_valid_prices[10.00-None]","
-Verify that valid regular and sale prices are accepted during creation.
-"
-"passed","Fri Sep 25 07:34:35 UTC 2026","Fri Sep 25 07:34:36 UTC 2026","565","tests.products.api","test_create_products","","","","test_create_product_with_populated_fields","
+"passed","Sat Sep 26 07:28:18 UTC 2026","Sat Sep 26 07:28:18 UTC 2026","289","tests.products.api","test_create_products","","","","test_create_product_with_populated_fields","
 Verify that commonly used product fields are accepted and persisted.
 "
