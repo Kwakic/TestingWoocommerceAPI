@@ -1,0 +1,47 @@
+INFO     tests.customers.api.test_get_customer:test_get_customer.py:141 🛠 Creating a test customers via factory fixture.
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:176 ⚙️ Creating customers with payload keys: ['email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.229s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=5, email=testuser_qpjzhxvtkc@supersqa.com
+DEBUG    EcommerceAPI.plugins.api.customers:customers.py:245 ℹ️ Registered customers with ID: 5 for cleanup.
+INFO     tests.customers.api.test_get_customer:test_get_customer.py:152 🔎 Fetching customers by ID: 5
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:291 🟢 Calling 'Get Customer' for ID 5.
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:88 📡 GET /customers/5
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/customers/5 → Status code: 200 (completed in 0.104s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=5, email=testuser_qpjzhxvtkc@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:343 ✅ Customer identity verified (id=5, email=testuser_qpjzhxvtkc@supersqa.com)
+INFO     tests.customers.api.test_get_customer:test_get_customer.py:180 ✅ Fetched customers matches created one: ID=5, Email=testuser_qpjzhxvtkc@supersqa.com
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:398 ⚙️ Calling 'List All Customers' via pagination utility
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:70 🧰 Starting paginated fetch for '/customers'
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:84 📦 Fetching /customers page 1 (attempt 1/3)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/customers?per_page=100&email=testuser_qpjzhxvtkc%40supersqa.com&page=1 → Status code: 200 (completed in 0.106s)
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:111 📄 Pagination request OK: endpoint=/customers page=1 status=200
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:132 ➡️ Page 1 → 1 items
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:84 📦 Fetching /customers page 2 (attempt 1/3)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/customers?per_page=100&email=testuser_qpjzhxvtkc%40supersqa.com&page=2 → Status code: 200 (completed in 0.101s)
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:111 📄 Pagination request OK: endpoint=/customers page=2 status=200
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:122 ⛔ Stop pagination (no more results at page 2)
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:123 📊 Total pages fetched: 1
+DEBUG    EcommerceAPI.src.customers.dao.customers_dao:customers_dao.py:66 ℹ️ Found customers for email 'testuser_qpjzhxvtkc@supersqa.com': {'ID': 5, 'user_login': 'maria.baker.pmmltm', 'user_pass': '***', 'user_nicename': 'maria-baker-pmmltm', 'user_email': 'testuser_qpjzhxvtkc@supersqa.com', 'user_url': '', 'user_registered': datetime.datetime(2026, 9, 26, 13, 20, 5), 'user_activation_key': '1790428805:$generic$DLn-kW4oGnfeYTMZYjX2H6UFQWJ4qOtL6UzQcw_5', 'user_status': 0, 'display_name': 'maria.baker.pmmltm'}
+DEBUG    EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:269 ⚙️ Validating existence of customers by email: testuser_qpjzhxvtkc@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=5, email=testuser_qpjzhxvtkc@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:140 ✅ Customer found in dataset: id=5 email=testuser_qpjzhxvtkc@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:277 ✅ Customer found in API response (id=5, email=testuser_qpjzhxvtkc@supersqa.com)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:289 ✅ Customer matches database record (ID=5)
+INFO     tests.customers.api.test_get_customer:test_get_customer.py:195 🎯 Full validation complete for customers ID: 5
+INFO     EcommerceAPI.plugins.entities:entities.py:718 🔧 Starting teardown of created test resources...
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up customer(s)... (2 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 4
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/4?force=True → Status code: 200 (completed in 0.142s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 4
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 5
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/5?force=True → Status code: 200 (completed in 0.143s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 5
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for customer(s).
+INFO     EcommerceAPI.plugins.entities:entities.py:758 
+
+🧹 ====================================== CLEANUP SUMMARY ======================================
+INFO     EcommerceAPI.plugins.entities:entities.py:761 📊 Created during test run: {'customers': 2}
+INFO     EcommerceAPI.plugins.entities:entities.py:762 🧾 Cleanup total summary:
+INFO     EcommerceAPI.plugins.entities:entities.py:764    • customer: 2 deleted (2 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:765 ✅ All test data cleanup completed.
