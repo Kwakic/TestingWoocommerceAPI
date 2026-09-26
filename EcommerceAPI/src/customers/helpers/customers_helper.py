@@ -1,4 +1,4 @@
-# CUSTOMER HELPER - (TO CREATE PAYLOAD API CALL)
+# CUSTOMER HELPER - DOMAIN API ORCHESTRATION
 
 from __future__ import annotations
 
@@ -6,7 +6,6 @@ import logging
 from typing import Optional, List, Dict, Any
 
 from EcommerceAPI.src.utils.pagination_utils import paginate_all_results
-from EcommerceAPI.src.utils.generic_utilities import generate_random_email_and_password
 from EcommerceAPI.src.utils.exceptions import (
     UnexpectedStatusCodeError,
     SchemaValidationError,
@@ -20,61 +19,79 @@ logger = logging.getLogger(__name__)
 
 class CustomersHelper(object):
     """
-    Domain-level orchestration layer for Customers (workflow).
+    Domain-level orchestration layer for Customers.
 
     Responsibilities
     ---------------
-    ✔ Build request payloads (including auto-generation)
-    ✔ Delegate HTTP calls to CustomersApi (no direct HTTP usage)
-    ✔ Handle happy-path and expected negative flows
-    ✔ Delegate validation to validator layer
+    ✔ Receive already-prepared customer data
+    ✔ Delegate customer API operations to CustomersApi
+    ✔ Expose parsed JSON by default
+    ✔ Optionally expose the framework HttpResponse
+    ✔ Handle expected API exceptions and expose structured error bodies
+
+    Test-data generation is intentionally NOT a Helper responsibility.
+    Valid customer data is created by the test-data layer:
+
+        CustomerFactory
+              ↓
+        CustomerBuilder
+              ↓
+        CustomerProvisioner
+              ↓
+        CustomersHelper
+              ↓
+        CustomersApi
+              ↓
+        WooCommerce
+
+    The Helper therefore never generates email addresses, passwords, usernames,
+    names, or other test data.
 
     Return Behavior
     ---------------
     Helper methods support two return modes:
 
     1. Default mode (return_http_response=False):
-       → Returns parsed JSON (dict or list)
-       → Used for most tests (clean, simple, business-focused)
+        → Returns parsed JSON (dict or list)
+        → Used when tests need the business-level response data.
 
     2. Response mode (return_http_response=True):
-       → Returns HttpResponse object
-       → Used when access to transport data is required:
-           - status_code
-           - headers
-           - elapsed time
-           - request/response debugging
+        → Returns HttpResponse
+        → Used when the caller needs transport-level information such as:
+            - status_code
+            - headers
+            - elapsed time
+            - response text
+            - request/response debugging
 
     Design Principles
     ----------------
-    ✔ Helper abstracts transport layer for most tests
-    ✔ Keeps tests readable and business-focused
-    ✔ Allows opt-in access to full HTTP response when needed
-    ✔ Supports both positive and negative scenarios
-
-    - Helper knows only about transport
-    - Helper only orchestrates
+    ✔ Test-data generation belongs to Factory/Builder.
+    ✔ Provisioning belongs to CustomerProvisioner.
+    ✔ API orchestration belongs to CustomersHelper.
+    ✔ HTTP transport belongs to CustomersApi/APIClient.
+    ✔ Response/schema validation belongs to the appropriate validator layer.
+    ✔ Cleanup and ownership belong to the test-data/fixture lifecycle.
 
     Non-Responsibilities
     --------------------
+    ✘ No test-data generation
     ✘ No raw HTTP calls (handled by APIClient)
-    ✘ No schema validation logic (delegated to validators)
-    ✘ No business validators
+    ✘ No schema validation logic
+    ✘ No business assertions
     ✘ No database access
     ✘ No pytest fixtures
 
-
     Testing Guidelines
-    -----------------
-    - Positive tests:
-        → Prefer fixtures (e.g. create_valid_customer)
+    ------------------
+    - Positive setup:
+        → Prefer create_valid_customer.
 
+    - Operations requiring transport-level assertions:
+        → Use helper(return_http_response=True).
 
-    - Advanced validation (status, headers, debugging):
-        → Use helper(return_http_response=True)
-
-    - Negative tests / invalid inputs:
-        → Use raw_customer_api (returns HttpResponse)
+    - Negative tests / intentionally invalid payloads:
+        → Prefer customer_api_raw when the test needs direct API control.
     """
 
     ENDPOINT = "customers"
@@ -93,112 +110,92 @@ class CustomersHelper(object):
     # ------------------------
     def create_customer(
         self,
-        email: Optional[str] = None,
-        password: Optional[str] = None,
-        auto_generate: bool = True,
+        payload: Optional[Dict[str, Any]] = None,
         return_http_response: bool = False,
         **kwargs,
     ) -> Dict[str, Any] | HttpResponse:
         """
-        Create a customers via CustomersApi.
+        Create a customer through CustomersApi.
 
-        Behavior:
-        - Auto-generate email/password for positive tests
-        - Supports negative testing via expected_status_code
-        - On success → return parsed JSON dict
-        - On expected failure:
-            - return parsed error JSON (if available)
-            - otherwise re-raise original exception
+        The Helper receives customer creation data that has already been
+        prepared by the caller. It does not generate test data.
 
         Args:
-            email: Optional email
-            password: Optional password
-            auto_generate: Auto-generate credentials for positive tests
-            return_http_response:  - False (default) → returns parsed JSON (dict)
-                              - True → returns HttpResponse (status_code, headers, elapsed, etc.)
-            **kwargs: Additional payload fields
+            payload:
+                Optional complete customer creation payload.
+
+            return_http_response:
+                - False (default) → return parsed JSON.
+                - True → return HttpResponse.
+
+            **kwargs:
+                Additional customer creation fields. These are merged into
+                ``payload`` and override matching keys.
 
         Returns:
             Dict[str, Any] | HttpResponse:
-                - dict → default mode (parsed JSON)
-                - HttpResponse → if return_http_response=True
+                Parsed customer JSON by default, or HttpResponse when
+                ``return_http_response=True``.
 
         Raises:
-            UnexpectedStatusCodeError, SchemaValidationError: Re-raised if no parsed error body is available.
-            On expected failures (4xx/5xx) this helper will attempt to return the parsed error JSON
-            attached by APIClient so tests can assert on error payloads.
+            UnexpectedStatusCodeError, SchemaValidationError:
+                Re-raised when no structured error response is available.
 
-        Note:
-            - APIClient handles response parsing and attaches:
-                - response_json (parsed body)
-                - response (the raw requests.Response) when it raises UnexpectedStatusCodeError / SchemaValidationError.
-            - Catching those exceptions and returning response_json is the cleanest way for helper methods to expose
-            error bodies to tests (useful for negative validators).
-            - request_raw (or return_raw=True) is still useful when you need the raw Response object (headers, exact
-            body bytes, status) or to bypass the exception-raising behavior entirely. Use api_client.request_raw from
-            tests for advanced debugging; use the helper's exception-handling for common negative validators.
-
-            - Use api_client.request_raw (or APIClient.raw_post/raw_get) from tests when you need:
-                - Access to response.headers, response.status_code, response.content in raw form, exact body bytes etc.
-                - To avoid _handle_response raising (you want to inspect whatever the server returned regardless of
-                expected_status_code).
-            - Use return_raw=True on APIClient.post(...) only when you expect the response status to match
-            expected_status_code but still want the raw Response or to bypass the exception-raising behavior entirely.
-            - Use api_client.request_raw from tests for advanced debugging; use the helper's exception-handling for
-            common negative validators.
-
+        Notes:
+            - Test-data generation belongs to CustomerFactory.
+            - Scenario customization belongs to CustomerBuilder.
+            - System provisioning belongs to CustomerProvisioner.
+            - This method only prepares the final API payload and delegates
+              the operation to CustomersApi.
+            - For expected API failures, the helper exposes the parsed error
+              body when the underlying exception provides one.
         """
-        # --------------------------------------------------------------
-        # Auto-generate credentials (POSITIVE FLOW ERGONOMICS)
-        # --------------------------------------------------------------
-        if auto_generate:
-            if not email:
-                ep = generate_random_email_and_password()
-                email = ep["email"]
-            if not password:
-                password = "Password1"
+        final_payload: Dict[str, Any] = {}
 
-        # --------------------------------------------------------------
-        # Build payload (skip None values)
-        # --------------------------------------------------------------
-        # Skip auto-generation if explicitly turned off (e.g., for negative test cases where you don't need these)
+        # Accept either a complete payload or individual fields.
+        if payload:
+            final_payload.update(payload)
 
-        # payload = {k: v for k, v in {'email': email, 'password': password, **kwargs}.items() if v is not None} # or:
-        payload: Dict[str, Any] = {}
-        if email is not None:
-            payload["email"] = email
-        if password is not None:
-            payload["password"] = password
-        # payload.update(kwargs) adds all those extra key-value pairs to the payload
-        payload.update(kwargs)
+        # Explicit keyword arguments take precedence over payload values.
+        final_payload.update(kwargs)
 
-        # logger.debug(f"🟢 Creating customers with payload: {payload}")
-        logger.debug("⚙️ Creating customers with payload keys: %r", list(payload.keys()))
+        logger.debug(
+            "⚙️ Creating customer with payload keys: %r",
+            list(final_payload.keys()),
+        )
 
         try:
-            http_response = self.customers_api.create_customer(payload=payload)
+            http_response = self.customers_api.create_customer(payload=final_payload)
 
             if return_http_response:
                 return http_response
 
             return http_response.json
+
         except (UnexpectedStatusCodeError, SchemaValidationError) as e:
-            # Log a short warning so the failure is visible in the structured logs (CustomFormatter will redact
-            # sensitive info/fields).
-            logger.warning("⚠️ Customer creation raised %s: %s", type(e).__name__, e)
+            # Preserve the existing structured-error behavior so negative
+            # tests can inspect parsed WooCommerce error responses.
+            logger.warning(
+                "⚠️ Customer creation raised %s: %s",
+                type(e).__name__,
+                e,
+            )
 
             # Preferred: APIClient attaches parsed JSON to 'response_json' on the exception
             response_json = getattr(e, "response_json", None)
 
-            # Fallback: if response_json not provided, try the raw response object and parse JSON
+            # Fallback: parse the raw response if the exception did not
+            # already provide structured JSON.
             if response_json is None:
                 resp = getattr(e, "response", None)
+
                 if resp is not None:
                     try:
                         response_json = resp.json()
                     except Exception as parse_err:
                         logger.exception(
-                            "🚫 Failed to parse error response JSON from create_customer: %s",
+                            "🚫 Failed to parse error response JSON from "
+                            "create_customer: %s",
                             parse_err,
                         )
                         # Re-raise the original exception since we cannot provide structured error body
@@ -212,7 +209,8 @@ class CustomersHelper(object):
             if response_json is not None:
                 return response_json
 
-            # Nothing parseable attached — re-raise so caller/test sees the original exception
+            # Nothing parseable was attached to the exception, so preserve
+            # the original failure for the caller.
             raise
 
     def update_customer(
@@ -541,7 +539,7 @@ class CustomersHelper(object):
 #
 #     from EcommerceAPI.src.clients.api_client import APIClient
 #     ru = APIClient()
-#     helper = CustomersHelper(api_client=ru)
+#     helper = CustomersHelper(customers_api=ru)
 #     items = helper.list_customers_paginated()
 #     breakpoint()  # Execution will pause here and drop into the debugger (pdb by default)
 #     print(len(items))

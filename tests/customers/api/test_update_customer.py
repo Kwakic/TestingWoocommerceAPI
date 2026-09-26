@@ -11,6 +11,9 @@ from EcommerceAPI.src.customers.validators.customer_validators import (
     assert_customer_exists_and_matches_api,
 )
 from EcommerceAPI.src.utils.generic_utilities import generate_random_email_and_password
+from EcommerceAPI.src.test_data.builders.customers.customer_state_builder import (
+    CustomerStateBuilder,
+)
 
 from EcommerceAPI.src.utils.date_timestamp_utils import (
     precise_parse_utc_datetime,
@@ -89,19 +92,24 @@ def test_update_customer_first_name(customer_helper, create_valid_customer):
     customer_id = customer["id"]
     # original_email = customers["email"]
 
-    # Define update payload
-    updated_first_name = "QAUpdated"
-    updated_email = "mart_hanz@golp.com"
-
-    logger.info(
-        f"🔁 Updating customers ID={customer_id} with first_name='{updated_first_name}' "
-        f"and email='{updated_email}'"
+    # Build the partial customer state used by the update operation.
+    customer_state = (
+        CustomerStateBuilder()
+        .with_first_name("QAUpdated")
+        .with_email("mart_hanz@golp.com")
+        .build()
     )
 
-    # Use the helper's injected api_client (singular) to perform raw update call
+    logger.info(
+        f"🔁 Updating customers ID={customer_id} "
+        f"with first_name='{customer_state['first_name']}' "
+        f"and email='{customer_state['email']}'"
+    )
+
+    # The helper performs the actual operation under test.
     response = customer_helper.update_customer(
         customer_id,
-        payload={"first_name": updated_first_name, "email": updated_email},
+        payload=customer_state,
         return_http_response=True,
     )
 
@@ -119,12 +127,12 @@ def test_update_customer_first_name(customer_helper, create_valid_customer):
 
     # Step 5 — Identity validation
     # Ensure we updated the correct customers
-    assert_customer_identity(customer_model, customer_id, updated_email)
+    assert_customer_identity(customer_model, customer_id, customer_state["email"])
 
     # Step 6 — Business field validation
     # Validate that the update actually modified the first_name
-    assert customer_model.first_name == updated_first_name, (
-        f"❌ First name update failed. Expected '{updated_first_name}', "
+    assert customer_model.first_name == customer_state["first_name"], (
+        f"❌ First name update failed. Expected '{customer_state['first_name']}', "
         f"got '{customer_model.first_name}'"
     )
 
@@ -273,33 +281,37 @@ def test_validate_date_modified_and_date_modified_gmt(
     • WooCommerce REST API returns timestamps in UTC.
     • Due to DST (Daylight Saving Time), DB and API may differ by ±1 hour.
 
-    👉 Therefore:
-       We do NOT assert exact equality.
-       We assert that timestamps are aligned within known system offsets.
+    Therefore:
+        We do NOT assert exact equality.
+        We assert that timestamps are aligned within known system offsets.
 
     Accepted differences:
         - 0 seconds   → perfect match
         - 3600 seconds → DST / timezone shift
 
     Test flow:
-        1. Fetch a random active customer from DB
-        2. Capture DB timestamps before update
-        3. Update the customer via API
-        4. Validate identity and business changes
-        5. Validate timestamp consistency between API and DB
+        1. Create a customer through the standard test-data lifecycle.
+        2. Verify the created customer exists consistently in API and DB.
+        3. Retrieve the same customer from DB.
+        4. Capture DB timestamps before update.
+        5. Build valid partial update state.
+        6. Update the customer via API.
+        7. Validate API response and business change.
+        8. Validate creation timestamp remains unchanged.
+        9. Validate modification timestamp changed and matches DB.
 
     Test strongly proves:
-       - Customer was updated
-       - API returned updated timestamps
-       - DB persisted timestamps correctly
-       - Timestamps are monotonic
-       - Timezone/DST behavior is correct
+        - Customer was updated.
+        - API returned updated timestamps.
+        - DB persisted timestamps correctly.
+        - Timestamps are monotonic.
+        - Timezone/DST behavior is correct.
     """
 
     # -------------------------------------------------------------
     # Step 1 — Create customer (test owns its data)
     # -------------------------------------------------------------
-    logger.info("🛠 Creating a test customer via factory fixture.")
+    logger.info("🛠 Creating a test customer via the standard test-data lifecycle.")
 
     customer = create_valid_customer()
 
@@ -341,20 +353,36 @@ def test_validate_date_modified_and_date_modified_gmt(
     db_modified_before = customers_dao.get_customers_updated_date(db_id)
 
     # -------------------------------------------------------------
-    # Step 4 — Update customer via API
+    # Step 4 — Build partial customer state for the update
     # -------------------------------------------------------------
+    # The generic utility provides the unique value.
+    # CustomerStateBuilder is responsible only for constructing
+    # the partial customer state used by the update operation.
     rand_email = generate_random_email_and_password()["email"]
 
-    payload = {
-        "email": rand_email,
-        "billing": {"phone": "36555888666"},
-    }
+    customer_state = (
+        CustomerStateBuilder()
+        .with_email(rand_email)
+        .with_billing({"phone": "36555888666"})
+        .build()
+    )
 
+    logger.info(
+        "🧩 Prepared customer state for update: email=%s, billing.phone=%s",
+        customer_state["email"],
+        customer_state["billing"]["phone"],
+    )
+
+    # -------------------------------------------------------------
+    # Step 5 — Update customer via API
+    # -------------------------------------------------------------
+    # The actual PUT operation remains visible in the test because
+    # it is the operation under test.
     logger.info("🟢 Updating customer %s with new email and billing info", db_id)
 
     response = customer_helper.update_customer(
         customer_id=db_id,
-        payload=payload,
+        payload=customer_state,
         return_http_response=True,
     )
 
@@ -362,7 +390,7 @@ def test_validate_date_modified_and_date_modified_gmt(
     assert response.status_code == 200, f"PUT /customers update failed: {response.text}"
 
     # -------------------------------------------------------------
-    # Step 5 — Validate response structure
+    # Step 6 — Validate response structure
     # -------------------------------------------------------------
     updated_customer = response.json
     customer_model = assert_valid_customer_response(updated_customer)
@@ -372,7 +400,7 @@ def test_validate_date_modified_and_date_modified_gmt(
     api_modified_at = precise_parse_utc_datetime(customer_model.date_modified)
 
     # -------------------------------------------------------------
-    # Step 6 — Validate identity and business change
+    # Step 7 — Validate identity and business change
     # -------------------------------------------------------------
     assert_customer_identity(customer_model, db_id, customer_model.email)
 
@@ -383,11 +411,10 @@ def test_validate_date_modified_and_date_modified_gmt(
     )
 
     # -------------------------------------------------------------
-    # Step 7 — Validate creation timestamp remains unchanged
+    # Step 8 — Validate creation timestamp remains unchanged
     # -------------------------------------------------------------
     # DB timestamp is local (naive), API is UTC.
     # We align DB timestamp to UTC WITHOUT shifting (best-effort assumption)
-
     db_created_at_utc = db_created_at.replace(tzinfo=timezone.utc)
 
     assert_timestamp_matches_system_behavior(
@@ -396,20 +423,20 @@ def test_validate_date_modified_and_date_modified_gmt(
     )
 
     # -------------------------------------------------------------
-    # Step 8 — Validate DB modification timestamp changed
+    # Step 9 — Validate DB modification timestamp changed
     # -------------------------------------------------------------
     db_modified_after = customers_dao.get_customers_updated_date(db_id)
 
     assert (
         db_modified_after >= db_modified_before
     ), "❌ DB modified timestamp moved backwards after update"
+
     # -------------------------------------------------------------
-    # Step 9 — Validate API modification timestamp matches DB
+    # Step 10 — Validate API modification timestamp matches DB
     # -------------------------------------------------------------
     # Accepted deltas:
     #   0 sec   → exact match
     #   3600 sec → DST shift
-
     assert_timestamp_matches_system_behavior(
         api_modified_at,
         db_modified_after,

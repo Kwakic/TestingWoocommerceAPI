@@ -176,8 +176,10 @@ GraphQL tests
 **Responsibilities**
 
 - Register entity-specific pytest fixtures.
-- Create valid test data factories.
 - Expose helpers for the owning business domain.
+- Connect pytest fixtures to the domain test-data lifecycle.
+- Delegate test-data generation and scenario customization to Factory + Builder.
+- Delegate real-system test-data provisioning to the Provisioner.
 
 Examples:
 
@@ -186,11 +188,32 @@ Examples:
 - products.py
 - coupons.py
 
+The entity plugin is the pytest integration point; it does not own the test-data generation or provisioning layers. The expected lifecycle is:
+
+```text
+Fixture
+   ↓
+Builder
+   ↓
+Factory
+   ↓
+prepared in-memory data
+   ↓
+Provisioner
+   ↓
+Helper
+   ↓
+API
+```
+
 **Forbidden**
 
 - HTTP implementation.
 - Runtime configuration.
 - Cross-entity imports.
+- Test-data generation inside plugin fixture code.
+- Direct resource cleanup logic outside the ownership/cleanup lifecycle.
+- Business assertions.
 
 ---
 

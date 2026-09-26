@@ -2,14 +2,16 @@ from __future__ import annotations
 
 from typing import Any
 
-from EcommerceAPI.src.test_data.factories.customer_factory import CustomerFactory
+from EcommerceAPI.src.test_data.factories.customers.customer_factory import (
+    CustomerFactory,
+)
 
 
 class CustomerBuilder:
     """
-    Builder for scenario-specific customer creation data.
+    Builder for scenario-specific customer creation data (builds a new customer).
 
-    The builder sits between a test and the factory:
+    The builder sits between a test and the factory (depends on CustomerFactory):
 
         Test
           |

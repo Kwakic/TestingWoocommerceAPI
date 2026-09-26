@@ -89,35 +89,15 @@ The framework is designed around clear separation of responsibilities and busine
 
 - 🔐 **Multi-Protocol Authentication** — Uses WooCommerce OAuth1 for REST API tests and WordPress Application Passwords over HTTP Basic Auth for authenticated GraphQL mutations, while keeping authentication independent from endpoint configuration.
 
+---
+
 ### 🧪 Test Data Architecture
 
-Test data is treated as an architectural concern rather than being embedded inside individual tests.
+Test data is treated as a **first-class architectural concern**, separating data generation, scenario customization, system provisioning, ownership, and cleanup.
 
-```text
-Test
-  ↓
-Fixture
-  ↓
-Builder
-  ↓
-Factory
-  ↓
-In-memory test data
-  ↓
-Provisioner
-  ↓
-Domain Helper / API
-  ↓
-WooCommerce
-  ↓
-Ownership + Cleanup
-```
+The framework distinguishes **stable environment seeds** from **dynamic test-owned data**, ensuring baseline UI personas and other shared resources are protected from normal test cleanup.
 
-Tests express only the data that matters to a scenario while the framework supplies valid defaults, provisions real system state, and cleans up only resources owned by the test.
-
-The architecture also distinguishes **stable environment seeds** from **dynamic test-owned data**, protecting seeded UI personas and other baseline resources from normal test cleanup.
-
-📚 [Test Data Architecture](./README_TEST_DATA_ARCHITECTURE.md)
+📚 [Explore the Test Data Architecture](./README_TEST_DATA_ARCHITECTURE.md)
 
 ---
 
