@@ -1,0 +1,97 @@
+INFO     tests.customers.api.test_get_all_customers:test_get_all_customers.py:105 🛠 Creating 12 customers for pagination test (run_id=ZaWtjvxhwc)
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:176 ⚙️ Creating customers with payload keys: ['email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.227s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=124, email=test_ZaWtjvxhwc_0@supersqa.com
+DEBUG    EcommerceAPI.plugins.api.customers:customers.py:245 ℹ️ Registered customers with ID: 124 for cleanup.
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:176 ⚙️ Creating customers with payload keys: ['email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.226s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=125, email=test_ZaWtjvxhwc_1@supersqa.com
+DEBUG    EcommerceAPI.plugins.api.customers:customers.py:245 ℹ️ Registered customers with ID: 125 for cleanup.
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:176 ⚙️ Creating customers with payload keys: ['email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.231s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=126, email=test_ZaWtjvxhwc_2@supersqa.com
+DEBUG    EcommerceAPI.plugins.api.customers:customers.py:245 ℹ️ Registered customers with ID: 126 for cleanup.
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:176 ⚙️ Creating customers with payload keys: ['email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.226s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=127, email=test_ZaWtjvxhwc_3@supersqa.com
+DEBUG    EcommerceAPI.plugins.api.customers:customers.py:245 ℹ️ Registered customers with ID: 127 for cleanup.
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:176 ⚙️ Creating customers with payload keys: ['email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.227s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=128, email=test_ZaWtjvxhwc_4@supersqa.com
+DEBUG    EcommerceAPI.plugins.api.customers:customers.py:245 ℹ️ Registered customers with ID: 128 for cleanup.
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:176 ⚙️ Creating customers with payload keys: ['email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.237s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=129, email=test_ZaWtjvxhwc_5@supersqa.com
+DEBUG    EcommerceAPI.plugins.api.customers:customers.py:245 ℹ️ Registered customers with ID: 129 for cleanup.
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:176 ⚙️ Creating customers with payload keys: ['email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.242s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=130, email=test_ZaWtjvxhwc_6@supersqa.com
+DEBUG    EcommerceAPI.plugins.api.customers:customers.py:245 ℹ️ Registered customers with ID: 130 for cleanup.
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:176 ⚙️ Creating customers with payload keys: ['email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.230s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=131, email=test_ZaWtjvxhwc_7@supersqa.com
+DEBUG    EcommerceAPI.plugins.api.customers:customers.py:245 ℹ️ Registered customers with ID: 131 for cleanup.
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:176 ⚙️ Creating customers with payload keys: ['email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.232s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=132, email=test_ZaWtjvxhwc_8@supersqa.com
+DEBUG    EcommerceAPI.plugins.api.customers:customers.py:245 ℹ️ Registered customers with ID: 132 for cleanup.
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:176 ⚙️ Creating customers with payload keys: ['email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.239s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=133, email=test_ZaWtjvxhwc_9@supersqa.com
+DEBUG    EcommerceAPI.plugins.api.customers:customers.py:245 ℹ️ Registered customers with ID: 133 for cleanup.
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:176 ⚙️ Creating customers with payload keys: ['email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.244s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=134, email=test_ZaWtjvxhwc_10@supersqa.com
+DEBUG    EcommerceAPI.plugins.api.customers:customers.py:245 ℹ️ Registered customers with ID: 134 for cleanup.
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:176 ⚙️ Creating customers with payload keys: ['email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.247s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=135, email=test_ZaWtjvxhwc_11@supersqa.com
+DEBUG    EcommerceAPI.plugins.api.customers:customers.py:245 ℹ️ Registered customers with ID: 135 for cleanup.
+INFO     tests.customers.api.test_get_all_customers:test_get_all_customers.py:112 🟢 Testing pagination boundary with per_page=5, max_pages=5
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:513 🧪 Fetching test customers (run_id=ZaWtjvxhwc, per_page=5, max_pages=5)
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:398 ⚙️ Calling 'List All Customers' via pagination utility
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:70 🧰 Starting paginated fetch for '/customers'
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:84 📦 Fetching /customers page 1 (attempt 1/3)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/customers?per_page=5&search=ZaWtjvxhwc&page=1 → Status code: 200 (completed in 0.105s)
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:111 📄 Pagination request OK: endpoint=/customers page=1 status=200
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:132 ➡️ Page 1 → 5 items
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:84 📦 Fetching /customers page 2 (attempt 1/3)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/customers?per_page=5&search=ZaWtjvxhwc&page=2 → Status code: 200 (completed in 0.111s)
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:111 📄 Pagination request OK: endpoint=/customers page=2 status=200
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:132 ➡️ Page 2 → 5 items
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:84 📦 Fetching /customers page 3 (attempt 1/3)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/customers?per_page=5&search=ZaWtjvxhwc&page=3 → Status code: 200 (completed in 0.103s)
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:111 📄 Pagination request OK: endpoint=/customers page=3 status=200
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:132 ➡️ Page 3 → 2 items
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:84 📦 Fetching /customers page 4 (attempt 1/3)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/customers?per_page=5&search=ZaWtjvxhwc&page=4 → Status code: 200 (completed in 0.097s)
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:111 📄 Pagination request OK: endpoint=/customers page=4 status=200
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:122 ⛔ Stop pagination (no more results at page 4)
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:123 📊 Total pages fetched: 3
+INFO     tests.customers.api.test_get_all_customers:test_get_all_customers.py:131 ✅ Retrieved 12 customers.
+INFO     tests.customers.api.test_get_all_customers:test_get_all_customers.py:155 ✅ Retrieved 12 unique customers across pages.
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=134, email=test_ZaWtjvxhwc_10@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=124, email=test_ZaWtjvxhwc_0@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=130, email=test_ZaWtjvxhwc_6@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=126, email=test_ZaWtjvxhwc_2@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=128, email=test_ZaWtjvxhwc_4@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=132, email=test_ZaWtjvxhwc_8@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=125, email=test_ZaWtjvxhwc_1@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=133, email=test_ZaWtjvxhwc_9@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=131, email=test_ZaWtjvxhwc_7@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=127, email=test_ZaWtjvxhwc_3@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=129, email=test_ZaWtjvxhwc_5@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=135, email=test_ZaWtjvxhwc_11@supersqa.com
+INFO     tests.customers.api.test_get_all_customers:test_get_all_customers.py:170 ✅ All paginated customers conform to schema.

@@ -1,10 +1,9 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Sat Sep 26 16:32:34 UTC 2026","Sat Sep 26 16:32:35 UTC 2026","685","tests.customers.api","test_customer_filters","","","","test_list_customers_created_within_time_range_with_db_check[5]","
-Verify that a customers appears in results when filtering by a time
-window that includes the creation timestamp.
+"passed","Sat Sep 26 16:38:19 UTC 2026","Sat Sep 26 16:38:19 UTC 2026","566","tests.customers.api","test_get_customer","","","","test_get_customer_by_email","
+Verify that a customers can be retrieved using the email filter.
 
 Endpoint tested:
-    GET /customers?created_after=&created_before=
+    GET /customers?email={email}
 
 Fixture responsibilities (`create_valid_customer`):
     - POST /customers
@@ -13,13 +12,172 @@ Fixture responsibilities (`create_valid_customer`):
 
 Test flow:
     1. Create a customers
-    2. Build a time window around the server creation timestamp
-    3. Retrieve customers using time filters
-    4. Ensure the created customers appears in the results
-    5. Validate returned customers
-    6. Verify API data matches database
+    2. Retrieve customers using email filter
+    3. Validate returned dataset
+    4. Verify returned customers identity
+    5. Verify API data matches database
 "
-"passed","Sat Sep 26 16:32:13 UTC 2026","Sat Sep 26 16:32:13 UTC 2026","473","tests.customers.api","test_create_customer","","","","test_create_single_customer_with_email_and_password_only","
+"passed","Sat Sep 26 16:38:20 UTC 2026","Sat Sep 26 16:38:21 UTC 2026","459","tests.customers.api","test_soft_deleted_customer_handling","","","","test_soft_deleted_customer_is_still_returned_by_api","
+Verify WooCommerce soft-delete behavior.
+
+Soft-deleting a customers in the database (user_status = 1):
+    - keeps the customers record in the database
+    - does NOT remove the customers from the WooCommerce API response
+
+This test documents the default WooCommerce behavior.
+
+Test flow:
+    1. Create a customers via fixture
+    2. Soft-delete the customers in DB (user_status = 1)
+    3. Confirm DB reflects the soft deletion
+    4. Verify API still returns the customers
+
+Note:
+    WooCommerce uses ""soft delete_it.py"" via status flags (e.g., user_status, post_status='trash').
+    However, the core REST API does not automatically exclude such entities unless customized.
+
+"
+"passed","Sat Sep 26 16:38:08 UTC 2026","Sat Sep 26 16:38:08 UTC 2026","503","tests.customers.api","test_customer_deletion","","","","test_customer_deletion_removes_resource","
+Verify that deleting a customers removes the resource completely.
+
+Endpoint tested:
+    DELETE /customers/{id}
+
+Test flow:
+    1. Create a customers
+    2. Delete the customers
+    3. Verify API no longer returns the customers (404)
+    4. Verify the customers record is removed from the database
+
+Args:
+    all_resources: mark_deleted (skip cleanup for this resource)
+    customer_helper: Provides customers's helper
+    customers_dao: Provides customers's DAOs
+    create_valid_customer (Callable): Factory fixture to create test customers.
+
+The framework has automatic cleanup at the end of the test, but:
+In THIS test, you already deleted the customers manually. So you must tell the framework:
+    “Don’t delete this again later” by setting: mark_deleted(""customers"", customer_id)
+"
+"passed","Sat Sep 26 16:38:09 UTC 2026","Sat Sep 26 16:38:09 UTC 2026","487","tests.customers.api","test_customer_deletion","","","","test_deleted_customer_not_in_created_after_filter[2]","
+Verify that a deleted customers does not appear in filtered
+GET /customers results.
+
+Endpoint tested:
+    GET /customers?created_after=&created_before=
+
+Test flow:
+    1. Create a customers
+    2. Delete the customers
+    3. Query customers using a time window that includes the creation time
+    4. Ensure the deleted customers is NOT returned
+
+Parameterized with different minute offsets to test consistency across varied filtering windows.
+
+        TIME WINDOW
+    ┌─────────────────┐
+    │                 │
+   09:59   10:00   10:02
+            ↑
+       customers created
+"
+"passed","Sat Sep 26 16:37:03 UTC 2026","Sat Sep 26 16:37:03 UTC 2026","1","tests.customers.api","test_create_customer","","","","test_bulk_create_customers_edge_cases[0]","
+Edge case test for bulk creation.
+
+Runs the bulk utility with extreme quantities (0 and 101)
+to ensure the framework handles boundary conditions correctly.
+
+Fixture responsibilities:
+    - POST validation
+    - response structure validation
+    - automatic cleanup registration
+"
+"passed","Sat Sep 26 16:37:50 UTC 2026","Sat Sep 26 16:37:50 UTC 2026","107","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[missing-email-field]","
+Verify that customer creation rejects invalid email values.
+
+This is an intentional negative test and therefore bypasses the
+valid-data test-data pipeline.
+
+The supplied payload is the test scenario itself:
+
+    Test
+      ↓
+    Raw API Client
+      ↓
+    POST /customers
+      ↓
+    WooCommerce
+      ↓
+    HTTP 400
+
+Test flow:
+    1. Send POST /customers with an invalid email payload.
+    2. Verify the expected HTTP 400 response.
+    3. Validate the error response against the error contract schema.
+
+The valid-data Factory/Builder/Provisioner pipeline is intentionally
+not used because this test must send invalid data.
+"
+"passed","Sat Sep 26 16:38:23 UTC 2026","Sat Sep 26 16:38:23 UTC 2026","576","tests.customers.api","test_update_customer","","","","test_update_customer_invalid_inputs[duplicate-email]","
+Verify that invalid customers updates are rejected by the API.
+
+This test ensures that:
+
+• Invalid update payloads return the correct error response
+• Error responses follow the expected schema
+• The original customers record in the database remains unchanged
+
+Test flow:
+    1. Create a valid customers
+    2. Attempt to update the customers with an invalid payload
+    3. Validate the returned error structure
+    4. Confirm the database record was not modified
+"
+"passed","Sat Sep 26 16:38:22 UTC 2026","Sat Sep 26 16:38:23 UTC 2026","341","tests.customers.api","test_update_customer","","","","test_update_customer_invalid_inputs[invalid-email-missing-local]","
+Verify that invalid customers updates are rejected by the API.
+
+This test ensures that:
+
+• Invalid update payloads return the correct error response
+• Error responses follow the expected schema
+• The original customers record in the database remains unchanged
+
+Test flow:
+    1. Create a valid customers
+    2. Attempt to update the customers with an invalid payload
+    3. Validate the returned error structure
+    4. Confirm the database record was not modified
+"
+"passed","Sat Sep 26 16:37:49 UTC 2026","Sat Sep 26 16:37:49 UTC 2026","445","tests.customers.api","test_create_customer","","","","test_create_customer_with_varied_addresses[spain-billing-us-shipping]","
+Create customers with different billing and shipping addresses.
+
+Test-data setup is handled by the ``create_valid_customer`` fixture.
+The test provides only the scenario-specific billing and shipping
+data required for this test case.
+
+The fixture is responsible for:
+    - CustomerBuilder
+    - CustomerFactory
+    - CustomerProvisioner
+    - POST /customers
+    - creation response validation
+    - cleanup registration
+
+CustomerFactory remains responsible for generating the customer's
+generic identity data such as email, password, username, and
+top-level first/last name.
+
+Test flow:
+    1. Create a customer with the parameterized addresses.
+    2. Fetch the customer through the API.
+    3. Fetch the customer from the database.
+    4. Verify that API and database data match.
+
+Faker is intentionally not used here. Random test-data generation
+belongs to the CustomerFactory, while this test owns only the
+business scenario variations.
+"
+"passed","Sat Sep 26 16:37:48 UTC 2026","Sat Sep 26 16:37:49 UTC 2026","468","tests.customers.api","test_create_customer","","","","test_create_single_customer_with_email_and_password_only","
 Create a customer using the minimum valid payload.
 
 Test-data setup is handled by the `create_valid_customer` fixture:
@@ -52,179 +210,7 @@ Test flow:
 The test does not generate test data itself because test-data
 generation and provisioning belong to the fixture/data layer.
 "
-"passed","Sat Sep 26 16:32:14 UTC 2026","Sat Sep 26 16:32:15 UTC 2026","122","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[name-included]","
-Verify that customer creation rejects invalid email values.
-
-This is an intentional negative test and therefore bypasses the
-valid-data test-data pipeline.
-
-The supplied payload is the test scenario itself:
-
-    Test
-      ↓
-    Raw API Client
-      ↓
-    POST /customers
-      ↓
-    WooCommerce
-      ↓
-    HTTP 400
-
-Test flow:
-    1. Send POST /customers with an invalid email payload.
-    2. Verify the expected HTTP 400 response.
-    3. Validate the error response against the error contract schema.
-
-The valid-data Factory/Builder/Provisioner pipeline is intentionally
-not used because this test must send invalid data.
-"
-"passed","Sat Sep 26 16:32:32 UTC 2026","Sat Sep 26 16:32:33 UTC 2026","507","tests.customers.api","test_customer_deletion","","","","test_customer_deletion_removes_resource","
-Verify that deleting a customers removes the resource completely.
-
-Endpoint tested:
-    DELETE /customers/{id}
-
-Test flow:
-    1. Create a customers
-    2. Delete the customers
-    3. Verify API no longer returns the customers (404)
-    4. Verify the customers record is removed from the database
-
-Args:
-    all_resources: mark_deleted (skip cleanup for this resource)
-    customer_helper: Provides customers's helper
-    customers_dao: Provides customers's DAOs
-    create_valid_customer (Callable): Factory fixture to create test customers.
-
-The framework has automatic cleanup at the end of the test, but:
-In THIS test, you already deleted the customers manually. So you must tell the framework:
-    “Don’t delete this again later” by setting: mark_deleted(""customers"", customer_id)
-"
-"passed","Sat Sep 26 16:32:46 UTC 2026","Sat Sep 26 16:32:47 UTC 2026","377","tests.customers.api","test_update_customer","","","","test_update_customer_invalid_inputs[invalid-email-no-at]","
-Verify that invalid customers updates are rejected by the API.
-
-This test ensures that:
-
-• Invalid update payloads return the correct error response
-• Error responses follow the expected schema
-• The original customers record in the database remains unchanged
-
-Test flow:
-    1. Create a valid customers
-    2. Attempt to update the customers with an invalid payload
-    3. Validate the returned error structure
-    4. Confirm the database record was not modified
-"
-"passed","Sat Sep 26 16:32:46 UTC 2026","Sat Sep 26 16:32:46 UTC 2026","355","tests.customers.api","test_update_customer","","","","test_update_customer_first_name","
-Verify that a customers can be updated successfully.
-
-Validates that:
-    - PUT /customers/{id} returns a successful response
-    - Updated fields are reflected in the API response
-    - Returned customers structure is valid (Pydantic validation)
-
-Test flow:
-    1. Create customers via fixture
-    2. Update first_name and email
-    3. Validate response structure
-    4. Verify updated values
-"
-"passed","Sat Sep 26 16:32:37 UTC 2026","Sat Sep 26 16:32:41 UTC 2026","3338","tests.customers.api","test_get_all_customers","","","","test_get_all_customers_pagination_boundary","
-Verify pagination behavior for GET /customers using an isolated test dataset (no dependency on global DB state)..
-
-Validates that:
-    - Pagination retrieves multiple pages correctly
-    - No duplicate customers appear across pages
-    - All returned customers have valid structure
-
-Test flow:
-    1. Creates controlled dataset
-    2. Retrieve customers with small page size
-    3. Collect results across multiple pages
-    4. Ensure no duplicate IDs
-    5. Validate structure of each customers
-    6. Stops correctly (no infinite loop)
-"
-"passed","Sat Sep 26 16:31:24 UTC 2026","Sat Sep 26 16:31:27 UTC 2026","2271","tests.customers.api","test_create_customer","","","","test_bulk_create_customers[5]","
-Verify that multiple valid customers can be created and subsequently
-retrieved consistently through both the API and database.
-
-This test focuses on the bulk-creation workflow and intentionally does
-not provide scenario-specific customer fields such as billing or
-shipping addresses.
-
-Generic valid customer data is generated by the test-data layer:
-
-    Test
-      ↓
-    create_valid_customer fixture
-      ↓
-    CustomerBuilder
-      ↓
-    CustomerFactory
-      ↓
-    CustomerProvisioner
-      ↓
-    CustomerHelper / CustomersApi
-      ↓
-    WooCommerce
-
-The CustomerFactory generates the generic valid customer data required
-for creation, including identity and address data.
-
-Address-specific scenarios are tested separately by TCID-004. Keeping
-those scenarios out of this bulk test ensures that each test has a
-focused responsibility.
-
-The create_valid_customer fixture is responsible for:
-    - building valid customer creation data
-    - provisioning the customer through the API
-    - validating the creation response
-    - registering the created customer for cleanup
-    - returning the created customer data
-
-The bulk utility is responsible for:
-    - calling create_fn() exactly ``qty`` times
-    - collecting the identifiers of created customers
-    - invoking validate_fn() for each created customer
-    - reporting validation failures
-
-Test flow:
-    1. Create ``qty`` valid customers through the test-data fixture.
-    2. Collect each customer's email as its validation identifier.
-    3. Retrieve each customer through the API.
-    4. Retrieve each customer from the database.
-    5. Verify that API and database data match.
-    6. Allow the ownership/cleanup mechanism to remove all customers
-       created by this test.
-
-Contract coverage:
-    The test is marked as CONTRACT because create_valid_customer performs
-    response validation using the customer response validation layer.
-"
-"passed","Sat Sep 26 16:32:33 UTC 2026","Sat Sep 26 16:32:33 UTC 2026","497","tests.customers.api","test_customer_deletion","","","","test_deleted_customer_not_in_created_after_filter[1]","
-Verify that a deleted customers does not appear in filtered
-GET /customers results.
-
-Endpoint tested:
-    GET /customers?created_after=&created_before=
-
-Test flow:
-    1. Create a customers
-    2. Delete the customers
-    3. Query customers using a time window that includes the creation time
-    4. Ensure the deleted customers is NOT returned
-
-Parameterized with different minute offsets to test consistency across varied filtering windows.
-
-        TIME WINDOW
-    ┌─────────────────┐
-    │                 │
-   09:59   10:00   10:02
-            ↑
-       customers created
-"
-"passed","Sat Sep 26 16:32:34 UTC 2026","Sat Sep 26 16:32:34 UTC 2026","696","tests.customers.api","test_customer_filters","","","","test_list_customers_created_within_time_range_with_db_check[1]","
+"passed","Sat Sep 26 16:38:09 UTC 2026","Sat Sep 26 16:38:10 UTC 2026","692","tests.customers.api","test_customer_filters","","","","test_list_customers_created_within_time_range_with_db_check[1]","
 Verify that a customers appears in results when filtering by a time
 window that includes the creation timestamp.
 
@@ -244,36 +230,7 @@ Test flow:
     5. Validate returned customers
     6. Verify API data matches database
 "
-"passed","Sat Sep 26 16:32:14 UTC 2026","Sat Sep 26 16:32:14 UTC 2026","456","tests.customers.api","test_create_customer","","","","test_create_customer_with_varied_addresses[germany-billing-italy-shipping]","
-Create customers with different billing and shipping addresses.
-
-Test-data setup is handled by the ``create_valid_customer`` fixture.
-The test provides only the scenario-specific billing and shipping
-data required for this test case.
-
-The fixture is responsible for:
-    - CustomerBuilder
-    - CustomerFactory
-    - CustomerProvisioner
-    - POST /customers
-    - creation response validation
-    - cleanup registration
-
-CustomerFactory remains responsible for generating the customer's
-generic identity data such as email, password, username, and
-top-level first/last name.
-
-Test flow:
-    1. Create a customer with the parameterized addresses.
-    2. Fetch the customer through the API.
-    3. Fetch the customer from the database.
-    4. Verify that API and database data match.
-
-Faker is intentionally not used here. Random test-data generation
-belongs to the CustomerFactory, while this test owns only the
-business scenario variations.
-"
-"passed","Sat Sep 26 16:32:41 UTC 2026","Sat Sep 26 16:32:41 UTC 2026","233","tests.customers.api","test_get_all_customers","","","","test_list_customers_created_in_the_future_returns_empty","
+"passed","Sat Sep 26 16:38:16 UTC 2026","Sat Sep 26 16:38:17 UTC 2026","227","tests.customers.api","test_get_all_customers","","","","test_list_customers_created_in_the_future_returns_empty","
 Verify that no customers are returned with a future creation timestamp.
 
 Endpoint tested:
@@ -300,7 +257,60 @@ Note:
         • API/backend time rounding
         • System clock skew
 "
-"passed","Sat Sep 26 16:32:15 UTC 2026","Sat Sep 26 16:32:15 UTC 2026","110","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[missing-at]","
+"passed","Sat Sep 26 16:37:03 UTC 2026","Sat Sep 26 16:37:48 UTC 2026","45714","tests.customers.api","test_create_customer","","","","test_bulk_create_customers_edge_cases[101]","
+Edge case test for bulk creation.
+
+Runs the bulk utility with extreme quantities (0 and 101)
+to ensure the framework handles boundary conditions correctly.
+
+Fixture responsibilities:
+    - POST validation
+    - response structure validation
+    - automatic cleanup registration
+"
+"passed","Sat Sep 26 16:38:22 UTC 2026","Sat Sep 26 16:38:22 UTC 2026","363","tests.customers.api","test_update_customer","","","","test_update_customer_invalid_inputs[invalid-email-no-at]","
+Verify that invalid customers updates are rejected by the API.
+
+This test ensures that:
+
+• Invalid update payloads return the correct error response
+• Error responses follow the expected schema
+• The original customers record in the database remains unchanged
+
+Test flow:
+    1. Create a valid customers
+    2. Attempt to update the customers with an invalid payload
+    3. Validate the returned error structure
+    4. Confirm the database record was not modified
+"
+"passed","Sat Sep 26 16:38:21 UTC 2026","Sat Sep 26 16:38:22 UTC 2026","383","tests.customers.api","test_update_customer","","","","test_update_customer_first_name","
+Verify that a customers can be updated successfully.
+
+Validates that:
+    - PUT /customers/{id} returns a successful response
+    - Updated fields are reflected in the API response
+    - Returned customers structure is valid (Pydantic validation)
+
+Test flow:
+    1. Create customers via fixture
+    2. Update first_name and email
+    3. Validate response structure
+    4. Verify updated values
+"
+"passed","Sat Sep 26 16:38:11 UTC 2026","Sat Sep 26 16:38:11 UTC 2026","447","tests.customers.api","test_customer_filters","","","","test_customer_should_not_returned_when_filtered_outside_creation_time","
+Verify that a customers is NOT returned when filtering outside
+the creation timestamp window.
+
+Endpoint tested:
+    GET /customers?created_after=&created_before=
+
+Test flow:
+    1. Create a customers
+    2. Build a time window outside the creation timestamp
+    3. Query customers using the filter
+    4. Ensure the created customers is NOT returned
+"
+"passed","Sat Sep 26 16:37:50 UTC 2026","Sat Sep 26 16:37:50 UTC 2026","107","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[missing-at]","
 Verify that customer creation rejects invalid email values.
 
 This is an intentional negative test and therefore bypasses the
@@ -326,18 +336,138 @@ Test flow:
 The valid-data Factory/Builder/Provisioner pipeline is intentionally
 not used because this test must send invalid data.
 "
-"passed","Sat Sep 26 16:31:27 UTC 2026","Sat Sep 26 16:31:27 UTC 2026","1","tests.customers.api","test_create_customer","","","","test_bulk_create_customers_edge_cases[0]","
-Edge case test for bulk creation.
+"passed","Sat Sep 26 16:38:21 UTC 2026","Sat Sep 26 16:38:21 UTC 2026","441","tests.customers.api","test_soft_deleted_customer_handling","","","","test_soft_deleted_customers_are_excluded_by_custom_filter","
+Verify that custom filtering removes soft-deleted customers.
 
-Runs the bulk utility with extreme quantities (0 and 101)
-to ensure the framework handles boundary conditions correctly.
+WooCommerce API behavior:
+    - Soft-deleted customers (user_status = 1) are still returned.
 
-Fixture responsibilities:
-    - POST validation
-    - response structure validation
-    - automatic cleanup registration
+Framework behavior:
+    - Custom filtering removes soft-deleted records.
+
+Test flow:
+    1. Create customers
+    2. Soft delete in DB (user_status = 1)
+    3. Retrieve customers from API
+    4. Apply custom filtering utility
+    5. Ensure soft-deleted customers is excluded
 "
-"passed","Sat Sep 26 16:31:23 UTC 2026","Sat Sep 26 16:31:24 UTC 2026","1353","tests.customers.api","test_create_customer","","","","test_bulk_create_customers[3]","
+"passed","Sat Sep 26 16:38:22 UTC 2026","Sat Sep 26 16:38:22 UTC 2026","341","tests.customers.api","test_update_customer","","","","test_update_customer_invalid_inputs[invalid-email-missing-domain]","
+Verify that invalid customers updates are rejected by the API.
+
+This test ensures that:
+
+• Invalid update payloads return the correct error response
+• Error responses follow the expected schema
+• The original customers record in the database remains unchanged
+
+Test flow:
+    1. Create a valid customers
+    2. Attempt to update the customers with an invalid payload
+    3. Validate the returned error structure
+    4. Confirm the database record was not modified
+"
+"passed","Sat Sep 26 16:37:50 UTC 2026","Sat Sep 26 16:37:50 UTC 2026","107","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[no-at-symbol]","
+Verify that customer creation rejects invalid email values.
+
+This is an intentional negative test and therefore bypasses the
+valid-data test-data pipeline.
+
+The supplied payload is the test scenario itself:
+
+    Test
+      ↓
+    Raw API Client
+      ↓
+    POST /customers
+      ↓
+    WooCommerce
+      ↓
+    HTTP 400
+
+Test flow:
+    1. Send POST /customers with an invalid email payload.
+    2. Verify the expected HTTP 400 response.
+    3. Validate the error response against the error contract schema.
+
+The valid-data Factory/Builder/Provisioner pipeline is intentionally
+not used because this test must send invalid data.
+"
+"passed","Sat Sep 26 16:37:50 UTC 2026","Sat Sep 26 16:37:50 UTC 2026","114","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[missing-Top-Level Domain]","
+Verify that customer creation rejects invalid email values.
+
+This is an intentional negative test and therefore bypasses the
+valid-data test-data pipeline.
+
+The supplied payload is the test scenario itself:
+
+    Test
+      ↓
+    Raw API Client
+      ↓
+    POST /customers
+      ↓
+    WooCommerce
+      ↓
+    HTTP 400
+
+Test flow:
+    1. Send POST /customers with an invalid email payload.
+    2. Verify the expected HTTP 400 response.
+    3. Validate the error response against the error contract schema.
+
+The valid-data Factory/Builder/Provisioner pipeline is intentionally
+not used because this test must send invalid data.
+"
+"passed","Sat Sep 26 16:37:50 UTC 2026","Sat Sep 26 16:37:50 UTC 2026","115","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[name-included]","
+Verify that customer creation rejects invalid email values.
+
+This is an intentional negative test and therefore bypasses the
+valid-data test-data pipeline.
+
+The supplied payload is the test scenario itself:
+
+    Test
+      ↓
+    Raw API Client
+      ↓
+    POST /customers
+      ↓
+    WooCommerce
+      ↓
+    HTTP 400
+
+Test flow:
+    1. Send POST /customers with an invalid email payload.
+    2. Verify the expected HTTP 400 response.
+    3. Validate the error response against the error contract schema.
+
+The valid-data Factory/Builder/Provisioner pipeline is intentionally
+not used because this test must send invalid data.
+"
+"passed","Sat Sep 26 16:38:08 UTC 2026","Sat Sep 26 16:38:09 UTC 2026","491","tests.customers.api","test_customer_deletion","","","","test_deleted_customer_not_in_created_after_filter[1]","
+Verify that a deleted customers does not appear in filtered
+GET /customers results.
+
+Endpoint tested:
+    GET /customers?created_after=&created_before=
+
+Test flow:
+    1. Create a customers
+    2. Delete the customers
+    3. Query customers using a time window that includes the creation time
+    4. Ensure the deleted customers is NOT returned
+
+Parameterized with different minute offsets to test consistency across varied filtering windows.
+
+        TIME WINDOW
+    ┌─────────────────┐
+    │                 │
+   09:59   10:00   10:02
+            ↑
+       customers created
+"
+"passed","Sat Sep 26 16:36:59 UTC 2026","Sat Sep 26 16:37:00 UTC 2026","1316","tests.customers.api","test_create_customer","","","","test_bulk_create_customers[3]","
 Verify that multiple valid customers can be created and subsequently
 retrieved consistently through both the API and database.
 
@@ -394,7 +524,7 @@ Contract coverage:
     The test is marked as CONTRACT because create_valid_customer performs
     response validation using the customer response validation layer.
 "
-"passed","Sat Sep 26 16:32:41 UTC 2026","Sat Sep 26 16:32:41 UTC 2026","1","tests.customers.api","test_get_all_customers","","","","test_get_all_customers_empty_list_with_mock","
+"passed","Sat Sep 26 16:38:16 UTC 2026","Sat Sep 26 16:38:16 UTC 2026","1","tests.customers.api","test_get_all_customers","","","","test_get_all_customers_empty_list_with_mock","
 Verify that GET /customers handles an empty dataset.
 
 This test uses mocking to simulate an empty API response.
@@ -410,214 +540,7 @@ Explanation:
 - Then the test asserts the returned list is empty, simulating no customers in DB.
 - You get a fully isolated test that doesn't depend on DB state.
 "
-"passed","Sat Sep 26 16:32:47 UTC 2026","Sat Sep 26 16:32:48 UTC 2026","597","tests.customers.api","test_update_customer","","","","test_update_customer_invalid_inputs[duplicate-email]","
-Verify that invalid customers updates are rejected by the API.
-
-This test ensures that:
-
-• Invalid update payloads return the correct error response
-• Error responses follow the expected schema
-• The original customers record in the database remains unchanged
-
-Test flow:
-    1. Create a valid customers
-    2. Attempt to update the customers with an invalid payload
-    3. Validate the returned error structure
-    4. Confirm the database record was not modified
-"
-"passed","Sat Sep 26 16:32:36 UTC 2026","Sat Sep 26 16:32:37 UTC 2026","1078","tests.customers.api","test_e2e_customer_lifecycle","","","","test_customer_full_lifecycle",""
-"passed","Sat Sep 26 16:32:13 UTC 2026","Sat Sep 26 16:32:14 UTC 2026","464","tests.customers.api","test_create_customer","","","","test_create_customer_with_varied_addresses[spain-billing-us-shipping]","
-Create customers with different billing and shipping addresses.
-
-Test-data setup is handled by the ``create_valid_customer`` fixture.
-The test provides only the scenario-specific billing and shipping
-data required for this test case.
-
-The fixture is responsible for:
-    - CustomerBuilder
-    - CustomerFactory
-    - CustomerProvisioner
-    - POST /customers
-    - creation response validation
-    - cleanup registration
-
-CustomerFactory remains responsible for generating the customer's
-generic identity data such as email, password, username, and
-top-level first/last name.
-
-Test flow:
-    1. Create a customer with the parameterized addresses.
-    2. Fetch the customer through the API.
-    3. Fetch the customer from the database.
-    4. Verify that API and database data match.
-
-Faker is intentionally not used here. Random test-data generation
-belongs to the CustomerFactory, while this test owns only the
-business scenario variations.
-"
-"passed","Sat Sep 26 16:31:27 UTC 2026","Sat Sep 26 16:32:13 UTC 2026","46248","tests.customers.api","test_create_customer","","","","test_bulk_create_customers_edge_cases[101]","
-Edge case test for bulk creation.
-
-Runs the bulk utility with extreme quantities (0 and 101)
-to ensure the framework handles boundary conditions correctly.
-
-Fixture responsibilities:
-    - POST validation
-    - response structure validation
-    - automatic cleanup registration
-"
-"passed","Sat Sep 26 16:32:45 UTC 2026","Sat Sep 26 16:32:45 UTC 2026","482","tests.customers.api","test_soft_deleted_customer_handling","","","","test_soft_deleted_customer_is_still_returned_by_api","
-Verify WooCommerce soft-delete behavior.
-
-Soft-deleting a customers in the database (user_status = 1):
-    - keeps the customers record in the database
-    - does NOT remove the customers from the WooCommerce API response
-
-This test documents the default WooCommerce behavior.
-
-Test flow:
-    1. Create a customers via fixture
-    2. Soft-delete the customers in DB (user_status = 1)
-    3. Confirm DB reflects the soft deletion
-    4. Verify API still returns the customers
-
-Note:
-    WooCommerce uses ""soft delete_it.py"" via status flags (e.g., user_status, post_status='trash').
-    However, the core REST API does not automatically exclude such entities unless customized.
-
-"
-"passed","Sat Sep 26 16:32:15 UTC 2026","Sat Sep 26 16:32:15 UTC 2026","112","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[missing-email-field]","
-Verify that customer creation rejects invalid email values.
-
-This is an intentional negative test and therefore bypasses the
-valid-data test-data pipeline.
-
-The supplied payload is the test scenario itself:
-
-    Test
-      ↓
-    Raw API Client
-      ↓
-    POST /customers
-      ↓
-    WooCommerce
-      ↓
-    HTTP 400
-
-Test flow:
-    1. Send POST /customers with an invalid email payload.
-    2. Verify the expected HTTP 400 response.
-    3. Validate the error response against the error contract schema.
-
-The valid-data Factory/Builder/Provisioner pipeline is intentionally
-not used because this test must send invalid data.
-"
-"passed","Sat Sep 26 16:32:14 UTC 2026","Sat Sep 26 16:32:14 UTC 2026","116","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[missing-local-part]","
-Verify that customer creation rejects invalid email values.
-
-This is an intentional negative test and therefore bypasses the
-valid-data test-data pipeline.
-
-The supplied payload is the test scenario itself:
-
-    Test
-      ↓
-    Raw API Client
-      ↓
-    POST /customers
-      ↓
-    WooCommerce
-      ↓
-    HTTP 400
-
-Test flow:
-    1. Send POST /customers with an invalid email payload.
-    2. Verify the expected HTTP 400 response.
-    3. Validate the error response against the error contract schema.
-
-The valid-data Factory/Builder/Provisioner pipeline is intentionally
-not used because this test must send invalid data.
-"
-"passed","Sat Sep 26 16:32:14 UTC 2026","Sat Sep 26 16:32:14 UTC 2026","110","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[no-at-symbol]","
-Verify that customer creation rejects invalid email values.
-
-This is an intentional negative test and therefore bypasses the
-valid-data test-data pipeline.
-
-The supplied payload is the test scenario itself:
-
-    Test
-      ↓
-    Raw API Client
-      ↓
-    POST /customers
-      ↓
-    WooCommerce
-      ↓
-    HTTP 400
-
-Test flow:
-    1. Send POST /customers with an invalid email payload.
-    2. Verify the expected HTTP 400 response.
-    3. Validate the error response against the error contract schema.
-
-The valid-data Factory/Builder/Provisioner pipeline is intentionally
-not used because this test must send invalid data.
-"
-"passed","Sat Sep 26 16:32:45 UTC 2026","Sat Sep 26 16:32:46 UTC 2026","493","tests.customers.api","test_soft_deleted_customer_handling","","","","test_soft_deleted_customers_are_excluded_by_custom_filter","
-Verify that custom filtering removes soft-deleted customers.
-
-WooCommerce API behavior:
-    - Soft-deleted customers (user_status = 1) are still returned.
-
-Framework behavior:
-    - Custom filtering removes soft-deleted records.
-
-Test flow:
-    1. Create customers
-    2. Soft delete in DB (user_status = 1)
-    3. Retrieve customers from API
-    4. Apply custom filtering utility
-    5. Ensure soft-deleted customers is excluded
-"
-"passed","Sat Sep 26 16:32:15 UTC 2026","Sat Sep 26 16:32:15 UTC 2026","118","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[missing-Top-Level Domain]","
-Verify that customer creation rejects invalid email values.
-
-This is an intentional negative test and therefore bypasses the
-valid-data test-data pipeline.
-
-The supplied payload is the test scenario itself:
-
-    Test
-      ↓
-    Raw API Client
-      ↓
-    POST /customers
-      ↓
-    WooCommerce
-      ↓
-    HTTP 400
-
-Test flow:
-    1. Send POST /customers with an invalid email payload.
-    2. Verify the expected HTTP 400 response.
-    3. Validate the error response against the error contract schema.
-
-The valid-data Factory/Builder/Provisioner pipeline is intentionally
-not used because this test must send invalid data.
-"
-"passed","Sat Sep 26 16:32:44 UTC 2026","Sat Sep 26 16:32:44 UTC 2026","110","tests.customers.api","test_get_customer","","","","test_get_customer_not_found","
-Negative test for retrieving a non-existing customers.
-
-Endpoint tested:
-    GET /customers/{id}
-
-Test flow:
-    1. Request non-existing customers ID
-    2. Validate API returns correct error response
-    3. Validate error schema
-"
-"passed","Sat Sep 26 16:32:48 UTC 2026","Sat Sep 26 16:32:49 UTC 2026","636","tests.customers.api","test_update_customer","","","","test_validate_date_modified_and_date_modified_gmt","
+"passed","Sat Sep 26 16:38:23 UTC 2026","Sat Sep 26 16:38:24 UTC 2026","566","tests.customers.api","test_update_customer","","","","test_validate_date_modified_and_date_modified_gmt","
 Verify that customer modification timestamps are consistent between API and database.
 
 This test validates the following:
@@ -655,130 +578,7 @@ Test strongly proves:
    - Timestamps are monotonic
    - Timezone/DST behavior is correct
 "
-"passed","Sat Sep 26 16:31:22 UTC 2026","Sat Sep 26 16:31:23 UTC 2026","522","tests.customers.api","test_create_customer","","","","test_bulk_create_customers[1]","
-Verify that multiple valid customers can be created and subsequently
-retrieved consistently through both the API and database.
-
-This test focuses on the bulk-creation workflow and intentionally does
-not provide scenario-specific customer fields such as billing or
-shipping addresses.
-
-Generic valid customer data is generated by the test-data layer:
-
-    Test
-      ↓
-    create_valid_customer fixture
-      ↓
-    CustomerBuilder
-      ↓
-    CustomerFactory
-      ↓
-    CustomerProvisioner
-      ↓
-    CustomerHelper / CustomersApi
-      ↓
-    WooCommerce
-
-The CustomerFactory generates the generic valid customer data required
-for creation, including identity and address data.
-
-Address-specific scenarios are tested separately by TCID-004. Keeping
-those scenarios out of this bulk test ensures that each test has a
-focused responsibility.
-
-The create_valid_customer fixture is responsible for:
-    - building valid customer creation data
-    - provisioning the customer through the API
-    - validating the creation response
-    - registering the created customer for cleanup
-    - returning the created customer data
-
-The bulk utility is responsible for:
-    - calling create_fn() exactly ``qty`` times
-    - collecting the identifiers of created customers
-    - invoking validate_fn() for each created customer
-    - reporting validation failures
-
-Test flow:
-    1. Create ``qty`` valid customers through the test-data fixture.
-    2. Collect each customer's email as its validation identifier.
-    3. Retrieve each customer through the API.
-    4. Retrieve each customer from the database.
-    5. Verify that API and database data match.
-    6. Allow the ownership/cleanup mechanism to remove all customers
-       created by this test.
-
-Contract coverage:
-    The test is marked as CONTRACT because create_valid_customer performs
-    response validation using the customer response validation layer.
-"
-"passed","Sat Sep 26 16:32:47 UTC 2026","Sat Sep 26 16:32:47 UTC 2026","343","tests.customers.api","test_update_customer","","","","test_update_customer_invalid_inputs[invalid-email-missing-local]","
-Verify that invalid customers updates are rejected by the API.
-
-This test ensures that:
-
-• Invalid update payloads return the correct error response
-• Error responses follow the expected schema
-• The original customers record in the database remains unchanged
-
-Test flow:
-    1. Create a valid customers
-    2. Attempt to update the customers with an invalid payload
-    3. Validate the returned error structure
-    4. Confirm the database record was not modified
-"
-"passed","Sat Sep 26 16:32:43 UTC 2026","Sat Sep 26 16:32:44 UTC 2026","583","tests.customers.api","test_get_customer","","","","test_get_customer_by_email","
-Verify that a customers can be retrieved using the email filter.
-
-Endpoint tested:
-    GET /customers?email={email}
-
-Fixture responsibilities (`create_valid_customer`):
-    - POST /customers
-    - response validation (Pydantic)
-    - automatic cleanup registration
-
-Test flow:
-    1. Create a customers
-    2. Retrieve customers using email filter
-    3. Validate returned dataset
-    4. Verify returned customers identity
-    5. Verify API data matches database
-"
-"passed","Sat Sep 26 16:32:47 UTC 2026","Sat Sep 26 16:32:47 UTC 2026","357","tests.customers.api","test_update_customer","","","","test_update_customer_invalid_inputs[invalid-email-missing-domain]","
-Verify that invalid customers updates are rejected by the API.
-
-This test ensures that:
-
-• Invalid update payloads return the correct error response
-• Error responses follow the expected schema
-• The original customers record in the database remains unchanged
-
-Test flow:
-    1. Create a valid customers
-    2. Attempt to update the customers with an invalid payload
-    3. Validate the returned error structure
-    4. Confirm the database record was not modified
-"
-"passed","Sat Sep 26 16:32:44 UTC 2026","Sat Sep 26 16:32:44 UTC 2026","564","tests.customers.api","test_get_customer","","","","test_get_customer_by_id","
-Verify that a customers can be retrieved by ID.
-
-Endpoint tested:
-    GET /customers/{id}
-
-Fixture responsibilities:
-    - POST /customers
-    - response validation (Pydantic)
-    - cleanup registration
-
-Test flow:
-    1. Create customers
-    2. Retrieve customers by ID
-    3. Validate response structure
-    4. Verify returned customers identity
-    5. Verify API data matches database
-"
-"passed","Sat Sep 26 16:32:37 UTC 2026","Sat Sep 26 16:32:37 UTC 2026","447","tests.customers.api","test_get_all_customers","","","","test_get_all_customers_list_not_empty_and_valid_schema","
+"passed","Sat Sep 26 16:38:13 UTC 2026","Sat Sep 26 16:38:13 UTC 2026","434","tests.customers.api","test_get_all_customers","","","","test_get_all_customers_list_not_empty_and_valid_schema","
 Smoke test for GET /customers endpoint.
 
 Validates that:
@@ -791,42 +591,7 @@ Test flow:
     3. Ensure response contains customers
     4. Validate structure of each customers
 "
-"passed","Sat Sep 26 16:32:35 UTC 2026","Sat Sep 26 16:32:35 UTC 2026","450","tests.customers.api","test_customer_filters","","","","test_customer_should_not_returned_when_filtered_outside_creation_time","
-Verify that a customers is NOT returned when filtering outside
-the creation timestamp window.
-
-Endpoint tested:
-    GET /customers?created_after=&created_before=
-
-Test flow:
-    1. Create a customers
-    2. Build a time window outside the creation timestamp
-    3. Query customers using the filter
-    4. Ensure the created customers is NOT returned
-"
-"passed","Sat Sep 26 16:32:33 UTC 2026","Sat Sep 26 16:32:34 UTC 2026","504","tests.customers.api","test_customer_deletion","","","","test_deleted_customer_not_in_created_after_filter[2]","
-Verify that a deleted customers does not appear in filtered
-GET /customers results.
-
-Endpoint tested:
-    GET /customers?created_after=&created_before=
-
-Test flow:
-    1. Create a customers
-    2. Delete the customers
-    3. Query customers using a time window that includes the creation time
-    4. Ensure the deleted customers is NOT returned
-
-Parameterized with different minute offsets to test consistency across varied filtering windows.
-
-        TIME WINDOW
-    ┌─────────────────┐
-    │                 │
-   09:59   10:00   10:02
-            ↑
-       customers created
-"
-"passed","Sat Sep 26 16:32:15 UTC 2026","Sat Sep 26 16:32:16 UTC 2026","576","tests.customers.api","test_create_customer","","","","test_create_customer_fail_for_existing_email","
+"passed","Sat Sep 26 16:37:50 UTC 2026","Sat Sep 26 16:37:51 UTC 2026","576","tests.customers.api","test_create_customer","","","","test_create_customer_fail_for_existing_email","
 Verify that customer creation rejects an email address that already exists.
 
 This test intentionally combines two different test-data flows:
@@ -874,4 +639,239 @@ Test flow:
 Cleanup:
     The original customer is owned by this test and is automatically
     registered for cleanup by create_valid_customer().
+"
+"passed","Sat Sep 26 16:38:19 UTC 2026","Sat Sep 26 16:38:20 UTC 2026","545","tests.customers.api","test_get_customer","","","","test_get_customer_by_id","
+Verify that a customers can be retrieved by ID.
+
+Endpoint tested:
+    GET /customers/{id}
+
+Fixture responsibilities:
+    - POST /customers
+    - response validation (Pydantic)
+    - cleanup registration
+
+Test flow:
+    1. Create customers
+    2. Retrieve customers by ID
+    3. Validate response structure
+    4. Verify returned customers identity
+    5. Verify API data matches database
+"
+"passed","Sat Sep 26 16:38:12 UTC 2026","Sat Sep 26 16:38:13 UTC 2026","1069","tests.customers.api","test_e2e_customer_lifecycle","","","","test_customer_full_lifecycle",""
+"passed","Sat Sep 26 16:38:13 UTC 2026","Sat Sep 26 16:38:16 UTC 2026","3262","tests.customers.api","test_get_all_customers","","","","test_get_all_customers_pagination_boundary","
+Verify pagination behavior for GET /customers using an isolated test dataset (no dependency on global DB state)..
+
+Validates that:
+    - Pagination retrieves multiple pages correctly
+    - No duplicate customers appear across pages
+    - All returned customers have valid structure
+
+Test flow:
+    1. Creates controlled dataset
+    2. Retrieve customers with small page size
+    3. Collect results across multiple pages
+    4. Ensure no duplicate IDs
+    5. Validate structure of each customers
+    6. Stops correctly (no infinite loop)
+"
+"passed","Sat Sep 26 16:37:50 UTC 2026","Sat Sep 26 16:37:50 UTC 2026","112","tests.customers.api","test_create_customer","","","","test_create_customer_email_field_validation[missing-local-part]","
+Verify that customer creation rejects invalid email values.
+
+This is an intentional negative test and therefore bypasses the
+valid-data test-data pipeline.
+
+The supplied payload is the test scenario itself:
+
+    Test
+      ↓
+    Raw API Client
+      ↓
+    POST /customers
+      ↓
+    WooCommerce
+      ↓
+    HTTP 400
+
+Test flow:
+    1. Send POST /customers with an invalid email payload.
+    2. Verify the expected HTTP 400 response.
+    3. Validate the error response against the error contract schema.
+
+The valid-data Factory/Builder/Provisioner pipeline is intentionally
+not used because this test must send invalid data.
+"
+"passed","Sat Sep 26 16:37:00 UTC 2026","Sat Sep 26 16:37:03 UTC 2026","2245","tests.customers.api","test_create_customer","","","","test_bulk_create_customers[5]","
+Verify that multiple valid customers can be created and subsequently
+retrieved consistently through both the API and database.
+
+This test focuses on the bulk-creation workflow and intentionally does
+not provide scenario-specific customer fields such as billing or
+shipping addresses.
+
+Generic valid customer data is generated by the test-data layer:
+
+    Test
+      ↓
+    create_valid_customer fixture
+      ↓
+    CustomerBuilder
+      ↓
+    CustomerFactory
+      ↓
+    CustomerProvisioner
+      ↓
+    CustomerHelper / CustomersApi
+      ↓
+    WooCommerce
+
+The CustomerFactory generates the generic valid customer data required
+for creation, including identity and address data.
+
+Address-specific scenarios are tested separately by TCID-004. Keeping
+those scenarios out of this bulk test ensures that each test has a
+focused responsibility.
+
+The create_valid_customer fixture is responsible for:
+    - building valid customer creation data
+    - provisioning the customer through the API
+    - validating the creation response
+    - registering the created customer for cleanup
+    - returning the created customer data
+
+The bulk utility is responsible for:
+    - calling create_fn() exactly ``qty`` times
+    - collecting the identifiers of created customers
+    - invoking validate_fn() for each created customer
+    - reporting validation failures
+
+Test flow:
+    1. Create ``qty`` valid customers through the test-data fixture.
+    2. Collect each customer's email as its validation identifier.
+    3. Retrieve each customer through the API.
+    4. Retrieve each customer from the database.
+    5. Verify that API and database data match.
+    6. Allow the ownership/cleanup mechanism to remove all customers
+       created by this test.
+
+Contract coverage:
+    The test is marked as CONTRACT because create_valid_customer performs
+    response validation using the customer response validation layer.
+"
+"passed","Sat Sep 26 16:38:10 UTC 2026","Sat Sep 26 16:38:11 UTC 2026","658","tests.customers.api","test_customer_filters","","","","test_list_customers_created_within_time_range_with_db_check[5]","
+Verify that a customers appears in results when filtering by a time
+window that includes the creation timestamp.
+
+Endpoint tested:
+    GET /customers?created_after=&created_before=
+
+Fixture responsibilities (`create_valid_customer`):
+    - POST /customers
+    - response validation (Pydantic)
+    - automatic cleanup registration
+
+Test flow:
+    1. Create a customers
+    2. Build a time window around the server creation timestamp
+    3. Retrieve customers using time filters
+    4. Ensure the created customers appears in the results
+    5. Validate returned customers
+    6. Verify API data matches database
+"
+"passed","Sat Sep 26 16:37:49 UTC 2026","Sat Sep 26 16:37:50 UTC 2026","442","tests.customers.api","test_create_customer","","","","test_create_customer_with_varied_addresses[germany-billing-italy-shipping]","
+Create customers with different billing and shipping addresses.
+
+Test-data setup is handled by the ``create_valid_customer`` fixture.
+The test provides only the scenario-specific billing and shipping
+data required for this test case.
+
+The fixture is responsible for:
+    - CustomerBuilder
+    - CustomerFactory
+    - CustomerProvisioner
+    - POST /customers
+    - creation response validation
+    - cleanup registration
+
+CustomerFactory remains responsible for generating the customer's
+generic identity data such as email, password, username, and
+top-level first/last name.
+
+Test flow:
+    1. Create a customer with the parameterized addresses.
+    2. Fetch the customer through the API.
+    3. Fetch the customer from the database.
+    4. Verify that API and database data match.
+
+Faker is intentionally not used here. Random test-data generation
+belongs to the CustomerFactory, while this test owns only the
+business scenario variations.
+"
+"passed","Sat Sep 26 16:36:58 UTC 2026","Sat Sep 26 16:36:59 UTC 2026","527","tests.customers.api","test_create_customer","","","","test_bulk_create_customers[1]","
+Verify that multiple valid customers can be created and subsequently
+retrieved consistently through both the API and database.
+
+This test focuses on the bulk-creation workflow and intentionally does
+not provide scenario-specific customer fields such as billing or
+shipping addresses.
+
+Generic valid customer data is generated by the test-data layer:
+
+    Test
+      ↓
+    create_valid_customer fixture
+      ↓
+    CustomerBuilder
+      ↓
+    CustomerFactory
+      ↓
+    CustomerProvisioner
+      ↓
+    CustomerHelper / CustomersApi
+      ↓
+    WooCommerce
+
+The CustomerFactory generates the generic valid customer data required
+for creation, including identity and address data.
+
+Address-specific scenarios are tested separately by TCID-004. Keeping
+those scenarios out of this bulk test ensures that each test has a
+focused responsibility.
+
+The create_valid_customer fixture is responsible for:
+    - building valid customer creation data
+    - provisioning the customer through the API
+    - validating the creation response
+    - registering the created customer for cleanup
+    - returning the created customer data
+
+The bulk utility is responsible for:
+    - calling create_fn() exactly ``qty`` times
+    - collecting the identifiers of created customers
+    - invoking validate_fn() for each created customer
+    - reporting validation failures
+
+Test flow:
+    1. Create ``qty`` valid customers through the test-data fixture.
+    2. Collect each customer's email as its validation identifier.
+    3. Retrieve each customer through the API.
+    4. Retrieve each customer from the database.
+    5. Verify that API and database data match.
+    6. Allow the ownership/cleanup mechanism to remove all customers
+       created by this test.
+
+Contract coverage:
+    The test is marked as CONTRACT because create_valid_customer performs
+    response validation using the customer response validation layer.
+"
+"passed","Sat Sep 26 16:38:20 UTC 2026","Sat Sep 26 16:38:20 UTC 2026","103","tests.customers.api","test_get_customer","","","","test_get_customer_not_found","
+Negative test for retrieving a non-existing customers.
+
+Endpoint tested:
+    GET /customers/{id}
+
+Test flow:
+    1. Request non-existing customers ID
+    2. Validate API returns correct error response
+    3. Validate error schema
 "

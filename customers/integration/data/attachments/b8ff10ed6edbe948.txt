@@ -1,0 +1,387 @@
+INFO     tests.customers.api.test_create_customer:test_create_customer.py:662 🛠 Creating a valid customer to establish the duplicate-email scenario.
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:176 ⚙️ Creating customers with payload keys: ['email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.246s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=115, email=testuser_kibshubpvj@supersqa.com
+DEBUG    EcommerceAPI.plugins.api.customers:customers.py:245 ℹ️ Registered customers with ID: 115 for cleanup.
+INFO     tests.customers.api.test_create_customer:test_create_customer.py:671 📧 Existing customer created: ID=115, email='testuser_kibshubpvj@supersqa.com'
+INFO     tests.customers.api.test_create_customer:test_create_customer.py:687 ⚠️ Attempting to create a duplicate customer using existing email: 'testuser_kibshubpvj@supersqa.com'
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/customers → Status code: 400 (completed in 0.102s)
+DEBUG    EcommerceAPI.src.clients.api_client:api_client.py:625 {
+                                                                 "code": "registration-error-email-exists",
+                                                                 "message": "An account is already registered with your email address. <a href=\"#\" class=\"showlogin\">Please log in.</a>",
+                                                                 "data": {
+                                                                   "status": 400
+                                                                 }
+                                                               }
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:404 ✅ Valid error response received (code=registration-error-email-exists status=400)
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:398 ⚙️ Calling 'List All Customers' via pagination utility
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:70 🧰 Starting paginated fetch for '/customers'
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:84 📦 Fetching /customers page 1 (attempt 1/3)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/customers?per_page=100&email=testuser_kibshubpvj%40supersqa.com&page=1 → Status code: 200 (completed in 0.108s)
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:111 📄 Pagination request OK: endpoint=/customers page=1 status=200
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:132 ➡️ Page 1 → 1 items
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:84 📦 Fetching /customers page 2 (attempt 1/3)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/customers?per_page=100&email=testuser_kibshubpvj%40supersqa.com&page=2 → Status code: 200 (completed in 0.105s)
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:111 📄 Pagination request OK: endpoint=/customers page=2 status=200
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:122 ⛔ Stop pagination (no more results at page 2)
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:123 📊 Total pages fetched: 1
+DEBUG    EcommerceAPI.src.customers.dao.customers_dao:customers_dao.py:66 ℹ️ Found customers for email 'testuser_kibshubpvj@supersqa.com': {'ID': 115, 'user_login': 'oliver.moore.8teuc9', 'user_pass': '***', 'user_nicename': 'oliver-moore-8teuc9', 'user_email': 'testuser_kibshubpvj@supersqa.com', 'user_url': '', 'user_registered': datetime.datetime(2026, 9, 26, 16, 37, 51), 'user_activation_key': '1790440671:$generic$YdiKtPMzFSsy02O6eMP295tZtLp8KsK75f5LLeRH', 'user_status': 0, 'display_name': 'oliver.moore.8teuc9'}
+DEBUG    EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:269 ⚙️ Validating existence of customers by email: testuser_kibshubpvj@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=115, email=testuser_kibshubpvj@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:140 ✅ Customer found in dataset: id=115 email=testuser_kibshubpvj@supersqa.com
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:277 ✅ Customer found in API response (id=115, email=testuser_kibshubpvj@supersqa.com)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:289 ✅ Customer matches database record (ID=115)
+INFO     tests.customers.api.test_create_customer:test_create_customer.py:741 ✅ Duplicate customer creation correctly rejected: {'email': 'testuser_kibshubpvj@supersqa.com', 'password': '***'} → registration-error-email-exists: An account is already registered with your email address. <a href="#" class="showlogin">Please log in.</a>
+INFO     EcommerceAPI.plugins.entities:entities.py:718 🔧 Starting teardown of created test resources...
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up customer(s)... (114 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 2
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/2?force=True → Status code: 200 (completed in 0.149s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 2
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 3
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/3?force=True → Status code: 200 (completed in 0.158s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 3
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 4
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/4?force=True → Status code: 200 (completed in 0.145s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 4
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 5
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/5?force=True → Status code: 200 (completed in 0.153s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 5
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 6
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/6?force=True → Status code: 200 (completed in 0.161s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 6
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 7
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/7?force=True → Status code: 200 (completed in 0.144s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 7
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 8
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/8?force=True → Status code: 200 (completed in 0.140s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 8
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 9
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/9?force=True → Status code: 200 (completed in 0.145s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 9
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 10
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/10?force=True → Status code: 200 (completed in 0.145s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 10
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 11
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/11?force=True → Status code: 200 (completed in 0.141s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 11
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 12
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/12?force=True → Status code: 200 (completed in 0.149s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 12
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 13
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/13?force=True → Status code: 200 (completed in 0.145s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 13
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 14
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/14?force=True → Status code: 200 (completed in 0.144s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 14
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 15
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/15?force=True → Status code: 200 (completed in 0.142s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 15
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 16
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/16?force=True → Status code: 200 (completed in 0.140s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 16
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 17
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/17?force=True → Status code: 200 (completed in 0.142s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 17
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 18
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/18?force=True → Status code: 200 (completed in 0.143s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 18
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 19
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/19?force=True → Status code: 200 (completed in 0.144s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 19
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 20
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/20?force=True → Status code: 200 (completed in 0.142s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 20
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 21
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/21?force=True → Status code: 200 (completed in 0.143s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 21
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 22
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/22?force=True → Status code: 200 (completed in 0.139s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 22
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 23
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/23?force=True → Status code: 200 (completed in 0.143s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 23
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 24
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/24?force=True → Status code: 200 (completed in 0.144s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 24
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 25
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/25?force=True → Status code: 200 (completed in 0.147s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 25
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 26
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/26?force=True → Status code: 200 (completed in 0.151s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 26
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 27
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/27?force=True → Status code: 200 (completed in 0.160s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 27
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 28
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/28?force=True → Status code: 200 (completed in 0.144s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 28
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 29
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/29?force=True → Status code: 200 (completed in 0.151s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 29
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 30
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/30?force=True → Status code: 200 (completed in 0.147s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 30
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 31
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/31?force=True → Status code: 200 (completed in 0.143s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 31
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 32
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/32?force=True → Status code: 200 (completed in 0.157s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 32
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 33
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/33?force=True → Status code: 200 (completed in 0.147s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 33
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 34
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/34?force=True → Status code: 200 (completed in 0.149s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 34
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 35
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/35?force=True → Status code: 200 (completed in 0.148s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 35
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 36
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/36?force=True → Status code: 200 (completed in 0.148s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 36
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 37
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/37?force=True → Status code: 200 (completed in 0.142s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 37
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 38
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/38?force=True → Status code: 200 (completed in 0.145s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 38
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 39
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/39?force=True → Status code: 200 (completed in 0.149s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 39
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 40
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/40?force=True → Status code: 200 (completed in 0.148s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 40
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 41
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/41?force=True → Status code: 200 (completed in 0.147s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 41
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 42
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/42?force=True → Status code: 200 (completed in 0.142s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 42
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 43
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/43?force=True → Status code: 200 (completed in 0.143s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 43
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 44
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/44?force=True → Status code: 200 (completed in 0.144s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 44
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 45
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/45?force=True → Status code: 200 (completed in 0.146s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 45
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 46
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/46?force=True → Status code: 200 (completed in 0.142s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 46
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 47
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/47?force=True → Status code: 200 (completed in 0.156s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 47
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 48
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/48?force=True → Status code: 200 (completed in 0.151s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 48
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 49
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/49?force=True → Status code: 200 (completed in 0.151s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 49
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 50
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/50?force=True → Status code: 200 (completed in 0.152s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 50
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 51
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/51?force=True → Status code: 200 (completed in 0.153s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 51
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 52
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/52?force=True → Status code: 200 (completed in 0.145s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 52
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 53
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/53?force=True → Status code: 200 (completed in 0.155s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 53
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 54
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/54?force=True → Status code: 200 (completed in 0.148s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 54
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 55
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/55?force=True → Status code: 200 (completed in 0.144s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 55
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 56
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/56?force=True → Status code: 200 (completed in 0.148s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 56
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 57
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/57?force=True → Status code: 200 (completed in 0.145s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 57
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 58
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/58?force=True → Status code: 200 (completed in 0.139s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 58
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 59
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/59?force=True → Status code: 200 (completed in 0.152s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 59
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 60
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/60?force=True → Status code: 200 (completed in 0.151s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 60
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 61
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/61?force=True → Status code: 200 (completed in 0.146s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 61
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 62
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/62?force=True → Status code: 200 (completed in 0.156s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 62
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 63
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/63?force=True → Status code: 200 (completed in 0.140s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 63
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 64
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/64?force=True → Status code: 200 (completed in 0.142s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 64
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 65
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/65?force=True → Status code: 200 (completed in 0.145s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 65
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 66
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/66?force=True → Status code: 200 (completed in 0.143s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 66
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 67
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/67?force=True → Status code: 200 (completed in 0.158s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 67
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 68
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/68?force=True → Status code: 200 (completed in 0.141s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 68
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 69
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/69?force=True → Status code: 200 (completed in 0.153s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 69
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 70
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/70?force=True → Status code: 200 (completed in 0.148s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 70
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 71
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/71?force=True → Status code: 200 (completed in 0.167s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 71
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 72
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/72?force=True → Status code: 200 (completed in 0.146s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 72
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 73
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/73?force=True → Status code: 200 (completed in 0.148s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 73
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 74
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/74?force=True → Status code: 200 (completed in 0.146s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 74
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 75
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/75?force=True → Status code: 200 (completed in 0.144s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 75
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 76
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/76?force=True → Status code: 200 (completed in 0.148s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 76
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 77
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/77?force=True → Status code: 200 (completed in 0.149s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 77
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 78
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/78?force=True → Status code: 200 (completed in 0.148s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 78
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 79
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/79?force=True → Status code: 200 (completed in 0.143s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 79
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 80
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/80?force=True → Status code: 200 (completed in 0.154s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 80
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 81
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/81?force=True → Status code: 200 (completed in 0.154s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 81
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 82
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/82?force=True → Status code: 200 (completed in 0.145s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 82
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 83
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/83?force=True → Status code: 200 (completed in 0.147s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 83
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 84
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/84?force=True → Status code: 200 (completed in 0.142s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 84
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 85
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/85?force=True → Status code: 200 (completed in 0.148s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 85
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 86
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/86?force=True → Status code: 200 (completed in 0.150s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 86
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 87
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/87?force=True → Status code: 200 (completed in 0.153s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 87
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 88
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/88?force=True → Status code: 200 (completed in 0.149s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 88
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 89
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/89?force=True → Status code: 200 (completed in 0.151s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 89
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 90
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/90?force=True → Status code: 200 (completed in 0.142s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 90
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 91
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/91?force=True → Status code: 200 (completed in 0.143s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 91
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 92
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/92?force=True → Status code: 200 (completed in 0.154s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 92
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 93
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/93?force=True → Status code: 200 (completed in 0.164s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 93
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 94
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/94?force=True → Status code: 200 (completed in 0.153s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 94
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 95
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/95?force=True → Status code: 200 (completed in 0.149s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 95
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 96
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/96?force=True → Status code: 200 (completed in 0.147s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 96
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 97
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/97?force=True → Status code: 200 (completed in 0.150s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 97
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 98
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/98?force=True → Status code: 200 (completed in 0.148s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 98
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 99
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/99?force=True → Status code: 200 (completed in 0.151s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 99
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 100
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/100?force=True → Status code: 200 (completed in 0.149s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 100
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 101
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/101?force=True → Status code: 200 (completed in 0.143s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 101
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 102
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/102?force=True → Status code: 200 (completed in 0.140s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 102
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 103
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/103?force=True → Status code: 200 (completed in 0.141s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 103
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 104
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/104?force=True → Status code: 200 (completed in 0.144s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 104
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 105
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/105?force=True → Status code: 200 (completed in 0.141s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 105
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 106
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/106?force=True → Status code: 200 (completed in 0.139s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 106
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 107
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/107?force=True → Status code: 200 (completed in 0.154s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 107
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 108
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/108?force=True → Status code: 200 (completed in 0.144s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 108
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 109
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/109?force=True → Status code: 200 (completed in 0.140s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 109
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 110
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/110?force=True → Status code: 200 (completed in 0.141s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 110
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 111
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/111?force=True → Status code: 200 (completed in 0.142s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 111
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 112
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/112?force=True → Status code: 200 (completed in 0.141s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 112
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 113
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/113?force=True → Status code: 200 (completed in 0.140s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 113
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 114
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/114?force=True → Status code: 200 (completed in 0.137s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 114
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 115
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/115?force=True → Status code: 200 (completed in 0.143s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 115
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for customer(s).
+INFO     EcommerceAPI.plugins.entities:entities.py:758 
+
+🧹 ====================================== CLEANUP SUMMARY ======================================
+INFO     EcommerceAPI.plugins.entities:entities.py:761 📊 Created during test run: {'customers': 114}
+INFO     EcommerceAPI.plugins.entities:entities.py:762 🧾 Cleanup total summary:
+INFO     EcommerceAPI.plugins.entities:entities.py:764    • customer: 114 deleted (114 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:765 ✅ All test data cleanup completed.
