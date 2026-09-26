@@ -1,45 +1,5 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Sat Sep 26 16:37:04 UTC 2026","Sat Sep 26 16:37:04 UTC 2026","231","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_discount_type[fixed-cart]","
-Verify that the coupon creation flow accepts the supported WooCommerce
-discount types.
-"
-"passed","Sat Sep 26 16:37:06 UTC 2026","Sat Sep 26 16:37:06 UTC 2026","226","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_email_restrictions","
-Verify that a coupon accepts email restrictions and returns them via the API.
-"
-"passed","Sat Sep 26 16:37:01 UTC 2026","Sat Sep 26 16:37:02 UTC 2026","246","tests.coupons.api","test_create_coupons","","","","test_bulk_create_coupons[1]","
-Create multiple coupons and verify each coupon exists in the API
-and matches its database record.
-
-The fixture owns:
-    - POST /coupons
-    - HTTP 201 validation
-    - Pydantic response validation
-    - cleanup registration
-
-The test owns the API/DB integration validation.
-"
-"passed","Sat Sep 26 16:37:10 UTC 2026","Sat Sep 26 16:37:10 UTC 2026","231","tests.coupons.api","test_get_coupon","","","","test_get_coupon_with_populated_fields","
-Verify that GET by ID returns the populated coupon fields supplied at creation.
-"
-"passed","Sat Sep 26 16:37:04 UTC 2026","Sat Sep 26 16:37:05 UTC 2026","239","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_restrictions","
-Verify that common coupon restriction fields are accepted and persisted.
-"
-"passed","Sat Sep 26 16:37:02 UTC 2026","Sat Sep 26 16:37:04 UTC 2026","1180","tests.coupons.api","test_create_coupons","","","","test_bulk_create_coupons[5]","
-Create multiple coupons and verify each coupon exists in the API
-and matches its database record.
-
-The fixture owns:
-    - POST /coupons
-    - HTTP 201 validation
-    - Pydantic response validation
-    - cleanup registration
-
-The test owns the API/DB integration validation.
-"
-"passed","Sat Sep 26 16:37:05 UTC 2026","Sat Sep 26 16:37:05 UTC 2026","233","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_amount[minimum-decimal]","
-Verify that valid coupon amounts are accepted and persisted correctly.
-"
-"passed","Sat Sep 26 16:37:09 UTC 2026","Sat Sep 26 16:37:09 UTC 2026","231","tests.coupons.api","test_get_coupon","","","","test_get_coupon_by_id","
+"passed","Sat Sep 26 20:09:33 UTC 2026","Sat Sep 26 20:09:33 UTC 2026","148","tests.coupons.api","test_get_coupon","","","","test_get_coupon_by_id","
 Verify that a coupon can be retrieved by ID.
 
 Endpoint tested:
@@ -57,16 +17,7 @@ Test flow:
     3. Validate response status and structure
     4. Verify returned coupon identity
 "
-"passed","Sat Sep 26 16:37:06 UTC 2026","Sat Sep 26 16:37:06 UTC 2026","228","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_usage_limits","
-Verify that coupon usage-limit fields are accepted and persisted.
-"
-"passed","Sat Sep 26 16:37:05 UTC 2026","Sat Sep 26 16:37:05 UTC 2026","230","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_amount[integer]","
-Verify that valid coupon amounts are accepted and persisted correctly.
-"
-"passed","Sat Sep 26 16:37:09 UTC 2026","Sat Sep 26 16:37:10 UTC 2026","256","tests.coupons.api","test_get_coupon","","","","test_get_coupon_by_id_matches_db","
-Verify that a coupon retrieved through the API matches its database state.
-"
-"passed","Sat Sep 26 16:37:02 UTC 2026","Sat Sep 26 16:37:02 UTC 2026","707","tests.coupons.api","test_create_coupons","","","","test_bulk_create_coupons[3]","
+"passed","Sat Sep 26 20:09:28 UTC 2026","Sat Sep 26 20:09:29 UTC 2026","778","tests.coupons.api","test_create_coupons","","","","test_bulk_create_coupons[5]","
 Create multiple coupons and verify each coupon exists in the API
 and matches its database record.
 
@@ -78,7 +29,37 @@ The fixture owns:
 
 The test owns the API/DB integration validation.
 "
-"passed","Sat Sep 26 16:37:01 UTC 2026","Sat Sep 26 16:37:01 UTC 2026","268","tests.coupons.api","test_create_coupons","","","","test_create_single_coupon","
+"passed","Sat Sep 26 20:09:29 UTC 2026","Sat Sep 26 20:09:30 UTC 2026","160","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_restrictions","
+Verify that common coupon restriction fields are accepted and persisted.
+"
+"passed","Sat Sep 26 20:09:31 UTC 2026","Sat Sep 26 20:09:31 UTC 2026","147","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_email_restrictions","
+Verify that a coupon accepts email restrictions and returns them via the API.
+"
+"passed","Sat Sep 26 20:09:30 UTC 2026","Sat Sep 26 20:09:30 UTC 2026","154","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_amount[decimal]","
+Verify that valid coupon amounts are accepted and persisted correctly.
+"
+"passed","Sat Sep 26 20:09:29 UTC 2026","Sat Sep 26 20:09:29 UTC 2026","160","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_discount_type[fixed-cart]","
+Verify that the coupon creation flow accepts the supported WooCommerce
+discount types.
+"
+"passed","Sat Sep 26 20:09:30 UTC 2026","Sat Sep 26 20:09:30 UTC 2026","165","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_amount[minimum-decimal]","
+Verify that valid coupon amounts are accepted and persisted correctly.
+"
+"passed","Sat Sep 26 20:09:29 UTC 2026","Sat Sep 26 20:09:29 UTC 2026","147","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_discount_type[fixed-product]","
+Verify that the coupon creation flow accepts the supported WooCommerce
+discount types.
+"
+"passed","Sat Sep 26 20:09:30 UTC 2026","Sat Sep 26 20:09:30 UTC 2026","147","tests.coupons.api","test_create_coupons","","","","test_create_coupon_fails_for_existing_code","
+Negative test: creating a second coupon with an existing coupon code
+should be rejected by WooCommerce.
+"
+"passed","Sat Sep 26 20:09:30 UTC 2026","Sat Sep 26 20:09:31 UTC 2026","154","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_usage_limits","
+Verify that coupon usage-limit fields are accepted and persisted.
+"
+"passed","Sat Sep 26 20:09:30 UTC 2026","Sat Sep 26 20:09:30 UTC 2026","150","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_amount[large-integer]","
+Verify that valid coupon amounts are accepted and persisted correctly.
+"
+"passed","Sat Sep 26 20:09:27 UTC 2026","Sat Sep 26 20:09:28 UTC 2026","185","tests.coupons.api","test_create_coupons","","","","test_create_single_coupon","
 Create a coupon using the minimum valid payload.
 
 The `create_valid_coupon` fixture already performs:
@@ -99,28 +80,47 @@ API/DB validation is intentionally explicit in the test:
 the helper fetches API data, the DAO fetches database data, and the
 validator compares the already-fetched data.
 "
-"passed","Sat Sep 26 16:37:05 UTC 2026","Sat Sep 26 16:37:06 UTC 2026","229","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_amount[decimal]","
-Verify that valid coupon amounts are accepted and persisted correctly.
+"passed","Sat Sep 26 20:09:33 UTC 2026","Sat Sep 26 20:09:33 UTC 2026","187","tests.coupons.api","test_get_coupon","","","","test_get_coupon_by_id_matches_db","
+Verify that a coupon retrieved through the API matches its database state.
 "
-"passed","Sat Sep 26 16:37:04 UTC 2026","Sat Sep 26 16:37:04 UTC 2026","238","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_discount_type[percent]","
-Verify that the coupon creation flow accepts the supported WooCommerce
-discount types.
-"
-"passed","Sat Sep 26 16:37:06 UTC 2026","Sat Sep 26 16:37:06 UTC 2026","227","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_expiration_date","
+"passed","Sat Sep 26 20:09:31 UTC 2026","Sat Sep 26 20:09:31 UTC 2026","149","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_expiration_date","
 Verify that a coupon accepts a valid future expiration date.
 "
-"passed","Sat Sep 26 16:37:04 UTC 2026","Sat Sep 26 16:37:04 UTC 2026","233","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_discount_type[fixed-product]","
+"passed","Sat Sep 26 20:09:33 UTC 2026","Sat Sep 26 20:09:33 UTC 2026","156","tests.coupons.api","test_get_coupon","","","","test_get_coupon_with_populated_fields","
+Verify that GET by ID returns the populated coupon fields supplied at creation.
+"
+"passed","Sat Sep 26 20:09:28 UTC 2026","Sat Sep 26 20:09:28 UTC 2026","158","tests.coupons.api","test_create_coupons","","","","test_bulk_create_coupons[1]","
+Create multiple coupons and verify each coupon exists in the API
+and matches its database record.
+
+The fixture owns:
+    - POST /coupons
+    - HTTP 201 validation
+    - Pydantic response validation
+    - cleanup registration
+
+The test owns the API/DB integration validation.
+"
+"passed","Sat Sep 26 20:09:30 UTC 2026","Sat Sep 26 20:09:30 UTC 2026","155","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_amount[integer]","
+Verify that valid coupon amounts are accepted and persisted correctly.
+"
+"passed","Sat Sep 26 20:09:29 UTC 2026","Sat Sep 26 20:09:29 UTC 2026","168","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_discount_type[percent]","
 Verify that the coupon creation flow accepts the supported WooCommerce
 discount types.
 "
-"passed","Sat Sep 26 16:37:06 UTC 2026","Sat Sep 26 16:37:06 UTC 2026","237","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_amount[large-integer]","
-Verify that valid coupon amounts are accepted and persisted correctly.
+"passed","Sat Sep 26 20:09:28 UTC 2026","Sat Sep 26 20:09:28 UTC 2026","472","tests.coupons.api","test_create_coupons","","","","test_bulk_create_coupons[3]","
+Create multiple coupons and verify each coupon exists in the API
+and matches its database record.
+
+The fixture owns:
+    - POST /coupons
+    - HTTP 201 validation
+    - Pydantic response validation
+    - cleanup registration
+
+The test owns the API/DB integration validation.
 "
-"passed","Sat Sep 26 16:37:05 UTC 2026","Sat Sep 26 16:37:05 UTC 2026","220","tests.coupons.api","test_create_coupons","","","","test_create_coupon_fails_for_existing_code","
-Negative test: creating a second coupon with an existing coupon code
-should be rejected by WooCommerce.
-"
-"passed","Sat Sep 26 16:37:10 UTC 2026","Sat Sep 26 16:37:10 UTC 2026","116","tests.coupons.api","test_get_coupon","","","","test_get_nonexistent_coupon","
+"passed","Sat Sep 26 20:09:33 UTC 2026","Sat Sep 26 20:09:33 UTC 2026","65","tests.coupons.api","test_get_coupon","","","","test_get_nonexistent_coupon","
 Verify that requesting a coupon ID that does not exist returns 404
 with a valid WooCommerce error response.
 "
