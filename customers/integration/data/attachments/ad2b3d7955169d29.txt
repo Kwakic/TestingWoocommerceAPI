@@ -1,0 +1,26 @@
+INFO     tests.customers.api.test_update_customer:test_update_customer.py:187 🛠 Creating a baseline customers for update test
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:162 ⚙️ Creating customer with payload keys: ['auto_generate', 'email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['auto_generate', 'email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.413s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=43, email=testuser_djapbnqylw@supersqa.com
+DEBUG    EcommerceAPI.plugins.api.customers:customers.py:248 ℹ️ Registered customers with ID: 43 for cleanup.
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:162 ⚙️ Creating customer with payload keys: ['auto_generate', 'email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['auto_generate', 'email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.521s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=44, email=testuser_eocpmwsymq@supersqa.com
+DEBUG    EcommerceAPI.plugins.api.customers:customers.py:248 ℹ️ Registered customers with ID: 44 for cleanup.
+INFO     tests.customers.api.test_update_customer:test_update_customer.py:205 🔁 Using duplicate email: testuser_eocpmwsymq@supersqa.com
+INFO     tests.customers.api.test_update_customer:test_update_customer.py:207 🚫 Attempting invalid update for customer_id=43 payload={'email': 'testuser_eocpmwsymq@supersqa.com'}
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:244 🟢 Updating customers 43 with payload keys: ['email']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:158 📡 PUT /customers/43 payload_keys=['email']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ PUT /wp-json/wc/v3/customers/43 → Status code: 400 (completed in 0.084s)
+DEBUG    EcommerceAPI.src.clients.api_client:api_client.py:625 {
+                                                                 "code": "woocommerce_rest_customer_invalid_email",
+                                                                 "message": "Email address is invalid.",
+                                                                 "data": {
+                                                                   "status": 400
+                                                                 }
+                                                               }
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:404 ✅ Valid error response received (code=woocommerce_rest_customer_invalid_email status=400)
+DEBUG    EcommerceAPI.src.customers.dao.customers_dao:customers_dao.py:66 ℹ️ Found customers for email 'testuser_djapbnqylw@supersqa.com': {'ID': 43, 'user_login': 'maria.anderson.v4dpyf', 'user_pass': '***', 'user_nicename': 'maria-anderson-v4dpyf', 'user_email': 'testuser_djapbnqylw@supersqa.com', 'user_url': '', 'user_registered': datetime.datetime(2026, 9, 26, 20, 29, 38), 'user_activation_key': '1790454578:$generic$Pu0pbpdwnkTA5YY-PKqDr7Fl0Qh67chddhdIS1DO', 'user_status': 0, 'display_name': 'maria.anderson.v4dpyf'}
+INFO     tests.customers.api.test_update_customer:test_update_customer.py:257 ✅ Database record remains unchanged after rejected update (customer_id=43)
