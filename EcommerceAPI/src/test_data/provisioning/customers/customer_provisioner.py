@@ -44,6 +44,7 @@ class CustomerProvisioner:
 
     The provisioner is the bridge between the in-memory test-data layer and
     the real system under test.
+    Receives already-prepared data and sends it through CustomersHelper
 
     It receives data produced by a CustomerFactory/CustomerBuilder and delegates
     the actual creation operation to CustomersHelper. It intentionally returns

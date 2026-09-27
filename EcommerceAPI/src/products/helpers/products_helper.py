@@ -1,50 +1,60 @@
-"""
-ProductsHelper — Domain-level orchestration layer for Products (workflow).
+"""ProductsHelper — domain-level orchestration layer for Products.
+
+ProductsHelper sits between the Product test/domain layer and ProductsApi.
+It provides business-focused operations while keeping transport details and
+validation responsibilities in their dedicated layers.
+
+Architecture
+------------
+Test / Fixture
+    ↓
+Factory / Builder / Provisioner
+    ↓
+ProductsHelper
+    ↓
+ProductsApi
+    ↓
+WooCommerce
 
 Responsibilities
 ----------------
-✔ Build request payloads
-✔ Delegate HTTP calls to ProductsApi (no direct HTTP usage)
-✔ Handle happy-path and expected negative flows
-✔ Delegate validation to validator layer
+- Orchestrate Product operations through ProductsApi.
+- Prepare and normalize request arguments required by the API operation.
+- Support both successful and expected negative API flows.
+- Expose parsed JSON by default or the framework HttpResponse when requested.
+- Delegate schema/domain validation to the appropriate validator layer.
+- Provide Product-specific query and pagination behavior.
 
-Return Behavior
----------------
-Helper methods support two return modes:
-
-1. Default mode (return_http_response=False):
-   → Returns parsed JSON (dict or list)
-   → Used for most tests (clean, simple, business-focused)
-
-2. Response mode (return_http_response=True):
-   → Returns HttpResponse object
-   → Used when access to transport data is required:
-       - status_code
-       - headers
-       - elapsed time
-       - request/response debugging
-
-Design Principles
------------------
-✔ Helper abstracts transport layer for most tests
-✔ Keeps tests readable and business-focused
-✔ Allows opt-in access to full HTTP response when needed
-✔ Supports both positive and negative scenarios
-
-Non-Responsibilities
+Non-responsibilities
 --------------------
-✘ No raw HTTP calls (handled by APIClient)
-✘ No schema validation logic (delegated to validators)
-✘ No business validators
-✘ No database access
-✘ No pytest fixtures
+- Generate test data.
+- Decide scenario-specific Product values.
+- Build Product creation defaults.
+- Build partial Product state for updates.
+- Register resource ownership or perform cleanup.
+- Use pytest fixtures.
+- Access the database directly.
+- Perform schema validation inside the Helper.
+
+Test-data generation belongs to ProductFactory and ProductBuilder. Scenario-
+specific update state belongs to ProductStateBuilder. System-boundary
+provisioning belongs to ProductProvisioner and ProductStateProvisioner.
+
+Return behavior
+---------------
+Helper methods that expose ``return_http_response`` support two modes:
+
+1. Default mode (``False``): return parsed JSON for clean, business-focused
+   tests.
+2. Response mode (``True``): return ``HttpResponse`` when transport-level
+   information such as status code, headers, elapsed time, or debugging data
+   is required.
 """
 
 from __future__ import annotations
 
 import logging
-import random
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from EcommerceAPI.src.utils.exceptions import (
     UnexpectedStatusCodeError,
@@ -59,19 +69,30 @@ logger = logging.getLogger(__name__)
 
 
 class ProductsHelper(object):
-    """
-    Domain-level orchestration layer for Products.
+    """Domain-level orchestration layer for Product operations.
 
-    Provides clean, business-focused API for product operations
-    while delegating transport and validation concerns to specialized layers.
+    ProductsHelper provides the business-facing operations used by tests and
+    provisioning components while delegating HTTP transport to ProductsApi.
+
+    The Helper intentionally does not generate Product test data. A Product
+    payload should already have been prepared by ProductFactory/ProductBuilder
+    when creating a resource, or by ProductStateBuilder when updating an
+    existing resource.
+
+    The Helper therefore remains reusable across fixtures, provisioning flows,
+    and direct API-oriented tests without becoming responsible for test-data
+    lifecycle or pytest concerns.
     """
 
     ENDPOINT = "products"
 
     def __init__(self, products_api: ProductsApi):
-        """
+        """Initialize the helper with the Product API layer.
+
         Args:
-            products_api: Domain API client (wraps APIClient)
+            products_api:
+                Product API client responsible for HTTP transport and endpoint
+                interaction. The Helper does not create the API client itself.
         """
         self.products_api = products_api
 
@@ -284,66 +305,77 @@ class ProductsHelper(object):
 
     def create_product(
         self,
-        name: Optional[str] = None,
-        description: Optional[str] = None,
-        price: Optional[float] = None,
-        sku: Optional[str] = None,
-        status: str = "publish",
+        payload: Optional[Dict[str, Any]] = None,
         return_http_response: bool = False,
         **kwargs,
     ) -> Dict[str, Any] | HttpResponse:
-        """
-        Create a product via ProductsApi.
+        """Create a Product using already-prepared creation data.
+
+        Product test-data generation deliberately happens outside the Helper.
+        The payload normally comes from ProductFactory/ProductBuilder and is
+        passed here by ProductProvisioner. ``kwargs`` remains supported as a
+        convenience for direct API-oriented tests and backward-compatible
+        callers.
 
         Behavior:
-        - Supports positive + negative testing
-        - On success → return parsed JSON dict
-        - On expected failure:
-            - return parsed error JSON (if available)
-            - otherwise re-raise original exception
+            - Success + default mode → parsed Product JSON.
+            - Success + response mode → ``HttpResponse``.
+            - Expected API failure → parsed error JSON when available, or the
+              original framework exception when no response body is available.
 
         Args:
-            name: Optional product name
-            description: Optional description
-            price: Optional price
-            sku: Optional SKU
-            status: Product status (default: "publish")
-            return_http_response:  - False (default) → returns parsed JSON (dict)
-                              - True → returns HttpResponse (status_code, headers, elapsed, etc.)
-            **kwargs: Additional payload fields
+            payload:
+                Prepared Product creation payload. It is not generated or
+                enriched by this Helper.
+            return_http_response:
+                When ``False`` (default), return parsed JSON. When ``True``,
+                return the framework ``HttpResponse``.
+            **kwargs:
+                Additional Product fields. These are merged into ``payload``
+                and are primarily useful for direct/simple API operations.
 
         Returns:
             Dict[str, Any] | HttpResponse:
-                - dict → default mode (parsed JSON)
-                - HttpResponse → if return_http_response=True
+                Parsed Product JSON by default, or the HTTP response when
+                ``return_http_response=True``.
 
         Raises:
-            UnexpectedStatusCodeError, SchemaValidationError: Re-raised if no parsed error body is available.
+            UnexpectedStatusCodeError:
+                Re-raised when an expected error response cannot be returned
+                as parsed JSON or an ``HttpResponse``.
+            SchemaValidationError:
+                Re-raised when no usable error response is available.
+
+        Notes:
+            This method does not register cleanup. Resource ownership belongs
+            to the fixture/lifecycle layer.
         """
-        payload: Dict[str, Any] = {}
-        if name is not None:
-            payload["name"] = name
-        if description is not None:
-            payload["description"] = description
-        if price is not None:
-            payload["price"] = price
-        if sku is not None:
-            payload["sku"] = sku
+        final_payload: Dict[str, Any] = {}
 
-        payload["status"] = status
-        payload.update(kwargs)
+        if payload:
+            final_payload.update(payload)
 
-        logger.debug("⚙️ Creating product with payload keys: %r", list(payload.keys()))
+        final_payload.update(kwargs)
+
+        logger.debug(
+            "⚙️ Creating product with payload keys: %r",
+            list(final_payload.keys()),
+        )
 
         try:
-            http_response = self.products_api.create_product(payload=payload)
+            http_response = self.products_api.create_product(payload=final_payload)
 
             if return_http_response:
                 return http_response
 
             return http_response.json
+
         except (UnexpectedStatusCodeError, SchemaValidationError) as e:
-            logger.warning("⚠️ Product creation raised %s: %s", type(e).__name__, e)
+            logger.warning(
+                "⚠️ Product creation raised %s: %s",
+                type(e).__name__,
+                e,
+            )
 
             response_json = getattr(e, "response_json", None)
 
@@ -376,14 +408,37 @@ class ProductsHelper(object):
         return_http_response: bool = False,
         **kwargs,
     ) -> Dict[str, Any] | HttpResponse:
-        """
-        Update product fields.
+        """Update an existing Product with prepared partial state.
 
-        Supports:
-        - payload: for full/complex updates
-        - return_http_response:  - False (default) → returns parsed JSON (dict)
-                            - True → returns HttpResponse (status_code, headers, elapsed, etc.)
-        - kwargs: for simple updates
+        The update payload is intentionally treated as state data: only fields
+        supplied by the caller are sent to ProductsApi. ProductStateBuilder is
+        responsible for defining scenario-specific state; this Helper only
+        orchestrates the update operation.
+
+        Args:
+            product_id:
+                WooCommerce Product ID of the resource to update.
+            payload:
+                Prepared partial Product state.
+            return_http_response:
+                When ``False`` (default), return parsed JSON. When ``True``,
+                return ``HttpResponse``.
+            **kwargs:
+                Additional update fields for simple/direct API calls.
+
+        Returns:
+            Dict[str, Any] | HttpResponse:
+                Updated Product JSON by default, or the HTTP response when
+                ``return_http_response=True``.
+
+        Raises:
+            UnexpectedStatusCodeError, SchemaValidationError:
+                Re-raised when no usable response body is available.
+
+        Notes:
+            Response validation and resource lifecycle remain outside the
+            Helper. ProductStateProvisioner returns this response to its
+            caller so the setup/fixture layer can apply its contract.
         """
         final_payload: Dict[str, Any] = {}
 
@@ -400,7 +455,8 @@ class ProductsHelper(object):
 
         try:
             http_response = self.products_api.update_product(
-                product_id=product_id, payload=final_payload
+                product_id=product_id,
+                payload=final_payload,
             )
 
             if return_http_response:
@@ -409,7 +465,11 @@ class ProductsHelper(object):
             return http_response.json
 
         except (UnexpectedStatusCodeError, SchemaValidationError) as e:
-            logger.warning("⚠️ Product update raised %s: %s", type(e).__name__, e)
+            logger.warning(
+                "⚠️ Product update raised %s: %s",
+                type(e).__name__,
+                e,
+            )
 
             response_json = getattr(e, "response_json", None)
             response = getattr(e, "response", None)
@@ -444,25 +504,3 @@ class ProductsHelper(object):
             return http_response
 
         return http_response.json
-
-    # -------- UTILITY HELPERS --------
-
-    @staticmethod
-    def generate_sale_price(
-        regular_price: float, min_discount: float = 5.0, max_discount: float = 50.0
-    ) -> Tuple[str, float]:
-        """
-        Generates a valid sale price that is less than the regular price.
-
-        Args:
-            regular_price (float): Base price
-            min_discount (float): Minimum discount percentage
-            max_discount (float): Maximum discount percentage
-
-        Returns:
-            Tuple[sale_price_str, discount_percentage]: Sale price and discount %
-        """
-        discount_percentage = random.uniform(min_discount, max_discount)
-        discount_amount = regular_price * (discount_percentage / 100.0)
-        sale_price_value = regular_price - discount_amount
-        return str(round(sale_price_value, 2)), discount_percentage

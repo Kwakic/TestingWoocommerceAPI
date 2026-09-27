@@ -35,6 +35,7 @@ pytestmark = [
 ]
 
 
+@pytest.mark.xfail(reason="Test-Data feature is not implemented yet for UI")
 def test_customer_can_save_shipping_address(
     no_address_customer_page: Page,
     ui_base_url: str,
@@ -107,6 +108,7 @@ def test_customer_can_save_shipping_address(
     )
 
 
+@pytest.mark.xfail(reason="Test-Data feature is not implemented yet for UI")
 def test_customer_can_modify_shipping_address(
     no_address_customer_page: Page,
     ui_base_url: str,

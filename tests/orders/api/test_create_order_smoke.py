@@ -7,7 +7,7 @@
 #
 # # Get a product from DB (We have a helper ‘product.dao’ that will return a random product ID.)
 # @pytest.fixture(scope='function')
-# def my_orders_smoke_setup(shared_api_resources):  # Inject test_data for cleanup support
+# def my_orders_smoke_setup(shared_api_resources):  # Inject test_data_infrastructure for cleanup support
 #     product_dao = ProductsDAO()
 #     rand_product = product_dao.get_random_product_from_db(1)
 #     product_id = rand_product[0]['ID']
@@ -19,7 +19,7 @@
 #         'product_id': product_id,
 #         'order_helper': order_helper,
 #         'customer_helper': customer_helper,
-#         'test_data': shared_api_resources
+#         'test_data_infrastructure': shared_api_resources
 #     }
 #
 #     return info
