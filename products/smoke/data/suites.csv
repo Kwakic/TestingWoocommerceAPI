@@ -1,5 +1,23 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Sat Sep 26 21:09:52 UTC 2026","Sat Sep 26 21:09:52 UTC 2026","384","tests.products.api","test_create_products","","","","test_create_single_simple_product","
+"passed","Sun Sep 27 15:43:39 UTC 2026","Sun Sep 27 15:43:39 UTC 2026","226","tests.products.api","test_get_products","","","","test_get_product_by_id","
+Verify that a Product can be retrieved successfully by ID.
+
+Endpoint tested:
+    GET /products/{id}
+
+Fixture responsibilities (``create_valid_product``):
+    - POST /products
+    - response validation (Pydantic)
+    - automatic cleanup registration
+
+Test flow:
+    1. Create a valid Product
+    2. Retrieve the Product by ID
+    3. Validate HTTP transport status
+    4. Validate the Product response structure
+    5. Verify the returned Product identity
+"
+"passed","Sun Sep 27 15:43:39 UTC 2026","Sun Sep 27 15:43:39 UTC 2026","245","tests.products.api","test_create_products","","","","test_create_single_simple_product","
 Create a simple product using the minimum valid payload.
 
 The fixture `create_valid_product` already performs:
@@ -14,7 +32,4 @@ Test flow:
     1. Create a simple product
     2. Fetch product via API
     3. Verify API data matches database record
-"
-"passed","Sat Sep 26 21:09:52 UTC 2026","Sat Sep 26 21:09:53 UTC 2026","364","tests.products.api","test_get_products","","","","test_get_product_by_id","
-Verify that a product can be retrieved successfully by ID.
 "
