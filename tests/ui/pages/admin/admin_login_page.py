@@ -70,32 +70,9 @@ class AdminLoginPage:
         self.username_input.fill(username)
         self.password_input.fill(password)
 
-        # Click the login button and observe the WordPress authentication response.
-        #
-        # Keep the response predicate tolerant of query parameters and use
-        # no_wait_after so the browser-specific navigation handling remains
-        # under our control. This mirrors the robust customer-login flow and
-        # avoids Firefox timing out while the native form navigation is handled.
-        with self.page.expect_response(
-            lambda r: (r.request.method == "POST" and "wp-login.php" in r.url)
-        ) as response_info:
-            self.login_button.click(no_wait_after=True)
-
-        login_response = response_info.value
-
-        if login_response.status not in (200, 302):
-            raise AssertionError(
-                f"Administrator login request failed with HTTP {login_response.status}."
-            )
-
-        # WordPress normally redirects a successful login to wp-admin.
-        redirect_url = login_response.headers.get("location")
-
-        if redirect_url:
-            self.page.goto(
-                urljoin(self.page.url, redirect_url),
-                wait_until="domcontentloaded",
-            )
+        # Submit the native WordPress login form and let Playwright handle
+        # the resulting navigation.
+        self.login_button.click()
 
         self.should_be_authenticated()
 
