@@ -1,40 +1,53 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Sun Sep 27 15:50:16 UTC 2026","Sun Sep 27 15:50:17 UTC 2026","263","tests.coupons.api","test_create_coupons","","","","test_create_single_coupon","
-Create a coupon using the minimum valid payload.
-
-The `create_valid_coupon` fixture already performs:
-
-    - POST /coupons
-    - HTTP status code validation (201)
-    - CouponModel/Pydantic response validation
-    - Cleanup registration
-
-Test flow:
-
-    1. Create a valid coupon
-    2. Verify the created coupon is persisted correctly
-       and matches the database record
-    3. Log completion of the full validation flow
-
-API/DB validation is intentionally explicit in the test:
-the helper fetches API data, the DAO fetches database data, and the
-validator compares the already-fetched data.
-"
-"passed","Sun Sep 27 15:50:17 UTC 2026","Sun Sep 27 15:50:17 UTC 2026","243","tests.coupons.api","test_get_coupon","","","","test_get_coupon_by_id","
+"passed","Sun Sep 27 19:25:35 UTC 2026","Sun Sep 27 19:25:35 UTC 2026","218","tests.coupons.api","test_get_coupon","","","","test_get_coupon_by_id","
 Verify that a coupon can be retrieved by ID.
 
 Endpoint tested:
     GET /coupons/{id}
 
-Fixture responsibilities:
+Fixture responsibilities (``create_valid_coupon``):
+    - create valid Coupon test data through the Builder / Factory path
+    - POST /coupons through the Provisioner / Helper path
+    - validate the creation response
+    - register the Coupon for automatic cleanup
+
+Test flow:
+    1. Create a valid Coupon
+    2. Retrieve the Coupon by ID
+    3. Validate the GET HTTP status
+    4. Validate the Coupon response structure
+    5. Verify the returned Coupon identity
+"
+"passed","Sun Sep 27 19:25:34 UTC 2026","Sun Sep 27 19:25:34 UTC 2026","254","tests.coupons.api","test_create_coupons","","","","test_create_single_coupon","
+Create a Coupon using the minimum scenario-specific input.
+
+The test does not build or provision the Coupon directly. The
+`create_valid_coupon` fixture owns the valid-data pipeline:
+
+    create_valid_coupon
+        ↓
+    CouponBuilder
+        ↓
+    CouponFactory
+        ↓
+    CouponProvisioner
+        ↓
+    CouponsHelper / CouponsApi
+        ↓
+    WooCommerce
+
+The fixture also owns:
     - POST /coupons
-    - response validation (Pydantic)
+    - HTTP 201 validation
+    - Coupon response validation
     - cleanup registration
 
 Test flow:
+    1. Create a valid Coupon through the standard fixture.
+    2. Retrieve the Coupon through the API.
+    3. Retrieve the Coupon from the database.
+    4. Verify that API and database data match.
 
-    1. Create a valid coupon
-    2. Retrieve the coupon by ID
-    3. Validate response status and structure
-    4. Verify returned coupon identity
+API/DB validation remains explicit in the test because it is the
+purpose of this integration scenario.
 "
