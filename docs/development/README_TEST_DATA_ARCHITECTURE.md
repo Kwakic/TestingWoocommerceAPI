@@ -261,9 +261,9 @@ Fixture → Builder → Factory → Provisioner → Helper/API
 ---
 # 🔄 The Core Creation Flow
 
-For a customer, the fundamental creation flow can be understood as three
-major responsibilities: data preparation, system provisioning, and pytest
-lifecycle management.
+For any supported domain, the fundamental creation flow can be understood as
+three major responsibilities: data preparation, system provisioning, and pytest
+lifecycle management. Customer is used below as the clearest concrete example.
 
 | Layer | Responsibility | Network Call? | Output |
 |---|---|---:|---|
@@ -1118,51 +1118,96 @@ test receives verified data
 
 # 📁 Current Package Structure
 
-The currently implemented test-data structure is centered on the **Customer
-reference implementation**.
+The test-data package now contains the shared architecture plus the domain
+components that have been justified by real test scenarios.
 
-The following components are confirmed as part of the current Customer
-test-data architecture:
+The current structure is:
 
 ```text
 EcommerceAPI/src/test_data/
 ├── builders/
-│   └── customers/
-│       ├── customer_builder.py
-│       └── customer_state_builder.py
+│   ├── customers/
+│   │   ├── customer_builder.py
+│   │   └── customer_state_builder.py
+│   ├── products/
+│   │   └── product_builder.py
+│   └── coupons/
+│       ├── coupon_builder.py
+│       └── coupon_state_builder.py
 │
 ├── factories/
-│   └── customers/
-│       └── customer_factory.py
+│   ├── customers/
+│   │   └── customer_factory.py
+│   ├── products/
+│   │   └── product_factory.py
+│   └── coupons/
+│       └── coupon_factory.py
 │
 ├── ownership/
 │   └── resource_ownership.py
 │
 ├── provisioning/
-│   └── customers/
-│       ├── customer_provisioner.py
-│       └── customer_state_provisioner.py
+│   ├── customers/
+│   │   ├── customer_provisioner.py
+│   │   └── customer_state_provisioner.py
+│   ├── products/
+│   │   └── product_provisioner.py
+│   └── coupons/
+│       ├── coupon_provisioner.py
+│       └── coupon_state_provisioner.py
 │
 └── seeds/
 ```
 
-This is the **implemented reference structure**, not a declaration that every
-future domain already has the same components.
+Customer remains the **reference implementation**, especially for the
+creation/state distinction and the state-preparation pattern.
 
-Products, Coupons, and Orders are the next domains to investigate. Their
-Factory, Builder, Provisioner, or State components should be added only when
-their real test-data requirements justify them.
+Products and Coupons now demonstrate that the architecture is applied
+incrementally rather than copied mechanically. Each domain receives only the
+components justified by its real test-data requirements.
+
+The current implementation status is therefore:
+
+```text
+Customer
+    → Factory + Builder + State Builder
+    → Provisioner + State Provisioner
+    → fixture integration
+    → ownership / cleanup
+    → reference implementation
+
+Product
+    → Factory + Builder
+    → Provisioner
+    → fixture integration
+    → ownership / cleanup
+    → implemented creation-data pattern
+
+Coupon
+    → Factory + Builder + State Builder
+    → Provisioner + State Provisioner
+    → fixture integration
+    → ownership / cleanup
+    → implemented creation/state pattern
+
+Order
+    → not yet migrated
+    → investigate when real test-data requirements justify it
+```
+
+This is an **implementation snapshot**, not a requirement that every future
+domain must contain every component.
 
 That distinction is intentional:
 
 ```text
-Implemented Customer architecture
-            ↓
-        Reference
-            ↓
-Investigate next domain
-            ↓
-Add only the components actually required
+Real domain requirements
+          ↓
+   Investigate the domain
+          ↓
+Add only justified components
+          ↓
+Keep the common architecture consistent
 ```
 
 This keeps the test-data architecture consistent without creating speculative
@@ -1361,33 +1406,28 @@ domain model already represents the relevant API contract.
 
 # 📊 Current Implementation Status
 
-The **Customer domain is the reference implementation** for this architecture.
+The **Customer domain is the reference implementation** for this architecture,
+but the pattern is no longer Customer-only.
 
-The following components are implemented and established:
+The following domains now have implemented test-data components:
 
-- Customer Factory
-- Customer Builder
-- Customer State Builder
-- Customer Provisioner
-- Customer State Provisioner
-- Ownership / cleanup integration
-- `create_valid_customer` fixture integration
-- `CustomersHelper` refactored so it no longer generates test data
-- Real customer update-test usage of `CustomerStateBuilder`
+| Domain | Factory | Builder | State Builder | Provisioner | State Provisioner | Fixture / Cleanup |
+|---|---:|---:|---:|---:|---:|---:|
+| **Customer** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Product** | ✅ | ✅ | — | ✅ | — | ✅ |
+| **Coupon** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Order** | — | — | — | — | — | — |
 
-The public test-facing contract of `create_valid_customer` remains:
+The absence of a component is intentional. The architecture does not require
+every domain to implement every pattern.
 
-```python
-customer = create_valid_customer()
-```
+### Customer
 
-The fixture returns a validated customer dictionary and owns setup validation
-and cleanup registration.
-
-The Customer architecture now has two distinct preparation paths:
+Customer remains the strongest reference because it demonstrates both
+creation and existing-resource state preparation:
 
 ```text
-New resource
+New Customer
     ↓
 CustomerBuilder
     ↓
@@ -1397,7 +1437,7 @@ CustomerProvisioner
     ↓
 WooCommerce
 
-Existing resource state
+Existing Customer
     ↓
 CustomerStateBuilder
     ↓
@@ -1406,18 +1446,72 @@ CustomerStateProvisioner
 WooCommerce
 ```
 
-The operation under test remains visible in the test. In particular, when a test
-verifies customer update behavior, the actual `PUT` operation is performed by
-the test rather than hidden inside `CustomerStateProvisioner`.
+The operation under test remains visible in the test. A State Provisioner is
+used to establish prerequisite state, not to hide the API operation that the
+test is actually verifying.
 
-The Customer domain is therefore complete enough to serve as the reference
-implementation for the next domain investigation.
+### Product
+
+Product demonstrates the creation-data pattern:
+
+```text
+ProductBuilder
+    ↓
+ProductFactory
+    ↓
+ProductProvisioner
+    ↓
+WooCommerce
+```
+
+Its implementation is intentionally smaller than Customer because the current
+Product test scenarios do not require a Product State Builder or State
+Provisioner.
+
+### Coupon
+
+Coupon demonstrates both creation and existing-resource state preparation:
+
+```text
+New Coupon
+    ↓
+CouponBuilder
+    ↓
+CouponFactory
+    ↓
+CouponProvisioner
+    ↓
+WooCommerce
+
+Existing Coupon
+    ↓
+CouponStateBuilder
+    ↓
+CouponStateProvisioner
+    ↓
+WooCommerce
+```
+
+The Coupon fixture follows the same lifecycle-gatekeeper principle established
+by Customer and Product: the fixture receives the provisioning response,
+validates setup, registers ownership, and returns clean validated data.
+
+The public fixture contract remains simple:
+
+```python
+coupon = create_valid_coupon()
+```
+
+The important architectural rule is:
+
+> **Reuse the established pattern where the domain needs it; do not add
+> components merely to make domains structurally identical.**
 
 # 🛣️ Development Strategy
 
 The architecture is implemented incrementally.
 
-The **Customer reference implementation is now complete**:
+The current progression is:
 
 ```text
 1. Architecture contract                    ✅
@@ -1438,45 +1532,39 @@ The **Customer reference implementation is now complete**:
        ↓
 9. Customer State Provisioner               ✅
        ↓
-10. First real state-update test migration  ✅
+10. First real Customer state-update test   ✅
        ↓
-11. Product test-data investigation         ← next
+11. Product test-data investigation         ✅
        ↓
-12. Coupon test data
+12. Product Factory / Builder / Provisioner  ✅
        ↓
-13. Order and cross-domain test data
+13. Coupon test-data investigation           ✅
        ↓
-14. REST / GraphQL / UI cross-system scenarios
+14. Coupon Factory / Builder / Provisioner   ✅
+       ↓
+15. Coupon state preparation                 ✅
+       ↓
+16. Order test-data investigation            ← next
+       ↓
+17. Cross-domain / REST / GraphQL / UI work
 ```
 
-The Customer state pattern is now established by a real update test.
+The important lesson from the Customer, Product, and Coupon work is that the
+architecture is a **decision framework**, not a fixed checklist.
 
-The important distinction is:
+Customer established the reference pattern. Product demonstrated that a domain
+can use only the creation path when that is sufficient. Coupon demonstrated
+that the state-preparation pattern can be reused where real scenarios require
+it.
 
-```text
-CustomerBuilder
-    → complete creation data for a new customer
+Future domains should therefore be investigated before their components are
+designed.
 
-CustomerStateBuilder
-    → partial state/change for an existing customer
+The rule remains:
 
-CustomerProvisioner
-    → create a new customer
-
-CustomerStateProvisioner
-    → establish prerequisite state on an existing customer
-```
-
-The operation under test must remain visible in the test. A test for customer
-update behavior should not hide the `PUT` operation inside a state provisioner
-when that `PUT` is the behavior being verified.
-
-The next step is to **investigate the Product entity before designing its
-test-data components**. We should not assume that Product requires exactly the
-same architecture as Customer.
-
-We should continue to avoid large speculative abstractions before there is a
-real requirement for them.
+> **Do not create a Factory, Builder, State Builder, Provisioner, or State
+> Provisioner merely because another domain has one. Create it when the domain's
+> real test scenarios justify it.**
 
 # 🧠 Example Mental Model for New Contributors
 
@@ -1490,7 +1578,7 @@ When deciding where new code belongs, ask:
 generate_random_phone()
 ```
 
-### "I need a valid Customer creation payload."
+### "I need a valid resource creation payload."
 
 → **Factory**
 
@@ -1498,7 +1586,9 @@ generate_random_phone()
 CustomerFactory().build()
 ```
 
-### "I need a Customer payload with one special condition."
+The same principle applies to `ProductFactory` and `CouponFactory`.
+
+### "I need a resource payload with one special condition."
 
 → **Builder**
 
@@ -1506,9 +1596,11 @@ CustomerFactory().build()
 CustomerBuilder().without_billing().build()
 ```
 
-### "I need to change specific fields on an existing Customer."
+The Builder customizes creation data; it does not provision the resource.
 
-→ **Customer State Builder**
+### "I need to change specific fields on an existing resource."
+
+→ **State Builder**, when that domain has a real state-preparation requirement.
 
 ```python
 (
@@ -1520,9 +1612,9 @@ CustomerBuilder().without_billing().build()
 ```
 
 This produces only the state that should change. It does not generate a new
-customer.
+resource.
 
-### "I need that Customer to actually exist in WooCommerce."
+### "I need the prepared resource to actually exist in WooCommerce."
 
 → **Provisioner**
 
@@ -1530,9 +1622,12 @@ customer.
 customer_provisioner.provision(customer_data)
 ```
 
-### "I need an existing Customer to have prerequisite state."
+The same role is fulfilled by `ProductProvisioner` or `CouponProvisioner`
+for their respective domains.
 
-→ **Customer State Provisioner**
+### "I need an existing resource to have prerequisite state."
+
+→ **State Provisioner**, when that domain provides one.
 
 ```python
 customer_state_provisioner.provision(
@@ -1541,13 +1636,21 @@ customer_state_provisioner.provision(
 )
 ```
 
-### "I need a valid customer through the normal pytest setup lifecycle."
+### "I need a valid resource through the normal pytest setup lifecycle."
 
-→ **Fixture**
+→ **Domain fixture**
 
 ```python
 customer = create_valid_customer()
 ```
+
+For the Coupon domain, the equivalent contract is:
+
+```python
+coupon = create_valid_coupon()
+```
+
+The fixture remains the pytest-facing lifecycle gatekeeper.
 
 ### "I need to know whether the test is responsible for deleting it."
 

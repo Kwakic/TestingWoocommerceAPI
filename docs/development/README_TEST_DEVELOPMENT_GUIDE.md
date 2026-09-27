@@ -53,7 +53,7 @@ The levels are not "junior", "senior", "simple", or "advanced" versions of testi
 
 **Use this for most normal tests.**
 
-When a test needs a valid customer, product, coupon, etc. as a **precondition**, use the entity fixture:
+When a test needs a valid customer, product, coupon, etc. as a **precondition**, use the corresponding domain fixture:
 
 ```python
 def test_get_customer_by_id(customer_helper, create_valid_customer):
@@ -564,6 +564,34 @@ clean dict
 Test
 ```
 
+### Current domain implementations
+
+The test-data architecture is currently applied differently across the implemented
+domains. This is intentional: the framework does **not** require every entity to
+have the same set of test-data components.
+
+```text
+Customer → Factory + Builder + State Builder
+         → Provisioner + State Provisioner
+
+Product  → Factory + Builder
+         → Provisioner
+
+Coupon   → Factory + Builder + State Builder
+         → Provisioner + State Provisioner
+```
+
+The difference reflects the scenarios each domain currently needs:
+
+- **Customer** has creation and existing-resource state preparation.
+- **Product** has creation customization and provisioning, but does not currently
+  require a separate State Builder / State Provisioner path.
+- **Coupon** has creation customization and existing-resource state preparation.
+
+Therefore, when adding a new domain, do not copy the Customer architecture
+mechanically. First identify whether the tests actually need creation
+customization, prerequisite state changes, or both.
+
 For an existing resource that must be placed into a specific state before the
 operation under test:
 
@@ -738,8 +766,12 @@ Use the State Builder/Provisioner only when the state needs to be established **
 the operation under test. If the state-changing API call is itself what the test verifies,
 keep that call in the test's **Act** step.
 
-This is the current Customer reference pattern and should be reused as a model for future
-entities only when their test scenarios demonstrate the same need.
+This remains the clearest Customer reference pattern for existing-resource state
+preparation. Product and Coupon use the same architectural principles where their
+current scenarios require them, but they do not need to expose identical layers.
+
+Future entities should introduce State Builder / State Provisioner only when the
+test scenarios demonstrate a real need for prerequisite state preparation.
 
 ---
 
@@ -1575,6 +1607,14 @@ A fixture that creates a valid resource should:
 The fixture is the connection point between **test-data preparation** and
 **real system provisioning**.
 
+The concrete fixture implementation is domain-specific, but the lifecycle contract
+is shared: prepare valid data through the domain's available Factory/Builder layers,
+provision it through the domain Provisioner, validate the setup response, register
+ownership, and return clean validated data.
+
+For Customer, Product, and Coupon, the exact Builder/Factory/Provisioner combination
+depends on the domain's current test-data architecture.
+
 Example flow:
 
 ```text
@@ -1917,7 +1957,15 @@ Fixture               → lifecycle + validated setup
 Test                  → assert operation behaviour
 ```
 
-The Customer test-data architecture is now a complete reference implementation. Use it to guide future entities, but investigate each entity's actual test-data needs before introducing matching layers. Focus on writing tests, not refactoring the framework.
+The Customer test-data architecture remains the clearest complete reference implementation,
+while Product and Coupon now provide additional concrete examples of applying the
+same principles with different layer requirements.
+
+Use the existing Customer, Product, and Coupon implementations as references, but
+investigate each entity's actual test-data needs before introducing matching layers.
+Do not add a Factory, Builder, State Builder, Provisioner, or State Provisioner merely
+for architectural symmetry. Focus on writing tests and introducing only the layers
+that make the test-data lifecycle clearer and more reusable.
 
 ---
 
