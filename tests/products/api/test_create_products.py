@@ -96,6 +96,13 @@ def test_create_single_simple_product(
     # -------------------------------------------
     logger.info("🛠 Creating a test product.")
 
+    # By default, CustomerFactory generates the customer data.
+    # To override a value for this scenario, pass it directly to the fixture:
+    #
+    #     customer = create_valid_customer(email="john.smith.12345@test.com")
+    #
+    # The fixture passes the override to CustomerBuilder → CustomerFactory.
+    # Only the specified value is overridden; all other fields are generated.
     product = create_valid_product()
 
     product_id = product["id"]

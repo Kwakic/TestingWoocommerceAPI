@@ -3,7 +3,7 @@
 * > **Status:** Active development
 * > **Scope:** GraphQL testing with WPGraphQL + WPGraphQL for WooCommerce
 * > **Current entity:** Products
-* > **Last updated:** 2026-09-17
+* > **Last updated:** 2026-09-28
 
 ---
 
@@ -108,6 +108,156 @@ databaseId, and the test validates the resulting resource. This establishes that
 the framework's authentication and HTTP layers to WPGraphQL/WPGraphQL for WooCommerce is functioning end-to-end.
 The GraphQL client is responsible for GraphQL transport and response wrapping. Business-specific assertions
 remain in the tests.
+
+---
+## 2.1 🧪 GraphQL Test Data Strategy
+
+GraphQL tests use the **GraphQL API itself to create prerequisite data when the
+scenario is intended to exercise the GraphQL API as an integrated interface**.
+
+For example, the Product `getProduct` integration test follows:
+
+```text
+GraphQL createProduct mutation
+        ↓
+real WooCommerce Product
+        ↓
+GraphQL getProduct query
+        ↓
+assertions
+```
+
+This is intentional. The GraphQL suite is testing the GraphQL interface, not
+only an isolated query implementation. Creating the Product through the
+GraphQL `createProduct` mutation means the test exercises the same GraphQL
+stack from creation through retrieval.
+
+It also means the test does not depend on arbitrary Products that happened to
+exist in the database before the test started.
+
+### Why not use the REST Product Provisioner for every GraphQL test?
+
+The shared test-data architecture is **transport-independent**, and its
+Factory/Builder components remain reusable across REST, GraphQL, and UI tests.
+However, that does not mean every interface must use another interface to
+provision its prerequisite data.
+
+For a GraphQL integration scenario, using REST solely to create the Product
+would introduce an additional API dependency:
+
+```text
+ProductFactory / Builder
+        ↓
+REST Product Provisioner
+        ↓
+REST API
+        ↓
+WooCommerce
+        ↓
+GraphQL getProduct
+```
+
+The GraphQL test would then depend on REST being available and correctly
+creating the prerequisite resource before GraphQL can be tested.
+
+For the current GraphQL Product suite, the preferred approach is therefore:
+
+```text
+GraphQL mutation/query under test
+        ↑
+GraphQL-created prerequisite data
+```
+
+when the prerequisite can naturally be created through GraphQL.
+
+### This does not mean GraphQL needs its own test-data architecture
+
+The project does **not** create a second set of:
+
+```text
+GraphQLProductFactory
+GraphQLProductBuilder
+GraphQLProductProvisioner
+```
+
+The domain test-data architecture remains shared:
+
+```text
+ProductFactory / ProductBuilder
+        ↓
+transport-independent Product data
+        ↓
+REST / GraphQL / UI
+```
+
+Factories and Builders prepare reusable Product data in memory. The interface
+under test decides how that data is sent to the system.
+
+For GraphQL tests, the GraphQL mutation can therefore receive data prepared by
+the existing Product Factory/Builder without introducing GraphQL-specific
+versions of those components.
+
+### Focus of individual tests
+
+The suite should still distinguish between operation-focused and workflow
+coverage.
+
+For example:
+
+```text
+test_create_product
+    → GraphQL createProduct
+    → verify creation
+
+test_get_product
+    → GraphQL createProduct
+    → GraphQL getProduct
+    → verify retrieval
+
+test_update_product
+    → GraphQL createProduct
+    → GraphQL updateProduct
+    → verify updated state
+
+test_delete_product
+    → GraphQL createProduct
+    → GraphQL deleteProduct
+    → verify deletion
+```
+
+The fact that `createProduct` is used as setup does not make the `getProduct`
+test a creation test. The creation establishes the deterministic prerequisite;
+the assertions for the test remain focused on the operation being verified.
+
+### When another interface should provision the data
+
+Cross-interface provisioning is still valid when it provides a real testing
+benefit.
+
+For example:
+
+```text
+REST
+  ↓
+WooCommerce state
+  ↓
+GraphQL operation
+```
+
+can be appropriate when the scenario specifically requires REST-created state,
+when GraphQL cannot create the required state, or when the purpose of the test
+is to verify that GraphQL can consume state created through another supported
+interface.
+
+The principle is:
+
+> **Use the interface under test to establish prerequisite data when doing so
+> provides meaningful integrated coverage. Use shared test-data components for
+> data preparation, but do not introduce another transport merely because a
+> Provisioner already exists.**
+
+This keeps the GraphQL suite deterministic while avoiding unnecessary
+GraphQL-specific test-data abstractions.
 
 ---
 

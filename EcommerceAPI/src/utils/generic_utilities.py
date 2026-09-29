@@ -361,60 +361,6 @@ def strip_keys(d: dict, exclude=("email", "password")) -> dict:
     # dictionary d and Keeps only those keys that are not in the exclude tuple.
 
 
-# Then in your test file: customers = create_customer_for_test(email=email, password=password, **strip_keys(payload))
-# Instead of doing this every time: additional_fields = {
-#     k: v for k, v in payload.items() if k not in ("email", "password")
-# }
-# You'd just write:
-# from EcommerceAPI.src.utils.genericUtilities import strip_keys
-# email = payload.get("email")
-# password = payload.get("password")
-#
-# customers = create_customer_for_test(
-#     email=email,
-#     password=password,
-#     expected_status_code=400,
-#     auto_generate=False,
-#     **strip_keys(payload)
-# )
-
-
-# That line only becomes necessary if: You’re passing a full payload dict using **payload AND you want to avoid
-# sending email and password twice (once directly, once inside **kwargs).
-
-# This line removes the 'email' and 'password' keys from the original payload and stores any remaining fields in a
-# new dictionary called `additional_fields`. In other words: It creates a new dictionary with all key-value pairs
-# except "email" and "password".
-# Example:
-# payload = {"email": "bademail", "password": "TestPass1", "first_name": "John", "age": 30}
-# additional_fields = {"first_name": "John", "age": 30}
-# Purpose:
-# Prevents duplicate values when calling the factory method, as `email` and `password` will be passed explicitly.
-
-# additional_fields = {
-#     k: v for k, v in payload.items() if k not in ("email", "password")
-# }
-
-# or:
-# additional_fields = {
-#     k: v             # For each key k and value v in the dictionary
-#     for k, v in payload.items()  # .items() gives us (key, value) pairs
-#     if k not in ("email", "password")  # Skip keys "email" and "password"
-# }
-
-# or:
-# # Full Equivalent Block Version:
-# additional_fields = {}
-# for k, v in payload.items():
-#     if k not in ("email", "password"):
-#         additional_fields[k] = v
-
-# 🔠 What Do k and v Mean? They are just placeholder variable names that represent:
-#     k: the key from the dictionary (e.g., "first_name")
-#     v: the value associated with that key (e.g., "Alice")
-# payload.items() gives you each key-value pair from the dictionary.
-
-
 # ✅ Safe version for test usage
 def safe_product_name(prefix: str = "Product") -> str:
     # Combines a short random string with a timestamp-based suffix for uniqueness.

@@ -170,6 +170,14 @@ def test_bulk_create_customers(
         No scenario-specific fields are supplied here. The CustomerFactory
         generates the complete valid customer payload.
         """
+
+        # By default, CustomerFactory generates the customer data.
+        # To override a value for this scenario, pass it directly to the fixture:
+        #
+        #     customer = create_valid_customer(email="john.smith.12345@test.com")
+        #
+        # The fixture passes the override to CustomerBuilder → CustomerFactory.
+        # Only the specified value is overridden; all other fields are generated.
         customer = create_valid_customer()
 
         email = customer["email"]
@@ -259,6 +267,13 @@ def test_bulk_create_customers_edge_cases(
     # Called by the bulk utility to create one customers.
     # The fixture already performs POST validation and cleanup registration.
     def create_fn():
+        # By default, CustomerFactory generates the customer data.
+        # To override a value for this scenario, pass it directly to the fixture:
+        #
+        #     customer = create_valid_customer(email="john.smith.12345@test.com")
+        #
+        # The fixture passes the override to CustomerBuilder → CustomerFactory.
+        # Only the specified value is overridden; all other fields are generated.
         customer = (
             create_valid_customer()
         )  # Default: skip_cleanup=False, validate_response=True
@@ -357,6 +372,13 @@ def test_create_single_customer_with_email_and_password_only(
     # ------------------------------------------------------------------
     logger.info("🛠 Creating a minimal valid customer via the test-data fixture.")
 
+    # By default, CustomerFactory generates the customer data.
+    # To override a value for this scenario, pass it directly to the fixture:
+    #
+    #     customer = create_valid_customer(email="john.smith.12345@test.com")
+    #
+    # The fixture passes the override to CustomerBuilder → CustomerFactory.
+    # Only the specified value is overridden; all other fields are generated.
     customer = create_valid_customer()
 
     customer_id = customer["id"]
@@ -493,7 +515,13 @@ def test_create_customer_with_varied_addresses(
     logger.info(
         "🛠 Creating a customer with parameterized billing and shipping addresses."
     )
-
+    # By default, CustomerFactory generates the customer data.
+    # To override a value for this scenario, pass it directly to the fixture:
+    #
+    #     customer = create_valid_customer(email="john.smith.12345@test.com")
+    #
+    # The fixture passes the override to CustomerBuilder → CustomerFactory.
+    # Only the specified value is overridden; all other fields are generated.
     customer = create_valid_customer(
         billing=billing,
         shipping=shipping,

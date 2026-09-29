@@ -13,6 +13,10 @@ class BaseFactory(ABC, Generic[T]):
 
     Factories are responsible for generating valid, unique test data.
 
+    The base factory answers:
+    "What must every Factory be able to do?"
+    "Every Factory in this framework must know how to build test data."
+
     They must NOT:
         - call APIs
         - access the database

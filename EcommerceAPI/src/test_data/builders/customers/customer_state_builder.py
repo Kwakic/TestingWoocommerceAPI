@@ -16,8 +16,66 @@ class CustomerStateBuilder:
     """
     Build partial state for an existing customer (builds a change).
 
+    The state builder answers:
+    "What state should I change on an existing Customer?"
+
+    Imagine Customer 123 currently has:
+        email = john@example.com
+        username = johnsmith
+        billing = old address
+        shipping = old address
+
+    We want:
+        billing = new address
+
+    We don't want the test-data system to accidentally generate:
+        new email
+        new username
+        new password
+        new shipping
+    That would be destructive and unpredictable
+
+    So StateBuilder produces:
+        {
+            "billing": new_address
+        }
+    Nothing else.
+
     Unlike CustomerBuilder, this class does not create a complete customer
     payload. It returns only the fields that should be changed (has no Factory dependency at all).
+
+    -----------------------------------------------------------------------------------------------
+
+    CREATION ARCHITECTURE:
+
+    CustomerBuilder
+           ↓
+    CustomerFactory
+           ↓
+    CustomerProvisioner
+           ↓
+    CustomersHelper
+           ↓
+    CustomersApi
+           ↓
+    WooCommerce
+
+
+    STATE CHANGE:
+
+    CustomerStateBuilder
+           ↓
+    CustomerStateProvisioner
+           ↓
+    CustomersHelper
+           ↓
+    CustomersApi
+           ↓
+    WooCommerce
+
+    Why no Factory in the second one?
+    Because we're not creating a new Customer.
+
     """
 
     _SUPPORTED_FIELDS = {

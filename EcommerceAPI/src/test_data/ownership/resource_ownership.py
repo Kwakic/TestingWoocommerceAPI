@@ -6,6 +6,9 @@ test lifecycle and therefore may be cleaned up.
 It does not perform API calls or delete resources itself. The existing entity
 cleanup mechanism remains responsible for actual resource deletion.
 
+The ownership answers:
+Which resources did my test create and therefore own?
+
 ResourceOwnershipRegistry handles:
 - explicit resource registration
 - duplicate registration protection

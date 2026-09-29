@@ -183,7 +183,6 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
 
 
 
-
         Args:
             skip_cleanup (bool):
                 If True → resource is NOT registered for cleanup
@@ -210,7 +209,10 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
         # CustomerProvisioner crosses the system boundary through the
         # existing CustomersHelper/API architecture and returns the
         # HttpResponse needed by this fixture's setup contract.
-        customer_data = CustomerBuilder().with_fields(**kwargs).build()
+        customer_data = (
+            CustomerBuilder().with_fields(**kwargs).build()
+        )  # Kwargs from the test flow directly
+        # become Builder overrides
         customer_provisioner = CustomerProvisioner(customer_helper)
         response = customer_provisioner.provision(customer_data)
 

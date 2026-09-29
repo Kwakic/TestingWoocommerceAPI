@@ -27,11 +27,10 @@ class CustomerBuilder:
           v
         WooCommerce
 
-    The factory answers:
-        "How do I generate a complete valid customer?"
 
     The builder answers:
         "What should be different for this particular scenario?"
+
 
     This keeps tests concise. A test can customize one or two fields
     without rebuilding an entire customer payload.
@@ -95,6 +94,10 @@ class CustomerBuilder:
     def with_username(self, username: str) -> CustomerBuilder:
         """
         Override the generated customer username.
+
+        It simply says:
+        "Factory, when you build this customer, don't generate
+        the username yourself.Use THIS username."
         """
         self._overrides["username"] = username
         return self
@@ -188,4 +191,54 @@ class CustomerBuilder:
                 .build()
             )
         """
+        # It passes all of these fields above to the Factory and the Factory is the boundary that validates the
+        # supported fields.
         return self._factory.build(**self._overrides)
+
+        # What happens when .build() is called?
+        # We have:
+        #   CustomerBuilder()
+        #     .with_name("John", "Smith")
+        #     .with_email("john@example.com")
+        #     .build()
+        #
+        # The Builder executes:
+        #   return self._factory.build(**self._overrides)
+        #
+        # The actual implementation does exactly this.
+        #   Builder
+        #     │
+        #     │ overrides:
+        #     │ {
+        #     │   first_name: John
+        #     │   last_name: Smith
+        #     │   email: john@example.com
+        #     │ }
+        #     ▼
+        #   CustomerFactory
+        #
+        # The Factory now generates everything else.
+        #
+        # Builder says:
+        #
+        #   first_name = John
+        #   last_name = Smith
+        #   email = john@example.com
+        #
+        # Factory generates:
+        #
+        #   password = random
+        #   username = generated from John + Smith
+        #   billing = generated
+        #   shipping = generated
+        #
+        # The final result becomes:
+        #   {
+        #     "email": "john@example.com",
+        #     "password": "...",
+        #     "username": "john_smith_...",
+        #     "first_name": "John",
+        #     "last_name": "Smith",
+        #     "billing": {...},
+        #     "shipping": {...},
+        # }

@@ -15,11 +15,44 @@ from EcommerceAPI.src.utils.generic_utilities import (
 
 class CustomerFactory(BaseFactory[dict[str, Any]]):
     """
-    Factory responsible for generating valid customer creation data.
+    Factory responsible for generating valid customer creation data in memory (exists only in RAM).
+    There is no customer in WooCommerce yet.The factory has only prepared the data that could be used to create one.
+
+    The factory answers:
+    "How do I generate a complete valid Customer?"
+
+    The data becomes an in-memory object when the Factory returns:
+
+    return {
+    "email": email,
+    "password": password,
+    ...
+    }
+    ---------------------------------------------------------
+    Example of its dictionary:
+
+    {
+    "first_name": "John",
+    "last_name": "Smith",
+    "email": "john.smith.12345@test.com",
+    "username": "johnsmith12345",
+    "password": "SecurePassword123!",
+    "billing": {...},
+    "shipping": {...}
+    }
+
+    --------------------------------------------------------
+    Then what happens?
+    Your test/fixture passes that dictionary to the provisioner:
+
+    customer_data = CustomerFactory().build()
+    response = customer_provisioner.provision(customer_data)
+    --------------------------------------------------------
 
     A factory belongs to the test-data generation layer. Its job is to
     create a complete, valid set of data in memory so tests do not have
     to manually assemble repetitive payloads.
+
 
     IMPORTANT ARCHITECTURAL RULE
     ----------------------------

@@ -5,6 +5,9 @@ This module is responsible for taking already-prepared customer creation data
 and provisioning it into the real WooCommerce environment through the existing
 CustomersHelper.
 
+The provisioner answers:
+"How do I put this prepared Customer into WooCommerce?"
+
 Architecture
 ------------
 CustomerFactory
@@ -93,9 +96,9 @@ class CustomerProvisioner:
                 If no customer data was supplied.
 
         Notes:
-            ``auto_generate=False`` is intentional. Test-data generation
-            belongs to the Factory layer, so the provisioner must not allow
-            the Helper to silently generate a second set of credentials.
+            The provisioner passes the already-prepared customer data directly
+            to the Helper. Test-data generation belongs to the Factory/Builder
+            layer and is not performed by the Helper.
         """
         if not isinstance(customer_data, Mapping):
             raise TypeError(
@@ -110,7 +113,6 @@ class CustomerProvisioner:
             )
 
         return self.customer_helper.create_customer(
-            auto_generate=False,
             return_http_response=True,
             **dict(customer_data),
         )

@@ -271,6 +271,57 @@ lifecycle management. Customer is used below as the clearest concrete example.
 | **2. Provisioner → Helper / API** | Cross the system boundary and execute the request against WooCommerce | ✅ Yes | `HttpResponse` / API response |
 | **3. Fixture** | Validate setup, register ownership, and expose clean data to the test | Indirectly | Verified Python dictionary |
 
+```text
+════════════════════════════════════════
+        DATA PREPARATION WORLD
+════════════════════════════════════════
+
+Test
+ ↓
+Builder
+ ↓
+Factory
+ ↓
+Python dict in memory
+
+════════════════════════════════════════
+        SYSTEM / REAL WORLD
+════════════════════════════════════════
+
+Provisioner
+ ↓
+Helper
+ ↓
+API
+ ↓
+HTTP
+ ↓
+WooCommerce
+```
+
+### 🧠 The mental model
+This boundary is one of the main reasons the architecture exists
+
+**Factory**
+>"Give me a complete valid Customer."
+
+**Builder**
+>"Give me a Customer, but make these things special for my scenario."
+
+**Provisioner**
+>"Take this prepared Customer and create it in the real system."
+
+**StateBuilder**
+>"I already have a Customer. Tell me only what should change."
+
+**StateProvisioner**
+>"Take those changes and apply them to this existing Customer."
+
+**Ownership Registry**
+>"Remember which real resources this test created and still owns."
+
+---
+
 ### Layer 1 — Builder / Factory
 
 Creates a payload entirely in memory.
@@ -385,6 +436,18 @@ customer = CustomerFactory().build()
 
 The result is data in memory.
 
+### 🎯 Advantage:
+>reusable, deterministic test-data generation.
+
+It can be used by:
+
+```text
+REST
+GraphQL
+UI
+```
+without knowing about those technologies. Your CustomerFactory explicitly states this design goal.
+
 ---
 
 # 🧩 Builder
@@ -423,6 +486,98 @@ factory.
 
 This allows tests to remain expressive without manually constructing the
 entire payload.
+
+### 🎯 Advantage:
+>tests stay readable.
+
+Instead of:
+```Python
+{
+    "email": "...",
+    "password": "...",
+    "username": "...",
+    "first_name": "...",
+    "last_name": "...",
+    "billing": "...",
+    "shipping": "..."
+}
+```
+the test can say:
+
+```Python
+CustomerBuilder()
+    .with_email("known@example.com")
+    .without_billing()
+    .build()
+```
+
+---
+
+# 💭 StateBuilder
+## Responsibility
+
+The **StateBuilder** prepares a **partial state change for an existing resource**.
+
+Its job is to answer:
+
+> "I already have this resource. Which fields should change for my scenario?"
+
+Unlike the normal Builder, the StateBuilder does **not** create a complete resource payload and does not use the Factory.
+
+For example:
+
+```python
+customer_state = (
+    CustomerStateBuilder()
+    .with_email("updated@example.com")
+    .with_first_name("QAUpdated")
+    .build()
+)
+```
+
+The result contains **only the fields that the scenario wants to change**:
+
+```python
+{
+    "email": "updated@example.com",
+    "first_name": "QAUpdated",
+}
+```
+
+It does not generate unrelated fields such as:
+
+```text
+password
+username
+last_name
+billing
+shipping
+```
+
+Those fields already belong to the existing customer and should remain untouched unless the scenario explicitly asks to change them.
+
+### 🎯 Advantage
+
+> **StateBuilder describes what should change without recreating the resource.**
+
+This is important for update scenarios because it prevents accidental overwriting or regeneration of existing resource state.
+
+The distinction is:
+
+```text
+CustomerBuilder
+    ↓
+Complete creation payload
+    ↓
+Create a NEW customer
+
+
+CustomerStateBuilder
+    ↓
+Partial state change
+    ↓
+Update an EXISTING customer
+```
 
 ## 🧩 Customer Builder vs Customer State Builder
 
@@ -494,6 +649,7 @@ The distinction is deliberate:
 
 A state builder must not silently generate a complete customer or overwrite
 fields that the scenario did not ask to change.
+
 
 ### 💡 Why use a Builder?
 
@@ -701,7 +857,99 @@ registration.
 The Provisioner deliberately does not perform raw HTTP requests when the
 domain Helper/API already provide that capability.
 
+### 🎯 Advantage:
+>separates test-data preparation from real system interaction.
+
+The Factory can stay completely offline.
+
+The Provisioner is the controlled point where we cross:
+```
+Python
+  ↓
+network
+```
+
 ---
+
+
+# 🌐 StateProvisioner
+## Responsibility
+
+The **StateProvisioner** takes the partial state prepared by a StateBuilder and
+applies it to an **existing resource in the real system**.
+
+Its job is to answer:
+
+> "Take these requested changes and apply them to this existing resource."
+
+For example:
+
+```python
+customer_state = (
+    CustomerStateBuilder()
+    .with_email("updated@example.com")
+    .with_first_name("QAUpdated")
+    .build()
+)
+
+response = customer_state_provisioner.provision(
+    customer_id,
+    customer_state,
+)
+```
+
+The flow is:
+
+```text
+Existing Customer
+       ↓
+CustomerStateBuilder
+       ↓
+Partial state/change
+       ↓
+CustomerStateProvisioner
+       ↓
+CustomersHelper / API
+       ↓
+WooCommerce
+```
+
+The StateProvisioner does **not**:
+
+- generate test data;
+- create a new resource;
+- decide which fields should change;
+- perform scenario-specific customization;
+- own cleanup;
+- replace the operation under test.
+
+The StateBuilder decides **what should change**.
+The StateProvisioner decides **how to apply that prepared change to the real system**.
+
+### 🎯 Advantage
+
+> **StateProvisioner separates preparing an update from executing that update.**
+
+This keeps the same architectural boundary used by the creation flow:
+
+```text
+Builder / Factory
+    ↓
+prepare data
+
+Provisioner
+    ↓
+create real state
+
+
+StateBuilder
+    ↓
+prepare state change
+
+StateProvisioner
+    ↓
+apply change to real state
+```
 
 # 👤 Ownership
 
@@ -742,6 +990,16 @@ Ownership is particularly important for:
 - cross-domain resources
 - UI/API combined tests
 - preventing accidental deletion of seed data
+
+### 🎯 Advantage:
+>safe cleanup.
+
+It prevents the dangerous concept of:
+>"Delete every Customer we can find."
+
+Instead:
+>"Delete the Customers this test explicitly owns."
+
 
 ---
 
@@ -1029,7 +1287,8 @@ logic.
 # 🔄 Cross-System Test Data
 
 This architecture also supports tests where one interface prepares the data
-and another interface consumes it.
+and another interface consumes it. This is a supported capability, not a
+requirement that one transport must always provision another transport's tests.
 
 For example:
 
@@ -1212,6 +1471,135 @@ Keep the common architecture consistent
 
 This keeps the test-data architecture consistent without creating speculative
 abstractions.
+
+---
+# 🔗 GraphQL Test Data Strategy
+
+The shared test-data architecture is deliberately **transport-independent**.
+
+Factories and Builders prepare valid domain data in memory. They do not know
+whether the data will eventually be consumed by REST, GraphQL, or Playwright.
+
+For example:
+
+```text
+ProductBuilder
+      ↓
+ProductFactory
+      ↓
+in-memory Product data
+      ↓
+┌─────────────┬──────────────┬─────────────┐
+│    REST     │   GraphQL    │     UI      │
+└─────────────┴──────────────┴─────────────┘
+```
+
+This does **not** mean that every GraphQL test should provision its Product
+through the REST Product Provisioner.
+
+## Why GraphQL tests create Products through GraphQL
+
+For the current Product GraphQL integration suite, when a Product is required
+as a prerequisite and GraphQL can create it, the preferred approach is to use
+the GraphQL `createProduct` mutation:
+
+```text
+GraphQL createProduct
+        ↓
+real WooCommerce Product
+        ↓
+GraphQL query / mutation under test
+        ↓
+assertions
+```
+
+This keeps the GraphQL scenario inside the GraphQL interface and avoids adding
+an unnecessary REST dependency:
+
+```text
+REST Product Provisioner
+        ↓
+REST API
+        ↓
+WooCommerce
+        ↓
+GraphQL
+```
+
+The GraphQL test is therefore testing the GraphQL API as an integrated
+interface rather than using REST as an unrelated setup mechanism.
+
+This is particularly useful for the Product CRUD workflow:
+
+```text
+CREATE → READ
+CREATE → UPDATE → READ
+CREATE → DELETE → READ
+```
+
+The Product is created by the test itself, so the test remains independent of
+arbitrary records already present in the database.
+
+## The Factory/Builder is still reused
+
+Choosing GraphQL for system provisioning does **not** require a separate
+GraphQL-specific test-data hierarchy.
+
+The existing domain Factory/Builder remains responsible for preparing data:
+
+```text
+ProductBuilder
+      ↓
+ProductFactory
+      ↓
+Product creation data
+      ↓
+GraphQL createProduct
+```
+
+The Factory and Builder do not make the GraphQL request. They simply provide
+the data that the GraphQL operation needs.
+
+Therefore, the framework does **not** need speculative components such as:
+
+```text
+GraphQLProductFactory
+GraphQLProductBuilder
+GraphQLProductProvisioner
+```
+
+unless a real future requirement justifies them.
+
+## REST-to-GraphQL provisioning is still valid
+
+The architecture also supports cross-interface tests:
+
+```text
+REST
+  ↓
+WooCommerce state
+  ↓
+GraphQL
+  ↓
+operation under test
+```
+
+This can be appropriate when:
+
+- the required state cannot be created through GraphQL;
+- the scenario intentionally verifies GraphQL against state created by REST;
+- using REST provides a genuine isolation or setup benefit.
+
+The decision is therefore based on the **purpose of the test**, not on a rule that
+one transport must always provision another transport's tests.
+
+> **Factory/Builder prepare domain data. The interface under test should normally
+> establish its own prerequisite state when that gives the test meaningful
+> integrated coverage. Cross-interface provisioning remains available when the
+> scenario actually requires it.**
+
+This preserves the reusable test-data architecture while keeping GraphQL tests
+focused on GraphQL behavior.
 
 # 🔌 Relationship With Domain Code
 

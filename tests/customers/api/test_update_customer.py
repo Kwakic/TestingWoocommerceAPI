@@ -84,6 +84,13 @@ def test_update_customer_first_name(customer_helper, create_valid_customer):
 
     # Step 1 — Create customers (POST handled by fixture)
     logger.info("🛠 Creating a test customers for updating name and email.")
+    # By default, CustomerFactory generates the customer data.
+    # To override a value for this scenario, pass it directly to the fixture:
+    #
+    #     customer = create_valid_customer(email="john.smith.12345@test.com")
+    #
+    # The fixture passes the override to CustomerBuilder → CustomerFactory.
+    # Only the specified value is overridden; all other fields are generated.
     customer = create_valid_customer()
 
     customer_id = customer["id"]

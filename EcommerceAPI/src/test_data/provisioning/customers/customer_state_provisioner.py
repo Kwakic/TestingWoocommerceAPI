@@ -5,6 +5,9 @@ This module is responsible for taking already-prepared customer state data
 and applying that state to an existing customer in the real WooCommerce
 environment through the existing CustomersHelper.
 
+The state provisioner answers:
+"What state should I change on an existing Customer?"
+
 Architecture
 ------------
 Existing customer
