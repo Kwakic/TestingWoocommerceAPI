@@ -1,22 +1,26 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Mon Sep 28 08:35:02 UTC 2026","Mon Sep 28 08:35:03 UTC 2026","232","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_usage_limits","
-Verify that Coupon usage-limit fields are accepted and persisted.
+"passed","Tue Sep 29 08:18:44 UTC 2026","Tue Sep 29 08:18:44 UTC 2026","231","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_amount[decimal]","
+Verify that valid Coupon amounts can be supplied as scenario-specific
+creation data and are persisted correctly.
 
-The test supplies only the usage-limit scenario; the standard fixture
-remains responsible for valid-data construction and provisioning.
+CouponFactory remains responsible for all unspecified valid defaults.
 "
-"passed","Mon Sep 28 08:35:06 UTC 2026","Mon Sep 28 08:35:06 UTC 2026","99","tests.coupons.api","test_get_coupon","","","","test_get_nonexistent_coupon","
-Negative test for retrieving a non-existent Coupon.
+"passed","Tue Sep 29 08:18:43 UTC 2026","Tue Sep 29 08:18:43 UTC 2026","243","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_discount_type[percent]","
+Verify that supported WooCommerce discount types can be supplied as
+scenario-specific Coupon creation data.
 
-Endpoint tested:
-    GET /coupons/{id}
-
-Test flow:
-    1. Request a non-existent Coupon ID
-    2. Validate the API returns HTTP 404
-    3. Validate the Coupon not-found error response
+The test owns only the `discount_type` and `amount` scenario values.
+Valid defaults and provisioning remain the responsibility of the
+standard `create_valid_coupon` pipeline.
 "
-"passed","Mon Sep 28 08:34:59 UTC 2026","Mon Sep 28 08:35:00 UTC 2026","1208","tests.coupons.api","test_create_coupons","","","","test_bulk_create_coupons[5]","
+"passed","Tue Sep 29 08:18:45 UTC 2026","Tue Sep 29 08:18:45 UTC 2026","225","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_email_restrictions","
+Verify that a Coupon accepts email restrictions and returns them through
+the API.
+
+The email list is scenario-specific data. The standard fixture remains
+responsible for the valid creation pipeline and cleanup.
+"
+"passed","Tue Sep 29 08:18:40 UTC 2026","Tue Sep 29 08:18:41 UTC 2026","266","tests.coupons.api","test_create_coupons","","","","test_bulk_create_coupons[1]","
 Create multiple valid Coupons and verify each Coupon exists through
 the API and matches its database record.
 
@@ -43,7 +47,26 @@ The fixture owns:
 
 The test owns the API/DB integration validation.
 "
-"passed","Mon Sep 28 08:35:00 UTC 2026","Mon Sep 28 08:35:01 UTC 2026","254","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_discount_type[fixed-cart]","
+"passed","Tue Sep 29 08:18:44 UTC 2026","Tue Sep 29 08:18:44 UTC 2026","230","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_amount[integer]","
+Verify that valid Coupon amounts can be supplied as scenario-specific
+creation data and are persisted correctly.
+
+CouponFactory remains responsible for all unspecified valid defaults.
+"
+"passed","Tue Sep 29 08:18:44 UTC 2026","Tue Sep 29 08:18:45 UTC 2026","231","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_amount[large-integer]","
+Verify that valid Coupon amounts can be supplied as scenario-specific
+creation data and are persisted correctly.
+
+CouponFactory remains responsible for all unspecified valid defaults.
+"
+"passed","Tue Sep 29 08:18:45 UTC 2026","Tue Sep 29 08:18:45 UTC 2026","236","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_expiration_date","
+Verify that a Coupon accepts a valid future expiration date.
+
+The expiration value is the only scenario-specific creation data supplied
+by this test; the standard fixture handles the remaining valid defaults,
+provisioning, validation, and cleanup.
+"
+"passed","Tue Sep 29 08:18:43 UTC 2026","Tue Sep 29 08:18:43 UTC 2026","228","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_discount_type[fixed-product]","
 Verify that supported WooCommerce discount types can be supplied as
 scenario-specific Coupon creation data.
 
@@ -51,13 +74,53 @@ The test owns only the `discount_type` and `amount` scenario values.
 Valid defaults and provisioning remain the responsibility of the
 standard `create_valid_coupon` pipeline.
 "
-"passed","Mon Sep 28 08:35:02 UTC 2026","Mon Sep 28 08:35:02 UTC 2026","229","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_amount[large-integer]","
-Verify that valid Coupon amounts can be supplied as scenario-specific
-creation data and are persisted correctly.
+"passed","Tue Sep 29 08:18:43 UTC 2026","Tue Sep 29 08:18:43 UTC 2026","228","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_discount_type[fixed-cart]","
+Verify that supported WooCommerce discount types can be supplied as
+scenario-specific Coupon creation data.
 
-CouponFactory remains responsible for all unspecified valid defaults.
+The test owns only the `discount_type` and `amount` scenario values.
+Valid defaults and provisioning remain the responsibility of the
+standard `create_valid_coupon` pipeline.
 "
-"passed","Mon Sep 28 08:35:01 UTC 2026","Mon Sep 28 08:35:01 UTC 2026","232","tests.coupons.api","test_create_coupons","","","","test_create_coupon_fails_for_existing_code","
+"passed","Tue Sep 29 08:18:48 UTC 2026","Tue Sep 29 08:18:48 UTC 2026","99","tests.coupons.api","test_get_coupon","","","","test_get_nonexistent_coupon","
+Negative test for retrieving a non-existent Coupon.
+
+Endpoint tested:
+    GET /coupons/{id}
+
+Test flow:
+    1. Request a non-existent Coupon ID
+    2. Validate the API returns HTTP 404
+    3. Validate the Coupon not-found error response
+"
+"passed","Tue Sep 29 08:18:41 UTC 2026","Tue Sep 29 08:18:43 UTC 2026","1148","tests.coupons.api","test_create_coupons","","","","test_bulk_create_coupons[5]","
+Create multiple valid Coupons and verify each Coupon exists through
+the API and matches its database record.
+
+Each Coupon is created through the standard valid-data fixture:
+
+    create_valid_coupon
+        ↓
+    CouponBuilder
+        ↓
+    CouponFactory
+        ↓
+    CouponProvisioner
+        ↓
+    CouponsHelper / CouponsApi
+        ↓
+    WooCommerce
+
+The fixture owns:
+    - valid-data construction
+    - POST /coupons
+    - HTTP 201 validation
+    - response validation
+    - cleanup registration
+
+The test owns the API/DB integration validation.
+"
+"passed","Tue Sep 29 08:18:44 UTC 2026","Tue Sep 29 08:18:44 UTC 2026","221","tests.coupons.api","test_create_coupons","","","","test_create_coupon_fails_for_existing_code","
 Negative test: creating a second Coupon with an existing Coupon code
 should be rejected by WooCommerce.
 
@@ -86,13 +149,7 @@ is owned and cleaned up by the fixture. The duplicate payload bypasses
 the valid-data pipeline because the invalid condition is the scenario
 being tested.
 "
-"passed","Mon Sep 28 08:35:02 UTC 2026","Mon Sep 28 08:35:02 UTC 2026","229","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_amount[integer]","
-Verify that valid Coupon amounts can be supplied as scenario-specific
-creation data and are persisted correctly.
-
-CouponFactory remains responsible for all unspecified valid defaults.
-"
-"passed","Mon Sep 28 08:34:58 UTC 2026","Mon Sep 28 08:34:58 UTC 2026","263","tests.coupons.api","test_create_coupons","","","","test_bulk_create_coupons[1]","
+"passed","Tue Sep 29 08:18:41 UTC 2026","Tue Sep 29 08:18:41 UTC 2026","691","tests.coupons.api","test_create_coupons","","","","test_bulk_create_coupons[3]","
 Create multiple valid Coupons and verify each Coupon exists through
 the API and matches its database record.
 
@@ -119,79 +176,22 @@ The fixture owns:
 
 The test owns the API/DB integration validation.
 "
-"passed","Mon Sep 28 08:35:02 UTC 2026","Mon Sep 28 08:35:02 UTC 2026","244","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_amount[decimal]","
+"passed","Tue Sep 29 08:18:44 UTC 2026","Tue Sep 29 08:18:44 UTC 2026","237","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_amount[minimum-decimal]","
 Verify that valid Coupon amounts can be supplied as scenario-specific
 creation data and are persisted correctly.
 
 CouponFactory remains responsible for all unspecified valid defaults.
 "
-"passed","Mon Sep 28 08:35:03 UTC 2026","Mon Sep 28 08:35:03 UTC 2026","236","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_expiration_date","
-Verify that a Coupon accepts a valid future expiration date.
+"passed","Tue Sep 29 08:18:45 UTC 2026","Tue Sep 29 08:18:45 UTC 2026","230","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_usage_limits","
+Verify that Coupon usage-limit fields are accepted and persisted.
 
-The expiration value is the only scenario-specific creation data supplied
-by this test; the standard fixture handles the remaining valid defaults,
-provisioning, validation, and cleanup.
+The test supplies only the usage-limit scenario; the standard fixture
+remains responsible for valid-data construction and provisioning.
 "
-"passed","Mon Sep 28 08:35:01 UTC 2026","Mon Sep 28 08:35:02 UTC 2026","245","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_amount[minimum-decimal]","
-Verify that valid Coupon amounts can be supplied as scenario-specific
-creation data and are persisted correctly.
-
-CouponFactory remains responsible for all unspecified valid defaults.
-"
-"passed","Mon Sep 28 08:35:00 UTC 2026","Mon Sep 28 08:35:00 UTC 2026","238","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_discount_type[percent]","
-Verify that supported WooCommerce discount types can be supplied as
-scenario-specific Coupon creation data.
-
-The test owns only the `discount_type` and `amount` scenario values.
-Valid defaults and provisioning remain the responsibility of the
-standard `create_valid_coupon` pipeline.
-"
-"passed","Mon Sep 28 08:35:01 UTC 2026","Mon Sep 28 08:35:01 UTC 2026","235","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_discount_type[fixed-product]","
-Verify that supported WooCommerce discount types can be supplied as
-scenario-specific Coupon creation data.
-
-The test owns only the `discount_type` and `amount` scenario values.
-Valid defaults and provisioning remain the responsibility of the
-standard `create_valid_coupon` pipeline.
-"
-"passed","Mon Sep 28 08:35:01 UTC 2026","Mon Sep 28 08:35:01 UTC 2026","242","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_restrictions","
+"passed","Tue Sep 29 08:18:43 UTC 2026","Tue Sep 29 08:18:44 UTC 2026","241","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_valid_restrictions","
 Verify that common Coupon restriction fields are accepted and persisted.
 
 The test supplies only the restriction scenario. CouponFactory provides
 all other valid defaults and the fixture owns provisioning, response
 validation, and cleanup.
-"
-"passed","Mon Sep 28 08:34:58 UTC 2026","Mon Sep 28 08:34:59 UTC 2026","704","tests.coupons.api","test_create_coupons","","","","test_bulk_create_coupons[3]","
-Create multiple valid Coupons and verify each Coupon exists through
-the API and matches its database record.
-
-Each Coupon is created through the standard valid-data fixture:
-
-    create_valid_coupon
-        ↓
-    CouponBuilder
-        ↓
-    CouponFactory
-        ↓
-    CouponProvisioner
-        ↓
-    CouponsHelper / CouponsApi
-        ↓
-    WooCommerce
-
-The fixture owns:
-    - valid-data construction
-    - POST /coupons
-    - HTTP 201 validation
-    - response validation
-    - cleanup registration
-
-The test owns the API/DB integration validation.
-"
-"passed","Mon Sep 28 08:35:03 UTC 2026","Mon Sep 28 08:35:03 UTC 2026","232","tests.coupons.api","test_create_coupons","","","","test_create_coupon_with_email_restrictions","
-Verify that a Coupon accepts email restrictions and returns them through
-the API.
-
-The email list is scenario-specific data. The standard fixture remains
-responsible for the valid creation pipeline and cleanup.
 "
