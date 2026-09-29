@@ -1,0 +1,26 @@
+DEBUG    EcommerceAPI.plugins.entities:entities.py:461 ✅ [coupons] Loaded API client: CouponsApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:470 ✅ [coupons] Instantiated helper with API client
+DEBUG    EcommerceAPI.src.coupons.dao.coupons_dao:coupons_dao.py:50 🗄️ CouponsDAO initialized: posts=wordpress.wp_posts, postmeta=wordpress.wp_postmeta
+DEBUG    EcommerceAPI.plugins.entities:entities.py:461 ✅ [customers] Loaded API client: CustomersApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:470 ✅ [customers] Instantiated helper with API client
+DEBUG    EcommerceAPI.plugins.entities:entities.py:461 ✅ [products] Loaded API client: ProductsApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:470 ✅ [products] Instantiated helper with API client
+DEBUG    EcommerceAPI.src.products.dao.products_dao:products_dao.py:45 🗄️ ProductsDAO initialized: table=wordpress.wp_posts
+INFO     EcommerceAPI.plugins.entities:entities.py:534 🔍 ENTITY DISCOVERY SUMMARY
+INFO     EcommerceAPI.plugins.entities:entities.py:536    coupons      | ✅  READY
+INFO     EcommerceAPI.plugins.entities:entities.py:536    customers    | ✅  READY
+INFO     EcommerceAPI.plugins.entities:entities.py:536    orders       | ⏭️ SKIPPED (missing API module)
+INFO     EcommerceAPI.plugins.entities:entities.py:536    products     | ✅  READY
+INFO     tests.products.api.test_get_products:test_get_products.py:76 🛠 Creating a test product.
+DEBUG    EcommerceAPI.src.products.helpers.products_helper:products_helper.py:360 ⚙️ Creating product with payload keys: ['name', 'type', 'status', 'regular_price', 'sku', 'description', 'short_description']
+DEBUG    EcommerceAPI.src.products.api.products_api:products_api.py:74 📡 POST /products payload_keys=['name', 'type', 'status', 'regular_price', 'sku', 'description', 'short_description']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/products → Status code: 201 (completed in 0.184s)
+INFO     EcommerceAPI.src.products.validators.product_validators:product_validators.py:99 ✅ Product structure valid: id=33, name=Product-xrCvg8936033, sku=TEST-SKU-174670364D0C
+DEBUG    EcommerceAPI.plugins.api.products:products.py:320 ℹ️ Registered product with ID: 33 for cleanup.
+INFO     tests.products.api.test_get_products:test_get_products.py:91 🔎 Fetching product by ID: 33
+DEBUG    EcommerceAPI.src.products.helpers.products_helper:products_helper.py:119 🟢 Calling 'Get Product' for ID 33.
+DEBUG    EcommerceAPI.src.products.api.products_api:products_api.py:88 📡 GET /products/33
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/products/33 → Status code: 200 (completed in 0.110s)
+INFO     EcommerceAPI.src.products.validators.product_validators:product_validators.py:99 ✅ Product structure valid: id=33, name=Product-xrCvg8936033, sku=TEST-SKU-174670364D0C
+INFO     EcommerceAPI.src.products.validators.product_validators:product_validators.py:357 ✅ Product identity verified (ID=33)
+INFO     tests.products.api.test_get_products:test_get_products.py:126 ✅ Fetched Product matches created one: ID=33, Name=Product-xrCvg8936033
