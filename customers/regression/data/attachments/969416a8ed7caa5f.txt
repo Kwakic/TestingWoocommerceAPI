@@ -1,0 +1,36 @@
+INFO     tests.customers.api.test_soft_deleted_customer_handling:test_soft_deleted_customer_handling.py:91 🛠 Creating a test customer.
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:162 ⚙️ Creating customer with payload keys: ['email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password', 'username', 'first_name', 'last_name', 'billing', 'shipping']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.145s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=34, email=testuser_ljohaehqxf@supersqa.com
+DEBUG    EcommerceAPI.plugins.api.customers:customers.py:250 ℹ️ Registered customers with ID: 34 for cleanup.
+INFO     EcommerceAPI.src.customers.dao.customers_dao:customers_dao.py:110 ✅ Soft-deleting customers ID=34 → Rows affected: 1
+DEBUG    EcommerceAPI.src.customers.dao.customers_dao:customers_dao.py:66 ℹ️ Found customers for email 'testuser_ljohaehqxf@supersqa.com': {'ID': 34, 'user_login': 'lucas.davis.a8uko1', 'user_pass': '***', 'user_nicename': 'lucas-davis-a8uko1', 'user_email': 'testuser_ljohaehqxf@supersqa.com', 'user_url': '', 'user_registered': datetime.datetime(2026, 10, 2, 8, 20, 11), 'user_activation_key': '1790929211:$generic$g8YN6lg3XLY5VJVPVX4AOKAPj1ojc_5AVBrn50bm', 'user_status': 1, 'display_name': 'lucas.davis.a8uko1'}
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:396 ⚙️ Calling 'List All Customers' via pagination utility
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:70 🧰 Starting paginated fetch for '/customers'
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:84 📦 Fetching /customers page 1 (attempt 1/3)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/customers?per_page=100&email=testuser_ljohaehqxf%40supersqa.com&page=1 → Status code: 200 (completed in 0.056s)
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:111 📄 Pagination request OK: endpoint=/customers page=1 status=200
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:132 ➡️ Page 1 → 1 items
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:84 📦 Fetching /customers page 2 (attempt 1/3)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/customers?per_page=100&email=testuser_ljohaehqxf%40supersqa.com&page=2 → Status code: 200 (completed in 0.055s)
+DEBUG    EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:111 📄 Pagination request OK: endpoint=/customers page=2 status=200
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:122 ⛔ Stop pagination (no more results at page 2)
+INFO     EcommerceAPI.src.utils.pagination_utils:pagination_utils.py:123 📊 Total pages fetched: 1
+DEBUG    EcommerceAPI.src.customers.dao.customers_dao:customers_dao.py:66 ℹ️ Found customers for email 'testuser_ljohaehqxf@supersqa.com': {'ID': 34, 'user_login': 'lucas.davis.a8uko1', 'user_pass': '***', 'user_nicename': 'lucas-davis-a8uko1', 'user_email': 'testuser_ljohaehqxf@supersqa.com', 'user_url': '', 'user_registered': datetime.datetime(2026, 10, 2, 8, 20, 11), 'user_activation_key': '1790929211:$generic$g8YN6lg3XLY5VJVPVX4AOKAPj1ojc_5AVBrn50bm', 'user_status': 1, 'display_name': 'lucas.davis.a8uko1'}
+INFO     EcommerceAPI.plugins.entities:entities.py:718 🔧 Starting teardown of created test resources...
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up customer(s)... (2 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 33
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/33?force=True → Status code: 200 (completed in 0.081s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 33
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 34
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/34?force=True → Status code: 200 (completed in 0.080s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 34
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for customer(s).
+INFO     EcommerceAPI.plugins.entities:entities.py:758 
+
+🧹 ====================================== CLEANUP SUMMARY ======================================
+INFO     EcommerceAPI.plugins.entities:entities.py:761 📊 Created during test run: {'customers': 2}
+INFO     EcommerceAPI.plugins.entities:entities.py:762 🧾 Cleanup total summary:
+INFO     EcommerceAPI.plugins.entities:entities.py:764    • customer: 2 deleted (2 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:765 ✅ All test data cleanup completed.
