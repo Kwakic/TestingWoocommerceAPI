@@ -1,0 +1,25 @@
+DEBUG    EcommerceAPI.plugins.entities:entities.py:461 ✅ [coupons] Loaded API client: CouponsApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:470 ✅ [coupons] Instantiated helper with API client
+DEBUG    EcommerceAPI.src.coupons.dao.coupons_dao:coupons_dao.py:50 🗄️ CouponsDAO initialized: posts=wordpress.wp_posts, postmeta=wordpress.wp_postmeta
+DEBUG    EcommerceAPI.plugins.entities:entities.py:461 ✅ [customers] Loaded API client: CustomersApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:470 ✅ [customers] Instantiated helper with API client
+DEBUG    EcommerceAPI.plugins.entities:entities.py:461 ✅ [products] Loaded API client: ProductsApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:470 ✅ [products] Instantiated helper with API client
+DEBUG    EcommerceAPI.src.products.dao.products_dao:products_dao.py:45 🗄️ ProductsDAO initialized: table=wordpress.wp_posts
+INFO     EcommerceAPI.plugins.entities:entities.py:534 🔍 ENTITY DISCOVERY SUMMARY
+INFO     EcommerceAPI.plugins.entities:entities.py:536    coupons      | ✅  READY
+INFO     EcommerceAPI.plugins.entities:entities.py:536    customers    | ✅  READY
+INFO     EcommerceAPI.plugins.entities:entities.py:536    orders       | ⏭️ SKIPPED (missing API module)
+INFO     EcommerceAPI.plugins.entities:entities.py:536    products     | ✅  READY
+DEBUG    EcommerceAPI.src.coupons.helpers.coupons_helper:coupons_helper.py:257 🟢 Calling 'Get Coupon' for ID 999999999.
+DEBUG    EcommerceAPI.src.coupons.api.coupons_api:coupons_api.py:91 📡 GET /coupons/999999999
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/coupons/999999999 → Status code: 404 (completed in 0.101s)
+DEBUG    EcommerceAPI.src.clients.api_client:api_client.py:625 {
+                                                                 "code": "woocommerce_rest_shop_coupon_invalid_id",
+                                                                 "message": "Invalid ID.",
+                                                                 "data": {
+                                                                   "status": 404
+                                                                 }
+                                                               }
+INFO     EcommerceAPI.src.coupons.validators.coupon_validators:coupon_validators.py:266 ✅ Valid coupon error response: code=woocommerce_rest_shop_coupon_invalid_id status=404
+DEBUG    EcommerceAPI.plugins.entities:entities.py:768 🧹 No test data created — skipping teardown.
