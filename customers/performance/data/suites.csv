@@ -1,5 +1,5 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Sun Oct 04 10:28:14 UTC 2026","Sun Oct 04 10:28:14 UTC 2026","579","tests.customers.performance","test_customer_performance","","","","test_customer_response_times","
+"passed","Sun Oct 11 10:40:35 UTC 2026","Sun Oct 11 10:40:35 UTC 2026","529","tests.customers.performance","test_customer_performance","","","","test_customer_response_times","
 Benchmark the Customers endpoint.
 
 The benchmark executes multiple requests, measures their response times,
