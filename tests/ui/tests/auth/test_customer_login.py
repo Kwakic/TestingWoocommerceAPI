@@ -18,12 +18,12 @@ Covered scenarios:
 - login with email
 """
 
-import os
 import pytest
 from playwright.sync_api import Page
 
 from tests.ui.pages.authentication.customer_login_page import CustomerLoginPage
 from tests.ui.pages.account.customer_account_page import CustomerAccountPage
+from tests.ui.data.models.customer_model import DynamicCustomer
 
 
 pytestmark = [
@@ -54,26 +54,20 @@ def test_customer_can_access_my_account(
 def test_customer_can_authenticate_with_email(
     page: Page,
     ui_base_url: str,
+    dynamic_customer: DynamicCustomer,
 ) -> None:
     """
-    Verify that an existing customer can authenticate using their email address.
+    Verify that a customer can authenticate using their email address.
 
-    WooCommerce supports authentication using either the customer's username
-    or email address. This test explicitly validates the email-based login path
-    independently of the ``customer_page`` fixture.
-
-    The fixture is intentionally not used here because the purpose of this
-    test is to exercise the authentication mechanism itself.
+    A disposable customer is provisioned through the API because the test
+    needs a valid account as a prerequisite, not a predefined customer persona.
+    The test exercises email-based login through the real UI; the dynamic
+    customer fixture owns API cleanup.
     """
 
-    # Arrange: Load the existing customer's email and password.
-    email = os.getenv("UI_CUSTOMER_EMAIL")
-    password = os.getenv("UI_CUSTOMER_PASSWORD")
-
-    if not email or not password:
-        raise pytest.UsageError(
-            "UI_CUSTOMER_EMAIL and UI_CUSTOMER_PASSWORD are required."
-        )
+    # Arrange: Use the disposable customer's email and password.
+    email = dynamic_customer.customer["email"]
+    password = dynamic_customer.password
 
     login_page = CustomerLoginPage(
         page=page,

@@ -14,7 +14,6 @@ Covered scenarios:
       profile is closed and reopened
 """
 
-import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -22,6 +21,8 @@ import pytest
 from playwright.sync_api import BrowserType, Page
 
 from tests.ui.pages.account.customer_account_page import CustomerAccountPage
+from tests.ui.data.models.customer_model import DynamicCustomer
+from tests.ui.fixtures.customer_auth import login_customer
 from tests.ui.pages.authentication.customer_login_page import CustomerLoginPage
 
 
@@ -69,10 +70,16 @@ def test_customer_can_logout(
 def test_customer_session_persistence(
     browser_type: BrowserType,
     ui_base_url: str,
+    dynamic_customer: DynamicCustomer,
     remember_me: bool,
 ) -> None:
     """
     Verify customer session behavior after closing and reopening the browser.
+
+    A disposable customer is provisioned through the API by the
+    ``dynamic_customer`` fixture; the API ownership lifecycle handles cleanup.
+    The test uses ``login_customer``'s established authentication flow for the
+    customer credentials, while managing its own persistent browser contexts.
 
     The same persistent browser profile is deliberately reused for both phases
     of the test. This models a real browser restart while preserving the browser
@@ -85,28 +92,14 @@ def test_customer_session_persistence(
     Args:
         browser_type: Playwright browser type selected by pytest.
         ui_base_url: Base URL of the WooCommerce storefront.
+        dynamic_customer: API-provisioned customer used for the login lifecycle.
         remember_me: Whether the Remember Me option is enabled before login.
 
     """
-    # Arrange: Load the dedicated customer credentials without exposing the
-    # password through parametrization or test identifiers.
-    email = os.getenv("UI_CUSTOMER_EMAIL")
-    password = os.getenv("UI_CUSTOMER_PASSWORD")
-
-    missing_credentials = [
-        name
-        for name, value in (
-            ("UI_CUSTOMER_EMAIL", email),
-            ("UI_CUSTOMER_PASSWORD", password),
-        )
-        if not value
-    ]
-
-    if missing_credentials:
-        raise pytest.UsageError(
-            "Missing required UI customer credentials: "
-            + ", ".join(missing_credentials)
-        )
+    # Arrange: Use the disposable API-provisioned customer. Its ownership
+    # lifecycle handles cleanup after the test completes.
+    username = dynamic_customer.username
+    password = dynamic_customer.password
 
     # Arrange: Use one persistent browser profile for the full restart cycle.
     with TemporaryDirectory(prefix="playwright-session-security-") as user_data_dir:
@@ -121,19 +114,22 @@ def test_customer_session_persistence(
         try:
             page: Page = context.pages[0] if context.pages else context.new_page()
 
-            login_page = CustomerLoginPage(
-                page=page,
-                base_url=ui_base_url,
-            )
-
             if remember_me:
+                # Use the Page Object's explicit Remember Me login action.
+                login_page = CustomerLoginPage(
+                    page=page,
+                    base_url=ui_base_url,
+                )
                 login_page.login_with_remember_me(
-                    username=email,
+                    username=username,
                     password=password,
                 )
             else:
-                login_page.login(
-                    username=email,
+                # Reuse the shared UI authentication helper for standard login.
+                login_customer(
+                    page=page,
+                    ui_base_url=ui_base_url,
+                    username=username,
                     password=password,
                 )
 

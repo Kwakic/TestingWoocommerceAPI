@@ -19,12 +19,11 @@ The test also validates the expected WooCommerce error for scenarios where
 Codegen confirmed the user-facing validation contract.
 """
 
-import os
-
 import pytest
 from playwright.sync_api import Page
 
 from tests.ui.pages.authentication.customer_login_page import CustomerLoginPage
+from tests.ui.data.models.customer_model import DynamicCustomer
 
 pytestmark = [
     pytest.mark.ui,
@@ -47,35 +46,21 @@ pytestmark = [
 def test_customer_cannot_authenticate_with_invalid_credentials(
     page: Page,
     ui_base_url: str,
+    dynamic_customer: DynamicCustomer,
     scenario: str,
 ) -> None:
     """
     Verify that invalid customer credentials cannot establish authentication.
 
-    The valid customer credentials are read from the environment so the test
-    can exercise realistic negative combinations without hard-coding secrets
-    or exposing passwords in parametrized test IDs.
+    A disposable customer is provisioned through the API because the test needs
+    valid credentials to construct negative combinations, not a predefined
+    customer persona. The dynamic customer fixture owns API cleanup.
     """
-    # Arrange: Load the configured dedicated customer credentials.
-    valid_username = os.getenv("UI_CUSTOMER_USERNAME")
-    valid_email = os.getenv("UI_CUSTOMER_EMAIL")
-    valid_password = os.getenv("UI_CUSTOMER_PASSWORD")
 
-    missing_credentials = [
-        name
-        for name, value in (
-            ("UI_CUSTOMER_USERNAME", valid_username),
-            ("UI_CUSTOMER_EMAIL", valid_email),
-            ("UI_CUSTOMER_PASSWORD", valid_password),
-        )
-        if not value
-    ]
-
-    if missing_credentials:
-        raise pytest.UsageError(
-            "Missing required UI customer credentials: "
-            + ", ".join(missing_credentials)
-        )
+    # Arrange: Use credentials from the disposable API-provisioned customer.
+    valid_username = dynamic_customer.username
+    valid_email = dynamic_customer.customer["email"]
+    valid_password = dynamic_customer.password
 
     login_page = CustomerLoginPage(
         page=page,

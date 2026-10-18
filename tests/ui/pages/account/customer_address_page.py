@@ -71,6 +71,12 @@ class CustomerAddressPage:
             name="Save address",
             exact=True,
         )
+
+        # WooCommerce Select2 controls used by the shipping address form.
+        self.shipping_country_control = page.locator(
+            "#select2-shipping_country-container"
+        )
+        self.shipping_state_control = page.locator("#select2-shipping_state-container")
         # Shipping address "Edit" action on the Addresses summary page.
         # The page also contains a Billing "Edit" link, so the shipping link
         # is identified by its destination rather than by link position.
@@ -154,14 +160,45 @@ class CustomerAddressPage:
         self.city_input.fill(city)
         self.zip_code_input.fill(zip_code)
 
+    def select_shipping_country(self, search_text: str, country: str) -> None:
+        """Select a shipping country from the WooCommerce Select2 control."""
+        self.page.get_by_role(
+            "combobox",
+            name="Country / Region",
+            exact=True,
+        ).click()
+
+        self.page.locator(".select2-container--open .select2-search__field").fill(
+            search_text
+        )
+
+        self.page.get_by_role(
+            "option",
+            name=country,
+            exact=True,
+        ).click()
+
+    def select_shipping_state(self, search_text: str, state: str) -> None:
+        """Select a shipping state from the WooCommerce Select2 control."""
+        self.page.get_by_role(
+            "combobox",
+            name="State",
+            exact=True,
+        ).click()
+
+        self.page.locator(".select2-container--open .select2-search__field").fill(
+            search_text
+        )
+
+        self.page.get_by_role(
+            "option",
+            name=state,
+            exact=True,
+        ).click()
+
     def save_address(self) -> None:
         """
-        Submit the shipping address form and wait for the WooCommerce save
-        request to complete.
-
-        WooCommerce submits this form with a POST request and then redirects
-        back to the account area. Waiting for the POST response prevents the
-        test from navigating away before the address update has been processed.
+        Submit the shipping address form and wait for WooCommerce to process it.
         """
         with self.page.expect_response(
             lambda response: (

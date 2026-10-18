@@ -1,8 +1,8 @@
 """
 UI tests for the authenticated WooCommerce customer account area.
 
-These tests verify that a customer can access the My Account page and navigate
-to the main account sections.
+These tests use the pre-authenticated ``customer_page`` fixture to verify
+access to the My Account page and navigation to its main sections.
 """
 
 import pytest
@@ -26,8 +26,8 @@ def test_customer_account_contains_main_sections(
     customer_page: Page,
 ) -> None:
     """
-    Verify that an authenticated customer can access the main My Account
-    sections.
+    Verify that the seeded customer session can access the main My Account
+    sections. Authentication is handled by the ``customer_page`` fixture.
     """
     # Arrange: Create the Page Object for the authenticated customer account.
     account_page = CustomerAccountPage(customer_page)
@@ -45,8 +45,8 @@ def test_customer_can_navigate_to_addresses_and_account_details(
     ui_base_url: str,
 ) -> None:
     """
-    Verify that an authenticated customer can navigate to Addresses and
-    Account details from the My Account page.
+    Verify that the seeded customer session can navigate to Addresses and
+    Account details. Authentication is handled by the ``customer_page`` fixture.
     """
     # Arrange: Create the Page Objects required by the navigation flow.
     account_page = CustomerAccountPage(customer_page)
@@ -54,6 +54,7 @@ def test_customer_can_navigate_to_addresses_and_account_details(
         page=customer_page,
         base_url=ui_base_url,
     )
+    account_details_page = CustomerAccountDetailsPage(customer_page)
 
     # Assert: Verify that the My Account page is loaded and authenticated.
     account_page.should_be_loaded()
@@ -73,5 +74,4 @@ def test_customer_can_navigate_to_addresses_and_account_details(
     account_page.open_account_details()
 
     # Assert: Verify that the Account details page is displayed.
-    account_details_page = CustomerAccountDetailsPage(customer_page)
     account_details_page.should_be_loaded()

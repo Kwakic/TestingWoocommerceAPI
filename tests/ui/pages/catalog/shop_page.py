@@ -47,8 +47,10 @@ class ShopPage:
 
     def open_product(self, product_name: str) -> ProductPage:
         """Open a product from the Shop page."""
-        self.page.get_by_role("link", name=product_name).click()
-        return ProductPage(self.page)
+        self.page.get_by_text(
+            product_name, exact=True
+        ).click()  # This avoids the ambiguity between the image link and title link
+        return ProductPage(self.page, product_name)
 
 
 # def test_seeded_products_are_visible(page):

@@ -208,7 +208,7 @@ def create_valid_product(shared_api_resources) -> Callable[..., dict]:
         - ALWAYS returns a valid Product dict
         - ALWAYS validates status_code == 201
         - ALWAYS validates the Product response
-        - NEVER returns HttpResponse
+        - HttpResponse is used internally for transport-level setup validation.
         - NEVER returns invalid data
         - Registers the Product for cleanup unless skip_cleanup=True
 

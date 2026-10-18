@@ -4,32 +4,29 @@ This document explains how authentication, pytest fixtures, Playwright, and Page
 
 The main design principle is:
 
-> **Fixtures manage test infrastructure and authentication. Tests manage business workflows. Page Objects manage UI interactions.**
+> **Fixtures manage shared test infrastructure and predefined session setup. Page Objects encapsulate UI interactions. Tests orchestrate business workflows, including explicit authentication when it is part of the scenario.**
 
 ---
 
 ## 🏗️ Architecture Overview
 
-Our Playwright architecture separates responsibilities into distinct layers:
+Our Playwright architecture separates responsibilities into distinct layers. The diagram below shows the standard `customer_page` fixture path; authentication-focused tests may use an explicit login flow instead.
 
 ```text
+STANDARD CUSTOMER-FIXTURE PATH
+
 TEST
- │
  │ requests customer_page
  ▼
 PYTEST FIXTURE
- │
- │ gets credentials
- │ creates login Page Object
- │ calls login()
+ │ gets configured credentials
+ │ creates CustomerLoginPage
+ │ performs and verifies login
  ▼
 CUSTOMER LOGIN PAGE
- │
  │ Playwright interacts with UI
- │ observes login response
  ▼
 WOOCOMMERCE
- │
  │ authenticates customer
  │ establishes session/cookies
  ▼
@@ -37,15 +34,46 @@ AUTHENTICATED PAGE
  │
  ▼
 TEST
+
+AUTHENTICATION-FOCUSED PATH
+
+TEST → dynamic_customer credentials → login helper / CustomerLoginPage
+    → real WooCommerce login → assertions about login or session behavior
 ```
 
-This separation prevents authentication mechanics from leaking into individual business tests.
+This separation keeps shared setup reusable without forcing every authentication scenario through the same fixture.
+
+---
+
+## 👥 Choosing a Customer Test Setup and Resource Owner
+
+The UI suite supports predefined customer personas and dynamically provisioned customers. Choose the setup based on the behavior under test rather than automatically logging in for every test involving a customer.
+
+### Predefined customer personas
+
+Use `customer_page` when a test needs a standard authenticated customer session. Use a specialized seeded persona when its initial state is part of the scenario—for example, a customer without a saved address or a separate customer account whose profile can be modified independently.
+
+### Dynamically provisioned customers
+
+Use `dynamic_customer` when a test needs a disposable customer with unique credentials or a controlled starting point, but does not depend on a predefined persona. The fixture provisions the customer through the API and exposes the customer data and credentials to the test. API resource ownership remains responsible for cleanup.
+
+A test may need an existing customer identity without needing to authenticate as that customer. For example, a duplicate-registration security test can submit an API-provisioned customer's existing email to the registration form without logging in.
+
+### Customers created through the UI
+
+When registration itself is the behavior under test, generate unique registration data and create the customer through the UI. Resolve the created customer resource and register it with `ui_resources` so UI cleanup removes it.
+
+**Ownership rule:** each resource should have one cleanup owner. Do not register the same customer with both API and UI resource ownership.
+
+### Authentication and provisioning are separate concerns
+
+Provisioning answers, “Where did this customer come from, and who cleans it up?” Authentication answers, “Does this test need to be logged in, and how?” Choose each independently to match the scenario.
 
 ---
 
 # 🔑 1. Customer Authentication Fixture
 
-The `customer_page` fixture is responsible for creating an **authenticated browser page**.
+The `customer_page` fixture is responsible for providing an **authenticated browser page** using the configured customer credentials. It is the standard path for tests that need an authenticated customer session, but it is not the only supported authentication flow.
 
 Conceptually:
 
@@ -83,7 +111,7 @@ Test receives customer_page
 
 ### 🎯 Architectural responsibility
 
-The fixture owns the **authentication lifecycle**, not the test.
+The fixture owns the **predefined authenticated-page setup** for tests that request `customer_page`. Tests that specifically exercise login behavior, Remember Me, or session persistence may orchestrate their own authentication flow and browser contexts.
 
 The test should not need to know:
 
@@ -106,7 +134,7 @@ and receives an authenticated browser session.
 
 # 🎭 2. `CustomerLoginPage` — Playwright Authentication
 
-The `CustomerLoginPage` Page Object contains the actual UI interaction.
+The `CustomerLoginPage` Page Object contains the actual login-form interactions. The standard `login_customer()` helper reuses the shared login flow, while scenarios such as Remember Me can call a specific Page Object method such as `login_with_remember_me()`. Tests may orchestrate these flows directly when authentication behavior is what they are testing.
 
 For example, it defines Playwright locators:
 
@@ -458,7 +486,7 @@ This creates a clean separation between **test infrastructure**, **UI mechanics*
 
 # 👤 10. Role-Based Authentication
 
-The framework also uses a role-based fixture architecture:
+The framework also uses role-based fixtures for common browser states. The examples below show the guest and customer roles; include `admin_page` in this model wherever it is part of the active fixture setup.
 
 ```python
 UI_ROLE_FIXTURES = {
@@ -521,7 +549,7 @@ Real UI login
 Authenticated session
 ```
 
-Every test that requests `customer_page` performs the real login flow.
+Every test that requests `customer_page` currently performs the real UI login flow. Tests that explicitly exercise authentication behavior may manage their own login flow and browser contexts.
 
 This is intentional at this stage.
 
@@ -545,7 +573,7 @@ Session establishment
 Authenticated customer
 ```
 
-Only after this contract is stable does it make sense to optimize the suite using reusable authentication state.
+For tests that do not need to validate login itself, reusable authentication state may later reduce repeated UI logins. Authentication-focused tests should continue to exercise the real login flow.
 
 Later we could introduce:
 
@@ -559,7 +587,7 @@ Avoid repeated UI login
 Faster test execution
 ```
 
-That becomes an **optimization**, rather than hiding authentication problems from the beginning.
+That becomes an **optimization for tests that do not target authentication**, rather than hiding authentication problems in tests that need to validate the login contract.
 
 ---
 

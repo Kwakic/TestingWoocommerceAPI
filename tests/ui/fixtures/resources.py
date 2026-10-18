@@ -1,7 +1,7 @@
 """UI test resource lifecycle fixtures.
 
 This module owns application-data teardown for resources explicitly created by
-Playwright UI tests.
+Playwright UI tests (handles cleanup registration for resources created through the UI).
 
 Browser state and application state are intentionally separate:
 - browser.py owns BrowserContext/Page lifecycle;

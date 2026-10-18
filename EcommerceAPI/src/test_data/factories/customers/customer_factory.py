@@ -4,54 +4,60 @@ from typing import Any
 
 from EcommerceAPI.src.test_data.factories.base import BaseFactory
 from EcommerceAPI.src.utils.generic_utilities import (
-    generate_random_address,
     generate_random_email,
-    generate_random_first_name,
-    generate_random_last_name,
     generate_random_password,
-    generate_random_username,
 )
 
 
 class CustomerFactory(BaseFactory[dict[str, Any]]):
     """
-    Factory responsible for generating valid customer creation data in memory (exists only in RAM).
-    There is no customer in WooCommerce yet.The factory has only prepared the data that could be used to create one.
+    Factory responsible for generating the minimum valid customer creation
+    data in memory (exists only in RAM).
+
+    There is no customer in WooCommerce yet. The factory has only prepared
+    the minimum data required to create one.
 
     The factory answers:
-    "How do I generate a complete valid Customer?"
+        "What is the minimum valid data required to create a Customer?"
 
-    The data becomes an in-memory object when the Factory returns:
+    By default, the Factory returns:
 
-    return {
-    "email": email,
-    "password": password,
-    ...
-    }
+        {
+            "email": email,
+            "password": password,
+        }
+
     ---------------------------------------------------------
     Example of its dictionary:
 
-    {
-    "first_name": "John",
-    "last_name": "Smith",
-    "email": "john.smith.12345@test.com",
-    "username": "johnsmith12345",
-    "password": "SecurePassword123!",
-    "billing": {...},
-    "shipping": {...}
-    }
+        {
+            "email": "john.smith.12345@test.com",
+            "password": "SecurePassword123!",
+        }
 
     --------------------------------------------------------
     Then what happens?
-    Your test/fixture passes that dictionary to the provisioner:
 
-    customer_data = CustomerFactory().build()
-    response = customer_provisioner.provision(customer_data)
+    The Builder can add scenario-specific customer data before the
+    creation payload is passed to the Provisioner:
+
+        customer_data = (
+            CustomerBuilder()
+            .with_name("John", "Smith")
+            .with_shipping(shipping_address)
+            .build()
+        )
+
+        response = customer_provisioner.provision(customer_data)
+
     --------------------------------------------------------
 
     A factory belongs to the test-data generation layer. Its job is to
-    create a complete, valid set of data in memory so tests do not have
-    to manually assemble repetitive payloads.
+    generate the minimum valid creation data so tests do not have to
+    manually assemble mandatory credentials.
+
+    Optional customer state belongs to the Builder and should only be
+    added when the scenario requires it.
 
 
     IMPORTANT ARCHITECTURAL RULE
@@ -67,20 +73,22 @@ class CustomerFactory(BaseFactory[dict[str, Any]]):
     such as ``id``. It should therefore not be used as this factory's
     return type.
 
-    Instead, this factory returns ``dict[str, Any]`` containing fields
-    needed to create a customer. The provisioner will later pass this data
+    Instead, this factory returns ``dict[str, Any]`` containing the minimum
+    fields needed to create a customer. The Builder may then add
+    scenario-specific fields before the Provisioner passes the final data
     to the existing customer domain helper.
 
     RESPONSIBILITIES
     ----------------
-    - Generate realistic test values.
+    - Generate realistic mandatory credential values.
     - Generate collision-resistant values where uniqueness is required.
-    - Provide sensible defaults for a complete customer.
-    - Accept explicit overrides for scenario-specific data.
+    - Provide the minimum valid customer creation data.
+    - Keep mandatory data generation independent from scenario-specific data.
 
     NON-RESPONSIBILITIES
     --------------------
     The factory must NOT:
+    - generate optional customer state such as names or addresses;
     - call the WooCommerce API;
     - access the database;
     - use pytest fixtures;
@@ -96,47 +104,51 @@ class CustomerFactory(BaseFactory[dict[str, Any]]):
 
     def build(self, **overrides: Any) -> dict[str, Any]:
         """
-        Build a complete customer creation payload.
+        Build the minimum valid customer creation payload.
 
-        The factory generates generic primitive values through the shared
-        utility layer and composes them into the customer structure.
+        The factory generates the mandatory customer credentials through
+        the shared utility layer. Optional customer fields are deliberately
+        not generated here; they belong to the Builder and should be added
+        only when required by the scenario.
 
-        Explicit keyword arguments replace generated defaults, allowing a
-        test to customize only the data relevant to its scenario.
+        Explicit ``email`` and ``password`` values replace generated defaults.
 
         Example:
             customer = factory.build()
 
-        Or, when a known email is required:
+        Result:
 
-            customer = factory.build(email="known@example.com")
+            {
+                "email": "random@test.com",
+                "password": "SecurePassword123!",
+            }
+
+        Or, when known credentials are required:
+
+            customer = factory.build(
+                email="known@example.com",
+                password="Password1!",
+            )
 
         Args:
             **overrides:
-                Supported creation fields:
-                ``email``, ``password``, ``username``, ``first_name``,
-                ``last_name``, ``billing`` and ``shipping``.
+                Supported factory fields:
+                ``email`` and ``password``.
+
+                Optional customer fields such as ``username``,
+                ``first_name``, ``last_name``, ``billing`` and ``shipping``
+                belong to ``CustomerBuilder`` rather than this factory.
 
         Returns:
             dict[str, Any]:
-                Complete customer creation data.
+                Minimum customer creation data containing ``email`` and
+                ``password``.
 
         Raises:
             TypeError:
                 If an unsupported field is supplied.
         """
         values = dict(overrides)
-
-        # Generate names first because the default username and addresses
-        # depend on them.
-        first_name = values.pop(
-            "first_name",
-            generate_random_first_name(),
-        )
-        last_name = values.pop(
-            "last_name",
-            generate_random_last_name(),
-        )
 
         # Credentials are generated by the shared utility layer rather than
         # by a second random-data library. Explicit values always win.
@@ -149,71 +161,18 @@ class CustomerFactory(BaseFactory[dict[str, Any]]):
             generate_random_password(),
         )
 
-        username = values.pop(
-            "username",
-            generate_random_username(first_name, last_name),
-        )
-
-        # The utility returns generic address primitives. The factory adds
-        # customer-specific fields such as first/last name and billing email.
-        billing = values.pop(
-            "billing",
-            self._build_address(
-                generate_random_address(country="ES"),
-                first_name,
-                last_name,
-                email,
-            ),
-        )
-        shipping = values.pop(
-            "shipping",
-            self._build_address(
-                generate_random_address(country="ES"),
-                first_name,
-                last_name,
-            ),
-        )
-
         if values:
             unknown_fields = ", ".join(sorted(values))
-            raise TypeError(f"Unsupported CustomerFactory fields: {unknown_fields}")
+            raise TypeError(
+                f"Unsupported CustomerFactory fields: {unknown_fields}. "
+                "Optional customer fields must be added through CustomerBuilder."
+            )
 
         return {
             "email": email,
             "password": password,
-            "username": username,
-            "first_name": first_name,
-            "last_name": last_name,
-            "billing": billing,
-            "shipping": shipping,
         }
 
-    @staticmethod
-    def _build_address(
-        address: dict[str, str],
-        first_name: str,
-        last_name: str,
-        email: str | None = None,
-    ) -> dict[str, str]:
-        """
-        Add customer-specific fields to a generic generated address.
 
-        Keeping this small composition step in the domain factory is
-        intentional: generic utilities generate reusable primitives, while
-        the CustomerFactory knows what WooCommerce customer address data
-        should look like.
-        """
-        customer_address = {
-            "first_name": first_name,
-            "last_name": last_name,
-            **address,
-        }
-
-        if email is not None:
-            customer_address["email"] = email
-
-        return customer_address
-
-    # Username and address generation intentionally live in the shared
-    # utility layer as reusable data-generation primitives. This factory
-    # composes those primitives into the WooCommerce customer structure.
+# The Factory intentionally generates only the mandatory customer
+# credentials. Optional customer state is composed by CustomerBuilder.

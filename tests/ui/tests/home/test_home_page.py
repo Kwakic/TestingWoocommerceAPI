@@ -1,9 +1,9 @@
-"""
-UI tests for the WooCommerce storefront home page.
+"""UI tests for home-page access and storefront navigation by selected roles.
 
-These scenarios currently validate guest access. The indirect role fixture is
-used consistently so additional supported roles can be enabled at the test
-boundary without changing the test implementation.
+The scenarios use the indirect ``ui_role_page`` fixture to keep browser and
+authentication setup outside the tests. Enabled roles vary by scenario: the
+home-page loading test covers guests, while shop navigation covers guests and
+customers.
 """
 
 import pytest
@@ -22,8 +22,6 @@ pytestmark = [
     "ui_role_page",
     [
         pytest.param("guest", id="guest"),
-        # pytest.param("customer", id="customer"),
-        # pytest.param("admin", id="admin"),
     ],
     indirect=True,
 )
@@ -64,8 +62,8 @@ def test_selected_role_can_navigate_to_shop(
     """
     Verify that the selected storefront role can navigate to the Shop page.
 
-    The current scenario is named for the guest use case because guest access
-    is the only enabled role in this test matrix at present.
+    The indirect ``ui_role_page`` fixture supplies a guest or customer page,
+    keeping browser/session lifecycle and authentication outside the test.
     """
 
     # Arrange: Start from the storefront home page.

@@ -152,7 +152,7 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
         - ALWAYS validates status_code == 201
         - ALWAYS validates schema + domain rules
         - NEVER returns HttpResponse
-        - NEVER returns invalid data
+        - HttpResponse is used internally for transport-level setup validation.
 
         FLOW:
         -----
@@ -234,7 +234,7 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
         # and you lose useful debugging info.
 
         # -----------------------------------------
-        # 3️⃣ Extract JSON to validate body
+        # 3️⃣ Extract JSON to validate body (parsed response body)
         # -----------------------------------------
         customer = response.json
         # -----------------------------------------
