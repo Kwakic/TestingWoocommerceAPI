@@ -1,24 +1,5 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Sun Oct 18 19:28:57 UTC 2026","Sun Oct 18 19:28:57 UTC 2026","230","tests.coupons.api","test_get_coupon","","","","test_get_coupon_by_id","
-Verify that a coupon can be retrieved by ID.
-
-Endpoint tested:
-    GET /coupons/{id}
-
-Fixture responsibilities (``create_valid_coupon``):
-    - create valid Coupon test data through the Builder / Factory path
-    - POST /coupons through the Provisioner / Helper path
-    - validate the creation response
-    - register the Coupon for automatic cleanup
-
-Test flow:
-    1. Create a valid Coupon
-    2. Retrieve the Coupon by ID
-    3. Validate the GET HTTP status
-    4. Validate the Coupon response structure
-    5. Verify the returned Coupon identity
-"
-"passed","Sun Oct 18 19:28:56 UTC 2026","Sun Oct 18 19:28:57 UTC 2026","273","tests.coupons.api","test_create_coupons","","","","test_create_single_coupon","
+"passed","Sun Oct 18 19:35:20 UTC 2026","Sun Oct 18 19:35:20 UTC 2026","258","tests.coupons.api","test_create_coupons","","","","test_create_single_coupon","
 Create a Coupon using the minimum scenario-specific input.
 
 The test does not build or provision the Coupon directly. The
@@ -50,4 +31,23 @@ Test flow:
 
 API/DB validation remains explicit in the test because it is the
 purpose of this integration scenario.
+"
+"passed","Sun Oct 18 19:35:20 UTC 2026","Sun Oct 18 19:35:21 UTC 2026","237","tests.coupons.api","test_get_coupon","","","","test_get_coupon_by_id","
+Verify that a coupon can be retrieved by ID.
+
+Endpoint tested:
+    GET /coupons/{id}
+
+Fixture responsibilities (``create_valid_coupon``):
+    - create valid Coupon test data through the Builder / Factory path
+    - POST /coupons through the Provisioner / Helper path
+    - validate the creation response
+    - register the Coupon for automatic cleanup
+
+Test flow:
+    1. Create a valid Coupon
+    2. Retrieve the Coupon by ID
+    3. Validate the GET HTTP status
+    4. Validate the Coupon response structure
+    5. Verify the returned Coupon identity
 "
