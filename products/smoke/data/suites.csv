@@ -1,5 +1,21 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Sun Oct 18 19:35:08 UTC 2026","Sun Oct 18 19:35:08 UTC 2026","284","tests.products.api","test_get_products","","","","test_get_product_by_id","
+"passed","Sun Oct 18 21:40:32 UTC 2026","Sun Oct 18 21:40:33 UTC 2026","331","tests.products.api","test_create_products","","","","test_create_single_simple_product","
+Create a simple product using the minimum valid payload.
+
+The fixture `create_valid_product` already performs:
+
+    - POST /products
+    - status code validation (201)
+    - response structure validation (Pydantic)
+    - cleanup registration
+
+Test flow:
+
+    1. Create a simple product
+    2. Fetch product via API
+    3. Verify API data matches database record
+"
+"passed","Sun Oct 18 21:40:33 UTC 2026","Sun Oct 18 21:40:33 UTC 2026","284","tests.products.api","test_get_products","","","","test_get_product_by_id","
 Verify that a Product can be retrieved successfully by ID.
 
 Endpoint tested:
@@ -16,20 +32,4 @@ Test flow:
     3. Validate HTTP transport status
     4. Validate the Product response structure
     5. Verify the returned Product identity
-"
-"passed","Sun Oct 18 19:35:08 UTC 2026","Sun Oct 18 19:35:08 UTC 2026","317","tests.products.api","test_create_products","","","","test_create_single_simple_product","
-Create a simple product using the minimum valid payload.
-
-The fixture `create_valid_product` already performs:
-
-    - POST /products
-    - status code validation (201)
-    - response structure validation (Pydantic)
-    - cleanup registration
-
-Test flow:
-
-    1. Create a simple product
-    2. Fetch product via API
-    3. Verify API data matches database record
 "
