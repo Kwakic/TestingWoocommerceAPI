@@ -487,8 +487,8 @@ Fixture
 
 | Layer | Responsibility |
 |---|---|
-| `Factory` | Generates valid default creation data in memory; no network, DB, pytest, or cleanup |
-| `Builder` | Customizes creation data from the Factory for a scenario; no network, DB, pytest, or cleanup |
+| `Factory` | Generates the minimum valid default creation data in memory; no network, DB, pytest, or cleanup |
+| `Builder` | Adds scenario-specific creation fields to the Factory defaults; no network, DB, pytest, or cleanup |
 | `State Builder` | Prepares partial state changes for an existing resource; no network, DB, pytest, or cleanup |
 | `Provisioner` | Takes already-prepared creation data and creates real system state through the domain Helper/API |
 | `State Provisioner` | Applies already-prepared state to an existing resource through the domain Helper/API |
@@ -512,7 +512,7 @@ Factory
     ↓
 Builder (when creation customization is needed)
     ↓
-complete creation data
+creation data
 
 Need an existing resource in a specific state
     ↓
@@ -539,6 +539,26 @@ WooCommerce
 
 The Factory and Builder never call the API. The Provisioner never generates
 random data. The Helper no longer acts as a test-data factory.
+
+For Customer specifically, the default creation payload is intentionally minimal:
+
+```python
+CustomerBuilder().build()
+```
+
+produces only:
+
+```python
+{
+    "email": "...",
+    "password": "...",
+}
+```
+
+Optional fields such as `username`, `first_name`, `last_name`, `billing`, and
+`shipping` are added through `CustomerBuilder` only when the scenario requires
+them. This keeps prerequisite data minimal and makes scenario dependencies
+visible in the test.
 
 The standard valid-creation setup path is therefore:
 
@@ -650,12 +670,30 @@ The test does not need to know how `HttpClient` performs retries, timeouts, auth
 
 Creation data and existing-resource state are deliberately different concepts.
 
-Use `CustomerBuilder` when the test needs a **new customer**:
+For example, a UI test that only needs a customer capable of logging in can use:
 
 ```python
+customer_data = CustomerBuilder().build()
+```
+
+This creates only the mandatory `email` and `password` data. The UI can then
+create the shipping address if creating that address is the behaviour under test.
+If an address is a prerequisite instead, add/provision that state before the UI
+operation rather than hiding it inside the UI test.
+
+Use `CustomerBuilder` when the test needs a **new customer**.
+The Builder starts with the minimum valid `email` + `password` payload and adds
+scenario-specific fields only when required:
+
+```python
+# Minimum customer — email + password
+customer_data = CustomerBuilder().build()
+
+# Customer with scenario-specific data
 customer_data = (
     CustomerBuilder()
     .with_email("known@example.com")
+    .with_name("John", "Smith")
     .build()
 )
 ```

@@ -20,7 +20,6 @@ pytest_plugins = [
     # -----------------------
     "EcommerceAPI.plugins.entities",  # <-- defines shared_api_resources
     "EcommerceAPI.plugins.db_fixtures",
-    "EcommerceAPI.plugins.api_fixtures",  # <-- uses shared_api_resources
     # -----------------------
     # API Layer (split by domain)
     # -----------------------
@@ -35,7 +34,7 @@ pytest_plugins = [
     # -----------------------
     "tests.ui.fixtures.browser",
     "tests.ui.fixtures.authentication",
-    "tests.ui.fixtures.customers",
+    "tests.ui.fixtures.customer_auth",
     "tests.ui.fixtures.admin",
     "tests.ui.fixtures.resources",
 ]

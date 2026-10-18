@@ -177,7 +177,17 @@ seed_product() {
     if [ -n "$existing_id" ]; then
         echo "✅ Seed product already exists: $name (ID: $existing_id)"
 
-        # Important:
+        # Keep existing seeded products aligned with API-created products.
+        # WooCommerce's product factory defaults both fields to
+        # "Test product: <product name>".
+        docker compose -f docker-compose.wp.yml run --rm \
+            -e HTTP_HOST="$WP_HTTP_HOST" \
+            wpcli wp wc product update "$existing_id" \
+            --description="Test product: $name" \
+            --short_description="Test product: $name" \
+            --user=admin \
+            --allow-root
+
         # Existing products must also receive the image if the
         # image fixture was added after the product was created.
         ensure_product_image \
@@ -201,6 +211,8 @@ seed_product() {
             --status=publish \
             --sku="$sku" \
             --regular_price="$price" \
+            --description="Test product: $name" \
+            --short_description="Test product: $name" \
             --in_stock=true \
             --catalog_visibility=visible \
             --user=admin \

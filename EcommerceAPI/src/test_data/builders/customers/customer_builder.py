@@ -32,6 +32,10 @@ class CustomerBuilder:
         "What should be different for this particular scenario?"
 
 
+    The Factory provides the minimum valid customer data
+    (email + password). The Builder adds optional customer fields
+    only when the scenario requires them.
+
     This keeps tests concise. A test can customize one or two fields
     without rebuilding an entire customer payload.
 
@@ -39,8 +43,33 @@ class CustomerBuilder:
         customer = (
             CustomerBuilder()
             .with_email("known@example.com")
+            .with_name("John", "Smith")
             .build()
         )
+
+    The resulting payload contains:
+
+        {
+            "email": "known@example.com",
+            "password": "...",
+            "first_name": "John",
+            "last_name": "Smith",
+        }
+
+    For a scenario that only needs credentials:
+
+        customer = CustomerBuilder().build()
+
+    Result:
+
+        {
+            "email": "...",
+            "password": "...",
+        }
+
+    This is useful for UI scenarios where the test needs only a
+    login-capable customer and will create additional state through
+    the UI itself.
 
     The builder does NOT:
     - call WooCommerce;
@@ -70,8 +99,9 @@ class CustomerBuilder:
         """
         self._factory = factory or CustomerFactory()
 
-        # Store only scenario-specific overrides here. The factory remains
-        # responsible for generating all unspecified default values.
+        # Store only scenario-specific optional fields here.
+        # The Factory remains responsible for generating the mandatory
+        # email/password defaults.
         self._overrides: dict[str, Any] = {}
 
     def with_email(self, email: str) -> CustomerBuilder:
@@ -93,11 +123,13 @@ class CustomerBuilder:
 
     def with_username(self, username: str) -> CustomerBuilder:
         """
-        Override the generated customer username.
+        Add an explicit customer username.
 
-        It simply says:
-        "Factory, when you build this customer, don't generate
-        the username yourself.Use THIS username."
+        The Factory does not generate a username by default because it is
+        not required for the minimum valid customer creation payload.
+
+        It can be added here when a scenario needs to log in with or
+        otherwise reference a known username.
         """
         self._overrides["username"] = username
         return self
@@ -108,10 +140,10 @@ class CustomerBuilder:
         last_name: str,
     ) -> CustomerBuilder:
         """
-        Override both first and last name.
+        Add customer first and last names.
 
-        The values are changed together because generated usernames and
-        default addresses are derived from the customer's name.
+        Names are optional customer creation data and are therefore
+        generated only when the scenario explicitly requires them.
         """
         self._overrides["first_name"] = first_name
         self._overrides["last_name"] = last_name
@@ -119,36 +151,44 @@ class CustomerBuilder:
 
     def with_billing(self, billing: dict[str, Any]) -> CustomerBuilder:
         """
-        Replace the generated billing address.
+        Add or replace the customer billing address.
         """
         self._overrides["billing"] = billing
         return self
 
     def with_shipping(self, shipping: dict[str, Any]) -> CustomerBuilder:
         """
-        Replace the generated shipping address.
+        Add or replace the customer shipping address.
         """
         self._overrides["shipping"] = shipping
         return self
 
     def with_fields(self, **fields: Any) -> CustomerBuilder:
         """
-        Override arbitrary customer creation fields.
+        Add arbitrary customer creation fields.
 
-        This is useful while the fixture API supports additional Customer API
-        fields that do not yet have a dedicated fluent builder method.
+        This is useful while the Customer API exposes additional fields
+        that do not yet have a dedicated fluent builder method.
+
         Dedicated ``with_*`` methods remain preferable for commonly used
         scenario fields because they make tests self-documenting.
+
+        Example:
+            customer = (
+                CustomerBuilder()
+                .with_fields(role="customer")
+                .build()
+            )
         """
         self._overrides.update(fields)
         return self
 
     def without_billing(self) -> CustomerBuilder:
         """
-        Set billing data to an empty dictionary.
+        Explicitly set billing data to an empty dictionary.
 
-        This is intended for scenarios that explicitly test missing or
-        empty billing information.
+        Billing is absent by default. This method is intended for scenarios
+        that specifically need to send an explicit empty billing object.
 
         IMPORTANT:
             This method does not claim that WooCommerce accepts an empty
@@ -160,10 +200,10 @@ class CustomerBuilder:
 
     def without_shipping(self) -> CustomerBuilder:
         """
-        Set shipping data to an empty dictionary.
+        Explicitly set shipping data to an empty dictionary.
 
-        This is intended for scenarios that explicitly test missing or
-        empty shipping information.
+        Shipping is absent by default. This method is intended for scenarios
+        that specifically need to send an explicit empty shipping object.
 
         Whether WooCommerce accepts this payload is deliberately not
         decided by the builder.
@@ -175,70 +215,68 @@ class CustomerBuilder:
         """
         Produce the final customer creation payload.
 
-        The builder does not generate all values itself. It passes the
-        collected scenario overrides to CustomerFactory, which generates
-        sensible defaults for everything that was not overridden.
+        The Builder first asks CustomerFactory for the minimum valid
+        customer data (email + password), then adds the scenario-specific
+        optional fields collected by the Builder.
 
         Returns:
             dict[str, Any]:
                 Customer creation data ready for the provisioning layer.
 
-        Example:
+        Example 1 - minimum customer:
+
+            customer = CustomerBuilder().build()
+
+        Result:
+
+            {
+                "email": "...",
+                "password": "...",
+            }
+
+        Example 2 - scenario-specific customer:
+
             customer = (
                 CustomerBuilder()
                 .with_name("John", "Smith")
-                .with_email("john.smith@example.com")
+                .with_shipping(shipping_address)
                 .build()
             )
-        """
-        # It passes all of these fields above to the Factory and the Factory is the boundary that validates the
-        # supported fields.
-        return self._factory.build(**self._overrides)
 
-        # What happens when .build() is called?
-        # We have:
-        #   CustomerBuilder()
-        #     .with_name("John", "Smith")
-        #     .with_email("john@example.com")
-        #     .build()
+        Result:
+
+            {
+                "email": "...",
+                "password": "...",
+                "first_name": "John",
+                "last_name": "Smith",
+                "shipping": {...},
+            }
+        """
+
+        # The Factory is the boundary responsible for generating the
+        # mandatory customer credentials.
         #
-        # The Builder executes:
-        #   return self._factory.build(**self._overrides)
-        #
-        # The actual implementation does exactly this.
-        #   Builder
-        #     │
-        #     │ overrides:
-        #     │ {
-        #     │   first_name: John
-        #     │   last_name: Smith
-        #     │   email: john@example.com
-        #     │ }
-        #     ▼
-        #   CustomerFactory
-        #
-        # The Factory now generates everything else.
-        #
-        # Builder says:
-        #
-        #   first_name = John
-        #   last_name = Smith
-        #   email = john@example.com
-        #
-        # Factory generates:
-        #
-        #   password = random
-        #   username = generated from John + Smith
-        #   billing = generated
-        #   shipping = generated
-        #
-        # The final result becomes:
-        #   {
-        #     "email": "john@example.com",
-        #     "password": "...",
-        #     "username": "john_smith_...",
-        #     "first_name": "John",
-        #     "last_name": "Smith",
-        #     "billing": {...},
-        #     "shipping": {...},
-        # }
+        # Only pass credentials when they were explicitly overridden.
+        # This keeps the Factory responsible for generating the defaults.
+        factory_overrides: dict[str, Any] = {}
+
+        if "email" in self._overrides:
+            factory_overrides["email"] = self._overrides["email"]
+
+        if "password" in self._overrides:
+            factory_overrides["password"] = self._overrides["password"]
+
+        customer_data = self._factory.build(**factory_overrides)
+
+        # The Builder owns all optional scenario-specific customer state.
+        # Only fields explicitly requested by the scenario are added.
+        optional_fields = {
+            key: value
+            for key, value in self._overrides.items()
+            if key not in {"email", "password"}
+        }
+
+        customer_data.update(optional_fields)
+
+        return customer_data

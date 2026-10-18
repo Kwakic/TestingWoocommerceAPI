@@ -42,6 +42,29 @@ def generate_random_email(
 
 def generate_random_password(length: int = 20) -> str:
     """
+    Generate a random alphanumeric password suitable for test users.
+
+    Args:
+        length:
+            Password length. Must be greater than zero.
+
+    Returns:
+        A random password containing only ASCII letters and digits.
+
+    Raises:
+        ValueError:
+            If ``length`` is not positive.
+    """
+    if length <= 0:
+        raise ValueError("'length' must be a positive integer")
+
+    password_chars = string.ascii_letters + string.digits
+
+    return "".join(random.choices(password_chars, k=length))
+
+
+def generate_strong_random_password(length: int = 20) -> str:
+    """
     Generate a random password suitable for test users.
 
     The password contains letters, digits, and punctuation.
