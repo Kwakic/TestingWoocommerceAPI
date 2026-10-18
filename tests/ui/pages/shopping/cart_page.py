@@ -76,7 +76,12 @@ class CartPage:
 
     def should_contain_product(self, product_name: str) -> None:
         """Verify that the cart contains the specified product."""
-        expect(self.page.get_by_text(product_name)).to_be_visible()
+        product_link = self.page.get_by_role(
+            "link",
+            name=product_name,
+            exact=True,
+        )
+        expect(product_link).to_be_visible()
 
     def should_show_price(self, expected_price: str) -> None:
         """Verify that the product price is displayed in the cart."""
