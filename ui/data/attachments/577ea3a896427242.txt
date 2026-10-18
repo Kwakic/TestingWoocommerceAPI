@@ -1,0 +1,23 @@
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:162 ⚙️ Creating customer with payload keys: ['email', 'password']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.240s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=25, email=testuser_iljfpehavn@supersqa.com
+INFO     EcommerceAPI.plugins.entities:entities.py:718 🔧 Starting teardown of created test resources...
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up customer(s)... (3 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 23
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/23?force=True → Status code: 200 (completed in 0.127s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 23
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 24
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/24?force=True → Status code: 200 (completed in 0.127s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 24
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 25
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/25?force=True → Status code: 200 (completed in 0.136s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 25
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for customer(s).
+INFO     EcommerceAPI.plugins.entities:entities.py:758 
+
+🧹 ====================================== CLEANUP SUMMARY ======================================
+INFO     EcommerceAPI.plugins.entities:entities.py:761 📊 Created during test run: {'customers': 3}
+INFO     EcommerceAPI.plugins.entities:entities.py:762 🧾 Cleanup total summary:
+INFO     EcommerceAPI.plugins.entities:entities.py:764    • customer: 3 deleted (3 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:765 ✅ All test data cleanup completed.
