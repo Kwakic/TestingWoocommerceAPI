@@ -33,24 +33,28 @@ pytestmark = [
 
 
 def test_customer_can_logout(
-    customer_page: Page,
+    page: Page,
     ui_base_url: str,
+    dynamic_customer: DynamicCustomer,
 ) -> None:
     """
-    Verify that an authenticated customer can explicitly log out.
+    Verify that a disposable API-provisioned customer can explicitly log out.
 
-    The test starts from the standard authenticated customer fixture, performs
-    the real WooCommerce logout action, and verifies that the session returns
-    to the unauthenticated login state.
+    The test logs in with generated credentials, performs the real logout
+    action, and verifies that the session ends.
     """
-    # Arrange: The customer fixture provides a successfully authenticated page.
-    login_page = CustomerLoginPage(
-        page=customer_page,
-        base_url=ui_base_url,
+    # Arrange: Build the Page Objects and authenticate this test's customer.
+    login_page = CustomerLoginPage(page=page, base_url=ui_base_url)
+    account_page = CustomerAccountPage(page)
+    login_customer(
+        page=page,
+        ui_base_url=ui_base_url,
+        username=dynamic_customer.username,
+        password=dynamic_customer.password,
     )
-    account_page = CustomerAccountPage(customer_page)
 
     # Assert: Confirm the starting state is an authenticated customer session.
+    account_page.should_be_loaded()
     account_page.should_be_authenticated()
 
     # Act: Log out through the real WooCommerce account navigation.

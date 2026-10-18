@@ -58,7 +58,7 @@ def test_customer_can_register_with_new_email(
     # Act: Create the customer through the real WooCommerce UI.
     registration_page.register(email=unique_email)
 
-    # Arrange: Resolve the application resource created by the UI.
+    # Arrange: Resolve the customer resource created through the UI.
     created_customer = customer_resource_helper.get_customer_by_email(unique_email)
 
     # Ownership: The UI test created this customer, so the UI resource registry

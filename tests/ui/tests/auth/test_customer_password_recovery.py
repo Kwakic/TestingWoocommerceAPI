@@ -10,6 +10,8 @@ The test covers:
  - invalid username/email is rejected
 """
 
+from uuid import uuid4
+
 import pytest
 from playwright.sync_api import Page
 
@@ -64,7 +66,8 @@ def test_customer_cannot_request_password_reset_for_unknown_email(
     )
 
     # Act: Submit an identifier that does not belong to a customer account.
-    recovery_page.request_reset(username_or_email="unknown@example.com")
+    unknown_email = f"unknown-{uuid4().hex}@example.com"
+    recovery_page.request_reset(username_or_email=unknown_email)
 
     # Assert: Verify that WooCommerce rejects the unknown identifier.
     recovery_page.should_show_invalid_identifier_error()

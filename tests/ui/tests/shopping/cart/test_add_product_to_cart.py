@@ -1,65 +1,58 @@
-"""
-UI tests for adding products to the WooCommerce cart.
+"""UI tests for adding a product to the WooCommerce cart.
 
-Role selection is handled through the indirect UI role fixture so the same
-test structure can later cover multiple supported storefront roles.
+Each test invocation provisions its own product through the shared API fixture,
+so browser-parametrized runs do not depend on or mutate a shared seeded product.
 """
+
+from collections.abc import Callable
+from uuid import uuid4
 
 import pytest
 from playwright.sync_api import Page
 
-from tests.ui.pages.shopping.cart_page import CartPage
 from tests.ui.pages.common.home_page import HomePage
+from tests.ui.pages.shopping.cart_page import CartPage
 
 
-pytestmark = [
-    pytest.mark.ui,
-    pytest.mark.smoke,
-]
+pytestmark = [pytest.mark.ui, pytest.mark.smoke]
 
 
 @pytest.mark.parametrize(
     "ui_role_page",
-    [
-        pytest.param("guest", id="guest"),
-        # pytest.param("customer", id="customer"), # No need add customer tests yet unless their workflows
-        # actually become different.
-    ],
+    [pytest.param("guest", id="guest")],
     indirect=True,
 )
 def test_add_product_to_cart(
     ui_role_page: Page,
     ui_base_url: str,
+    create_valid_product: Callable[..., dict],
 ) -> None:
-    """
-    Verify that the selected storefront role can add a product to the cart.
-
-    The Playwright Page is role-specific and is passed between Page Objects.
-    Page Objects therefore continue to operate on the same isolated browser
-    context throughout the scenario.
-    """
-
-    product_name = "UI Seed – Album"
+    """Verify that a guest can add a newly provisioned product to the cart."""
+    # Arrange: Create an isolated product for this test invocation.
+    suffix = uuid4().hex[:10]
+    product = create_valid_product(
+        name=f"UI Cart Product {suffix}",
+        sku=f"ui-cart-{suffix}",
+        regular_price="15.00",
+    )
+    product_name = product["name"]
     product_price = "$15.00"
 
-    # Arrange: Navigate to the seeded product.
+    # Arrange: Navigate to the newly created product through the storefront.
     home_page = HomePage(ui_role_page, ui_base_url)
     home_page.open()
     home_page.should_be_loaded()
 
     shop_page = home_page.open_shop()
     product_page = shop_page.open_product(product_name)
-
     product_page.should_be_loaded()
 
-    # Act: Add the product to the cart.
+    # Act: Add the product to the cart and open the cart page.
     product_page.add_to_cart()
-
-    # Act: Open the cart from the product-added confirmation.
     cart_page = CartPage(ui_role_page)
     cart_page.open_from_add_to_cart_notice()
 
-    # Assert: Verify that the expected product and price are present in the cart.
+    # Assert: The cart displays the created product and its expected price.
     cart_page.should_be_loaded()
     cart_page.should_contain_product(product_name)
     cart_page.should_show_price(product_price)

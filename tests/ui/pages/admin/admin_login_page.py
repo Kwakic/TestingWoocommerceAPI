@@ -81,4 +81,30 @@ class AdminLoginPage:
         expect(self.page).to_have_url(f"{self.base_url.rstrip('/')}/wp-admin/")
         # expect(self.page).to_have_url(
         #     re.compile(r".*/wp-admin/.*")
-        # ) # The first .* allows any text before /wp-admin/ (like https://example.com).The second .* allows any text after /wp-admin/ (like index.php or post-new.php).
+        # ) # The first .* allows any text before /wp-admin/ (like https://example.com).
+        # The second .* allows any text after /wp-admin/ (like index.php or post-new.php).
+
+
+# =======================================================================
+# For debugging purposes ONLY
+# =======================================================================
+# def should_be_authenticated(self) -> None:
+#     """Verify administrator authentication and report login failures."""
+#     try:
+#         expect(self.page).to_have_url(
+#             f"{self.base_url.rstrip('/')}/wp-admin/",
+#             timeout=10000,
+#         )
+#     except AssertionError as exc:
+#         if self.login_error.is_visible():
+#             error_message = self.login_error.inner_text().strip()
+#             raise AssertionError(
+#                 f"WordPress administrator login failed. "
+#                 f"Login error: {error_message!r}. "
+#                 f"Current URL: {self.page.url}"
+#             ) from exc
+#
+#         raise AssertionError(
+#             "WordPress administrator login did not reach the dashboard. "
+#             f"Current URL: {self.page.url}"
+#         ) from exc

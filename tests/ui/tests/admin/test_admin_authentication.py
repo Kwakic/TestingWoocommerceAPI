@@ -10,6 +10,8 @@ Authentication mechanics remain in the role fixtures and Page Objects.
 import pytest
 from playwright.sync_api import Page
 
+from tests.ui.data.models.customer_model import DynamicCustomer
+from tests.ui.fixtures.customer_auth import login_customer
 from tests.ui.pages.account.customer_account_page import CustomerAccountPage
 from tests.ui.pages.admin.admin_dashboard_page import AdminDashboardPage
 
@@ -41,7 +43,8 @@ def test_admin_can_access_wordpress_dashboard(
 @pytest.mark.smoke
 @pytest.mark.security
 def test_customer_cannot_access_wordpress_dashboard(
-    customer_page: Page,
+    page: Page,
+    dynamic_customer: DynamicCustomer,
     ui_base_url: str,
 ) -> None:
     """
@@ -54,20 +57,26 @@ def test_customer_cannot_access_wordpress_dashboard(
             -> administrator access denied
             -> remains outside WordPress admin
     """
-    # Arrange: The customer fixture provides an authenticated customer session.
-    account_page = CustomerAccountPage(customer_page)
+    # Arrange: Authenticate a per-test customer created through the REST API.
+    login_customer(
+        page=page,
+        ui_base_url=ui_base_url,
+        username=dynamic_customer.username,
+        password=dynamic_customer.password,
+    )
+    account_page = CustomerAccountPage(page)
     account_page.should_be_authenticated()
 
     dashboard_page = AdminDashboardPage(
-        page=customer_page,
+        page=page,
         base_url=ui_base_url,
     )
 
     # Act: Attempt to access the WordPress administrator dashboard.
     dashboard_page.open()
 
-    # Assert: The customer must not gain access to the WordPress admin area.
-    assert "/wp-admin/" not in customer_page.url
+    # Assert: The customer is redirected away from the WordPress admin area.
+    assert "/wp-admin/" not in page.url
 
-    # Assert: The customer session remains authenticated.
+    # Assert: Denied admin access does not log the customer out.
     account_page.should_be_authenticated()
