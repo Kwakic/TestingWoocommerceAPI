@@ -4,8 +4,9 @@ Positive UI tests for WooCommerce customer shipping address management.
 These tests use disposable customers provisioned through the API when a
 customer is only a prerequisite for the UI behavior under test.
 
-The shipping address itself is established through the UI because creating or
-modifying the address is the behavior being verified.
+Each test establishes only the state it needs: the create-address test enters
+the address through the UI, while the edit-address test creates its initial
+address through the API so it can focus on editing.
 
 The scenarios cover:
 
@@ -25,12 +26,6 @@ The scenarios cover:
 import pytest
 from playwright.sync_api import Page, expect
 
-from EcommerceAPI.src.test_data.builders.customers.customer_state_builder import (
-    CustomerStateBuilder,
-)
-from EcommerceAPI.src.test_data.provisioning.customers.customer_state_provisioner import (
-    CustomerStateProvisioner,
-)
 from tests.ui.data.models.customer_model import DynamicCustomer
 from tests.ui.fixtures.customer_auth import login_customer
 from tests.ui.pages.account.customer_account_page import CustomerAccountPage
@@ -123,39 +118,43 @@ def test_customer_can_save_shipping_address(
 def test_customer_can_modify_shipping_address(
     page: Page,
     ui_base_url: str,
-    dynamic_customer: DynamicCustomer,
-    customer_state_provisioner: CustomerStateProvisioner,
+    dynamic_customer_factory,
 ) -> None:
     """
     Verify that a customer can modify an existing shipping address and that
     the updated values persist after reloading the form.
 
-    The customer is provisioned through the API as a disposable prerequisite.
-    The initial shipping address is established through the API state-provisioning
-    layer because address creation is not the behavior under test.
+    The customer and its initial shipping address are created through the API
+    because customer/address creation is not the behavior under test. The UI
+    then exercises editing, saving, and verifying the existing address.
 
-    The UI is responsible only for:
-        - opening the existing shipping address;
-        - modifying the selected fields;
-        - saving the modification;
-        - verifying the updated address;
-        - verifying persistence after reload.
-
-    The customer's API ownership registration remains responsible for cleanup.
+    The shared API creation fixture registers the customer for cleanup.
     """
 
-    # -----------------------------------------------------------------------
+    # Arrange: Create a customer that already has a shipping address.
+    # This is test setup; the behavior being tested is editing that address.
+    dynamic_customer = dynamic_customer_factory(
+        shipping={
+            "first_name": "Mark",
+            "last_name": "Twain",
+            "company": "QA SDET Ltd",
+            "address_1": "Calle Alguna",
+            "address_2": "",
+            "city": "Alcobendas",
+            "state": "M",
+            "postcode": "28109",
+            "country": "ES",
+        }
+    )
+
     # Arrange: Build the Page Objects required by the test.
-    # -----------------------------------------------------------------------
     account_page = CustomerAccountPage(page)
     address_page = CustomerAddressPage(
         page=page,
         base_url=ui_base_url,
     )
 
-    # -----------------------------------------------------------------------
-    # Arrange: Authenticate the dynamically provisioned customer.
-    # -----------------------------------------------------------------------
+    # Arrange: Log in as the customer created for this test.
     login_customer(
         page=page,
         ui_base_url=ui_base_url,
@@ -165,51 +164,6 @@ def test_customer_can_modify_shipping_address(
 
     account_page.should_be_loaded()
     account_page.should_be_authenticated()
-
-    # -----------------------------------------------------------------------
-    # Arrange: Build the initial shipping-address state required by the test.
-    #
-    # This is prerequisite state, not the behavior under test. Therefore it
-    # belongs in the API test-data/state-provisioning layer rather than in the
-    # UI flow.
-    # -----------------------------------------------------------------------
-    initial_shipping_state = (
-        CustomerStateBuilder()
-        .with_shipping(
-            {
-                "first_name": "Mark",
-                "last_name": "Twain",
-                "company": "QA SDET Ltd",
-                "address_1": "Calle Alguna",
-                "address_2": "",
-                "city": "Alcobendas",
-                "state": "M",
-                "postcode": "28109",
-                "country": "ES",
-            }
-        )
-        .build()
-    )
-
-    # -----------------------------------------------------------------------
-    # Arrange: Provision the initial shipping address through the API.
-    #
-    # The customer was already created by the dynamic_customer fixture.
-    # CustomerStateProvisioner changes only the required shipping state.
-    # API ownership remains responsible for customer cleanup.
-    # -----------------------------------------------------------------------
-    response = customer_state_provisioner.provision(
-        customer_id=dynamic_customer.customer["id"],
-        state=initial_shipping_state,
-    )
-
-    # The prerequisite must be successfully established before the UI test
-    # begins exercising the behavior under test.
-    assert response.status_code == 200, (
-        "Initial shipping-address state provisioning failed. "
-        f"Expected: 200, got {response.status_code}. "
-        f"Response: {response.text}"
-    )
 
     # -----------------------------------------------------------------------
     # Act: Open the customer Addresses section.

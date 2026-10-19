@@ -87,18 +87,18 @@ class CartPage:
         """Verify that the product price is displayed in the cart."""
         expect(self.product_price).to_have_text(expected_price)
 
-    def increase_quantity(self) -> None:
-        """Increase the quantity of the seeded cart product."""
+    def increase_quantity(self, product_name: str) -> None:
+        """Increase the quantity of the specified cart product."""
         self.page.get_by_role(
             "button",
-            name="Increase quantity of UI Seed",
+            name=f"Increase quantity of {product_name}",
         ).click()
 
-    def decrease_quantity(self) -> None:
-        """Decrease the quantity of the seeded cart product."""
+    def decrease_quantity(self, product_name: str) -> None:
+        """Decrease the quantity of the specified cart product."""
         self.page.get_by_role(
             "button",
-            name="Reduce quantity of UI Seed",
+            name=f"Reduce quantity of {product_name}",
         ).click()
 
     def should_show_quantity(self, expected_quantity: int) -> None:
@@ -106,8 +106,12 @@ class CartPage:
         expect(self.quantity_input).to_have_value(str(expected_quantity))
 
     def should_show_total(self, expected_total: str) -> None:
-        """Verify that the cart displays the expected total."""
-        expect(self.page.get_by_text(expected_total, exact=True).last).to_be_visible()
+        """Wait for the cart to display the expected recalculated total."""
+        # WooCommerce's block cart updates totals asynchronously after quantity
+        # changes. Allow the recalculation time to finish, especially in WebKit.
+        expect(self.page.get_by_text(expected_total, exact=True).last).to_be_visible(
+            timeout=15000
+        )
 
     def remove_product(self, product_name: str) -> None:
         """Remove the specified product from the shopping cart."""

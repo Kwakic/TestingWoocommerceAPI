@@ -1,12 +1,11 @@
-"""
-UI test for applying a WooCommerce coupon in the shopping cart.
+"""UI test for applying a WooCommerce percentage coupon in the cart.
 
-The coupon is created as test-specific data through the existing Coupons API
-fixture. The browser then exercises the customer-facing coupon workflow.
-
-This keeps the persistent UI baseline limited to users and products while
-allowing each test to own and clean up its temporary coupon.
+The test provisions a unique product and coupon through shared API fixtures,
+then verifies the coupon workflow through the storefront UI. Each invocation
+owns its temporary data so browser-parametrized runs remain isolated.
 """
+
+from uuid import uuid4
 
 import pytest
 from playwright.sync_api import Page
@@ -31,21 +30,27 @@ def test_apply_coupon_to_cart(
     ui_role_page: Page,
     ui_base_url: str,
     create_valid_coupon,
+    create_valid_product,
 ) -> None:
     """
-    Verify that a storefront user can apply a valid percentage coupon.
+    Verify that a storefront guest can apply a valid percentage coupon.
 
-    The test uses the API only to prepare isolated coupon test data.
-    The behavior under test is performed and verified entirely through the UI.
+    API fixtures provision isolated product and coupon data. Adding the product
+    to the cart and applying the coupon are exercised through the storefront UI.
     """
 
-    product_name = "UI Seed – Album"
+    # Arrange: Provision a unique product priced at $15.00 and a 10% coupon.
+    suffix = uuid4().hex[:10]
+    product = create_valid_product(
+        name=f"UI Coupon Product {suffix}",
+        sku=f"ui-coupon-{suffix}",
+        regular_price="15.00",
+    )
+    product_name = product["name"]
     product_price = "$15.00"
     discount_amount = "-$1.50"
     discounted_total = "$13.50"
 
-    # Arrange: Create a temporary 10% coupon and add the seeded product
-    # to the shopping cart.
     coupon = create_valid_coupon(
         discount_type="percent",
         amount="10",
@@ -70,8 +75,7 @@ def test_apply_coupon_to_cart(
     # Act: Apply the temporary coupon through the customer-facing cart UI.
     cart_page.add_coupon(coupon_code)
 
-    # Assert: Verify that WooCommerce displays the applied coupon,
-    # the expected 10% discount, and the recalculated cart total.
+    # Assert: Verify the coupon, 10% discount, and recalculated cart total.
     cart_page.should_show_coupon(coupon_code)
     cart_page.should_show_discount(discount_amount)
     cart_page.should_show_total(discounted_total)

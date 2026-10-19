@@ -6,7 +6,7 @@
 > **Scope:** Playwright UI testing with pytest
 > **Current UI coverage:** Guest storefront + authenticated customer flows + admin authentication
 > **Browser coverage:** Chromium, Firefox, WebKit
-> **Last updated:** 2026-10-17
+> **Last updated:** 2026-10-19
 
 This document is the canonical guide for the browser-based UI test layer.
 
@@ -288,12 +288,65 @@ customer
 admin
 ```
 
-The role router maps the role to its authentication fixture. For most customer
-UI tests, use `dynamic_customer` to create a disposable customer through the API
-and `login_customer` to authenticate it. The older `customer_page` and named
-customer-profile fixtures remain available for scenarios that explicitly
-require a configured persistent account; they are not the default for tests
-where an API-created customer is sufficient.
+The role router maps an **access-role name** to a fixture that supplies a
+browser page for that role. It does not create test data. The registry in
+`tests/ui/fixtures/authentication.py` is intentionally small:
+
+```python
+UI_ROLE_FIXTURES = {
+    "guest": "guest_page",
+    "customer": "customer_page",
+    "admin": "admin_page",
+}
+```
+
+Each key is a supported value passed to `ui_role_page`; each value is the name
+of the pytest fixture that provides the page. Add an entry only when adding a
+new **access role** with its own role fixture—not when adding a customer profile
+or a test-data factory/provisioning fixture.
+
+Use `ui_role_page` when the test is naturally expressed in terms of an access
+role—for example, when the same behavior should be checked for a guest,
+customer, or administrator. The role is selected through indirect pytest
+parametrization:
+
+```python
+@pytest.mark.parametrize(
+    "ui_role_page",
+    ["guest"],
+    indirect=True,
+)
+def test_guest_can_view_cart(ui_role_page):
+    ...
+```
+
+The router's current `customer` mapping resolves to `customer_page`, which
+authenticates the configured checkout-customer profile. It does **not** create
+a customer through the API.
+
+For most customer tests that need an existing customer as a prerequisite, use
+`dynamic_customer` and `login_customer` instead. This creates a disposable
+customer for that test and gives the API cleanup lifecycle ownership of it.
+
+Use `dynamic_customer` when the test can use the builder's default customer
+data. Use `dynamic_customer_factory` when the test needs specific initial
+customer fields, such as an existing shipping address. The factory accepts
+customer fields as keyword arguments and creates the customer through the
+shared API fixture, preserving the existing validation and cleanup lifecycle.
+
+Use a named persistent-profile fixture only when the scenario specifically
+requires that configured account or its deliberately maintained state.
+
+Keep these concepts separate:
+
+- `ui_role_page`: chooses an **access role** (`guest`, `customer`, `admin`).
+- `dynamic_customer`: creates **test data** (a new customer through the API).
+- `login_customer`: authenticates a page using the supplied customer's credentials.
+- Named profile fixtures: authenticate configured persistent accounts.
+
+`dynamic_customer` must not be added to `UI_ROLE_FIXTURES`: it is a data-
+provisioning fixture, not an access role. A test can request it directly when
+it needs a fresh customer, independently of the role router.
 
 ### Fixture responsibilities
 
@@ -301,7 +354,7 @@ where an API-created customer is sufficient.
 |---|---|
 | `browser.py` | Browser context and page lifecycle |
 | `authentication.py` | Shared authentication implementation |
-| `customers.py` | Customer authentication helpers and API-created `dynamic_customer` fixture |
+| `customers.py` | Customer authentication helpers, `dynamic_customer`, and `dynamic_customer_factory` fixtures |
 | `resources.py` | Function-scoped cleanup for resources created through the UI |
 | `admin.py` | Administrator authentication |
 
@@ -490,22 +543,47 @@ Customer
 Admin
 ```
 
-| Access role | Typical setup | Meaning |
+| Access role | Role-router mapping | Meaning |
 |---|---|---|
 | Guest | `guest_page` | Unauthenticated storefront user |
-| Customer | `dynamic_customer` + `login_customer` | A unique API-created customer authenticated for this test |
+| Customer | `customer_page` | Authenticated configured checkout-customer profile |
 | Admin | `admin_page` | Authenticated WordPress/WooCommerce administrator |
 
-`customer_page` and the named customer-profile fixtures remain available for
-scenarios that explicitly need a configured persistent profile. They should not
-be the default for ordinary customer UI tests when the required customer can be
-created through the API.
+The table describes what `ui_role_page` routes to. It is separate from the
+recommended test-data setup: for most customer scenarios, create a per-test
+customer with `dynamic_customer` and authenticate it with `login_customer`.
+That explicit path is preferred when a fresh, isolated customer is sufficient.
+Use `customer_page` or a named customer-profile fixture when the scenario
+specifically requires a configured persistent account.
 
 ### Choosing the right customer setup
 
-Use `dynamic_customer` when the test needs an existing customer to exercise a
-different behavior—for example, login, account navigation, editing account
-details, or saving a shipping address.
+Choose the fixture based on what the test needs, not just because it involves
+a customer.
+
+**Use `ui_role_page` when the access role is what matters**, or when you want
+one test implementation to be parametrized across roles:
+
+```python
+@pytest.mark.parametrize(
+    "ui_role_page",
+    ["guest"],
+    indirect=True,
+)
+def test_guest_can_view_cart(ui_role_page):
+    # The router resolves "guest" to guest_page.
+    # No customer is created and no login takes place.
+    ...
+```
+
+If you change the parameter to `"customer"`, the router resolves it to
+`customer_page`, which currently delegates to the configured
+`checkout_customer_page`. That fixture logs into an existing account; it does
+not create a new customer.
+
+**Use `dynamic_customer` when the test needs its own customer account** and
+customer creation is only setup—not the behavior under test. Authenticate the
+page explicitly with `login_customer`:
 
 ```python
 def test_customer_can_open_account(
@@ -513,19 +591,33 @@ def test_customer_can_open_account(
     ui_base_url,
     dynamic_customer,
 ):
+    # dynamic_customer creates a disposable customer through the API.
+    # login_customer authenticates this page as that newly created customer.
     login_customer(
         page,
         ui_base_url,
         dynamic_customer.username,
         dynamic_customer.password,
     )
+
     # Exercise and assert the account behavior.
 ```
 
-This fixture creates a customer through the established API test-data
-architecture, retains the generated credentials for login, validates the
-creation response, and registers the customer with API cleanup. The test must
-not register that same customer with `ui_resources`.
+In this example, `login_customer` should be imported from the project's
+customer-authentication fixture module if it is not already available through
+the test's fixture/plugin imports.
+
+The `dynamic_customer` fixture builds and validates customer data, retains the
+generated credentials, and registers the customer with API cleanup. The test
+must not register that same customer with `ui_resources`.
+
+**Use a named profile fixture** such as `no_address_customer_page` or
+`profile_customer_page` only when the scenario specifically requires that
+configured persistent account or its maintained state.
+
+**Use the UI registration flow** when registration itself is the behavior
+under test. Do not request `dynamic_customer` in a registration test, because
+that would create the customer before the registration form is submitted.
 
 Use `ui_resources` when the UI creates the resource because creation through
 the UI is the behavior being tested—for example, customer registration.
@@ -585,6 +677,39 @@ that customer.
 
 Do not use `dynamic_customer` for a registration test: that would mean the
 customer already exists before the registration form is submitted.
+
+### Customers with scenario-specific initial state
+
+When a test needs a customer with specific initial data, use
+`dynamic_customer_factory` instead of creating a default customer and then
+making a separate API call to change its state.
+
+For example, a test that verifies editing an existing shipping address can
+create the customer with an initial shipping address:
+
+```python
+def test_customer_can_modify_shipping_address(dynamic_customer_factory):
+    customer = dynamic_customer_factory(
+        shipping={
+            "first_name": "Mark",
+            "last_name": "Twain",
+            "address_1": "Calle Alguna",
+            "city": "Alcobendas",
+            "state": "M",
+            "postcode": "28109",
+            "country": "ES",
+        }
+    )
+
+    # Log in as this customer and edit the existing address through the UI.
+```
+
+This keeps prerequisite setup explicit and avoids a separate state-provisioning
+step. The UI remains responsible for the behavior under test: editing and
+saving the address.
+
+The customer is created through the API and registered with the existing API
+cleanup lifecycle. Do not register the same customer with `ui_resources`.
 
 ## Products: `create_valid_product`
 
@@ -1118,9 +1243,10 @@ For each test, verify:
 3. **Name** — the test name describes the expected user-visible behavior.
 4. **Role** — the test uses the correct access role (`guest`, `customer`, or
    `admin`).
-5. **Test data** — use `dynamic_customer` for API-created customer prerequisites
-   and `create_valid_product` for API-created product prerequisites; avoid
-   shared seeded resources when a per-test resource is feasible.
+5. **Test data** — use `dynamic_customer` for default API-created customer
+   prerequisites, `dynamic_customer_factory` when the customer needs specific
+   initial fields, and `create_valid_product` for API-created product
+   prerequisites; avoid shared seeded resources when a per-test resource is feasible.
 6. **Markers** — the test carries the markers needed for suite classification and
    execution.
 7. **Comments** — comments explain non-obvious intent or constraints rather than

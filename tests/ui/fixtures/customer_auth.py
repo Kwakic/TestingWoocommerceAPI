@@ -34,23 +34,15 @@ Design principles:
 """
 
 import os
+from collections.abc import Callable
 
 import pytest
 from playwright.sync_api import Page
 
 from tests.ui.pages.authentication.customer_login_page import CustomerLoginPage
 
-from EcommerceAPI.src.customers.validators.customer_validators import (
-    assert_valid_customer_response,
-)
 from EcommerceAPI.src.test_data.builders.customers.customer_builder import (
     CustomerBuilder,
-)
-from EcommerceAPI.src.test_data.provisioning.customers.customer_provisioner import (
-    CustomerProvisioner,
-)
-from EcommerceAPI.src.test_data.provisioning.customers.customer_state_provisioner import (
-    CustomerStateProvisioner,
 )
 
 from tests.ui.data.models.customer_model import DynamicCustomer
@@ -143,101 +135,60 @@ def login_customer(
 
 
 @pytest.fixture(scope="function")
-def dynamic_customer(shared_api_resources) -> DynamicCustomer:
-    """Create a disposable customer for UI scenarios that need a customer prerequisite.
+def dynamic_customer_factory(create_valid_customer) -> Callable[..., DynamicCustomer]:
+    """Create disposable customers with optional data for a test scenario.
 
-    This fixture uses the existing API test-data architecture:
+    Use this factory when a UI test needs a customer to start with specific
+    data, such as a shipping address. The data is included in the customer
+    creation request, so the test does not need a second API call to prepare
+    that initial state.
 
-        CustomerBuilder
-            ↓
-        CustomerProvisioner
-            ↓
-        WooCommerce
-            ↓
-        API ownership registration
-            ↓
-        TestCustomer
+    Customer creation, response validation, and cleanup registration remain
+    the responsibility of ``create_valid_customer``. This factory only keeps
+    the returned customer together with the password needed for UI login.
 
-    The customer is created through the API because customer creation is not
-    the UI behavior under test. The fixture therefore establishes the
-    prerequisite while preserving the existing API ownership/cleanup path.
-
-    The original password is retained because WooCommerce does not return the
-    customer's password in the creation response. The UI test can pass those
-    credentials to ``login_customer`` when browser authentication is needed.
+    Example:
+        customer = dynamic_customer_factory(shipping={...})
 
     Returns:
-        DynamicCustomer:
-            Validated customer data together with the credentials required
-            for browser authentication.
-
-    Raises:
-        AssertionError:
-            If customer creation does not return HTTP 201, the response is
-            invalid, or the created customer does not expose a username.
+        A callable that creates a ``DynamicCustomer`` using optional customer
+        fields supported by the customer creation API.
     """
-    customer_helper = shared_api_resources["customers_helper"]
-    register = shared_api_resources["register_resource"]
 
-    # Keep the creation payload because the password is intentionally not
-    # returned by WooCommerce after customer creation.
+    def _create_customer(**customer_fields) -> DynamicCustomer:
+        # Keep the generated password: WooCommerce does not return it in the
+        # customer response, but the UI test needs it to log in.
+        customer_data = CustomerBuilder().with_fields(**customer_fields).build()
 
-    customer_data = CustomerBuilder().build()
+        # Reuse the API fixture so validation and cleanup stay centralized.
+        customer = create_valid_customer(**customer_data)
 
-    customer_provisioner = CustomerProvisioner(customer_helper)
-    response = customer_provisioner.provision(customer_data)
+        username = customer.get("username")
+        assert username, (
+            "Dynamic customer creation succeeded, but WooCommerce did not "
+            "return a username required for UI authentication."
+        )
 
-    # The fixture is responsible for validating its setup contract before
-    # exposing the resource to the UI test.
-    assert response.status_code == 201, (
-        "Dynamic customer creation failed. "
-        f"Expected: 201, got {response.status_code}. "
-        f"Response: {response.text}"
-    )
+        return DynamicCustomer(
+            customer=customer,
+            username=username,
+            password=customer_data["password"],
+        )
 
-    customer = response.json
-    assert_valid_customer_response(customer)
-
-    username = customer.get("username")
-    assert username, (
-        "Dynamic customer creation succeeded, but WooCommerce did not "
-        "return a username required for UI authentication."
-    )
-
-    # Ownership remains with the API lifecycle because the API created the
-    # customer.The UI layer must not register the same resource again.
-    register("customers", customer["id"])
-
-    return DynamicCustomer(
-        customer=customer,
-        username=username,
-        password=customer_data["password"],
-    )
+    return _create_customer
 
 
-@pytest.fixture
-def customer_state_provisioner(
-    shared_api_resources,
-) -> CustomerStateProvisioner:
-    """Provide the customer state provisioner used by UI scenarios.
+@pytest.fixture(scope="function")
+def dynamic_customer(
+    dynamic_customer_factory,
+) -> DynamicCustomer:
+    """Create a disposable customer with default valid data.
 
-    The fixture owns dependency wiring only. It supplies the existing
-    ``CustomersHelper`` required by ``CustomerStateProvisioner`` but does not
-    provision or modify any customer state.
-
-    Scenario-specific state remains the responsibility of the test.
-
-    Args:
-        shared_api_resources:
-            Shared API infrastructure containing the customer domain helper.
-
-    Returns:
-        CustomerStateProvisioner:
-            Provisioner ready to apply prepared customer state.
+    Use this fixture when a UI test needs a fresh customer but does not need
+    to provide any special fields at creation time. Tests that need initial
+    customer data can use ``dynamic_customer_factory`` instead.
     """
-    customer_helper = shared_api_resources["customers_helper"]
-
-    return CustomerStateProvisioner(customer_helper)
+    return dynamic_customer_factory()
 
 
 @pytest.fixture
