@@ -1,5 +1,148 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Sun Oct 18 21:40:53 UTC 2026","Sun Oct 18 21:40:55 UTC 2026","2067","tests.ui.tests.account","test_customer_address","","","","test_customer_can_save_shipping_address[chromium]","
+"passed","Mon Oct 19 20:20:43 UTC 2026","Mon Oct 19 20:20:44 UTC 2026","789","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[webkit-invalid-password-username]","
+Verify that invalid customer credentials cannot establish authentication.
+
+A disposable customer is provisioned through the API because the test needs
+valid credentials to construct negative combinations, not a predefined
+customer persona. The dynamic customer fixture owns API cleanup.
+"
+"passed","Mon Oct 19 20:20:52 UTC 2026","Mon Oct 19 20:20:53 UTC 2026","767","tests.ui.tests.auth","test_customer_password_recovery","","","","test_customer_cannot_request_password_reset_for_unknown_email[webkit]","
+Verify that password recovery rejects an unknown username or email.
+
+This validates the negative password-recovery contract observed in the
+WooCommerce UI: an unknown identifier must not produce a valid reset
+request.
+"
+"passed","Mon Oct 19 20:19:48 UTC 2026","Mon Oct 19 20:19:49 UTC 2026","1078","tests.ui.tests.account","test_customer_account","","","","test_customer_can_navigate_to_addresses_and_account_details[chromium]","
+Verify that a disposable API-provisioned customer can navigate to Addresses and
+Account details. API ownership handles customer cleanup.
+"
+"passed","Mon Oct 19 20:21:29 UTC 2026","Mon Oct 19 20:21:32 UTC 2026","3189","tests.ui.tests.shopping.cart","test_update_cart_quantity","","","","test_update_cart_quantity[webkit-guest]","Verify that increasing and decreasing quantity updates the cart total."
+"passed","Mon Oct 19 20:20:37 UTC 2026","Mon Oct 19 20:20:38 UTC 2026","897","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[firefox-unknown-email]","
+Verify that invalid customer credentials cannot establish authentication.
+
+A disposable customer is provisioned through the API because the test needs
+valid credentials to construct negative combinations, not a predefined
+customer persona. The dynamic customer fixture owns API cleanup.
+"
+"passed","Mon Oct 19 20:20:25 UTC 2026","Mon Oct 19 20:20:27 UTC 2026","1921","tests.ui.tests.account","test_customer_account_details","","","","test_customer_can_update_account_details[webkit]","
+Verify that a disposable customer can update their first and last name.
+
+The customer is provisioned through the API specifically for this test.
+The UI updates the profile, and API ownership handles customer cleanup.
+"
+"passed","Mon Oct 19 20:20:07 UTC 2026","Mon Oct 19 20:20:08 UTC 2026","774","tests.ui.tests.auth","test_customer_session_security","","","","test_customer_can_logout[chromium]","
+Verify that a disposable API-provisioned customer can explicitly log out.
+
+The test logs in with generated credentials, performs the real logout
+action, and verifies that the session ends.
+"
+"passed","Mon Oct 19 20:21:16 UTC 2026","Mon Oct 19 20:21:19 UTC 2026","2273","tests.ui.tests.shopping.cart","test_add_product_to_cart","","","","test_add_product_to_cart[webkit-guest]","Verify that a guest can add a newly provisioned product to the cart."
+"passed","Mon Oct 19 20:20:50 UTC 2026","Mon Oct 19 20:20:51 UTC 2026","714","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[webkit-empty-password]","
+Verify that invalid customer credentials cannot establish authentication.
+
+A disposable customer is provisioned through the API because the test needs
+valid credentials to construct negative combinations, not a predefined
+customer persona. The dynamic customer fixture owns API cleanup.
+"
+"passed","Mon Oct 19 20:20:14 UTC 2026","Mon Oct 19 20:20:16 UTC 2026","2183","tests.ui.tests.account","test_customer_account_details","","","","test_customer_cannot_save_account_details_without_required_names[firefox]","
+Verify that a disposable customer cannot save Account details without
+the required first and last names.
+"
+"passed","Mon Oct 19 20:20:26 UTC 2026","Mon Oct 19 20:20:28 UTC 2026","1562","tests.ui.tests.admin","test_admin_authentication","","","","test_customer_cannot_access_wordpress_dashboard[firefox]","
+Verify that an authenticated WooCommerce customer cannot access
+the WordPress administrator dashboard.
+
+Flow:
+    authenticated customer
+        -> /wp-admin/
+        -> administrator access denied
+        -> remains outside WordPress admin
+"
+"passed","Mon Oct 19 20:21:25 UTC 2026","Mon Oct 19 20:21:29 UTC 2026","3290","tests.ui.tests.shopping.cart","test_remove_product_from_cart","","","","test_remove_product_from_cart[webkit-guest]","Verify that a guest can remove a product and leave the cart empty."
+"passed","Mon Oct 19 20:21:18 UTC 2026","Mon Oct 19 20:21:19 UTC 2026","971","tests.ui.tests.home","test_home_page","","","","test_guest_can_navigate_to_shop[firefox]","Verify that a guest can navigate from the home page to Shop."
+"passed","Mon Oct 19 20:21:19 UTC 2026","Mon Oct 19 20:21:22 UTC 2026","3429","tests.ui.tests.shopping.cart","test_apply_coupon","","","","test_apply_coupon_to_cart[webkit-guest]","
+Verify that a storefront guest can apply a valid percentage coupon.
+
+API fixtures provision isolated product and coupon data. Adding the product
+to the cart and applying the coupon are exercised through the storefront UI.
+"
+"passed","Mon Oct 19 20:19:51 UTC 2026","Mon Oct 19 20:19:52 UTC 2026","976","tests.ui.tests.account","test_customer_account_details","","","","test_customer_cannot_save_account_details_without_required_names[chromium]","
+Verify that a disposable customer cannot save Account details without
+the required first and last names.
+"
+"passed","Mon Oct 19 20:21:19 UTC 2026","Mon Oct 19 20:21:21 UTC 2026","2132","tests.ui.tests.home","test_home_page","","","","test_customer_can_navigate_to_shop[firefox]","Verify that a disposable API-provisioned customer can navigate to Shop."
+"passed","Mon Oct 19 20:20:29 UTC 2026","Mon Oct 19 20:20:30 UTC 2026","1157","tests.ui.tests.auth","test_customer_login","","","","test_customer_can_access_my_account[firefox]","
+Verify that a disposable API-provisioned customer can access My Account.
+
+The shared login helper performs authentication; API ownership handles
+cleanup of the customer created for this test.
+"
+"passed","Mon Oct 19 20:20:11 UTC 2026","Mon Oct 19 20:20:14 UTC 2026","2782","tests.ui.tests.account","test_customer_account_details","","","","test_customer_can_update_account_details[firefox]","
+Verify that a disposable customer can update their first and last name.
+
+The customer is provisioned through the API specifically for this test.
+The UI updates the profile, and API ownership handles customer cleanup.
+"
+"passed","Mon Oct 19 20:20:38 UTC 2026","Mon Oct 19 20:20:38 UTC 2026","280","tests.ui.tests.admin","test_admin_authentication","","","","test_admin_can_access_wordpress_dashboard[webkit]","
+Verify that the dedicated UI administrator can access WordPress Dashboard.
+
+The ``admin_page`` fixture owns administrator authentication. This test
+therefore validates the resulting authenticated capability rather than
+duplicating login selectors or credential handling.
+"
+"passed","Mon Oct 19 20:21:06 UTC 2026","Mon Oct 19 20:21:09 UTC 2026","3005","tests.ui.tests.catalog","test_product_discovery","","","","test_customer_can_open_product[firefox]","Verify that an API-provisioned customer can view a product's details."
+"passed","Mon Oct 19 20:20:13 UTC 2026","Mon Oct 19 20:20:14 UTC 2026","1220","tests.ui.tests.catalog","test_product_review","","","","test_guest_can_submit_product_review[chromium]","Verify that a guest can submit a review for a product."
+"passed","Mon Oct 19 20:20:44 UTC 2026","Mon Oct 19 20:20:45 UTC 2026","1025","tests.ui.tests.auth","test_customer_password_recovery","","","","test_customer_cannot_request_password_reset_for_unknown_email[firefox]","
+Verify that password recovery rejects an unknown username or email.
+
+This validates the negative password-recovery contract observed in the
+WooCommerce UI: an unknown identifier must not produce a valid reset
+request.
+"
+"passed","Mon Oct 19 20:20:27 UTC 2026","Mon Oct 19 20:20:29 UTC 2026","1501","tests.ui.tests.account","test_customer_account_details","","","","test_customer_cannot_save_account_details_without_required_names[webkit]","
+Verify that a disposable customer cannot save Account details without
+the required first and last names.
+"
+"passed","Mon Oct 19 20:21:23 UTC 2026","Mon Oct 19 20:21:25 UTC 2026","2308","tests.ui.tests.shopping.cart","test_cart_contents","","","","test_cart_contents[webkit-guest]","Verify the cart's product, quantity, unit price, and total."
+"passed","Mon Oct 19 20:20:48 UTC 2026","Mon Oct 19 20:20:49 UTC 2026","848","tests.ui.tests.auth","test_customer_registration_security","","","","test_customer_cannot_register_with_existing_email[firefox]","
+Verify that an existing customer email cannot create another account.
+
+The customer is provisioned through the API as a disposable prerequisite.
+The test submits that existing email through the real WooCommerce
+registration form and verifies the duplicate-account error.
+"
+"passed","Mon Oct 19 20:21:36 UTC 2026","Mon Oct 19 20:21:39 UTC 2026","3850","tests.ui.tests.shopping.cart","test_remove_product_from_cart","","","","test_remove_product_from_cart[firefox-guest]","Verify that a guest can remove a product and leave the cart empty."
+"passed","Mon Oct 19 20:20:20 UTC 2026","Mon Oct 19 20:20:22 UTC 2026","2207","tests.ui.tests.shopping.cart","test_apply_coupon","","","","test_apply_coupon_to_cart[chromium-guest]","
+Verify that a storefront guest can apply a valid percentage coupon.
+
+API fixtures provision isolated product and coupon data. Adding the product
+to the cart and applying the coupon are exercised through the storefront UI.
+"
+"passed","Mon Oct 19 20:20:00 UTC 2026","Mon Oct 19 20:20:01 UTC 2026","477","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[chromium-invalid-password-email]","
+Verify that invalid customer credentials cannot establish authentication.
+
+A disposable customer is provisioned through the API because the test needs
+valid credentials to construct negative combinations, not a predefined
+customer persona. The dynamic customer fixture owns API cleanup.
+"
+"passed","Mon Oct 19 20:21:13 UTC 2026","Mon Oct 19 20:21:16 UTC 2026","3529","tests.ui.tests.catalog","test_product_review","","","","test_customer_can_submit_product_review[firefox]","Verify that an authenticated customer can submit a product review."
+"passed","Mon Oct 19 20:20:01 UTC 2026","Mon Oct 19 20:20:01 UTC 2026","422","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[chromium-invalid-username]","
+Verify that invalid customer credentials cannot establish authentication.
+
+A disposable customer is provisioned through the API because the test needs
+valid credentials to construct negative combinations, not a predefined
+customer persona. The dynamic customer fixture owns API cleanup.
+"
+"passed","Mon Oct 19 20:21:17 UTC 2026","Mon Oct 19 20:21:18 UTC 2026","523","tests.ui.tests.home","test_home_page","","","","test_home_page_loads[firefox]","Verify that a guest can access the storefront home page."
+"passed","Mon Oct 19 20:19:57 UTC 2026","Mon Oct 19 20:19:57 UTC 2026","64","tests.ui.tests.admin","test_admin_authentication","","","","test_admin_can_access_wordpress_dashboard[chromium]","
+Verify that the dedicated UI administrator can access WordPress Dashboard.
+
+The ``admin_page`` fixture owns administrator authentication. This test
+therefore validates the resulting authenticated capability rather than
+duplicating login selectors or credential handling.
+"
+"passed","Mon Oct 19 20:19:52 UTC 2026","Mon Oct 19 20:19:54 UTC 2026","1462","tests.ui.tests.account","test_customer_address","","","","test_customer_can_save_shipping_address[chromium]","
 Verify that a dynamically provisioned customer can create a shipping
 address through the My Account UI.
 
@@ -10,28 +153,83 @@ the address is the behavior under test.
 The customer's API ownership registration remains responsible for cleanup
 after the test finishes.
 "
-"passed","Sun Oct 18 21:40:47 UTC 2026","Sun Oct 18 21:40:48 UTC 2026","1527","tests.ui.tests.account","test_customer_account","","","","test_customer_can_navigate_to_addresses_and_account_details[chromium]","
+"passed","Mon Oct 19 20:20:07 UTC 2026","Mon Oct 19 20:20:10 UTC 2026","2753","tests.ui.tests.account","test_customer_account","","","","test_customer_can_navigate_to_addresses_and_account_details[firefox]","
 Verify that a disposable API-provisioned customer can navigate to Addresses and
 Account details. API ownership handles customer cleanup.
 "
-"passed","Sun Oct 18 21:41:27 UTC 2026","Sun Oct 18 21:41:27 UTC 2026","477","tests.ui.tests.auth","test_customer_password_recovery","","","","test_customer_can_open_password_recovery_page[firefox]","
-Verify that the customer can access the password-recovery workflow.
+"passed","Mon Oct 19 20:19:58 UTC 2026","Mon Oct 19 20:19:59 UTC 2026","518","tests.ui.tests.auth","test_customer_login","","","","test_customer_can_access_my_account[chromium]","
+Verify that a disposable API-provisioned customer can access My Account.
 
-The test validates the user-facing ""Lost your password?"" entry point and
-confirms that the dedicated password-recovery page is displayed.
+The shared login helper performs authentication; API ownership handles
+cleanup of the customer created for this test.
 "
-"passed","Sun Oct 18 21:41:40 UTC 2026","Sun Oct 18 21:41:43 UTC 2026","2686","tests.ui.tests.shopping.cart","test_update_cart_quantity","","","","test_update_cart_quantity[chromium-guest]","
-Verify that the selected storefront role can update cart quantity.
-"
-"passed","Sun Oct 18 21:41:23 UTC 2026","Sun Oct 18 21:41:24 UTC 2026","1471","tests.ui.tests.catalog","test_product_review","","","","test_guest_can_submit_product_review[webkit]","Verify that a guest can submit a review for a product."
-"passed","Sun Oct 18 21:41:24 UTC 2026","Sun Oct 18 21:41:24 UTC 2026","858","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[firefox-empty-username]","
+"passed","Mon Oct 19 20:20:33 UTC 2026","Mon Oct 19 20:20:34 UTC 2026","957","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[firefox-invalid-password-username]","
 Verify that invalid customer credentials cannot establish authentication.
 
 A disposable customer is provisioned through the API because the test needs
 valid credentials to construct negative combinations, not a predefined
 customer persona. The dynamic customer fixture owns API cleanup.
 "
-"passed","Sun Oct 18 21:41:04 UTC 2026","Sun Oct 18 21:41:04 UTC 2026","648","tests.ui.tests.auth","test_customer_login","","","","test_customer_can_authenticate_with_email[webkit]","
+"passed","Mon Oct 19 20:20:03 UTC 2026","Mon Oct 19 20:20:04 UTC 2026","427","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[chromium-empty-password]","
+Verify that invalid customer credentials cannot establish authentication.
+
+A disposable customer is provisioned through the API because the test needs
+valid credentials to construct negative combinations, not a predefined
+customer persona. The dynamic customer fixture owns API cleanup.
+"
+"passed","Mon Oct 19 20:20:49 UTC 2026","Mon Oct 19 20:20:50 UTC 2026","681","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[webkit-empty-username]","
+Verify that invalid customer credentials cannot establish authentication.
+
+A disposable customer is provisioned through the API because the test needs
+valid credentials to construct negative combinations, not a predefined
+customer persona. The dynamic customer fixture owns API cleanup.
+"
+"passed","Mon Oct 19 20:21:40 UTC 2026","Mon Oct 19 20:21:45 UTC 2026","4598","tests.ui.tests.shopping.cart","test_update_cart_quantity","","","","test_update_cart_quantity[firefox-guest]","Verify that increasing and decreasing quantity updates the cart total."
+"passed","Mon Oct 19 20:21:13 UTC 2026","Mon Oct 19 20:21:13 UTC 2026","544","tests.ui.tests.home","test_home_page","","","","test_home_page_loads[webkit]","Verify that a guest can access the storefront home page."
+"passed","Mon Oct 19 20:21:04 UTC 2026","Mon Oct 19 20:21:06 UTC 2026","2153","tests.ui.tests.catalog","test_product_discovery","","","","test_customer_can_open_product[webkit]","Verify that an API-provisioned customer can view a product's details."
+"passed","Mon Oct 19 20:20:39 UTC 2026","Mon Oct 19 20:20:40 UTC 2026","811","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[firefox-invalid-credentials]","
+Verify that invalid customer credentials cannot establish authentication.
+
+A disposable customer is provisioned through the API because the test needs
+valid credentials to construct negative combinations, not a predefined
+customer persona. The dynamic customer fixture owns API cleanup.
+"
+"passed","Mon Oct 19 20:20:44 UTC 2026","Mon Oct 19 20:20:45 UTC 2026","782","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[webkit-invalid-password-email]","
+Verify that invalid customer credentials cannot establish authentication.
+
+A disposable customer is provisioned through the API because the test needs
+valid credentials to construct negative combinations, not a predefined
+customer persona. The dynamic customer fixture owns API cleanup.
+"
+"passed","Mon Oct 19 20:21:10 UTC 2026","Mon Oct 19 20:21:12 UTC 2026","2655","tests.ui.tests.catalog","test_product_review","","","","test_guest_can_submit_product_review[firefox]","Verify that a guest can submit a review for a product."
+"passed","Mon Oct 19 20:21:27 UTC 2026","Mon Oct 19 20:21:31 UTC 2026","4491","tests.ui.tests.shopping.cart","test_apply_coupon","","","","test_apply_coupon_to_cart[firefox-guest]","
+Verify that a storefront guest can apply a valid percentage coupon.
+
+API fixtures provision isolated product and coupon data. Adding the product
+to the cart and applying the coupon are exercised through the storefront UI.
+"
+"passed","Mon Oct 19 20:20:35 UTC 2026","Mon Oct 19 20:20:36 UTC 2026","925","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[firefox-invalid-password-email]","
+Verify that invalid customer credentials cannot establish authentication.
+
+A disposable customer is provisioned through the API because the test needs
+valid credentials to construct negative combinations, not a predefined
+customer persona. The dynamic customer fixture owns API cleanup.
+"
+"passed","Mon Oct 19 20:20:10 UTC 2026","Mon Oct 19 20:20:11 UTC 2026","899","tests.ui.tests.catalog","test_product_discovery","","","","test_guest_can_open_product[chromium]","Verify that a guest can view an API-created product and its details."
+"passed","Mon Oct 19 20:20:02 UTC 2026","Mon Oct 19 20:20:02 UTC 2026","416","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[chromium-unknown-email]","
+Verify that invalid customer credentials cannot establish authentication.
+
+A disposable customer is provisioned through the API because the test needs
+valid credentials to construct negative combinations, not a predefined
+customer persona. The dynamic customer fixture owns API cleanup.
+"
+"passed","Mon Oct 19 20:20:56 UTC 2026","Mon Oct 19 20:20:57 UTC 2026","1232","tests.ui.tests.auth","test_customer_session_security","","","","test_customer_can_logout[webkit]","
+Verify that a disposable API-provisioned customer can explicitly log out.
+
+The test logs in with generated credentials, performs the real logout
+action, and verifies that the session ends.
+"
+"passed","Mon Oct 19 20:19:59 UTC 2026","Mon Oct 19 20:19:59 UTC 2026","547","tests.ui.tests.auth","test_customer_login","","","","test_customer_can_authenticate_with_email[chromium]","
 Verify that a customer can authenticate using their email address.
 
 A disposable customer is provisioned through the API because the test
@@ -39,12 +237,7 @@ needs a valid account as a prerequisite, not a predefined customer persona.
 The test exercises email-based login through the real UI; the dynamic
 customer fixture owns API cleanup.
 "
-"passed","Sun Oct 18 21:41:18 UTC 2026","Sun Oct 18 21:41:20 UTC 2026","1355","tests.ui.tests.catalog","test_product_discovery","","","","test_guest_can_open_product[chromium]","Verify that a guest can view an API-created product and its details."
-"passed","Sun Oct 18 21:41:36 UTC 2026","Sun Oct 18 21:41:38 UTC 2026","2400","tests.ui.tests.shopping.cart","test_remove_product_from_cart","","","","test_remove_product_from_cart[webkit-guest]","
-Verify that the selected storefront role can remove a product from the cart.
-"
-"passed","Sun Oct 18 21:42:01 UTC 2026","Sun Oct 18 21:42:02 UTC 2026","933","tests.ui.tests.home","test_home_page","","","","test_guest_can_navigate_to_shop[firefox]","Verify that a guest can navigate from the home page to Shop."
-"passed","Sun Oct 18 21:41:17 UTC 2026","Sun Oct 18 21:41:19 UTC 2026","1542","tests.ui.tests.auth","test_customer_session_security","","","","test_customer_session_persistence[webkit-with-remember-me]","
+"passed","Mon Oct 19 20:20:57 UTC 2026","Mon Oct 19 20:20:59 UTC 2026","1996","tests.ui.tests.auth","test_customer_session_security","","","","test_customer_session_persistence[webkit-without-remember-me]","
 Verify customer session behavior after closing and reopening the browser.
 
 A disposable customer is provisioned through the API by the
@@ -67,41 +260,17 @@ Args:
     remember_me: Whether the Remember Me option is enabled before login.
 
 "
-"passed","Sun Oct 18 21:41:12 UTC 2026","Sun Oct 18 21:41:13 UTC 2026","632","tests.ui.tests.auth","test_customer_registration_security","","","","test_customer_cannot_register_with_existing_email[chromium]","
-Verify that an existing customer email cannot create another account.
+"passed","Mon Oct 19 20:21:02 UTC 2026","Mon Oct 19 20:21:04 UTC 2026","1680","tests.ui.tests.catalog","test_product_discovery","","","","test_guest_can_open_product[webkit]","Verify that a guest can view an API-created product and its details."
+"passed","Mon Oct 19 20:20:26 UTC 2026","Mon Oct 19 20:20:28 UTC 2026","2242","tests.ui.tests.shopping.cart","test_update_cart_quantity","","","","test_update_cart_quantity[chromium-guest]","Verify that increasing and decreasing quantity updates the cart total."
+"passed","Mon Oct 19 20:20:30 UTC 2026","Mon Oct 19 20:20:32 UTC 2026","1545","tests.ui.tests.auth","test_customer_login","","","","test_customer_can_authenticate_with_email[firefox]","
+Verify that a customer can authenticate using their email address.
 
-The customer is provisioned through the API as a disposable prerequisite.
-The test submits that existing email through the real WooCommerce
-registration form and verifies the duplicate-account error.
+A disposable customer is provisioned through the API because the test
+needs a valid account as a prerequisite, not a predefined customer persona.
+The test exercises email-based login through the real UI; the dynamic
+customer fixture owns API cleanup.
 "
-"passed","Sun Oct 18 21:41:49 UTC 2026","Sun Oct 18 21:41:52 UTC 2026","3006","tests.ui.tests.catalog","test_product_discovery","","","","test_customer_can_open_product[firefox]","Verify that an API-provisioned customer can view a product's details."
-"passed","Sun Oct 18 21:41:29 UTC 2026","Sun Oct 18 21:41:30 UTC 2026","1268","tests.ui.tests.home","test_home_page","","","","test_customer_can_navigate_to_shop[chromium]","Verify that a disposable API-provisioned customer can navigate to Shop."
-"passed","Sun Oct 18 21:41:01 UTC 2026","Sun Oct 18 21:41:02 UTC 2026","757","tests.ui.tests.auth","test_customer_login","","","","test_customer_can_access_my_account[chromium]","
-Verify that a disposable API-provisioned customer can access My Account.
-
-The shared login helper performs authentication; API ownership handles
-cleanup of the customer created for this test.
-"
-"passed","Sun Oct 18 21:42:01 UTC 2026","Sun Oct 18 21:42:01 UTC 2026","529","tests.ui.tests.home","test_home_page","","","","test_home_page_loads[firefox]","Verify that a guest can access the storefront home page."
-"passed","Sun Oct 18 21:41:47 UTC 2026","Sun Oct 18 21:41:49 UTC 2026","1966","tests.ui.tests.catalog","test_product_discovery","","","","test_guest_can_open_product[firefox]","Verify that a guest can view an API-created product and its details."
-"passed","Sun Oct 18 21:41:05 UTC 2026","Sun Oct 18 21:41:05 UTC 2026","565","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[webkit-invalid-password-username]","
-Verify that invalid customer credentials cannot establish authentication.
-
-A disposable customer is provisioned through the API because the test needs
-valid credentials to construct negative combinations, not a predefined
-customer persona. The dynamic customer fixture owns API cleanup.
-"
-"passed","Sun Oct 18 21:40:49 UTC 2026","Sun Oct 18 21:40:50 UTC 2026","1261","tests.ui.tests.account","test_customer_account","","","","test_customer_can_navigate_to_addresses_and_account_details[webkit]","
-Verify that a disposable API-provisioned customer can navigate to Addresses and
-Account details. API ownership handles customer cleanup.
-"
-"passed","Sun Oct 18 21:40:49 UTC 2026","Sun Oct 18 21:40:51 UTC 2026","1766","tests.ui.tests.account","test_customer_account_details","","","","test_customer_can_update_account_details[chromium]","
-Verify that a disposable customer can update their first and last name.
-
-The customer is provisioned through the API specifically for this test.
-The UI updates the profile, and API ownership handles customer cleanup.
-"
-"skipped","Sun Oct 18 21:42:17 UTC 2026","Sun Oct 18 21:42:49 UTC 2026","31809","tests.ui.tests.shopping.checkout","test_customer_checkout","","","","test_customer_without_saved_address_can_complete_checkout[webkit]","
+"skipped","Mon Oct 19 20:22:29 UTC 2026","Mon Oct 19 20:23:03 UTC 2026","33785","tests.ui.tests.shopping.checkout","test_customer_checkout","","","","test_customer_without_saved_address_can_complete_checkout[firefox]","
 Verify that Customer B can complete checkout by entering an address.
 
 Flow:
@@ -116,14 +285,37 @@ Flow:
         -> place order
         -> verify order confirmation
 "
-"passed","Sun Oct 18 21:41:07 UTC 2026","Sun Oct 18 21:41:08 UTC 2026","511","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[webkit-unknown-email]","
+"passed","Mon Oct 19 20:20:20 UTC 2026","Mon Oct 19 20:20:22 UTC 2026","1949","tests.ui.tests.account","test_customer_account","","","","test_customer_account_contains_main_sections[webkit]","
+Verify that a disposable API-provisioned customer can access the main My Account
+sections. API ownership handles customer cleanup.
+"
+"passed","Mon Oct 19 20:20:45 UTC 2026","Mon Oct 19 20:20:47 UTC 2026","1358","tests.ui.tests.auth","test_customer_registration","","","","test_customer_can_register_with_new_email[firefox]","
+Verify that a new customer can successfully register through the UI.
+
+The customer is intentionally created by the UI because customer
+registration is the behavior under test.
+
+The generated email guarantees test isolation. After registration, the
+created customer is resolved through the API and registered with the UI
+resource owner so the customer is removed during UI test cleanup.
+"
+"passed","Mon Oct 19 20:20:48 UTC 2026","Mon Oct 19 20:20:48 UTC 2026","717","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[webkit-invalid-credentials]","
 Verify that invalid customer credentials cannot establish authentication.
 
 A disposable customer is provisioned through the API because the test needs
 valid credentials to construct negative combinations, not a predefined
 customer persona. The dynamic customer fixture owns API cleanup.
 "
-"passed","Sun Oct 18 21:41:01 UTC 2026","Sun Oct 18 21:41:02 UTC 2026","1485","tests.ui.tests.admin","test_admin_authentication","","","","test_customer_cannot_access_wordpress_dashboard[webkit]","
+"passed","Mon Oct 19 20:21:32 UTC 2026","Mon Oct 19 20:21:35 UTC 2026","3271","tests.ui.tests.shopping.cart","test_cart_contents","","","","test_cart_contents[firefox-guest]","Verify the cart's product, quantity, unit price, and total."
+"passed","Mon Oct 19 20:20:16 UTC 2026","Mon Oct 19 20:20:17 UTC 2026","231","tests.ui.tests.home","test_home_page","","","","test_home_page_loads[chromium]","Verify that a guest can access the storefront home page."
+"passed","Mon Oct 19 20:20:06 UTC 2026","Mon Oct 19 20:20:07 UTC 2026","412","tests.ui.tests.auth","test_customer_registration_security","","","","test_customer_cannot_register_with_existing_email[chromium]","
+Verify that an existing customer email cannot create another account.
+
+The customer is provisioned through the API as a disposable prerequisite.
+The test submits that existing email through the real WooCommerce
+registration form and verifies the duplicate-account error.
+"
+"passed","Mon Oct 19 20:20:38 UTC 2026","Mon Oct 19 20:20:40 UTC 2026","1663","tests.ui.tests.admin","test_admin_authentication","","","","test_customer_cannot_access_wordpress_dashboard[webkit]","
 Verify that an authenticated WooCommerce customer cannot access
 the WordPress administrator dashboard.
 
@@ -133,11 +325,7 @@ Flow:
         -> administrator access denied
         -> remains outside WordPress admin
 "
-"passed","Sun Oct 18 21:41:35 UTC 2026","Sun Oct 18 21:41:37 UTC 2026","1778","tests.ui.tests.shopping.cart","test_cart_contents","","","","test_cart_contents[chromium-guest]","
-Verify that the cart displays the expected product, quantity, price,
-and total.
-"
-"passed","Sun Oct 18 21:41:02 UTC 2026","Sun Oct 18 21:41:03 UTC 2026","773","tests.ui.tests.auth","test_customer_login","","","","test_customer_can_authenticate_with_email[chromium]","
+"passed","Mon Oct 19 20:20:42 UTC 2026","Mon Oct 19 20:20:43 UTC 2026","855","tests.ui.tests.auth","test_customer_login","","","","test_customer_can_authenticate_with_email[webkit]","
 Verify that a customer can authenticate using their email address.
 
 A disposable customer is provisioned through the API because the test
@@ -145,14 +333,17 @@ needs a valid account as a prerequisite, not a predefined customer persona.
 The test exercises email-based login through the real UI; the dynamic
 customer fixture owns API cleanup.
 "
-"passed","Sun Oct 18 21:42:21 UTC 2026","Sun Oct 18 21:42:25 UTC 2026","3991","tests.ui.tests.shopping.cart","test_update_cart_quantity","","","","test_update_cart_quantity[firefox-guest]","
-Verify that the selected storefront role can update cart quantity.
+"passed","Mon Oct 19 20:20:53 UTC 2026","Mon Oct 19 20:20:54 UTC 2026","1012","tests.ui.tests.auth","test_customer_registration","","","","test_customer_can_register_with_new_email[webkit]","
+Verify that a new customer can successfully register through the UI.
+
+The customer is intentionally created by the UI because customer
+registration is the behavior under test.
+
+The generated email guarantees test isolation. After registration, the
+created customer is resolved through the API and registered with the UI
+resource owner so the customer is removed during UI test cleanup.
 "
-"passed","Sun Oct 18 21:42:14 UTC 2026","Sun Oct 18 21:42:17 UTC 2026","2898","tests.ui.tests.shopping.cart","test_cart_contents","","","","test_cart_contents[firefox-guest]","
-Verify that the cart displays the expected product, quantity, price,
-and total.
-"
-"skipped","Sun Oct 18 21:42:20 UTC 2026","Sun Oct 18 21:42:53 UTC 2026","32224","tests.ui.tests.shopping.checkout","test_customer_checkout","","","","test_customer_without_saved_address_can_complete_checkout[chromium]","
+"skipped","Mon Oct 19 20:21:03 UTC 2026","Mon Oct 19 20:21:35 UTC 2026","31612","tests.ui.tests.shopping.checkout","test_customer_checkout","","","","test_customer_without_saved_address_can_complete_checkout[chromium]","
 Verify that Customer B can complete checkout by entering an address.
 
 Flow:
@@ -167,29 +358,7 @@ Flow:
         -> place order
         -> verify order confirmation
 "
-"skipped","Sun Oct 18 21:41:45 UTC 2026","Sun Oct 18 21:42:17 UTC 2026","31786","tests.ui.tests.shopping.checkout","test_customer_checkout","","","","test_customer_can_complete_checkout_with_different_shipping_address[webkit]","
-Verify that Customer A can complete checkout with a different shipping address.
-
-Flow:
-    customer
-        -> Shop
-        -> add product to cart
-        -> Checkout
-        -> verify saved billing details
-        -> use a separate shipping address
-        -> verify shipping option
-            -> place order
-        -> verify order confirmation
-"
-"passed","Sun Oct 18 21:41:28 UTC 2026","Sun Oct 18 21:41:29 UTC 2026","1037","tests.ui.tests.home","test_home_page","","","","test_customer_can_navigate_to_shop[webkit]","Verify that a disposable API-provisioned customer can navigate to Shop."
-"passed","Sun Oct 18 21:41:13 UTC 2026","Sun Oct 18 21:41:14 UTC 2026","508","tests.ui.tests.auth","test_customer_registration_security","","","","test_customer_cannot_register_with_existing_email[webkit]","
-Verify that an existing customer email cannot create another account.
-
-The customer is provisioned through the API as a disposable prerequisite.
-The test submits that existing email through the real WooCommerce
-registration form and verifies the duplicate-account error.
-"
-"passed","Sun Oct 18 21:41:41 UTC 2026","Sun Oct 18 21:41:46 UTC 2026","5289","tests.ui.tests.auth","test_customer_session_security","","","","test_customer_session_persistence[firefox-with-remember-me]","
+"passed","Mon Oct 19 20:20:08 UTC 2026","Mon Oct 19 20:20:09 UTC 2026","985","tests.ui.tests.auth","test_customer_session_security","","","","test_customer_session_persistence[chromium-without-remember-me]","
 Verify customer session behavior after closing and reopening the browser.
 
 A disposable customer is provisioned through the API by the
@@ -212,468 +381,153 @@ Args:
     remember_me: Whether the Remember Me option is enabled before login.
 
 "
-"passed","Sun Oct 18 21:41:25 UTC 2026","Sun Oct 18 21:41:27 UTC 2026","1909","tests.ui.tests.catalog","test_product_review","","","","test_customer_can_submit_product_review[webkit]","Verify that an authenticated customer can submit a product review."
-"passed","Sun Oct 18 21:41:30 UTC 2026","Sun Oct 18 21:41:31 UTC 2026","1608","tests.ui.tests.shopping.cart","test_add_product_to_cart","","","","test_add_product_to_cart[webkit-guest]","Verify that a guest can add a newly provisioned product to the cart."
-"passed","Sun Oct 18 21:41:13 UTC 2026","Sun Oct 18 21:41:14 UTC 2026","1132","tests.ui.tests.auth","test_customer_login","","","","test_customer_can_access_my_account[firefox]","
-Verify that a disposable API-provisioned customer can access My Account.
-
-The shared login helper performs authentication; API ownership handles
-cleanup of the customer created for this test.
-"
-"passed","Sun Oct 18 21:41:18 UTC 2026","Sun Oct 18 21:41:19 UTC 2026","937","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[firefox-invalid-password-email]","
-Verify that invalid customer credentials cannot establish authentication.
-
-A disposable customer is provisioned through the API because the test needs
-valid credentials to construct negative combinations, not a predefined
-customer persona. The dynamic customer fixture owns API cleanup.
-"
-"passed","Sun Oct 18 21:41:14 UTC 2026","Sun Oct 18 21:41:15 UTC 2026","909","tests.ui.tests.auth","test_customer_session_security","","","","test_customer_can_logout[webkit]","
-Verify that a disposable API-provisioned customer can explicitly log out.
-
-The test logs in with generated credentials, performs the real logout
-action, and verifies that the session ends.
-"
-"passed","Sun Oct 18 21:41:10 UTC 2026","Sun Oct 18 21:41:10 UTC 2026","140","tests.ui.tests.admin","test_admin_authentication","","","","test_admin_can_access_wordpress_dashboard[firefox]","
-Verify that the dedicated UI administrator can access WordPress Dashboard.
-
-The ``admin_page`` fixture owns administrator authentication. This test
-therefore validates the resulting authenticated capability rather than
-duplicating login selectors or credential handling.
-"
-"passed","Sun Oct 18 21:40:56 UTC 2026","Sun Oct 18 21:40:58 UTC 2026","1854","tests.ui.tests.account","test_customer_address","","","","test_customer_can_modify_shipping_address[webkit]","
+"passed","Mon Oct 19 20:20:20 UTC 2026","Mon Oct 19 20:20:24 UTC 2026","3628","tests.ui.tests.account","test_customer_address","","","","test_customer_can_modify_shipping_address[firefox]","
 Verify that a customer can modify an existing shipping address and that
 the updated values persist after reloading the form.
 
-The customer is provisioned through the API as a disposable prerequisite.
-The initial shipping address is established through the API state-provisioning
-layer because address creation is not the behavior under test.
+The customer and its initial shipping address are created through the API
+because customer/address creation is not the behavior under test. The UI
+then exercises editing, saving, and verifying the existing address.
 
-The UI is responsible only for:
-    - opening the existing shipping address;
-    - modifying the selected fields;
-    - saving the modification;
-    - verifying the updated address;
-    - verifying persistence after reload.
+The shared API creation fixture registers the customer for cleanup.
+"
+"passed","Mon Oct 19 20:20:52 UTC 2026","Mon Oct 19 20:20:57 UTC 2026","5383","tests.ui.tests.auth","test_customer_session_security","","","","test_customer_session_persistence[firefox-without-remember-me]","
+Verify customer session behavior after closing and reopening the browser.
 
-The customer's API ownership registration remains responsible for cleanup.
-"
-"passed","Sun Oct 18 21:40:51 UTC 2026","Sun Oct 18 21:40:52 UTC 2026","1333","tests.ui.tests.account","test_customer_account_details","","","","test_customer_cannot_save_account_details_without_required_names[chromium]","
-Verify that a disposable customer cannot save Account details without
-the required first and last names.
-"
-"passed","Sun Oct 18 21:41:04 UTC 2026","Sun Oct 18 21:41:05 UTC 2026","672","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[chromium-invalid-password-email]","
-Verify that invalid customer credentials cannot establish authentication.
+A disposable customer is provisioned through the API by the
+``dynamic_customer`` fixture; the API ownership lifecycle handles cleanup.
+The test uses ``login_customer``'s established authentication flow for the
+customer credentials, while managing its own persistent browser contexts.
 
-A disposable customer is provisioned through the API because the test needs
-valid credentials to construct negative combinations, not a predefined
-customer persona. The dynamic customer fixture owns API cleanup.
-"
-"passed","Sun Oct 18 21:41:27 UTC 2026","Sun Oct 18 21:41:28 UTC 2026","353","tests.ui.tests.home","test_home_page","","","","test_home_page_loads[chromium]","Verify that a guest can access the storefront home page."
-"passed","Sun Oct 18 21:41:32 UTC 2026","Sun Oct 18 21:41:33 UTC 2026","934","tests.ui.tests.auth","test_customer_registration_security","","","","test_customer_cannot_register_with_existing_email[firefox]","
-Verify that an existing customer email cannot create another account.
+The same persistent browser profile is deliberately reused for both phases
+of the test. This models a real browser restart while preserving the browser
+profile data that may contain WooCommerce authentication cookies.
 
-The customer is provisioned through the API as a disposable prerequisite.
-The test submits that existing email through the real WooCommerce
-registration form and verifies the duplicate-account error.
+Expected behavior:
+    - Without Remember Me: authentication is not expected to persist.
+    - With Remember Me: authentication is expected to persist.
+
+Args:
+    browser_type: Playwright browser type selected by pytest.
+    ui_base_url: Base URL of the WooCommerce storefront.
+    dynamic_customer: API-provisioned customer used for the login lifecycle.
+    remember_me: Whether the Remember Me option is enabled before login.
+
 "
-"passed","Sun Oct 18 21:41:21 UTC 2026","Sun Oct 18 21:41:22 UTC 2026","1626","tests.ui.tests.catalog","test_product_discovery","","","","test_customer_can_open_product[webkit]","Verify that an API-provisioned customer can view a product's details."
-"passed","Sun Oct 18 21:40:58 UTC 2026","Sun Oct 18 21:41:00 UTC 2026","2233","tests.ui.tests.account","test_customer_account_details","","","","test_customer_cannot_save_account_details_without_required_names[firefox]","
-Verify that a disposable customer cannot save Account details without
-the required first and last names.
+"skipped","Mon Oct 19 20:22:11 UTC 2026","Mon Oct 19 20:22:44 UTC 2026","32492","tests.ui.tests.shopping.checkout","test_customer_checkout","","","","test_customer_without_saved_address_can_complete_checkout[webkit]","
+Verify that Customer B can complete checkout by entering an address.
+
+Flow:
+    customer without saved address
+        -> Shop
+        -> add product to cart
+        -> Cart
+        -> Checkout
+        -> use shipping address for billing
+        -> enter shipping address
+        -> verify shipping option
+        -> place order
+        -> verify order confirmation
 "
-"passed","Sun Oct 18 21:40:51 UTC 2026","Sun Oct 18 21:40:54 UTC 2026","2720","tests.ui.tests.account","test_customer_account","","","","test_customer_can_navigate_to_addresses_and_account_details[firefox]","
+"passed","Mon Oct 19 20:21:33 UTC 2026","Mon Oct 19 20:21:37 UTC 2026","3165","tests.ui.tests.shopping.checkout","test_customer_checkout","","","","test_customer_can_complete_checkout[webkit]","
+Verify that an authenticated customer can purchase a seeded product.
+
+Flow:
+    customer
+        -> Shop
+        -> add product to cart
+        -> Cart
+        -> Checkout
+        -> verify saved billing details
+            -> add order note
+        -> place order
+        -> verify order confirmation
+"
+"passed","Mon Oct 19 20:19:49 UTC 2026","Mon Oct 19 20:19:51 UTC 2026","1209","tests.ui.tests.account","test_customer_account_details","","","","test_customer_can_update_account_details[chromium]","
+Verify that a disposable customer can update their first and last name.
+
+The customer is provisioned through the API specifically for this test.
+The UI updates the profile, and API ownership handles customer cleanup.
+"
+"skipped","Mon Oct 19 20:20:31 UTC 2026","Mon Oct 19 20:21:03 UTC 2026","31449","tests.ui.tests.shopping.checkout","test_customer_checkout","","","","test_customer_can_complete_checkout_with_different_shipping_address[chromium]","
+Verify that Customer A can complete checkout with a different shipping address.
+
+Flow:
+    customer
+        -> Shop
+        -> add product to cart
+        -> Checkout
+        -> verify saved billing details
+        -> use a separate shipping address
+        -> verify shipping option
+            -> place order
+        -> verify order confirmation
+"
+"passed","Mon Oct 19 20:20:22 UTC 2026","Mon Oct 19 20:20:24 UTC 2026","1350","tests.ui.tests.shopping.cart","test_cart_contents","","","","test_cart_contents[chromium-guest]","Verify the cart's product, quantity, unit price, and total."
+"passed","Mon Oct 19 20:21:07 UTC 2026","Mon Oct 19 20:21:09 UTC 2026","2047","tests.ui.tests.catalog","test_product_review","","","","test_guest_can_submit_product_review[webkit]","Verify that a guest can submit a review for a product."
+"passed","Mon Oct 19 20:20:57 UTC 2026","Mon Oct 19 20:21:03 UTC 2026","5269","tests.ui.tests.auth","test_customer_session_security","","","","test_customer_session_persistence[firefox-with-remember-me]","
+Verify customer session behavior after closing and reopening the browser.
+
+A disposable customer is provisioned through the API by the
+``dynamic_customer`` fixture; the API ownership lifecycle handles cleanup.
+The test uses ``login_customer``'s established authentication flow for the
+customer credentials, while managing its own persistent browser contexts.
+
+The same persistent browser profile is deliberately reused for both phases
+of the test. This models a real browser restart while preserving the browser
+profile data that may contain WooCommerce authentication cookies.
+
+Expected behavior:
+    - Without Remember Me: authentication is not expected to persist.
+    - With Remember Me: authentication is expected to persist.
+
+Args:
+    browser_type: Playwright browser type selected by pytest.
+    ui_base_url: Base URL of the WooCommerce storefront.
+    dynamic_customer: API-provisioned customer used for the login lifecycle.
+    remember_me: Whether the Remember Me option is enabled before login.
+
+"
+"passed","Mon Oct 19 20:20:23 UTC 2026","Mon Oct 19 20:20:25 UTC 2026","1665","tests.ui.tests.account","test_customer_account","","","","test_customer_can_navigate_to_addresses_and_account_details[webkit]","
 Verify that a disposable API-provisioned customer can navigate to Addresses and
 Account details. API ownership handles customer cleanup.
 "
-"passed","Sun Oct 18 21:41:34 UTC 2026","Sun Oct 18 21:41:36 UTC 2026","1538","tests.ui.tests.shopping.cart","test_cart_contents","","","","test_cart_contents[webkit-guest]","
-Verify that the cart displays the expected product, quantity, price,
-and total.
-"
-"passed","Sun Oct 18 21:41:01 UTC 2026","Sun Oct 18 21:41:04 UTC 2026","3228","tests.ui.tests.account","test_customer_address","","","","test_customer_can_save_shipping_address[firefox]","
-Verify that a dynamically provisioned customer can create a shipping
-address through the My Account UI.
-
-The customer is created through the API as a disposable prerequisite.
-The shipping address itself is created through the UI because creating
-the address is the behavior under test.
-
-The customer's API ownership registration remains responsible for cleanup
-after the test finishes.
-"
-"passed","Sun Oct 18 21:40:54 UTC 2026","Sun Oct 18 21:40:56 UTC 2026","2000","tests.ui.tests.account","test_customer_address","","","","test_customer_can_save_shipping_address[webkit]","
-Verify that a dynamically provisioned customer can create a shipping
-address through the My Account UI.
-
-The customer is created through the API as a disposable prerequisite.
-The shipping address itself is created through the UI because creating
-the address is the behavior under test.
-
-The customer's API ownership registration remains responsible for cleanup
-after the test finishes.
-"
-"passed","Sun Oct 18 21:41:17 UTC 2026","Sun Oct 18 21:41:18 UTC 2026","858","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[firefox-invalid-password-username]","
-Verify that invalid customer credentials cannot establish authentication.
-
-A disposable customer is provisioned through the API because the test needs
-valid credentials to construct negative combinations, not a predefined
-customer persona. The dynamic customer fixture owns API cleanup.
-"
-"passed","Sun Oct 18 21:41:09 UTC 2026","Sun Oct 18 21:41:09 UTC 2026","597","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[chromium-empty-password]","
-Verify that invalid customer credentials cannot establish authentication.
-
-A disposable customer is provisioned through the API because the test needs
-valid credentials to construct negative combinations, not a predefined
-customer persona. The dynamic customer fixture owns API cleanup.
-"
-"passed","Sun Oct 18 21:41:20 UTC 2026","Sun Oct 18 21:41:20 UTC 2026","860","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[firefox-invalid-username]","
-Verify that invalid customer credentials cannot establish authentication.
-
-A disposable customer is provisioned through the API because the test needs
-valid credentials to construct negative combinations, not a predefined
-customer persona. The dynamic customer fixture owns API cleanup.
-"
-"passed","Sun Oct 18 21:41:08 UTC 2026","Sun Oct 18 21:41:09 UTC 2026","530","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[webkit-invalid-credentials]","
-Verify that invalid customer credentials cannot establish authentication.
-
-A disposable customer is provisioned through the API because the test needs
-valid credentials to construct negative combinations, not a predefined
-customer persona. The dynamic customer fixture owns API cleanup.
-"
-"passed","Sun Oct 18 21:42:18 UTC 2026","Sun Oct 18 21:42:21 UTC 2026","3331","tests.ui.tests.shopping.cart","test_remove_product_from_cart","","","","test_remove_product_from_cart[firefox-guest]","
-Verify that the selected storefront role can remove a product from the cart.
-"
-"skipped","Sun Oct 18 21:41:47 UTC 2026","Sun Oct 18 21:42:19 UTC 2026","32381","tests.ui.tests.shopping.checkout","test_customer_checkout","","","","test_customer_can_complete_checkout_with_different_shipping_address[chromium]","
-Verify that Customer A can complete checkout with a different shipping address.
-
-Flow:
-    customer
-        -> Shop
-        -> add product to cart
-        -> Checkout
-        -> verify saved billing details
-        -> use a separate shipping address
-        -> verify shipping option
-            -> place order
-        -> verify order confirmation
-"
-"passed","Sun Oct 18 21:41:15 UTC 2026","Sun Oct 18 21:41:17 UTC 2026","1482","tests.ui.tests.auth","test_customer_session_security","","","","test_customer_session_persistence[webkit-without-remember-me]","
-Verify customer session behavior after closing and reopening the browser.
-
-A disposable customer is provisioned through the API by the
-``dynamic_customer`` fixture; the API ownership lifecycle handles cleanup.
-The test uses ``login_customer``'s established authentication flow for the
-customer credentials, while managing its own persistent browser contexts.
-
-The same persistent browser profile is deliberately reused for both phases
-of the test. This models a real browser restart while preserving the browser
-profile data that may contain WooCommerce authentication cookies.
-
-Expected behavior:
-    - Without Remember Me: authentication is not expected to persist.
-    - With Remember Me: authentication is expected to persist.
-
-Args:
-    browser_type: Playwright browser type selected by pytest.
-    ui_base_url: Base URL of the WooCommerce storefront.
-    dynamic_customer: API-provisioned customer used for the login lifecycle.
-    remember_me: Whether the Remember Me option is enabled before login.
-
-"
-"passed","Sun Oct 18 21:41:11 UTC 2026","Sun Oct 18 21:41:12 UTC 2026","908","tests.ui.tests.auth","test_customer_registration","","","","test_customer_can_register_with_new_email[chromium]","
-Verify that a new customer can successfully register through the UI.
-
-The customer is intentionally created by the UI because customer
-registration is the behavior under test.
-
-The generated email guarantees test isolation. After registration, the
-created customer is resolved through the API and registered with the UI
-resource owner so the customer is removed during UI test cleanup.
-"
-"passed","Sun Oct 18 21:41:08 UTC 2026","Sun Oct 18 21:41:08 UTC 2026","611","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[chromium-empty-username]","
-Verify that invalid customer credentials cannot establish authentication.
-
-A disposable customer is provisioned through the API because the test needs
-valid credentials to construct negative combinations, not a predefined
-customer persona. The dynamic customer fixture owns API cleanup.
-"
-"passed","Sun Oct 18 21:42:03 UTC 2026","Sun Oct 18 21:42:05 UTC 2026","2392","tests.ui.tests.home","test_home_page","","","","test_customer_can_navigate_to_shop[firefox]","Verify that a disposable API-provisioned customer can navigate to Shop."
-"passed","Sun Oct 18 21:41:10 UTC 2026","Sun Oct 18 21:41:10 UTC 2026","344","tests.ui.tests.auth","test_customer_password_recovery","","","","test_customer_can_open_password_recovery_page[chromium]","
-Verify that the customer can access the password-recovery workflow.
-
-The test validates the user-facing ""Lost your password?"" entry point and
-confirms that the dedicated password-recovery page is displayed.
-"
-"passed","Sun Oct 18 21:41:35 UTC 2026","Sun Oct 18 21:41:41 UTC 2026","5326","tests.ui.tests.auth","test_customer_session_security","","","","test_customer_session_persistence[firefox-without-remember-me]","
-Verify customer session behavior after closing and reopening the browser.
-
-A disposable customer is provisioned through the API by the
-``dynamic_customer`` fixture; the API ownership lifecycle handles cleanup.
-The test uses ``login_customer``'s established authentication flow for the
-customer credentials, while managing its own persistent browser contexts.
-
-The same persistent browser profile is deliberately reused for both phases
-of the test. This models a real browser restart while preserving the browser
-profile data that may contain WooCommerce authentication cookies.
-
-Expected behavior:
-    - Without Remember Me: authentication is not expected to persist.
-    - With Remember Me: authentication is expected to persist.
-
-Args:
-    browser_type: Playwright browser type selected by pytest.
-    ui_base_url: Base URL of the WooCommerce storefront.
-    dynamic_customer: API-provisioned customer used for the login lifecycle.
-    remember_me: Whether the Remember Me option is enabled before login.
-
-"
-"passed","Sun Oct 18 21:41:00 UTC 2026","Sun Oct 18 21:41:00 UTC 2026","152","tests.ui.tests.admin","test_admin_authentication","","","","test_admin_can_access_wordpress_dashboard[webkit]","
+"passed","Mon Oct 19 20:20:26 UTC 2026","Mon Oct 19 20:20:26 UTC 2026","96","tests.ui.tests.admin","test_admin_authentication","","","","test_admin_can_access_wordpress_dashboard[firefox]","
 Verify that the dedicated UI administrator can access WordPress Dashboard.
 
 The ``admin_page`` fixture owns administrator authentication. This test
 therefore validates the resulting authenticated capability rather than
 duplicating login selectors or credential handling.
 "
-"passed","Sun Oct 18 21:41:37 UTC 2026","Sun Oct 18 21:41:40 UTC 2026","2617","tests.ui.tests.shopping.cart","test_remove_product_from_cart","","","","test_remove_product_from_cart[chromium-guest]","
-Verify that the selected storefront role can remove a product from the cart.
-"
-"passed","Sun Oct 18 21:41:25 UTC 2026","Sun Oct 18 21:41:27 UTC 2026","2377","tests.ui.tests.catalog","test_product_review","","","","test_customer_can_submit_product_review[chromium]","Verify that an authenticated customer can submit a product review."
-"passed","Sun Oct 18 21:40:52 UTC 2026","Sun Oct 18 21:40:54 UTC 2026","1153","tests.ui.tests.account","test_customer_account_details","","","","test_customer_cannot_save_account_details_without_required_names[webkit]","
-Verify that a disposable customer cannot save Account details without
-the required first and last names.
-"
-"passed","Sun Oct 18 21:41:27 UTC 2026","Sun Oct 18 21:41:28 UTC 2026","546","tests.ui.tests.home","test_home_page","","","","test_guest_can_navigate_to_shop[webkit]","Verify that a guest can navigate from the home page to Shop."
-"passed","Sun Oct 18 21:41:56 UTC 2026","Sun Oct 18 21:42:00 UTC 2026","3534","tests.ui.tests.catalog","test_product_review","","","","test_customer_can_submit_product_review[firefox]","Verify that an authenticated customer can submit a product review."
-"passed","Sun Oct 18 21:41:09 UTC 2026","Sun Oct 18 21:41:10 UTC 2026","505","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[webkit-empty-username]","
-Verify that invalid customer credentials cannot establish authentication.
-
-A disposable customer is provisioned through the API because the test needs
-valid credentials to construct negative combinations, not a predefined
-customer persona. The dynamic customer fixture owns API cleanup.
-"
-"passed","Sun Oct 18 21:41:32 UTC 2026","Sun Oct 18 21:41:35 UTC 2026","2786","tests.ui.tests.shopping.cart","test_apply_coupon","","","","test_apply_coupon_to_cart[chromium-guest]","
-Verify that a storefront user can apply a valid percentage coupon.
-
-The test uses the API only to prepare isolated coupon test data.
-The behavior under test is performed and verified entirely through the UI.
-"
-"passed","Sun Oct 18 21:41:12 UTC 2026","Sun Oct 18 21:41:13 UTC 2026","736","tests.ui.tests.auth","test_customer_registration","","","","test_customer_can_register_with_new_email[webkit]","
-Verify that a new customer can successfully register through the UI.
-
-The customer is intentionally created by the UI because customer
-registration is the behavior under test.
-
-The generated email guarantees test isolation. After registration, the
-created customer is resolved through the API and registered with the UI
-resource owner so the customer is removed during UI test cleanup.
-"
-"passed","Sun Oct 18 21:42:10 UTC 2026","Sun Oct 18 21:42:14 UTC 2026","4018","tests.ui.tests.shopping.cart","test_apply_coupon","","","","test_apply_coupon_to_cart[firefox-guest]","
-Verify that a storefront user can apply a valid percentage coupon.
-
-The test uses the API only to prepare isolated coupon test data.
-The behavior under test is performed and verified entirely through the UI.
-"
-"passed","Sun Oct 18 21:41:11 UTC 2026","Sun Oct 18 21:41:11 UTC 2026","303","tests.ui.tests.auth","test_customer_password_recovery","","","","test_customer_can_open_password_recovery_page[webkit]","
+"passed","Mon Oct 19 20:20:52 UTC 2026","Mon Oct 19 20:20:52 UTC 2026","474","tests.ui.tests.auth","test_customer_password_recovery","","","","test_customer_can_open_password_recovery_page[webkit]","
 Verify that the customer can access the password-recovery workflow.
 
 The test validates the user-facing ""Lost your password?"" entry point and
 confirms that the dedicated password-recovery page is displayed.
 "
-"passed","Sun Oct 18 21:41:05 UTC 2026","Sun Oct 18 21:41:06 UTC 2026","602","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[chromium-invalid-username]","
+"passed","Mon Oct 19 20:20:41 UTC 2026","Mon Oct 19 20:20:42 UTC 2026","842","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[firefox-empty-password]","
 Verify that invalid customer credentials cannot establish authentication.
 
 A disposable customer is provisioned through the API because the test needs
 valid credentials to construct negative combinations, not a predefined
 customer persona. The dynamic customer fixture owns API cleanup.
 "
-"passed","Sun Oct 18 21:41:12 UTC 2026","Sun Oct 18 21:41:12 UTC 2026","581","tests.ui.tests.auth","test_customer_password_recovery","","","","test_customer_cannot_request_password_reset_for_unknown_email[webkit]","
-Verify that password recovery rejects an unknown username or email.
+"passed","Mon Oct 19 20:20:30 UTC 2026","Mon Oct 19 20:20:32 UTC 2026","2495","tests.ui.tests.account","test_customer_address","","","","test_customer_can_save_shipping_address[webkit]","
+Verify that a dynamically provisioned customer can create a shipping
+address through the My Account UI.
 
-This validates the negative password-recovery contract observed in the
-WooCommerce UI: an unknown identifier must not produce a valid reset
-request.
+The customer is created through the API as a disposable prerequisite.
+The shipping address itself is created through the UI because creating
+the address is the behavior under test.
+
+The customer's API ownership registration remains responsible for cleanup
+after the test finishes.
 "
-"passed","Sun Oct 18 21:41:29 UTC 2026","Sun Oct 18 21:41:30 UTC 2026","1322","tests.ui.tests.auth","test_customer_registration","","","","test_customer_can_register_with_new_email[firefox]","
-Verify that a new customer can successfully register through the UI.
-
-The customer is intentionally created by the UI because customer
-registration is the behavior under test.
-
-The generated email guarantees test isolation. After registration, the
-created customer is resolved through the API and registered with the UI
-resource owner so the customer is removed during UI test cleanup.
-"
-"passed","Sun Oct 18 21:41:10 UTC 2026","Sun Oct 18 21:41:12 UTC 2026","1542","tests.ui.tests.admin","test_admin_authentication","","","","test_customer_cannot_access_wordpress_dashboard[firefox]","
-Verify that an authenticated WooCommerce customer cannot access
-the WordPress administrator dashboard.
-
-Flow:
-    authenticated customer
-        -> /wp-admin/
-        -> administrator access denied
-        -> remains outside WordPress admin
-"
-"passed","Sun Oct 18 21:41:30 UTC 2026","Sun Oct 18 21:41:32 UTC 2026","1943","tests.ui.tests.shopping.cart","test_add_product_to_cart","","","","test_add_product_to_cart[chromium-guest]","Verify that a guest can add a newly provisioned product to the cart."
-"passed","Sun Oct 18 21:41:16 UTC 2026","Sun Oct 18 21:41:18 UTC 2026","1387","tests.ui.tests.auth","test_customer_session_security","","","","test_customer_session_persistence[chromium-with-remember-me]","
-Verify customer session behavior after closing and reopening the browser.
-
-A disposable customer is provisioned through the API by the
-``dynamic_customer`` fixture; the API ownership lifecycle handles cleanup.
-The test uses ``login_customer``'s established authentication flow for the
-customer credentials, while managing its own persistent browser contexts.
-
-The same persistent browser profile is deliberately reused for both phases
-of the test. This models a real browser restart while preserving the browser
-profile data that may contain WooCommerce authentication cookies.
-
-Expected behavior:
-    - Without Remember Me: authentication is not expected to persist.
-    - With Remember Me: authentication is expected to persist.
-
-Args:
-    browser_type: Playwright browser type selected by pytest.
-    ui_base_url: Base URL of the WooCommerce storefront.
-    dynamic_customer: API-provisioned customer used for the login lifecycle.
-    remember_me: Whether the Remember Me option is enabled before login.
-
-"
-"passed","Sun Oct 18 21:41:13 UTC 2026","Sun Oct 18 21:41:15 UTC 2026","1133","tests.ui.tests.auth","test_customer_session_security","","","","test_customer_can_logout[chromium]","
-Verify that a disposable API-provisioned customer can explicitly log out.
-
-The test logs in with generated credentials, performs the real logout
-action, and verifies that the session ends.
-"
-"passed","Sun Oct 18 21:40:45 UTC 2026","Sun Oct 18 21:40:47 UTC 2026","1274","tests.ui.tests.account","test_customer_account","","","","test_customer_account_contains_main_sections[chromium]","
+"passed","Mon Oct 19 20:19:47 UTC 2026","Mon Oct 19 20:19:48 UTC 2026","897","tests.ui.tests.account","test_customer_account","","","","test_customer_account_contains_main_sections[chromium]","
 Verify that a disposable API-provisioned customer can access the main My Account
 sections. API ownership handles customer cleanup.
 "
-"skipped","Sun Oct 18 21:42:32 UTC 2026","Sun Oct 18 21:43:05 UTC 2026","33308","tests.ui.tests.shopping.checkout","test_customer_checkout","","","","test_customer_can_complete_checkout_with_different_shipping_address[firefox]","
-Verify that Customer A can complete checkout with a different shipping address.
-
-Flow:
-    customer
-        -> Shop
-        -> add product to cart
-        -> Checkout
-        -> verify saved billing details
-        -> use a separate shipping address
-        -> verify shipping option
-            -> place order
-        -> verify order confirmation
-"
-"passed","Sun Oct 18 21:41:10 UTC 2026","Sun Oct 18 21:41:11 UTC 2026","646","tests.ui.tests.auth","test_customer_password_recovery","","","","test_customer_cannot_request_password_reset_for_unknown_email[chromium]","
-Verify that password recovery rejects an unknown username or email.
-
-This validates the negative password-recovery contract observed in the
-WooCommerce UI: an unknown identifier must not produce a valid reset
-request.
-"
-"passed","Sun Oct 18 21:41:31 UTC 2026","Sun Oct 18 21:41:34 UTC 2026","2569","tests.ui.tests.shopping.cart","test_apply_coupon","","","","test_apply_coupon_to_cart[webkit-guest]","
-Verify that a storefront user can apply a valid percentage coupon.
-
-The test uses the API only to prepare isolated coupon test data.
-The behavior under test is performed and verified entirely through the UI.
-"
-"passed","Sun Oct 18 21:41:21 UTC 2026","Sun Oct 18 21:41:22 UTC 2026","891","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[firefox-unknown-email]","
-Verify that invalid customer credentials cannot establish authentication.
-
-A disposable customer is provisioned through the API because the test needs
-valid credentials to construct negative combinations, not a predefined
-customer persona. The dynamic customer fixture owns API cleanup.
-"
-"passed","Sun Oct 18 21:40:51 UTC 2026","Sun Oct 18 21:40:52 UTC 2026","1491","tests.ui.tests.account","test_customer_account_details","","","","test_customer_can_update_account_details[webkit]","
-Verify that a disposable customer can update their first and last name.
-
-The customer is provisioned through the API specifically for this test.
-The UI updates the profile, and API ownership handles customer cleanup.
-"
-"passed","Sun Oct 18 21:40:47 UTC 2026","Sun Oct 18 21:40:49 UTC 2026","1715","tests.ui.tests.account","test_customer_account","","","","test_customer_account_contains_main_sections[webkit]","
-Verify that a disposable API-provisioned customer can access the main My Account
-sections. API ownership handles customer cleanup.
-"
-"passed","Sun Oct 18 21:41:10 UTC 2026","Sun Oct 18 21:41:10 UTC 2026","519","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[webkit-empty-password]","
-Verify that invalid customer credentials cannot establish authentication.
-
-A disposable customer is provisioned through the API because the test needs
-valid credentials to construct negative combinations, not a predefined
-customer persona. The dynamic customer fixture owns API cleanup.
-"
-"passed","Sun Oct 18 21:41:53 UTC 2026","Sun Oct 18 21:41:56 UTC 2026","2629","tests.ui.tests.catalog","test_product_review","","","","test_guest_can_submit_product_review[firefox]","Verify that a guest can submit a review for a product."
-"passed","Sun Oct 18 21:41:20 UTC 2026","Sun Oct 18 21:41:22 UTC 2026","2051","tests.ui.tests.catalog","test_product_discovery","","","","test_customer_can_open_product[chromium]","Verify that an API-provisioned customer can view a product's details."
-"passed","Sun Oct 18 21:40:54 UTC 2026","Sun Oct 18 21:40:57 UTC 2026","2862","tests.ui.tests.account","test_customer_account_details","","","","test_customer_can_update_account_details[firefox]","
-Verify that a disposable customer can update their first and last name.
-
-The customer is provisioned through the API specifically for this test.
-The UI updates the profile, and API ownership handles customer cleanup.
-"
-"passed","Sun Oct 18 21:41:00 UTC 2026","Sun Oct 18 21:41:01 UTC 2026","1035","tests.ui.tests.admin","test_admin_authentication","","","","test_customer_cannot_access_wordpress_dashboard[chromium]","
-Verify that an authenticated WooCommerce customer cannot access
-the WordPress administrator dashboard.
-
-Flow:
-    authenticated customer
-        -> /wp-admin/
-        -> administrator access denied
-        -> remains outside WordPress admin
-"
-"passed","Sun Oct 18 21:41:28 UTC 2026","Sun Oct 18 21:41:29 UTC 2026","635","tests.ui.tests.home","test_home_page","","","","test_guest_can_navigate_to_shop[chromium]","Verify that a guest can navigate from the home page to Shop."
-"skipped","Sun Oct 18 21:43:07 UTC 2026","Sun Oct 18 21:43:40 UTC 2026","33443","tests.ui.tests.shopping.checkout","test_customer_checkout","","","","test_customer_without_saved_address_can_complete_checkout[firefox]","
-Verify that Customer B can complete checkout by entering an address.
-
-Flow:
-    customer without saved address
-        -> Shop
-        -> add product to cart
-        -> Cart
-        -> Checkout
-        -> use shipping address for billing
-        -> enter shipping address
-        -> verify shipping option
-        -> place order
-        -> verify order confirmation
-"
-"passed","Sun Oct 18 21:40:49 UTC 2026","Sun Oct 18 21:40:50 UTC 2026","1748","tests.ui.tests.account","test_customer_account","","","","test_customer_account_contains_main_sections[firefox]","
-Verify that a disposable API-provisioned customer can access the main My Account
-sections. API ownership handles customer cleanup.
-"
-"passed","Sun Oct 18 21:41:07 UTC 2026","Sun Oct 18 21:41:07 UTC 2026","602","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[chromium-invalid-credentials]","
-Verify that invalid customer credentials cannot establish authentication.
-
-A disposable customer is provisioned through the API because the test needs
-valid credentials to construct negative combinations, not a predefined
-customer persona. The dynamic customer fixture owns API cleanup.
-"
-"passed","Sun Oct 18 21:41:25 UTC 2026","Sun Oct 18 21:41:26 UTC 2026","868","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[firefox-empty-password]","
-Verify that invalid customer credentials cannot establish authentication.
-
-A disposable customer is provisioned through the API because the test needs
-valid credentials to construct negative combinations, not a predefined
-customer persona. The dynamic customer fixture owns API cleanup.
-"
-"passed","Sun Oct 18 21:41:23 UTC 2026","Sun Oct 18 21:41:24 UTC 2026","1683","tests.ui.tests.catalog","test_product_review","","","","test_guest_can_submit_product_review[chromium]","Verify that a guest can submit a review for a product."
-"passed","Sun Oct 18 21:41:15 UTC 2026","Sun Oct 18 21:41:16 UTC 2026","1354","tests.ui.tests.auth","test_customer_session_security","","","","test_customer_session_persistence[chromium-without-remember-me]","
-Verify customer session behavior after closing and reopening the browser.
-
-A disposable customer is provisioned through the API by the
-``dynamic_customer`` fixture; the API ownership lifecycle handles cleanup.
-The test uses ``login_customer``'s established authentication flow for the
-customer credentials, while managing its own persistent browser contexts.
-
-The same persistent browser profile is deliberately reused for both phases
-of the test. This models a real browser restart while preserving the browser
-profile data that may contain WooCommerce authentication cookies.
-
-Expected behavior:
-    - Without Remember Me: authentication is not expected to persist.
-    - With Remember Me: authentication is expected to persist.
-
-Args:
-    browser_type: Playwright browser type selected by pytest.
-    ui_base_url: Base URL of the WooCommerce storefront.
-    dynamic_customer: API-provisioned customer used for the login lifecycle.
-    remember_me: Whether the Remember Me option is enabled before login.
-
-"
-"passed","Sun Oct 18 21:42:27 UTC 2026","Sun Oct 18 21:42:31 UTC 2026","4056","tests.ui.tests.shopping.checkout","test_customer_checkout","","","","test_customer_can_complete_checkout[firefox]","
+"passed","Mon Oct 19 20:21:46 UTC 2026","Mon Oct 19 20:21:51 UTC 2026","4628","tests.ui.tests.shopping.checkout","test_customer_checkout","","","","test_customer_can_complete_checkout[firefox]","
 Verify that an authenticated customer can purchase a seeded product.
 
 Flow:
@@ -687,140 +541,244 @@ Flow:
         -> place order
         -> verify order confirmation
 "
-"passed","Sun Oct 18 21:41:14 UTC 2026","Sun Oct 18 21:41:15 UTC 2026","1139","tests.ui.tests.auth","test_customer_login","","","","test_customer_can_authenticate_with_email[firefox]","
-Verify that a customer can authenticate using their email address.
+"passed","Mon Oct 19 20:20:02 UTC 2026","Mon Oct 19 20:20:03 UTC 2026","436","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[chromium-invalid-credentials]","
+Verify that invalid customer credentials cannot establish authentication.
 
-A disposable customer is provisioned through the API because the test
-needs a valid account as a prerequisite, not a predefined customer persona.
-The test exercises email-based login through the real UI; the dynamic
-customer fixture owns API cleanup.
+A disposable customer is provisioned through the API because the test needs
+valid credentials to construct negative combinations, not a predefined
+customer persona. The dynamic customer fixture owns API cleanup.
 "
-"passed","Sun Oct 18 21:40:59 UTC 2026","Sun Oct 18 21:40:59 UTC 2026","85","tests.ui.tests.admin","test_admin_authentication","","","","test_admin_can_access_wordpress_dashboard[chromium]","
-Verify that the dedicated UI administrator can access WordPress Dashboard.
+"passed","Mon Oct 19 20:20:47 UTC 2026","Mon Oct 19 20:20:47 UTC 2026","727","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[webkit-unknown-email]","
+Verify that invalid customer credentials cannot establish authentication.
 
-The ``admin_page`` fixture owns administrator authentication. This test
-therefore validates the resulting authenticated capability rather than
-duplicating login selectors or credential handling.
+A disposable customer is provisioned through the API because the test needs
+valid credentials to construct negative combinations, not a predefined
+customer persona. The dynamic customer fixture owns API cleanup.
 "
-"passed","Sun Oct 18 21:42:06 UTC 2026","Sun Oct 18 21:42:09 UTC 2026","3072","tests.ui.tests.shopping.cart","test_add_product_to_cart","","","","test_add_product_to_cart[firefox-guest]","Verify that a guest can add a newly provisioned product to the cart."
-"passed","Sun Oct 18 21:41:03 UTC 2026","Sun Oct 18 21:41:03 UTC 2026","637","tests.ui.tests.auth","test_customer_login","","","","test_customer_can_access_my_account[webkit]","
+"passed","Mon Oct 19 20:20:40 UTC 2026","Mon Oct 19 20:20:41 UTC 2026","839","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[firefox-empty-username]","
+Verify that invalid customer credentials cannot establish authentication.
+
+A disposable customer is provisioned through the API because the test needs
+valid credentials to construct negative combinations, not a predefined
+customer persona. The dynamic customer fixture owns API cleanup.
+"
+"passed","Mon Oct 19 20:20:55 UTC 2026","Mon Oct 19 20:20:55 UTC 2026","697","tests.ui.tests.auth","test_customer_registration_security","","","","test_customer_cannot_register_with_existing_email[webkit]","
+Verify that an existing customer email cannot create another account.
+
+The customer is provisioned through the API as a disposable prerequisite.
+The test submits that existing email through the real WooCommerce
+registration form and verifies the duplicate-account error.
+"
+"passed","Mon Oct 19 20:20:05 UTC 2026","Mon Oct 19 20:20:06 UTC 2026","637","tests.ui.tests.auth","test_customer_registration","","","","test_customer_can_register_with_new_email[chromium]","
+Verify that a new customer can successfully register through the UI.
+
+The customer is intentionally created by the UI because customer
+registration is the behavior under test.
+
+The generated email guarantees test isolation. After registration, the
+created customer is resolved through the API and registered with the UI
+resource owner so the customer is removed during UI test cleanup.
+"
+"skipped","Mon Oct 19 20:21:38 UTC 2026","Mon Oct 19 20:22:10 UTC 2026","32459","tests.ui.tests.shopping.checkout","test_customer_checkout","","","","test_customer_can_complete_checkout_with_different_shipping_address[webkit]","
+Verify that Customer A can complete checkout with a different shipping address.
+
+Flow:
+    customer
+        -> Shop
+        -> add product to cart
+        -> Checkout
+        -> verify saved billing details
+        -> use a separate shipping address
+        -> verify shipping option
+            -> place order
+        -> verify order confirmation
+"
+"passed","Mon Oct 19 20:20:40 UTC 2026","Mon Oct 19 20:20:41 UTC 2026","890","tests.ui.tests.auth","test_customer_login","","","","test_customer_can_access_my_account[webkit]","
 Verify that a disposable API-provisioned customer can access My Account.
 
 The shared login helper performs authentication; API ownership handles
 cleanup of the customer created for this test.
 "
-"passed","Sun Oct 18 21:41:03 UTC 2026","Sun Oct 18 21:41:04 UTC 2026","646","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[chromium-invalid-password-username]","
+"passed","Mon Oct 19 20:21:15 UTC 2026","Mon Oct 19 20:21:16 UTC 2026","1382","tests.ui.tests.home","test_home_page","","","","test_customer_can_navigate_to_shop[webkit]","Verify that a disposable API-provisioned customer can navigate to Shop."
+"passed","Mon Oct 19 20:20:18 UTC 2026","Mon Oct 19 20:20:20 UTC 2026","1275","tests.ui.tests.shopping.cart","test_add_product_to_cart","","","","test_add_product_to_cart[chromium-guest]","Verify that a guest can add a newly provisioned product to the cart."
+"passed","Mon Oct 19 20:20:00 UTC 2026","Mon Oct 19 20:20:00 UTC 2026","450","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[chromium-invalid-password-username]","
 Verify that invalid customer credentials cannot establish authentication.
 
 A disposable customer is provisioned through the API because the test needs
 valid credentials to construct negative combinations, not a predefined
 customer persona. The dynamic customer fixture owns API cleanup.
 "
-"passed","Sun Oct 18 21:41:27 UTC 2026","Sun Oct 18 21:41:27 UTC 2026","352","tests.ui.tests.home","test_home_page","","","","test_home_page_loads[webkit]","Verify that a guest can access the storefront home page."
-"passed","Sun Oct 18 21:41:33 UTC 2026","Sun Oct 18 21:41:35 UTC 2026","1701","tests.ui.tests.auth","test_customer_session_security","","","","test_customer_can_logout[firefox]","
+"passed","Mon Oct 19 20:20:17 UTC 2026","Mon Oct 19 20:20:17 UTC 2026","418","tests.ui.tests.home","test_home_page","","","","test_guest_can_navigate_to_shop[chromium]","Verify that a guest can navigate from the home page to Shop."
+"passed","Mon Oct 19 20:20:29 UTC 2026","Mon Oct 19 20:20:31 UTC 2026","1908","tests.ui.tests.shopping.checkout","test_customer_checkout","","","","test_customer_can_complete_checkout[chromium]","
+Verify that an authenticated customer can purchase a seeded product.
+
+Flow:
+    customer
+        -> Shop
+        -> add product to cart
+        -> Cart
+        -> Checkout
+        -> verify saved billing details
+            -> add order note
+        -> place order
+        -> verify order confirmation
+"
+"passed","Mon Oct 19 20:21:22 UTC 2026","Mon Oct 19 20:21:25 UTC 2026","3348","tests.ui.tests.shopping.cart","test_add_product_to_cart","","","","test_add_product_to_cart[firefox-guest]","Verify that a guest can add a newly provisioned product to the cart."
+"passed","Mon Oct 19 20:20:05 UTC 2026","Mon Oct 19 20:20:07 UTC 2026","1748","tests.ui.tests.account","test_customer_account","","","","test_customer_account_contains_main_sections[firefox]","
+Verify that a disposable API-provisioned customer can access the main My Account
+sections. API ownership handles customer cleanup.
+"
+"passed","Mon Oct 19 20:21:00 UTC 2026","Mon Oct 19 20:21:01 UTC 2026","1948","tests.ui.tests.auth","test_customer_session_security","","","","test_customer_session_persistence[webkit-with-remember-me]","
+Verify customer session behavior after closing and reopening the browser.
+
+A disposable customer is provisioned through the API by the
+``dynamic_customer`` fixture; the API ownership lifecycle handles cleanup.
+The test uses ``login_customer``'s established authentication flow for the
+customer credentials, while managing its own persistent browser contexts.
+
+The same persistent browser profile is deliberately reused for both phases
+of the test. This models a real browser restart while preserving the browser
+profile data that may contain WooCommerce authentication cookies.
+
+Expected behavior:
+    - Without Remember Me: authentication is not expected to persist.
+    - With Remember Me: authentication is expected to persist.
+
+Args:
+    browser_type: Playwright browser type selected by pytest.
+    ui_base_url: Base URL of the WooCommerce storefront.
+    dynamic_customer: API-provisioned customer used for the login lifecycle.
+    remember_me: Whether the Remember Me option is enabled before login.
+
+"
+"passed","Mon Oct 19 20:21:10 UTC 2026","Mon Oct 19 20:21:12 UTC 2026","2602","tests.ui.tests.catalog","test_product_review","","","","test_customer_can_submit_product_review[webkit]","Verify that an authenticated customer can submit a product review."
+"passed","Mon Oct 19 20:19:57 UTC 2026","Mon Oct 19 20:19:58 UTC 2026","731","tests.ui.tests.admin","test_admin_authentication","","","","test_customer_cannot_access_wordpress_dashboard[chromium]","
+Verify that an authenticated WooCommerce customer cannot access
+the WordPress administrator dashboard.
+
+Flow:
+    authenticated customer
+        -> /wp-admin/
+        -> administrator access denied
+        -> remains outside WordPress admin
+"
+"passed","Mon Oct 19 20:20:43 UTC 2026","Mon Oct 19 20:20:44 UTC 2026","473","tests.ui.tests.auth","test_customer_password_recovery","","","","test_customer_can_open_password_recovery_page[firefox]","
+Verify that the customer can access the password-recovery workflow.
+
+The test validates the user-facing ""Lost your password?"" entry point and
+confirms that the dedicated password-recovery page is displayed.
+"
+"passed","Mon Oct 19 20:20:17 UTC 2026","Mon Oct 19 20:20:18 UTC 2026","855","tests.ui.tests.home","test_home_page","","","","test_customer_can_navigate_to_shop[chromium]","Verify that a disposable API-provisioned customer can navigate to Shop."
+"passed","Mon Oct 19 20:21:03 UTC 2026","Mon Oct 19 20:21:05 UTC 2026","1980","tests.ui.tests.catalog","test_product_discovery","","","","test_guest_can_open_product[firefox]","Verify that a guest can view an API-created product and its details."
+"passed","Mon Oct 19 20:20:04 UTC 2026","Mon Oct 19 20:20:05 UTC 2026","222","tests.ui.tests.auth","test_customer_password_recovery","","","","test_customer_can_open_password_recovery_page[chromium]","
+Verify that the customer can access the password-recovery workflow.
+
+The test validates the user-facing ""Lost your password?"" entry point and
+confirms that the dedicated password-recovery page is displayed.
+"
+"passed","Mon Oct 19 20:21:13 UTC 2026","Mon Oct 19 20:21:14 UTC 2026","759","tests.ui.tests.home","test_home_page","","","","test_guest_can_navigate_to_shop[webkit]","Verify that a guest can navigate from the home page to Shop."
+"passed","Mon Oct 19 20:20:50 UTC 2026","Mon Oct 19 20:20:51 UTC 2026","1701","tests.ui.tests.auth","test_customer_session_security","","","","test_customer_can_logout[firefox]","
 Verify that a disposable API-provisioned customer can explicitly log out.
 
 The test logs in with generated credentials, performs the real logout
 action, and verifies that the session ends.
 "
-"passed","Sun Oct 18 21:41:06 UTC 2026","Sun Oct 18 21:41:07 UTC 2026","588","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[chromium-unknown-email]","
+"passed","Mon Oct 19 20:20:09 UTC 2026","Mon Oct 19 20:20:10 UTC 2026","1011","tests.ui.tests.auth","test_customer_session_security","","","","test_customer_session_persistence[chromium-with-remember-me]","
+Verify customer session behavior after closing and reopening the browser.
+
+A disposable customer is provisioned through the API by the
+``dynamic_customer`` fixture; the API ownership lifecycle handles cleanup.
+The test uses ``login_customer``'s established authentication flow for the
+customer credentials, while managing its own persistent browser contexts.
+
+The same persistent browser profile is deliberately reused for both phases
+of the test. This models a real browser restart while preserving the browser
+profile data that may contain WooCommerce authentication cookies.
+
+Expected behavior:
+    - Without Remember Me: authentication is not expected to persist.
+    - With Remember Me: authentication is expected to persist.
+
+Args:
+    browser_type: Playwright browser type selected by pytest.
+    ui_base_url: Base URL of the WooCommerce storefront.
+    dynamic_customer: API-provisioned customer used for the login lifecycle.
+    remember_me: Whether the Remember Me option is enabled before login.
+
+"
+"passed","Mon Oct 19 20:20:17 UTC 2026","Mon Oct 19 20:20:20 UTC 2026","3261","tests.ui.tests.account","test_customer_address","","","","test_customer_can_save_shipping_address[firefox]","
+Verify that a dynamically provisioned customer can create a shipping
+address through the My Account UI.
+
+The customer is created through the API as a disposable prerequisite.
+The shipping address itself is created through the UI because creating
+the address is the behavior under test.
+
+The customer's API ownership registration remains responsible for cleanup
+after the test finishes.
+"
+"passed","Mon Oct 19 20:20:15 UTC 2026","Mon Oct 19 20:20:16 UTC 2026","1583","tests.ui.tests.catalog","test_product_review","","","","test_customer_can_submit_product_review[chromium]","Verify that an authenticated customer can submit a product review."
+"passed","Mon Oct 19 20:20:46 UTC 2026","Mon Oct 19 20:20:46 UTC 2026","706","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[webkit-invalid-username]","
 Verify that invalid customer credentials cannot establish authentication.
 
 A disposable customer is provisioned through the API because the test needs
 valid credentials to construct negative combinations, not a predefined
 customer persona. The dynamic customer fixture owns API cleanup.
 "
-"passed","Sun Oct 18 21:41:07 UTC 2026","Sun Oct 18 21:41:07 UTC 2026","505","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[webkit-invalid-username]","
+"passed","Mon Oct 19 20:20:03 UTC 2026","Mon Oct 19 20:20:03 UTC 2026","446","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[chromium-empty-username]","
 Verify that invalid customer credentials cannot establish authentication.
 
 A disposable customer is provisioned through the API because the test needs
 valid credentials to construct negative combinations, not a predefined
 customer persona. The dynamic customer fixture owns API cleanup.
 "
-"passed","Sun Oct 18 21:41:28 UTC 2026","Sun Oct 18 21:41:29 UTC 2026","1023","tests.ui.tests.auth","test_customer_password_recovery","","","","test_customer_cannot_request_password_reset_for_unknown_email[firefox]","
+"passed","Mon Oct 19 20:19:54 UTC 2026","Mon Oct 19 20:19:55 UTC 2026","1642","tests.ui.tests.account","test_customer_address","","","","test_customer_can_modify_shipping_address[chromium]","
+Verify that a customer can modify an existing shipping address and that
+the updated values persist after reloading the form.
+
+The customer and its initial shipping address are created through the API
+because customer/address creation is not the behavior under test. The UI
+then exercises editing, saving, and verifying the existing address.
+
+The shared API creation fixture registers the customer for cleanup.
+"
+"passed","Mon Oct 19 20:20:36 UTC 2026","Mon Oct 19 20:20:37 UTC 2026","870","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[firefox-invalid-username]","
+Verify that invalid customer credentials cannot establish authentication.
+
+A disposable customer is provisioned through the API because the test needs
+valid credentials to construct negative combinations, not a predefined
+customer persona. The dynamic customer fixture owns API cleanup.
+"
+"skipped","Mon Oct 19 20:21:52 UTC 2026","Mon Oct 19 20:22:27 UTC 2026","34789","tests.ui.tests.shopping.checkout","test_customer_checkout","","","","test_customer_can_complete_checkout_with_different_shipping_address[firefox]","
+Verify that Customer A can complete checkout with a different shipping address.
+
+Flow:
+    customer
+        -> Shop
+        -> add product to cart
+        -> Checkout
+        -> verify saved billing details
+        -> use a separate shipping address
+        -> verify shipping option
+            -> place order
+        -> verify order confirmation
+"
+"passed","Mon Oct 19 20:20:05 UTC 2026","Mon Oct 19 20:20:05 UTC 2026","438","tests.ui.tests.auth","test_customer_password_recovery","","","","test_customer_cannot_request_password_reset_for_unknown_email[chromium]","
 Verify that password recovery rejects an unknown username or email.
 
 This validates the negative password-recovery contract observed in the
 WooCommerce UI: an unknown identifier must not produce a valid reset
 request.
 "
-"passed","Sun Oct 18 21:40:55 UTC 2026","Sun Oct 18 21:40:57 UTC 2026","2260","tests.ui.tests.account","test_customer_address","","","","test_customer_can_modify_shipping_address[chromium]","
+"passed","Mon Oct 19 20:20:11 UTC 2026","Mon Oct 19 20:20:13 UTC 2026","1343","tests.ui.tests.catalog","test_product_discovery","","","","test_customer_can_open_product[chromium]","Verify that an API-provisioned customer can view a product's details."
+"passed","Mon Oct 19 20:20:24 UTC 2026","Mon Oct 19 20:20:26 UTC 2026","2084","tests.ui.tests.shopping.cart","test_remove_product_from_cart","","","","test_remove_product_from_cart[chromium-guest]","Verify that a guest can remove a product and leave the cart empty."
+"passed","Mon Oct 19 20:20:32 UTC 2026","Mon Oct 19 20:20:35 UTC 2026","2565","tests.ui.tests.account","test_customer_address","","","","test_customer_can_modify_shipping_address[webkit]","
 Verify that a customer can modify an existing shipping address and that
 the updated values persist after reloading the form.
 
-The customer is provisioned through the API as a disposable prerequisite.
-The initial shipping address is established through the API state-provisioning
-layer because address creation is not the behavior under test.
+The customer and its initial shipping address are created through the API
+because customer/address creation is not the behavior under test. The UI
+then exercises editing, saving, and verifying the existing address.
 
-The UI is responsible only for:
-    - opening the existing shipping address;
-    - modifying the selected fields;
-    - saving the modification;
-    - verifying the updated address;
-    - verifying persistence after reload.
-
-The customer's API ownership registration remains responsible for cleanup.
-"
-"passed","Sun Oct 18 21:41:43 UTC 2026","Sun Oct 18 21:41:46 UTC 2026","2759","tests.ui.tests.shopping.checkout","test_customer_checkout","","","","test_customer_can_complete_checkout[chromium]","
-Verify that an authenticated customer can purchase a seeded product.
-
-Flow:
-    customer
-        -> Shop
-        -> add product to cart
-        -> Cart
-        -> Checkout
-        -> verify saved billing details
-            -> add order note
-        -> place order
-        -> verify order confirmation
-"
-"passed","Sun Oct 18 21:41:19 UTC 2026","Sun Oct 18 21:41:20 UTC 2026","1207","tests.ui.tests.catalog","test_product_discovery","","","","test_guest_can_open_product[webkit]","Verify that a guest can view an API-created product and its details."
-"passed","Sun Oct 18 21:41:06 UTC 2026","Sun Oct 18 21:41:06 UTC 2026","589","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[webkit-invalid-password-email]","
-Verify that invalid customer credentials cannot establish authentication.
-
-A disposable customer is provisioned through the API because the test needs
-valid credentials to construct negative combinations, not a predefined
-customer persona. The dynamic customer fixture owns API cleanup.
-"
-"passed","Sun Oct 18 21:41:42 UTC 2026","Sun Oct 18 21:41:44 UTC 2026","2259","tests.ui.tests.shopping.checkout","test_customer_checkout","","","","test_customer_can_complete_checkout[webkit]","
-Verify that an authenticated customer can purchase a seeded product.
-
-Flow:
-    customer
-        -> Shop
-        -> add product to cart
-        -> Cart
-        -> Checkout
-        -> verify saved billing details
-            -> add order note
-        -> place order
-        -> verify order confirmation
-"
-"passed","Sun Oct 18 21:41:22 UTC 2026","Sun Oct 18 21:41:23 UTC 2026","909","tests.ui.tests.auth","test_customer_login_security","","","","test_customer_cannot_authenticate_with_invalid_credentials[firefox-invalid-credentials]","
-Verify that invalid customer credentials cannot establish authentication.
-
-A disposable customer is provisioned through the API because the test needs
-valid credentials to construct negative combinations, not a predefined
-customer persona. The dynamic customer fixture owns API cleanup.
-"
-"passed","Sun Oct 18 21:41:39 UTC 2026","Sun Oct 18 21:41:41 UTC 2026","2461","tests.ui.tests.shopping.cart","test_update_cart_quantity","","","","test_update_cart_quantity[webkit-guest]","
-Verify that the selected storefront role can update cart quantity.
-"
-"passed","Sun Oct 18 21:41:04 UTC 2026","Sun Oct 18 21:41:08 UTC 2026","3478","tests.ui.tests.account","test_customer_address","","","","test_customer_can_modify_shipping_address[firefox]","
-Verify that a customer can modify an existing shipping address and that
-the updated values persist after reloading the form.
-
-The customer is provisioned through the API as a disposable prerequisite.
-The initial shipping address is established through the API state-provisioning
-layer because address creation is not the behavior under test.
-
-The UI is responsible only for:
-    - opening the existing shipping address;
-    - modifying the selected fields;
-    - saving the modification;
-    - verifying the updated address;
-    - verifying persistence after reload.
-
-The customer's API ownership registration remains responsible for cleanup.
+The shared API creation fixture registers the customer for cleanup.
 "

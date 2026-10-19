@@ -1,0 +1,43 @@
+DEBUG    EcommerceAPI.src.customers.helpers.customers_helper:customers_helper.py:162 ⚙️ Creating customer with payload keys: ['email', 'password']
+DEBUG    EcommerceAPI.src.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.138s)
+INFO     EcommerceAPI.src.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=26, email=testuser_bbkaixfwlr@supersqa.com
+DEBUG    EcommerceAPI.plugins.api.customers:customers.py:250 ℹ️ Registered customers with ID: 26 for cleanup.
+DEBUG    EcommerceAPI.src.products.helpers.products_helper:products_helper.py:360 ⚙️ Creating product with payload keys: ['name', 'type', 'status', 'regular_price', 'sku', 'description', 'short_description']
+DEBUG    EcommerceAPI.src.products.api.products_api:products_api.py:74 📡 POST /products payload_keys=['name', 'type', 'status', 'regular_price', 'sku', 'description', 'short_description']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/products → Status code: 201 (completed in 0.117s)
+INFO     EcommerceAPI.src.products.validators.product_validators:product_validators.py:99 ✅ Product structure valid: id=20, name=UI Discovery Product fa5955b3d1, sku=ui-discovery-fa5955b3d1
+DEBUG    EcommerceAPI.plugins.api.products:products.py:320 ℹ️ Registered product with ID: 20 for cleanup.
+DEBUG    EcommerceAPI.src.products.helpers.products_helper:products_helper.py:360 ⚙️ Creating product with payload keys: ['name', 'type', 'status', 'regular_price', 'sku', 'description', 'short_description']
+DEBUG    EcommerceAPI.src.products.api.products_api:products_api.py:74 📡 POST /products payload_keys=['name', 'type', 'status', 'regular_price', 'sku', 'description', 'short_description']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/products → Status code: 201 (completed in 0.110s)
+INFO     EcommerceAPI.src.products.validators.product_validators:product_validators.py:99 ✅ Product structure valid: id=21, name=UI Related Product fa5955b3d1, sku=ui-related-fa5955b3d1
+DEBUG    EcommerceAPI.plugins.api.products:products.py:320 ℹ️ Registered product with ID: 21 for cleanup.
+INFO     EcommerceAPI.plugins.entities:entities.py:718 🔧 Starting teardown of created test resources...
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up product(s)... (4 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 18
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/18?force=True → Status code: 200 (completed in 0.112s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 18
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 19
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/19?force=True → Status code: 200 (completed in 0.103s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 19
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 20
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/20?force=True → Status code: 200 (completed in 0.105s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 20
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 21
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/21?force=True → Status code: 200 (completed in 0.095s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 21
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for product(s).
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up customer(s)... (1 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 26
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/26?force=True → Status code: 200 (completed in 0.079s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 26
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for customer(s).
+INFO     EcommerceAPI.plugins.entities:entities.py:758 
+
+🧹 ====================================== CLEANUP SUMMARY ======================================
+INFO     EcommerceAPI.plugins.entities:entities.py:761 📊 Created during test run: {'products': 4, 'customers': 1}
+INFO     EcommerceAPI.plugins.entities:entities.py:762 🧾 Cleanup total summary:
+INFO     EcommerceAPI.plugins.entities:entities.py:764    • product: 4 deleted (4 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:764    • customer: 1 deleted (1 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:765 ✅ All test data cleanup completed.
