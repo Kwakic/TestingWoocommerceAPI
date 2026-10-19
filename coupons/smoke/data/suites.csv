@@ -1,5 +1,5 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Sun Oct 18 21:40:42 UTC 2026","Sun Oct 18 21:40:42 UTC 2026","260","tests.coupons.api","test_create_coupons","","","","test_create_single_coupon","
+"passed","Mon Oct 19 20:20:03 UTC 2026","Mon Oct 19 20:20:04 UTC 2026","274","tests.coupons.api","test_create_coupons","","","","test_create_single_coupon","
 Create a Coupon using the minimum scenario-specific input.
 
 The test does not build or provision the Coupon directly. The
@@ -32,7 +32,7 @@ Test flow:
 API/DB validation remains explicit in the test because it is the
 purpose of this integration scenario.
 "
-"passed","Sun Oct 18 21:40:43 UTC 2026","Sun Oct 18 21:40:43 UTC 2026","267","tests.coupons.api","test_get_coupon","","","","test_get_coupon_by_id","
+"passed","Mon Oct 19 20:20:04 UTC 2026","Mon Oct 19 20:20:04 UTC 2026","234","tests.coupons.api","test_get_coupon","","","","test_get_coupon_by_id","
 Verify that a coupon can be retrieved by ID.
 
 Endpoint tested:
