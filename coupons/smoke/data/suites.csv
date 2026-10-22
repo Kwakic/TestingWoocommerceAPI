@@ -1,5 +1,5 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Mon Oct 19 20:20:03 UTC 2026","Mon Oct 19 20:20:04 UTC 2026","274","tests.coupons.api","test_create_coupons","","","","test_create_single_coupon","
+"passed","Thu Oct 22 10:33:59 UTC 2026","Thu Oct 22 10:33:59 UTC 2026","151","tests.coupons.api","test_create_coupons","","","","test_create_single_coupon","
 Create a Coupon using the minimum scenario-specific input.
 
 The test does not build or provision the Coupon directly. The
@@ -31,8 +31,30 @@ Test flow:
 
 API/DB validation remains explicit in the test because it is the
 purpose of this integration scenario.
+
+Coupon creation flow:
+    1. The test calls create_valid_coupon(...). Any keyword arguments are scenario-specific overrides.
+    2. The fixture passes them to CouponBuilder and builds the payload.
+    3. CouponBuilder stores the overrides and delegates to CouponFactory.
+    4. CouponFactory assembles the default payload.
+    5. The fixture passes that payload to CouponProvisioner, which sends it through the Coupons API.
+    The fixture then validates the response and registers the created Coupon for cleanup.
+
+With no overrides, the factory creates data shaped like:
+    {
+        ""code"": ""test-<generated code>"",
+        ""discount_type"": ""percent"",
+        ""amount"": ""10.00"",
+    }
+Optional fields—such as usage limits, restrictions, or expiration—are only included when the test supplies them.
+For example, create_valid_coupon(discount_type=""fixed_cart"", amount=""20"") overrides those two defaults.
+The payload is still only in-memory data until the provisioner sends it to WooCommerce.
+
+As with Products, Orders and Customers, this payload is prepared in memory first.
+The coupon is created when the provisioner sends it to WooCommerce.
+
 "
-"passed","Mon Oct 19 20:20:04 UTC 2026","Mon Oct 19 20:20:04 UTC 2026","234","tests.coupons.api","test_get_coupon","","","","test_get_coupon_by_id","
+"passed","Thu Oct 22 10:33:59 UTC 2026","Thu Oct 22 10:33:59 UTC 2026","127","tests.coupons.api","test_get_coupon","","","","test_get_coupon_by_id","
 Verify that a coupon can be retrieved by ID.
 
 Endpoint tested:

@@ -1,5 +1,46 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Mon Oct 19 20:20:11 UTC 2026","Mon Oct 19 20:20:11 UTC 2026","300","tests.products.api","test_get_products","","","","test_get_product_by_id","
+"passed","Thu Oct 22 10:34:08 UTC 2026","Thu Oct 22 10:34:08 UTC 2026","319","tests.products.api","test_create_products","","","","test_create_single_simple_product","
+Create a simple product using the minimum valid payload.
+
+The fixture `create_valid_product` already performs:
+
+    - POST /products
+    - status code validation (201)
+    - response structure validation (Pydantic)
+    - cleanup registration
+
+Test flow:
+
+    1. Create a simple product
+    2. Fetch product via API
+    3. Verify API data matches database record
+
+Product creation flow:
+    1. The test calls create_valid_product(...).Any keyword arguments are scenario-specific overrides.
+    2. The fixture passes those overrides to ProductBuilder in products.py.
+    3. ProductBuilder stores them and calls ProductFactory.build(...).
+    4. ProductFactory.build() fills in defaults for fields the test didn’t supply, then returns the payload
+    dictionary.The fixture passes that dictionary to ProductProvisioner to make the API request.
+
+With no overrides, the Product factory creates data shaped like:
+
+    {
+      ""name"": ""<generated product name>"",
+      ""type"": ""simple"",
+      ""status"": ""publish"",
+      ""regular_price"": ""19.99"",
+      ""sku"": ""TEST-SKU-<unique suffix>"",
+      ""description"": ""Test product: <generated product name>"",
+      ""short_description"": ""Test product: <generated product name>""
+    }
+
+Optional fields such as sale_price and categories are left out unless supplied. Explicit
+values passed by the test replace the corresponding defaults.
+
+So product_data is the in-memory request payload; WooCommerce creates the Product
+later, when the provisioner sends it.
+"
+"passed","Thu Oct 22 10:34:08 UTC 2026","Thu Oct 22 10:34:09 UTC 2026","294","tests.products.api","test_get_products","","","","test_get_product_by_id","
 Verify that a Product can be retrieved successfully by ID.
 
 Endpoint tested:
@@ -16,20 +57,4 @@ Test flow:
     3. Validate HTTP transport status
     4. Validate the Product response structure
     5. Verify the returned Product identity
-"
-"passed","Mon Oct 19 20:20:11 UTC 2026","Mon Oct 19 20:20:11 UTC 2026","348","tests.products.api","test_create_products","","","","test_create_single_simple_product","
-Create a simple product using the minimum valid payload.
-
-The fixture `create_valid_product` already performs:
-
-    - POST /products
-    - status code validation (201)
-    - response structure validation (Pydantic)
-    - cleanup registration
-
-Test flow:
-
-    1. Create a simple product
-    2. Fetch product via API
-    3. Verify API data matches database record
 "
