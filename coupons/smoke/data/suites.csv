@@ -1,5 +1,5 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Thu Oct 22 10:33:59 UTC 2026","Thu Oct 22 10:33:59 UTC 2026","151","tests.coupons.api","test_create_coupons","","","","test_create_single_coupon","
+"passed","Thu Oct 22 18:49:47 UTC 2026","Thu Oct 22 18:49:48 UTC 2026","261","tests.coupons.api","test_create_coupons","","","","test_create_single_coupon","
 Create a Coupon using the minimum scenario-specific input.
 
 The test does not build or provision the Coupon directly. The
@@ -54,7 +54,7 @@ As with Products, Orders and Customers, this payload is prepared in memory first
 The coupon is created when the provisioner sends it to WooCommerce.
 
 "
-"passed","Thu Oct 22 10:33:59 UTC 2026","Thu Oct 22 10:33:59 UTC 2026","127","tests.coupons.api","test_get_coupon","","","","test_get_coupon_by_id","
+"passed","Thu Oct 22 18:49:48 UTC 2026","Thu Oct 22 18:49:48 UTC 2026","226","tests.coupons.api","test_get_coupon","","","","test_get_coupon_by_id","
 Verify that a coupon can be retrieved by ID.
 
 Endpoint tested:

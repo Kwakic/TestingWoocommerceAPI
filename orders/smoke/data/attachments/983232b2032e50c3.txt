@@ -1,0 +1,54 @@
+DEBUG    EcommerceAPI.plugins.entities:entities.py:461 ✅ [coupons] Loaded API client: CouponsApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:470 ✅ [coupons] Instantiated helper with API client
+DEBUG    EcommerceAPI.src.entities.coupons.dao.coupons_dao:coupons_dao.py:50 🗄️ CouponsDAO initialized: posts=wordpress.wp_posts, postmeta=wordpress.wp_postmeta
+DEBUG    EcommerceAPI.plugins.entities:entities.py:461 ✅ [customers] Loaded API client: CustomersApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:470 ✅ [customers] Instantiated helper with API client
+DEBUG    EcommerceAPI.plugins.entities:entities.py:461 ✅ [orders] Loaded API client: OrdersApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:470 ✅ [orders] Instantiated helper with API client
+DEBUG    EcommerceAPI.src.entities.orders.dao.orders_dao:orders_dao.py:67 OrdersDAO initialized: hpos_enabled=False, posts=wordpress.wp_posts, hpos_orders=wordpress.wp_wc_orders, order_items=wordpress.wp_woocommerce_order_items, order_itemmeta=wordpress.wp_woocommerce_order_itemmeta
+DEBUG    EcommerceAPI.plugins.entities:entities.py:461 ✅ [products] Loaded API client: ProductsApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:470 ✅ [products] Instantiated helper with API client
+DEBUG    EcommerceAPI.src.entities.products.dao.products_dao:products_dao.py:45 🗄️ ProductsDAO initialized: table=wordpress.wp_posts
+INFO     EcommerceAPI.plugins.entities:entities.py:534 🔍 ENTITY DISCOVERY SUMMARY
+INFO     EcommerceAPI.plugins.entities:entities.py:536    coupons      | ✅  READY
+INFO     EcommerceAPI.plugins.entities:entities.py:536    customers    | ✅  READY
+INFO     EcommerceAPI.plugins.entities:entities.py:536    orders       | ✅  READY
+INFO     EcommerceAPI.plugins.entities:entities.py:536    products     | ✅  READY
+INFO     tests.orders.api.test_get_order:test_get_order.py:62 Creating a Product for the Order line item.
+DEBUG    EcommerceAPI.src.entities.products.helpers.products_helper:products_helper.py:360 ⚙️ Creating product with payload keys: ['name', 'type', 'status', 'regular_price', 'sku', 'description', 'short_description']
+DEBUG    EcommerceAPI.src.entities.products.api.products_api:products_api.py:74 📡 POST /products payload_keys=['name', 'type', 'status', 'regular_price', 'sku', 'description', 'short_description']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/products → Status code: 201 (completed in 0.110s)
+INFO     EcommerceAPI.src.entities.products.validators.product_validators:product_validators.py:99 ✅ Product structure valid: id=21, name=Product-wepAQP979404, sku=TEST-SKU-9A805F42485D
+DEBUG    EcommerceAPI.plugins.api.products:products.py:323 ℹ️ Registered product with ID: 21 for cleanup.
+DEBUG    EcommerceAPI.src.entities.orders.helpers.orders_helper:orders_helper.py:144 Creating Order with payload keys: ['line_items']
+DEBUG    EcommerceAPI.src.entities.orders.api.orders_api:orders_api.py:44 POST /orders payload_keys=['line_items']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/orders → Status code: 201 (completed in 0.118s)
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:100 Order structure valid: id=22 status=pending customer_id=0
+DEBUG    EcommerceAPI.plugins.api.orders:orders.py:168 Registered Order ID 22 for cleanup.
+INFO     tests.orders.api.test_get_order:test_get_order.py:72 Fetching Order ID=22.
+DEBUG    EcommerceAPI.src.entities.orders.helpers.orders_helper:orders_helper.py:202 Retrieving Order 22
+DEBUG    EcommerceAPI.src.entities.orders.api.orders_api:orders_api.py:61 GET /orders/22
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/orders/22 → Status code: 200 (completed in 0.066s)
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:100 Order structure valid: id=22 status=pending customer_id=0
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:310 Order identity verified: id=22
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:438 Order line items verified: id=22 item_count=1
+INFO     tests.orders.api.test_get_order:test_get_order.py:100 Retrieved Order ID=22 with Product ID=21.
+INFO     EcommerceAPI.plugins.entities:entities.py:718 🔧 Starting teardown of created test resources...
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up product(s)... (1 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 21
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/21?force=True → Status code: 200 (completed in 0.096s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 21
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for product(s).
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up order(s)... (1 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting order ID: 22
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/orders/22?force=True → Status code: 200 (completed in 0.095s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted order ID: 22
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for order(s).
+INFO     EcommerceAPI.plugins.entities:entities.py:758 
+
+🧹 ====================================== CLEANUP SUMMARY ======================================
+INFO     EcommerceAPI.plugins.entities:entities.py:761 📊 Created during test run: {'products': 1, 'orders': 1}
+INFO     EcommerceAPI.plugins.entities:entities.py:762 🧾 Cleanup total summary:
+INFO     EcommerceAPI.plugins.entities:entities.py:764    • product: 1 deleted (1 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:764    • order: 1 deleted (1 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:765 ✅ All test data cleanup completed.

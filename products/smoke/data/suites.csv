@@ -1,5 +1,5 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Thu Oct 22 10:34:08 UTC 2026","Thu Oct 22 10:34:08 UTC 2026","319","tests.products.api","test_create_products","","","","test_create_single_simple_product","
+"passed","Thu Oct 22 18:49:40 UTC 2026","Thu Oct 22 18:49:40 UTC 2026","329","tests.products.api","test_create_products","","","","test_create_single_simple_product","
 Create a simple product using the minimum valid payload.
 
 The fixture `create_valid_product` already performs:
@@ -40,7 +40,7 @@ values passed by the test replace the corresponding defaults.
 So product_data is the in-memory request payload; WooCommerce creates the Product
 later, when the provisioner sends it.
 "
-"passed","Thu Oct 22 10:34:08 UTC 2026","Thu Oct 22 10:34:09 UTC 2026","294","tests.products.api","test_get_products","","","","test_get_product_by_id","
+"passed","Thu Oct 22 18:49:40 UTC 2026","Thu Oct 22 18:49:41 UTC 2026","299","tests.products.api","test_get_products","","","","test_get_product_by_id","
 Verify that a Product can be retrieved successfully by ID.
 
 Endpoint tested:
