@@ -1,0 +1,15 @@
+DEBUG    EcommerceAPI.src.entities.products.helpers.products_helper:products_helper.py:360 ⚙️ Creating product with payload keys: ['name', 'type', 'status', 'regular_price', 'sku', 'description', 'short_description']
+DEBUG    EcommerceAPI.src.entities.products.api.products_api:products_api.py:74 📡 POST /products payload_keys=['name', 'type', 'status', 'regular_price', 'sku', 'description', 'short_description']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/products → Status code: 201 (completed in 0.184s)
+INFO     EcommerceAPI.src.entities.products.validators.product_validators:product_validators.py:99 ✅ Product structure valid: id=24, name=Product-rRErvP011264, sku=TEST-SKU-84BCD0D73433
+DEBUG    EcommerceAPI.plugins.api.products:products.py:323 ℹ️ Registered product with ID: 24 for cleanup.
+DEBUG    EcommerceAPI.src.entities.orders.helpers.orders_helper:orders_helper.py:144 Creating Order with payload keys: ['line_items']
+DEBUG    EcommerceAPI.src.entities.orders.api.orders_api:orders_api.py:44 POST /orders payload_keys=['line_items']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/orders → Status code: 201 (completed in 0.208s)
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:100 Order structure valid: id=25 status=pending customer_id=0
+DEBUG    EcommerceAPI.plugins.api.orders:orders.py:168 Registered Order ID 25 for cleanup.
+DEBUG    EcommerceAPI.src.entities.orders.helpers.orders_helper:orders_helper.py:202 Retrieving Order 25
+DEBUG    EcommerceAPI.src.entities.orders.api.orders_api:orders_api.py:61 GET /orders/25
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/orders/25 → Status code: 200 (completed in 0.115s)
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:100 Order structure valid: id=25 status=pending customer_id=0
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:438 Order line items verified: id=25 item_count=1

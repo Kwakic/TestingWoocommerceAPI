@@ -1,0 +1,21 @@
+DEBUG    EcommerceAPI.src.entities.products.helpers.products_helper:products_helper.py:360 ⚙️ Creating product with payload keys: ['name', 'type', 'status', 'regular_price', 'sku', 'description', 'short_description']
+DEBUG    EcommerceAPI.src.entities.products.api.products_api:products_api.py:74 📡 POST /products payload_keys=['name', 'type', 'status', 'regular_price', 'sku', 'description', 'short_description']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/products → Status code: 201 (completed in 0.181s)
+INFO     EcommerceAPI.src.entities.products.validators.product_validators:product_validators.py:99 ✅ Product structure valid: id=34, name=Product-iS8qs6015939, sku=TEST-SKU-903F7C9A2291
+DEBUG    EcommerceAPI.plugins.api.products:products.py:323 ℹ️ Registered product with ID: 34 for cleanup.
+DEBUG    EcommerceAPI.src.entities.orders.helpers.orders_helper:orders_helper.py:144 Creating Order with payload keys: ['line_items']
+DEBUG    EcommerceAPI.src.entities.orders.api.orders_api:orders_api.py:44 POST /orders payload_keys=['line_items']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/orders → Status code: 201 (completed in 0.229s)
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:100 Order structure valid: id=35 status=pending customer_id=0
+DEBUG    EcommerceAPI.plugins.api.orders:orders.py:168 Registered Order ID 35 for cleanup.
+DEBUG    EcommerceAPI.src.entities.orders.helpers.orders_helper:orders_helper.py:202 Retrieving Order 35
+DEBUG    EcommerceAPI.src.entities.orders.api.orders_api:orders_api.py:61 GET /orders/35
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/orders/35 → Status code: 200 (completed in 0.119s)
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:100 Order structure valid: id=35 status=pending customer_id=0
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:310 Order identity verified: id=35
+DEBUG    EcommerceAPI.src.entities.orders.dao.orders_dao:orders_dao.py:138 Retrieved WooCommerce order ID=35 from legacy storage
+DEBUG    EcommerceAPI.src.entities.orders.dao.orders_dao:orders_dao.py:290 Retrieved 19 metadata value(s) for order ID=35 from legacy storage
+DEBUG    EcommerceAPI.src.entities.orders.dao.orders_dao:orders_dao.py:221 Retrieved 1 order item(s) for order ID=35
+DEBUG    EcommerceAPI.src.entities.orders.dao.orders_dao:orders_dao.py:332 Retrieved 9 metadata value(s) for order item ID=10
+INFO     EcommerceAPI.src.entities.orders.validators.order_db_validators:order_db_validators.py:97 API order matches DB records: ID=35 status=pending
+INFO     tests.orders.api.test_get_order:test_get_order.py:170 GET Order ID=35 matches its database records.

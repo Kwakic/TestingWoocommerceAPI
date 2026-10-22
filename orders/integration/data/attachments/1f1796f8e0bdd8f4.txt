@@ -1,0 +1,39 @@
+INFO     tests.orders.api.test_get_order:test_get_order.py:196 Requesting non-existent Order ID=999999999.
+DEBUG    EcommerceAPI.src.entities.orders.helpers.orders_helper:orders_helper.py:202 Retrieving Order 999999999
+DEBUG    EcommerceAPI.src.entities.orders.api.orders_api:orders_api.py:61 GET /orders/999999999
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/orders/999999999 → Status code: 404 (completed in 0.105s)
+DEBUG    EcommerceAPI.src.clients.api_client:api_client.py:625 {
+                                                                 "code": "woocommerce_rest_shop_order_invalid_id",
+                                                                 "message": "Invalid ID.",
+                                                                 "data": {
+                                                                   "status": 404
+                                                                 }
+                                                               }
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:497 Valid Order error response: code=woocommerce_rest_shop_order_invalid_id status=404
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:537 Order not-found error validated: code=woocommerce_rest_shop_order_invalid_id
+INFO     tests.orders.api.test_get_order:test_get_order.py:214 Order not-found response validated for ID=999999999.
+INFO     EcommerceAPI.plugins.entities:entities.py:718 🔧 Starting teardown of created test resources...
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up product(s)... (2 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 32
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/32?force=True → Status code: 200 (completed in 0.154s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 32
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 34
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/34?force=True → Status code: 200 (completed in 0.155s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 34
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for product(s).
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up order(s)... (2 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting order ID: 33
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/orders/33?force=True → Status code: 200 (completed in 0.142s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted order ID: 33
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting order ID: 35
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/orders/35?force=True → Status code: 200 (completed in 0.142s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted order ID: 35
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for order(s).
+INFO     EcommerceAPI.plugins.entities:entities.py:758 
+
+🧹 ====================================== CLEANUP SUMMARY ======================================
+INFO     EcommerceAPI.plugins.entities:entities.py:761 📊 Created during test run: {'products': 2, 'orders': 2}
+INFO     EcommerceAPI.plugins.entities:entities.py:762 🧾 Cleanup total summary:
+INFO     EcommerceAPI.plugins.entities:entities.py:764    • product: 2 deleted (2 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:764    • order: 2 deleted (2 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:765 ✅ All test data cleanup completed.

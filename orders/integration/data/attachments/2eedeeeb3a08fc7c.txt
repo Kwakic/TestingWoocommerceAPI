@@ -1,0 +1,21 @@
+DEBUG    EcommerceAPI.src.entities.products.helpers.products_helper:products_helper.py:360 ⚙️ Creating product with payload keys: ['name', 'type', 'status', 'regular_price', 'sku', 'description', 'short_description']
+DEBUG    EcommerceAPI.src.entities.products.api.products_api:products_api.py:74 📡 POST /products payload_keys=['name', 'type', 'status', 'regular_price', 'sku', 'description', 'short_description']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/products → Status code: 201 (completed in 0.178s)
+INFO     EcommerceAPI.src.entities.products.validators.product_validators:product_validators.py:99 ✅ Product structure valid: id=72, name=Product-RQ27wC030606, sku=TEST-SKU-5C2DEA26E869
+DEBUG    EcommerceAPI.plugins.api.products:products.py:323 ℹ️ Registered product with ID: 72 for cleanup.
+DEBUG    EcommerceAPI.src.entities.orders.helpers.orders_helper:orders_helper.py:144 Creating Order with payload keys: ['line_items']
+DEBUG    EcommerceAPI.src.entities.orders.api.orders_api:orders_api.py:44 POST /orders payload_keys=['line_items']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/orders → Status code: 201 (completed in 0.210s)
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:100 Order structure valid: id=73 status=pending customer_id=0
+DEBUG    EcommerceAPI.plugins.api.orders:orders.py:168 Registered Order ID 73 for cleanup.
+DEBUG    EcommerceAPI.src.entities.orders.helpers.orders_helper:orders_helper.py:349 Updating Order 73 with payload keys: ['customer_note']
+DEBUG    EcommerceAPI.src.entities.orders.api.orders_api:orders_api.py:91 PUT /orders/73 payload_keys=['customer_note']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ PUT /wp-json/wc/v3/orders/73 → Status code: 200 (completed in 0.131s)
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:100 Order structure valid: id=73 status=pending customer_id=0
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:310 Order identity verified: id=73
+DEBUG    EcommerceAPI.src.entities.orders.helpers.orders_helper:orders_helper.py:202 Retrieving Order 73
+DEBUG    EcommerceAPI.src.entities.orders.api.orders_api:orders_api.py:61 GET /orders/73
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/orders/73 → Status code: 200 (completed in 0.122s)
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:100 Order structure valid: id=73 status=pending customer_id=0
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:310 Order identity verified: id=73
+INFO     tests.orders.api.test_update_order:test_update_order.py:164 Order ID=73 customer note updated and verified.
