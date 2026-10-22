@@ -26,12 +26,12 @@ import logging
 
 import pytest
 
-from EcommerceAPI.src.products.validators.product_validators import (
+from EcommerceAPI.src.entities.products.validators.product_validators import (
     assert_product_identity,
     assert_product_not_found_error,
     assert_product_retrieved_successfully,
 )
-from EcommerceAPI.src.products.validators.product_db_validators import (
+from EcommerceAPI.src.entities.products.validators.product_validators import (
     assert_product_matches_db,
 )
 

@@ -205,6 +205,7 @@ class ProductBuilder:
     def with_fields(self, **fields: Any) -> ProductBuilder:
         """
         Override arbitrary Product creation fields.
+        Provide other fields supported by ProductFactory.
 
         This is useful while the fixture API supports additional Product API
         fields that do not yet have a dedicated fluent builder method.

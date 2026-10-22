@@ -11,7 +11,7 @@ import logging
 import pytest
 
 
-from EcommerceAPI.src.coupons.validators.coupon_validators import (
+from EcommerceAPI.src.entities.coupons.validators.coupon_validators import (
     assert_coupon_exists_and_matches_api,
 )
 
@@ -64,6 +64,28 @@ def test_create_single_coupon(
 
     API/DB validation remains explicit in the test because it is the
     purpose of this integration scenario.
+
+    Coupon creation flow:
+        1. The test calls create_valid_coupon(...). Any keyword arguments are scenario-specific overrides.
+        2. The fixture passes them to CouponBuilder and builds the payload.
+        3. CouponBuilder stores the overrides and delegates to CouponFactory.
+        4. CouponFactory assembles the default payload.
+        5. The fixture passes that payload to CouponProvisioner, which sends it through the Coupons API.
+        The fixture then validates the response and registers the created Coupon for cleanup.
+
+    With no overrides, the factory creates data shaped like:
+        {
+            "code": "test-<generated code>",
+            "discount_type": "percent",
+            "amount": "10.00",
+        }
+    Optional fields—such as usage limits, restrictions, or expiration—are only included when the test supplies them.
+    For example, create_valid_coupon(discount_type="fixed_cart", amount="20") overrides those two defaults.
+    The payload is still only in-memory data until the provisioner sends it to WooCommerce.
+
+    As with Products, Orders and Customers, this payload is prepared in memory first.
+    The coupon is created when the provisioner sends it to WooCommerce.
+
     """
 
     # ------------------------------------------------------------------
@@ -73,13 +95,15 @@ def test_create_single_coupon(
     # the complete valid creation data through CouponBuilder.
     logger.info("🛠 Creating a test coupon.")
 
-    # By default, CustomerFactory generates the customer data.
+    # By default, CouponFactory generates the coupon data.
     # To override a value for this scenario, pass it directly to the fixture:
     #
-    #     customer = create_valid_customer(email="john.smith.12345@test.com")
+    #     coupon = create_valid_coupon(code="test-coupon-12345")
     #
-    # The fixture passes the override to CustomerBuilder → CustomerFactory.
+    # The fixture passes the override to CouponBuilder → CouponFactory.
     # Only the specified value is overridden; all other fields are generated.
+
+    # You can set "skip_cleanup (bool)": If True → resource is NOT registered for cleanup
     coupon = create_valid_coupon()
 
     coupon_id = coupon["id"]

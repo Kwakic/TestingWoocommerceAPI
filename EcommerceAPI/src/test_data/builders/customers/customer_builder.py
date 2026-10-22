@@ -167,6 +167,8 @@ class CustomerBuilder:
         """
         Add arbitrary customer creation fields.
 
+        Provide other fields supported by CustomerFactory.
+
         This is useful while the Customer API exposes additional fields
         that do not yet have a dedicated fluent builder method.
 

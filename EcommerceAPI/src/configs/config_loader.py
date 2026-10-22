@@ -126,7 +126,7 @@ def detect_service() -> str:
 
 def _find_service_candidates_from_ancestors(start: Path) -> set[str]:
     """
-    Search parent directories for available services.
+    Search parent directories for available entities.
 
     The framework walks from the current working directory towards the
     repository root looking for folders that match the expected layout:

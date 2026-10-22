@@ -154,14 +154,14 @@ discover_services:
     - echo "🔍 Discovering entity test suites"
 
 # ------------------------------------------
-    # Discover services (unless SERVICE override)
+    # Discover entities (unless SERVICE override)
     # ------------------------------------------
     - |
       if [ -n "$SERVICE" ]; then
-        services="$SERVICE"
+        entities="$SERVICE"
         echo "SERVICE override detected: $services"
       else
-        services=$(find tests -maxdepth 1 -mindepth 1 -type d \
+        entities=$(find tests -maxdepth 1 -mindepth 1 -type d \
           ! -name shared -printf '%f\n' | tr '\n' ' ')
       fi
       if [ -z "$services" ]; then

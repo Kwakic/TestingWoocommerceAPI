@@ -244,6 +244,7 @@ class CouponBuilder:
     def with_fields(self, **fields: Any) -> CouponBuilder:
         """
         Override arbitrary Coupon creation fields.
+        Provide other fields supported by OrderFactory.
 
         This is useful while the Coupon API supports additional creation
         fields that do not yet have a dedicated fluent builder method.

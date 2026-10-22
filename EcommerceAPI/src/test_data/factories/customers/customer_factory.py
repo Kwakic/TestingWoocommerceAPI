@@ -11,7 +11,7 @@ from EcommerceAPI.src.utils.generic_utilities import (
 
 class CustomerFactory(BaseFactory[dict[str, Any]]):
     """
-    Factory responsible for generating the minimum valid customer creation
+    Factory responsible for generating the minimum/default valid customer creation
     data in memory (exists only in RAM).
 
     There is no customer in WooCommerce yet. The factory has only prepared

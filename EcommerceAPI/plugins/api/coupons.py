@@ -99,7 +99,7 @@ import logging
 
 import pytest
 
-from EcommerceAPI.src.coupons.validators.coupon_validators import (
+from EcommerceAPI.src.entities.coupons.validators.coupon_validators import (
     assert_valid_coupon_response,
 )
 
@@ -280,7 +280,10 @@ def create_valid_coupon(shared_api_resources) -> Callable[..., dict]:
         # -----------------------------------------
         # CouponBuilder collects scenario-specific overrides.
         # CouponFactory supplies all unspecified valid defaults.
-        coupon_data = CouponBuilder().with_fields(**kwargs).build()
+        coupon_data = (
+            CouponBuilder().with_fields(**kwargs).build()
+        )  # Kwargs from the test flow directly
+        # become Builder overrides
 
         # -----------------------------------------
         # 2️⃣ Provision Coupon
@@ -301,6 +304,12 @@ def create_valid_coupon(shared_api_resources) -> Callable[..., dict]:
             f"Expected: 201, got {response.status_code}. "
             f"Response: {response.text}"
         )
+        # Note: Using response.text:
+        # Coupons updating failed. Expected 200, got 400.
+        # Response: {"code":"rest_invalid_param","message":"Invalid parameter(s): billing",...}
+        # This shows exactly what the server returned.
+        # Problem with response.json. If the API returns something that is not JSON (very common when PHP crashes
+        # or proxies break), then: response.json will be: None and you lose useful debugging info.
 
         # -----------------------------------------
         # 4️⃣ Extract JSON to validate body

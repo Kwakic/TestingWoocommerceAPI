@@ -4,7 +4,7 @@ from unittest.mock import patch
 from datetime import timedelta
 
 from EcommerceAPI.src.utils.generic_utilities import generate_random_string
-from EcommerceAPI.src.customers.validators.customer_validators import (
+from EcommerceAPI.src.entities.customers.validators.customer_validators import (
     assert_valid_customer_response,
 )
 from EcommerceAPI.src.utils.date_timestamp_utils import (

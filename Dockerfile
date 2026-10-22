@@ -6,7 +6,7 @@
 #   - Build a reusable pytest runner image for GitLab CI
 #   - Installs the EcommerceAPI framework in editable mode
 #   - Uses pytest.ini from repo root
-#   - Does NOT run WordPress (CI services do that)
+#   - Does NOT run WordPress (CI entities do that)
 #   - This image is only for running pytest, not WordPress.
 
 # You only need a Dockerfile if:

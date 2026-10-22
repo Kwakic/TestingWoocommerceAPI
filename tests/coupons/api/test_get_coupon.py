@@ -26,12 +26,12 @@ import logging
 
 import pytest
 
-from EcommerceAPI.src.coupons.validators.coupon_validators import (
+from EcommerceAPI.src.entities.coupons.validators.coupon_validators import (
     assert_coupon_identity,
     assert_coupon_retrieved_successfully,
     assert_coupon_error_response,
 )
-from EcommerceAPI.src.coupons.validators.coupon_db_validators import (
+from EcommerceAPI.src.entities.coupons.validators.coupon_db_validators import (
     assert_coupon_matches_db,
 )
 

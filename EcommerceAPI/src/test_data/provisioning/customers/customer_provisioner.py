@@ -38,7 +38,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from EcommerceAPI.src.core.http_response import HttpResponse
-from EcommerceAPI.src.customers.helpers.customers_helper import CustomersHelper
+from EcommerceAPI.src.entities.customers.helpers.customers_helper import CustomersHelper
 
 
 class CustomerProvisioner:

@@ -1,39 +1,55 @@
 [
   {
-    "name": "50 percent discount",
+    "name": "percentage coupon meets minimum",
     "discount_type": "percent",
     "amount": "50.00",
-    "minimum_amount": "35",
-    "product_price_offset": 5,
-    "expected_status_code": 201,
-    "expect_discount": true
+    "minimum_amount": "35.00",
+    "product_price_offset": "5.00",
+    "expected_outcome": "applied",
+    "expected_discount": "20.00",
+    "expected_shipping_total": "5.00",
+    "free_shipping": false
   },
   {
-    "name": "Fixed cart discount",
+    "name": "fixed cart coupon meets minimum",
     "discount_type": "fixed_cart",
     "amount": "10.00",
-    "minimum_amount": "20",
-    "product_price_offset": 10,
-    "expected_status_code": 201,
-    "expect_discount": true
+    "minimum_amount": "20.00",
+    "product_price_offset": "10.00",
+    "expected_outcome": "applied",
+    "expected_discount": "10.00",
+    "expected_shipping_total": "5.00",
+    "free_shipping": false
   },
   {
-    "name": "Free shipping only",
+    "name": "free shipping only coupon",
     "discount_type": "fixed_cart",
     "amount": "0.00",
-    "minimum_amount": "0",
-    "product_price_offset": 5,
-    "expected_status_code": 201,
-    "expect_discount": false,
+    "minimum_amount": "0.00",
+    "product_price_offset": "5.00",
+    "expected_outcome": "applied",
+    "expected_discount": "0.00",
+    "expected_shipping_total": "0.00",
     "free_shipping": true
   },
   {
-    "name": "Under minimum amount (should fail)",
+    "name": "percentage coupon below minimum",
     "discount_type": "percent",
     "amount": "30.00",
-    "minimum_amount": "50",
-    "product_price_offset": -10,
-    "expected_status_code": 400,
-    "expect_discount": false
+    "minimum_amount": "50.00",
+    "product_price_offset": "-10.00",
+    "expected_outcome": "rejected_below_minimum",
+    "expected_error_code": "woocommerce_rest_invalid_coupon",
+    "expected_error_message_contains": "minimum spend"
+  },
+  {
+    "name": "fixed cart coupon below minimum",
+    "discount_type": "fixed_cart",
+    "amount": "10.00",
+    "minimum_amount": "40.00",
+    "product_price_offset": "-5.00",
+    "expected_outcome": "rejected_below_minimum",
+    "expected_error_code": "woocommerce_rest_invalid_coupon",
+    "expected_error_message_contains": "minimum spend"
   }
 ]

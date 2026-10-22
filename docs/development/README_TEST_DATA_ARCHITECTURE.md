@@ -78,7 +78,7 @@ already enough:
 customer = CustomerBuilder().build()
 ```
 
-The Factory generates only the mandatory credentials:
+The Factory generates only the mandatory credentials for creating a customer:
 
 ```python
 {

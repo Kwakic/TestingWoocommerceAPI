@@ -59,7 +59,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from EcommerceAPI.src.core.http_response import HttpResponse
-from EcommerceAPI.src.coupons.helpers.coupons_helper import CouponsHelper
+from EcommerceAPI.src.entities.coupons.helpers.coupons_helper import CouponsHelper
 
 
 class CouponProvisioner:

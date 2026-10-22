@@ -1,6 +1,6 @@
 import pytest
 
-from EcommerceAPI.src.customers.validators.customer_validators import (
+from EcommerceAPI.src.entities.customers.validators.customer_validators import (
     assert_customer_exists_and_matches_api,
 )
 

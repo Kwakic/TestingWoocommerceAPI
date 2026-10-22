@@ -40,7 +40,7 @@ invalid payload itself is the scenario under test.
 import pytest
 import logging
 
-from EcommerceAPI.src.products.validators.product_validators import (
+from EcommerceAPI.src.entities.products.validators.product_validators import (
     assert_product_exists_and_matches_api,
     assert_product_creation_failed,
 )
@@ -89,6 +89,31 @@ def test_create_single_simple_product(
         1. Create a simple product
         2. Fetch product via API
         3. Verify API data matches database record
+
+    Product creation flow:
+        1. The test calls create_valid_product(...).Any keyword arguments are scenario-specific overrides.
+        2. The fixture passes those overrides to ProductBuilder in products.py.
+        3. ProductBuilder stores them and calls ProductFactory.build(...).
+        4. ProductFactory.build() fills in defaults for fields the test didn’t supply, then returns the payload
+        dictionary.The fixture passes that dictionary to ProductProvisioner to make the API request.
+
+    With no overrides, the Product factory creates data shaped like:
+
+        {
+          "name": "<generated product name>",
+          "type": "simple",
+          "status": "publish",
+          "regular_price": "19.99",
+          "sku": "TEST-SKU-<unique suffix>",
+          "description": "Test product: <generated product name>",
+          "short_description": "Test product: <generated product name>"
+        }
+
+    Optional fields such as sale_price and categories are left out unless supplied. Explicit
+    values passed by the test replace the corresponding defaults.
+
+    So product_data is the in-memory request payload; WooCommerce creates the Product
+    later, when the provisioner sends it.
     """
 
     # -------------------------------------------
@@ -96,13 +121,15 @@ def test_create_single_simple_product(
     # -------------------------------------------
     logger.info("🛠 Creating a test product.")
 
-    # By default, CustomerFactory generates the customer data.
+    # By default, ProductFactory generates the product data.
     # To override a value for this scenario, pass it directly to the fixture:
     #
-    #     customer = create_valid_customer(email="john.smith.12345@test.com")
+    #     product = create_valid_product(regular_price=15)
     #
-    # The fixture passes the override to CustomerBuilder → CustomerFactory.
+    # The fixture passes the override to ProductBuilder → ProductFactory.
     # Only the specified value is overridden; all other fields are generated.
+
+    # You can set "skip_cleanup (bool)": If True → resource is NOT registered for cleanup
     product = create_valid_product()
 
     product_id = product["id"]

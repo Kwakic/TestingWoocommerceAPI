@@ -6,7 +6,7 @@ from typing import Iterable, Dict, Any
 # from EcommerceAPI.src.orders.helpers.orders_helper import OrdersHelper
 # from EcommerceAPI.src.products.helpers.products_helper import ProductsHelper
 # from EcommerceAPI.src.coupons.helpers.coupons_helper import CouponsHelper
-from EcommerceAPI.src.customers.helpers.customers_helper import CustomersHelper
+from EcommerceAPI.src.entities.customers.helpers.customers_helper import CustomersHelper
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

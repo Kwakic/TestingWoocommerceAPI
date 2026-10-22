@@ -54,7 +54,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from EcommerceAPI.src.core.http_response import HttpResponse
-from EcommerceAPI.src.products.helpers.products_helper import ProductsHelper
+from EcommerceAPI.src.entities.products.helpers.products_helper import ProductsHelper
 
 
 class ProductStateProvisioner:

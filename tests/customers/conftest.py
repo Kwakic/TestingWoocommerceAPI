@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING
 import pytest
 
 if TYPE_CHECKING:
-    from EcommerceAPI.src.customers.helpers.customers_helper import CustomersHelper
-    from EcommerceAPI.src.customers.dao.customers_dao import CustomersDAO
+    from src.entities.customers.helpers.customers_helper import CustomersHelper
+    from src.entities.customers.dao.customers_dao import CustomersDAO
 
 
 # ---------------------------------------------------------------------------

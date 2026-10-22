@@ -2,7 +2,7 @@ import pytest
 import logging
 from dateutil.parser import isoparse  # For robust ISO date parsing
 
-from EcommerceAPI.src.customers.validators.customer_validators import (
+from EcommerceAPI.src.entities.customers.validators.customer_validators import (
     assert_valid_customer_response,
     assert_single_customer_by_email,
     assert_customer_identity,

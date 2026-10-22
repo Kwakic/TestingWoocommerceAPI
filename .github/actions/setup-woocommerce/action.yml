@@ -321,7 +321,7 @@ runs:
     #
     # Extremely valuable for CI debugging:
     # - failed container startup
-    # - unhealthy services
+    # - unhealthy entities
     # - port collisions
     # - unexpected exits
     # --------------------------------------------------

@@ -70,7 +70,7 @@ API_ENV=docker
 
 API_ENV=ci
     Tests run on a GitHub Actions runner.
-    WordPress runs inside Docker services started by the workflow and
+    WordPress runs inside Docker entities started by the workflow and
     is exposed on localhost.
 
 This separation allows each execution environment to evolve

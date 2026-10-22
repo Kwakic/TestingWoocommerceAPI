@@ -1,113 +1,244 @@
-# import json
-# from EcommerceAPI.src.helpers.woo_orders_helper import OrdersHelper
-# from EcommerceAPI.src.utils.genericUtilities import generate_random_string
-# from EcommerceAPI.src.utils.wooAPIUtility import WooAPIUtility
-# import pytest
-#
-# pytestmark = [pytest.mark.orders, pytest.mark.regression]
-#
-#
-# @pytest.mark.parametrize("new_status",
-#                          [
-#                              pytest.param('cancelled', marks=[pytest.mark.tcid55, pytest.mark.smoke]),
-#                              pytest.param('completed', marks=pytest.mark.tcid56),
-#                              pytest.param('on-hold', marks=pytest.mark.tcid57)
-#                          ])
-# def test_update_order_status(new_status):
-#     # 1. Create new order (for that we will use our OrdersHelper)
-#     order_helper = OrdersHelper()
-#     order_json = order_helper.create_order()
-#
-#     # with open('order_status_before_update.json', 'w') as file:
-#     #     json.dump(order_json, file)
-#     # file.close()
-#
-#     # 2. Get the current status of order
-#     cur_status = order_json['status']
-#     assert cur_status != new_status, f'Current status of order is already {new_status}. Unable to run test.'  # First,
-#     # we verify the status of the order to make sure it doesn’t have the same status that you want to update with.
-#
-#     # 3. Update status (making the call to update the status)
-#     # First, we need to define method PUT in our 'wooAPIUtility.py' (we create new function 'def put():')
-#     # Next, we will create a new function 'def call_update_an_order():' in "wooNOTUSED_orders_helper.py" which requires function
-#     # PUT that we created in 'wooAPIUtility.py'.
-#     order_id = order_json['id']
-#     payload = {"status": new_status}
-#     rs_updated = order_helper.call_update_an_order(order_id, payload)
-#     # with open('order_status_updated.json', 'w') as file:
-#     #     json.dump(rs_updated, file)
-#     # file.close()
-#     # pdb.set_trace()
-#
-#     # 4. Get order information
-#     # We could go to a database and get an order, but instead we make GET API call to get the data. To make GET API
-#     # call, we need to create a function in 'wooNOTUSED_orders_helper.py' ('def call_retrieve_an_order()')
-#     # NOTE!!!!! Make sure it is not cached because when you say GET Order, and if this update doesn't bust/refresh the
-#     # cache, then when you call the API GET Order it will give you outdated information. So ask developers if is cached
-#     # or not! In our case is not cached.
-#     # We use GET method to make sure that is retrieved from a database. That way, we don't need to make an additional
-#     # test for DB. We could have used the response that returns the call to update the status but who knows if it comes
-#     # from the memory or from DB. We better make call GET to ensure 100% that comes from DB.
-#
-#     new_order_info = order_helper.call_retrieve_an_order(order_id)  # This will retrieve the info from the DB.
-#
-#     # 5. Verify the new order status is what was updated
-#     assert new_order_info['status'] == new_status, (f"Updated order status to '{new_status}' but order is still "
-#                                                     f"'{new_order_info['status']}'")
-#
-#
-# @pytest.mark.tcid58
-# def test_update_order_status_to_random_string():  # negative test with invalid input
-#     # 1. Create new order (for that we will use our OrdersHelper)
-#     order_helper = OrdersHelper()
-#     order_json = order_helper.create_order()
-#     order_id = order_json['id']
-#
-#     # 2. Generate random string for the status
-#     random_string = generate_random_string(15)
-#     new_status = random_string
-#     # import pdb; pdb.set_trace()
-#
-#     # 3. Update status (making the call to update the status)
-#     # First, we need to define method PUT in our 'wooAPIUtility.py' (we create new function 'def put():')
-#     # Next, we will create a new function 'def call_update_an_order():' in "wooNOTUSED_orders_helper.py" which requires function
-#     # PUT that we created in 'wooAPIUtility.py'.
-#     # Since we set status code 200 in 'wooAPIUtility.py' for method PUT, we could modify the status code either in
-#     # 'def call_update_an_order():' or call it from here which we did.
-#     payload = {"status": new_status}
-#     rs_api = WooAPIUtility().put(f'orders/{order_id}', params=payload, expected_status_code=400)
-#
-#     # 4. Validate error message
-#     assert rs_api['code'] == 'rest_invalid_param', (f"Update order status to random string did not have correct code "
-#                                                     f"in response. Expected: 'rest_invalid_param' , Actual:{rs_api[
-#                                                         'code']}")
-#     assert rs_api['message'] == 'Invalid parameter(s): status', (f"Update order status to random string did not have "
-#                                                                  f"correct code in response. Expected: 'Invalid "
-#                                                                  f"parameter(s): status' , Actual:{rs_api['message']}")
-#     # I create the following tests just for practice purposes
-#     error_message = rs_api['data']['details']['status']['message']
-#     assert error_message == ('status is not one of auto-draft, pending, processing, on-hold, completed, cancelled, '
-#                              'refunded, failed and checkout-draft.')
-#     assert 'status' in rs_api['data']['details']
-#     assert 'status is not one of' in rs_api['data']['details']['status']['message']
-#
-#     # import pdb;pdb.set_trace()
-#
-#
-# @pytest.mark.tcid59
-# def test_update_order_customer_note():
-#     # 1. Create new order (for that we will use our OrdersHelper)
-#     order_helper = OrdersHelper()
-#     order_json = order_helper.create_order()
-#     order_id = order_json['id']
-#
-#     # 2. Update the order (making the call to update the status)
-#     # For the note; we want to generate some random string
-#     rand_string = generate_random_string(40)
-#     payload = {"customer_note": rand_string}
-#     order_helper.call_update_an_order(order_id, payload)
-#
-#     # 3. Get order information
-#     new_order_info = order_helper.call_retrieve_an_order(order_id)  # This will retrieve the info from the DB.
-#     assert new_order_info['customer_note'] == rand_string, (f"Update order's 'customer_note' field failed. Expected: "
-#                                                             f"{rand_string}, Actual:{new_order_info['customer_note']}")
+"""Order update integration tests.
+
+Each test creates its Order through create_valid_order so setup validation and
+cleanup registration stay with the shared fixture. Partial update data is
+prepared by OrderStateBuilder and applied by OrderStateProvisioner through the
+existing OrdersHelper and Orders API layers.
+"""
+
+import logging
+
+import pytest
+
+from EcommerceAPI.src.entities.orders.validators.order_validators import (
+    assert_order_error_response,
+    assert_order_identity,
+    assert_order_status,
+    assert_order_updated_successfully,
+    assert_valid_order_response,
+)
+from EcommerceAPI.src.test_data.builders.orders.order_state_builder import (
+    OrderStateBuilder,
+)
+from EcommerceAPI.src.test_data.provisioning.orders.order_state_provisioner import (
+    OrderStateProvisioner,
+)
+
+
+logger = logging.getLogger(__name__)
+
+pytestmark = [pytest.mark.orders, pytest.mark.integration]
+
+
+# ---------------------------------------
+# 🧪 Test: Update Order Status
+# ---------------------------------------
+@pytest.mark.smoke
+@pytest.mark.contract
+@pytest.mark.parametrize(
+    "new_status",
+    [
+        pytest.param("cancelled", id="cancelled"),
+        pytest.param("completed", id="completed"),
+        pytest.param("on-hold", id="on-hold"),
+    ],
+)
+def test_update_order_status(
+    new_status,
+    order_helper,
+    create_valid_product,
+    create_valid_order,
+):
+    """Update an Order to a supported status and verify it persists.
+
+    Test flow:
+
+        1. Create a Product and a valid Order through their fixtures.
+        2. Build a partial state containing the requested status.
+        3. Apply the state through OrderStateProvisioner.
+        4. Validate the update response and retrieve the Order again.
+    """
+
+    # -------------------------------------------
+    # Step 1 — Create a Product and Order
+    # -------------------------------------------
+    product = create_valid_product()
+    product_id = product["id"]
+
+    order = create_valid_order(product_id=product_id)
+    order_id = order["id"]
+    original_status = order["status"]
+
+    assert original_status != new_status, (
+        f"Order ID={order_id} already has status {new_status!r}; "
+        "the update scenario requires a status change."
+    )
+
+    # -------------------------------------------
+    # Step 2 — Build the partial Order state
+    # -------------------------------------------
+    order_state = OrderStateBuilder().with_status(new_status).build()
+
+    # -------------------------------------------
+    # Step 3 — Apply the state through the provisioner
+    # -------------------------------------------
+    order_state_provisioner = OrderStateProvisioner(order_helper)
+    response = order_state_provisioner.provision(
+        order_id=order_id,
+        state=order_state,
+    )
+
+    updated_order = assert_order_updated_successfully(response)
+    assert_order_identity(updated_order, expected_id=order_id)
+    assert_order_status(updated_order, expected_status=new_status)
+
+    # -------------------------------------------
+    # Step 4 — Confirm the updated status through a fresh API read
+    # -------------------------------------------
+    retrieved_order_data = order_helper.get_order_by_id(order_id=order_id)
+    retrieved_order = assert_valid_order_response(retrieved_order_data)
+
+    assert_order_identity(retrieved_order, expected_id=order_id)
+    assert_order_status(retrieved_order, expected_status=new_status)
+
+    logger.info(
+        "Order ID=%r status updated from %s to %s.",
+        order_id,
+        original_status,
+        new_status,
+    )
+
+
+# ---------------------------------------
+# 🧪 Test: Update Order Customer Note
+# ---------------------------------------
+@pytest.mark.contract
+@pytest.mark.regression
+def test_update_order_customer_note(
+    order_helper,
+    create_valid_product,
+    create_valid_order,
+):
+    """Update an Order customer note and verify it persists through the API."""
+
+    # -------------------------------------------
+    # Step 1 — Create a Product and Order
+    # -------------------------------------------
+    product = create_valid_product()
+    product_id = product["id"]
+
+    order = create_valid_order(product_id=product_id)
+    order_id = order["id"]
+
+    # -------------------------------------------
+    # Step 2 — Build and apply the partial note state
+    # -------------------------------------------
+    customer_note = "Updated by the Order API integration test."
+    order_state = OrderStateBuilder().with_customer_note(customer_note).build()
+
+    order_state_provisioner = OrderStateProvisioner(order_helper)
+    response = order_state_provisioner.provision(
+        order_id=order_id,
+        state=order_state,
+    )
+
+    updated_order = assert_order_updated_successfully(response)
+    assert_order_identity(updated_order, expected_id=order_id)
+    assert updated_order.customer_note == customer_note, (
+        f"Expected customer_note {customer_note!r}, "
+        f"got {updated_order.customer_note!r}."
+    )
+
+    # -------------------------------------------
+    # Step 3 — Confirm the note through a fresh API read
+    # -------------------------------------------
+    retrieved_order_data = order_helper.get_order_by_id(order_id=order_id)
+    retrieved_order = assert_valid_order_response(retrieved_order_data)
+
+    assert_order_identity(retrieved_order, expected_id=order_id)
+    assert retrieved_order.customer_note == customer_note, (
+        f"Customer note was not persisted. Expected {customer_note!r}, "
+        f"got {retrieved_order.customer_note!r}."
+    )
+
+    logger.info(
+        "Order ID=%r customer note updated and verified.",
+        order_id,
+    )
+
+
+# ---------------------------------------
+# ⚠️ Test: Reject an Invalid Order Status
+# ---------------------------------------
+@pytest.mark.negative
+@pytest.mark.contract
+@pytest.mark.regression
+def test_update_order_status_to_invalid_value(
+    order_helper,
+    create_valid_product,
+    create_valid_order,
+):
+    """Reject an unsupported status and verify the Order remains unchanged.
+
+    The Order is created through the standard fixture and remains registered
+    for cleanup. The invalid partial state is sent through the same update
+    provisioner used by successful state changes.
+    """
+
+    # -------------------------------------------
+    # Step 1 — Create a Product and baseline Order
+    # -------------------------------------------
+    product = create_valid_product()
+    product_id = product["id"]
+
+    order = create_valid_order(product_id=product_id)
+    order_id = order["id"]
+    original_status = order["status"]
+
+    # -------------------------------------------
+    # Step 2 — Build and submit an unsupported status
+    # -------------------------------------------
+    invalid_status = "not-a-valid-order-status"
+    order_state = OrderStateBuilder().with_status(invalid_status).build()
+
+    order_state_provisioner = OrderStateProvisioner(order_helper)
+    response = order_state_provisioner.provision(
+        order_id=order_id,
+        state=order_state,
+    )
+
+    # -------------------------------------------
+    # Step 3 — Validate the API error contract
+    # -------------------------------------------
+    assert response.status_code == 400, (
+        "Expected HTTP 400 for an unsupported Order status, "
+        f"got {response.status_code}. "
+        f"Response: {response.text[:300]}"
+    )
+
+    error_response = response.json
+    assert_order_error_response(error_response, expected_status=400)
+    assert error_response["code"] == "rest_invalid_param", (
+        "Expected the REST invalid-parameter error code, "
+        f"got {error_response['code']!r}."
+    )
+    assert "status" in error_response["message"].lower(), (
+        "Expected the error message to identify the invalid status field, "
+        f"got {error_response['message']!r}."
+    )
+
+    # -------------------------------------------
+    # Step 4 — Confirm the rejected update did not change the Order
+    # -------------------------------------------
+    current_order_data = order_helper.get_order_by_id(order_id=order_id)
+    current_order = assert_valid_order_response(current_order_data)
+
+    assert_order_identity(current_order, expected_id=order_id)
+    assert_order_status(current_order, expected_status=original_status)
+
+    logger.info(
+        "Invalid status %r rejected; Order ID=%r remains %s.",
+        invalid_status,
+        order_id,
+        original_status,
+    )

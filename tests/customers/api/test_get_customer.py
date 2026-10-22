@@ -5,7 +5,7 @@ from jsonschema import validate
 
 from tests.shared.contracts.rest.error_schema import error_schema
 
-from EcommerceAPI.src.customers.validators.customer_validators import (
+from EcommerceAPI.src.entities.customers.validators.customer_validators import (
     assert_customer_not_found_error,
     assert_valid_customer_response,
     assert_customer_identity,

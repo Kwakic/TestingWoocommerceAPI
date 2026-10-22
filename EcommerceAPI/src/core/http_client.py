@@ -10,7 +10,7 @@ class HttpClient:
     the raw response object from the `requests` library.
 
     It is intentionally kept minimal and stateless to ensure:
-    - Reusability across different APIs/services
+    - Reusability across different APIs/entities
     - Testability
     - Clean separation of concerns
 

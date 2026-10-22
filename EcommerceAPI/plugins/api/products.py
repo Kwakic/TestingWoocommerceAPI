@@ -97,7 +97,7 @@ import logging
 
 import pytest
 
-from EcommerceAPI.src.products.validators.product_validators import (
+from EcommerceAPI.src.entities.products.validators.product_validators import (
     assert_valid_product_response,
 )
 
@@ -276,7 +276,10 @@ def create_valid_product(shared_api_resources) -> Callable[..., dict]:
         # -----------------------------------------
         # ProductBuilder collects scenario-specific overrides.
         # ProductFactory supplies all unspecified valid defaults.
-        product_data = ProductBuilder().with_fields(**kwargs).build()
+        product_data = (
+            ProductBuilder().with_fields(**kwargs).build()
+        )  # Kwargs from the test flow directly
+        # become Builder overrides
 
         # -----------------------------------------
         # 2️⃣ Provision Product

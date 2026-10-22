@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING
 import pytest
 
 if TYPE_CHECKING:
-    from EcommerceAPI.src.coupons.helpers.coupons_helper import CouponsHelper
-    from EcommerceAPI.src.coupons.dao.coupons_dao import CouponsDAO
+    from src.entities.coupons.helpers.coupons_helper import CouponsHelper
+    from src.entities.coupons.dao import CouponsDAO
 
 
 # ---------------------------------------------------------------------------

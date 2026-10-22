@@ -61,7 +61,7 @@ import logging
 import pytest
 
 # from EcommerceAPI.src.shared.helpers.cleanup_helpers import set_default_api_client
-from EcommerceAPI.src.customers.validators.customer_validators import (
+from EcommerceAPI.src.entities.customers.validators.customer_validators import (
     assert_valid_customer_response,
 )
 
@@ -142,6 +142,8 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
     customer_helper = shared_api_resources["customers_helper"]
     register = shared_api_resources["register_resource"]
 
+    customer_provisioner = CustomerProvisioner(customer_helper)
+
     def _create_customer(skip_cleanup: bool = False, **kwargs) -> dict:
         """
         Create a valid customers (happy-path ONLY).
@@ -205,20 +207,24 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
         # -----------------------------------------
         # 1️⃣ Build and provision customer
         # -----------------------------------------
-        # CustomerBuilder generates valid creation data in memory.
-        # CustomerProvisioner crosses the system boundary through the
-        # existing CustomersHelper/API architecture and returns the
-        # HttpResponse needed by this fixture's setup contract.
+        # CustomerBuilder collects scenario-specific overrides.
+        # CustomerFactory supplies all unspecified valid defaults.
         customer_data = (
             CustomerBuilder().with_fields(**kwargs).build()
         )  # Kwargs from the test flow directly
         # become Builder overrides
-        customer_provisioner = CustomerProvisioner(customer_helper)
+
+        # -----------------------------------------
+        # 2️⃣ Provision Product
+        # -----------------------------------------
+        # CustomerProvisioner crosses the system boundary through the
+        # existing CustomersHelper/API architecture and returns the
+        # HttpResponse required by this fixture's setup contract.
         response = customer_provisioner.provision(customer_data)
 
-        # -----------------------------------------------------------------
-        # 2️⃣ Transport validation (FAIL FAST) — setup contract
-        # -----------------------------------------------------------------
+        # -----------------------------------------
+        # 3️⃣ Transport validation (FAIL FAST)
+        # -----------------------------------------
         assert response.status_code == 201, (
             "POST /customers creation failed. "
             f"Expected: 201, got {response.status_code}. "
@@ -229,21 +235,19 @@ def create_valid_customer(shared_api_resources) -> Callable[..., dict]:
         # Response: {"code":"rest_invalid_param","message":"Invalid parameter(s): billing",...}
         # This shows exactly what the server returned.
         # Problem with response.json. If the API returns something that is not JSON (very common when PHP crashes
-        # or proxies break), then: response.json
-        # will be: None
-        # and you lose useful debugging info.
+        # or proxies break), then: response.json will be: None and you lose useful debugging info.
 
         # -----------------------------------------
-        # 3️⃣ Extract JSON to validate body (parsed response body)
+        # 4️⃣ Extract JSON to validate body (parsed response body)
         # -----------------------------------------
         customer = response.json
         # -----------------------------------------
-        # 4️⃣ Structure + business validation via Pydantic
+        # 5️⃣ Structure + business validation via Pydantic
         # -----------------------------------------
         assert_valid_customer_response(customer)
 
         # -----------------------------------------
-        # 5️⃣ Cleanup registration
+        # 6️⃣ Cleanup registration
         # -----------------------------------------
         if not skip_cleanup:
             register("customers", customer["id"])

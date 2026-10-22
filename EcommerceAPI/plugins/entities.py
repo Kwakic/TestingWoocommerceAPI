@@ -215,8 +215,8 @@ class SharedAPIResources(TypedDict, total=False):
 
     """
 
-    register_resource: Callable[[str, str], None]
-    mark_resource_deleted: Callable[[str, str], None]
+    register_resource: Callable[[str, str | int], None]
+    mark_resource_deleted: Callable[[str, str | int], None]
     api_client: Any
     _entity_registry: EntitiesRegistry[EntityBundle]  # Internal plumbing, not for tests
 

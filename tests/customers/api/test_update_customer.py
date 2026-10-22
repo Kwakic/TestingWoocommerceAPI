@@ -4,7 +4,7 @@ import logging
 from jsonschema import validate
 from datetime import timezone
 
-from EcommerceAPI.src.customers.validators.customer_validators import (
+from EcommerceAPI.src.entities.customers.validators.customer_validators import (
     assert_customer_identity,
     assert_valid_customer_response,
     assert_customer_error_response,
