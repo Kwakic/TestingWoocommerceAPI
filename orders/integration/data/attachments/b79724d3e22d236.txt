@@ -1,0 +1,23 @@
+DEBUG    EcommerceAPI.src.entities.products.helpers.products_helper:products_helper.py:360 ⚙️ Creating product with payload keys: ['name', 'type', 'status', 'regular_price', 'sku', 'description', 'short_description']
+DEBUG    EcommerceAPI.src.entities.products.api.products_api:products_api.py:74 📡 POST /products payload_keys=['name', 'type', 'status', 'regular_price', 'sku', 'description', 'short_description']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/products → Status code: 201 (completed in 0.102s)
+INFO     EcommerceAPI.src.entities.products.validators.product_validators:product_validators.py:99 ✅ Product structure valid: id=70, name=Product-4XdV0T249174, sku=TEST-SKU-4D2BA297471A
+DEBUG    EcommerceAPI.plugins.api.products:products.py:323 ℹ️ Registered product with ID: 70 for cleanup.
+DEBUG    EcommerceAPI.src.entities.orders.helpers.orders_helper:orders_helper.py:144 Creating Order with payload keys: ['line_items']
+DEBUG    EcommerceAPI.src.entities.orders.api.orders_api:orders_api.py:44 POST /orders payload_keys=['line_items']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/orders → Status code: 201 (completed in 0.113s)
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:100 Order structure valid: id=71 status=pending customer_id=0
+DEBUG    EcommerceAPI.plugins.api.orders:orders.py:168 Registered Order ID 71 for cleanup.
+DEBUG    EcommerceAPI.src.entities.orders.helpers.orders_helper:orders_helper.py:349 Updating Order 71 with payload keys: ['status']
+DEBUG    EcommerceAPI.src.entities.orders.api.orders_api:orders_api.py:91 PUT /orders/71 payload_keys=['status']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ PUT /wp-json/wc/v3/orders/71 → Status code: 200 (completed in 0.091s)
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:100 Order structure valid: id=71 status=on-hold customer_id=0
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:310 Order identity verified: id=71
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:366 Order status verified: id=71 status=on-hold
+DEBUG    EcommerceAPI.src.entities.orders.helpers.orders_helper:orders_helper.py:202 Retrieving Order 71
+DEBUG    EcommerceAPI.src.entities.orders.api.orders_api:orders_api.py:61 GET /orders/71
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/orders/71 → Status code: 200 (completed in 0.060s)
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:100 Order structure valid: id=71 status=on-hold customer_id=0
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:310 Order identity verified: id=71
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:366 Order status verified: id=71 status=on-hold
+INFO     tests.orders.api.test_update_order:test_update_order.py:104 Order ID=71 status updated from pending to on-hold.

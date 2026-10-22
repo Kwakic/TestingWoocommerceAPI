@@ -1,0 +1,67 @@
+DEBUG    EcommerceAPI.src.entities.products.helpers.products_helper:products_helper.py:360 ⚙️ Creating product with payload keys: ['name', 'type', 'status', 'regular_price', 'sku', 'description', 'short_description']
+DEBUG    EcommerceAPI.src.entities.products.api.products_api:products_api.py:74 📡 POST /products payload_keys=['name', 'type', 'status', 'regular_price', 'sku', 'description', 'short_description']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/products → Status code: 201 (completed in 0.097s)
+INFO     EcommerceAPI.src.entities.products.validators.product_validators:product_validators.py:99 ✅ Product structure valid: id=29, name=Product-SpMrsH239461, sku=TEST-SKU-F7C0113DB882
+DEBUG    EcommerceAPI.plugins.api.products:products.py:323 ℹ️ Registered product with ID: 29 for cleanup.
+DEBUG    EcommerceAPI.src.entities.customers.helpers.customers_helper:customers_helper.py:213 ⚙️ Creating customer with payload keys: ['email', 'password']
+DEBUG    EcommerceAPI.src.entities.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.143s)
+INFO     EcommerceAPI.src.entities.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=2, email=testuser_hcogjgdfnk@supersqa.com
+DEBUG    EcommerceAPI.plugins.api.customers:customers.py:254 ℹ️ Registered customers with ID: 2 for cleanup.
+DEBUG    EcommerceAPI.src.entities.orders.helpers.orders_helper:orders_helper.py:144 Creating Order with payload keys: ['line_items', 'customer_id']
+DEBUG    EcommerceAPI.src.entities.orders.api.orders_api:orders_api.py:44 POST /orders payload_keys=['line_items', 'customer_id']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/orders → Status code: 201 (completed in 0.115s)
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:100 Order structure valid: id=30 status=pending customer_id=2
+DEBUG    EcommerceAPI.plugins.api.orders:orders.py:168 Registered Order ID 30 for cleanup.
+DEBUG    EcommerceAPI.src.entities.orders.helpers.orders_helper:orders_helper.py:202 Retrieving Order 30
+DEBUG    EcommerceAPI.src.entities.orders.api.orders_api:orders_api.py:61 GET /orders/30
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/orders/30 → Status code: 200 (completed in 0.061s)
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:100 Order structure valid: id=30 status=pending customer_id=2
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:338 Order customer association verified: id=30 customer_id=2
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:438 Order line items verified: id=30 item_count=1
+INFO     EcommerceAPI.plugins.entities:entities.py:718 🔧 Starting teardown of created test resources...
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up product(s)... (5 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 22
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/22?force=True → Status code: 200 (completed in 0.086s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 22
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 24
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/24?force=True → Status code: 200 (completed in 0.090s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 24
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 26
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/26?force=True → Status code: 200 (completed in 0.090s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 26
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 27
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/27?force=True → Status code: 200 (completed in 0.086s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 27
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 29
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/29?force=True → Status code: 200 (completed in 0.088s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 29
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for product(s).
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up order(s)... (4 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting order ID: 23
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/orders/23?force=True → Status code: 200 (completed in 0.080s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted order ID: 23
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting order ID: 25
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/orders/25?force=True → Status code: 200 (completed in 0.076s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted order ID: 25
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting order ID: 28
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/orders/28?force=True → Status code: 200 (completed in 0.074s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted order ID: 28
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting order ID: 30
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/orders/30?force=True → Status code: 200 (completed in 0.087s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted order ID: 30
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for order(s).
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up customer(s)... (1 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 2
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/customers/2?force=True → Status code: 200 (completed in 0.070s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 2
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for customer(s).
+INFO     EcommerceAPI.plugins.entities:entities.py:758 
+
+🧹 ====================================== CLEANUP SUMMARY ======================================
+INFO     EcommerceAPI.plugins.entities:entities.py:761 📊 Created during test run: {'products': 5, 'orders': 4, 'customers': 1}
+INFO     EcommerceAPI.plugins.entities:entities.py:762 🧾 Cleanup total summary:
+INFO     EcommerceAPI.plugins.entities:entities.py:764    • product: 5 deleted (5 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:764    • order: 4 deleted (4 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:764    • customer: 1 deleted (1 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:765 ✅ All test data cleanup completed.
