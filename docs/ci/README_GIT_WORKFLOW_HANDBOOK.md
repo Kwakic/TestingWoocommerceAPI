@@ -198,7 +198,7 @@ Run once:
 ## 🔹Step 2. 🛠️ Create a new branch
 
 ```bash
-git git switch -c fix/bug_ticket_1235
+git switch -c fix/bug_ticket_1235
 ```
 
 💡 Use one branch per ticket/feature
@@ -282,10 +282,10 @@ To avoid conflicts and ensure your current branch (fix/bug_ticket_1235) is up-to
 ### 🟢 Option A (Beginner-friendly — recommended)
 
 ```
-git checkout main
+git switch main
 git pull origin main
 
-git checkout fix/bug_ticket_1235
+git switch fix/bug_ticket_1235
 git merge main
 ```
 

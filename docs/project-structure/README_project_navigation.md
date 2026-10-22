@@ -1,3 +1,4 @@
+````
 # 📁 Project Structure Guide
 
 Quick navigation to understand what each directory does and where to find related documentation.
@@ -119,27 +120,28 @@ EcommerceAPI/
 │   │   ├── graphql_client.py         ← Main GraphQL API client (uses http_client)
 │   │   └── __init__.py
 │   │
-│   ├── customers/                    ← Domain: Customers
-│   │   ├── dao/                      ← Data access & business logic
-│   │   │   ├── customers_dao.py
-│   │   │   └── __init__.py
-│   │   ├── api/                      ← Domain API wrapper
-│   │   │   ├── customers_api.py
-│   │   │   └── __init__.py
-│   │   ├── validators/               ← Custom validators
-│   │   │   ├── customer_db_validators.py
-│   │   │   ├── customer_validators.py
-│   │   │   └── __init__.py
-│   │   ├── models/                   ← Pydantic models (runtime validation)
-│   │   │   ├── customer_model.py     ← canonical Customer model
-│   │   │   └── __init__.py
-│   │   └── helpers/                  ← Business & API logic
-│   │       ├── customers_helper.py
-│   │       └── __init__.py
-│   │
-│   ├── products/                     ← Domain: Products (same structure)
-│   ├── orders/                       ← Domain: Orders (same structure)
-│   ├── coupons/                      ← Domain: Coupons (same structure)
+│   ├── entities/                     ← Domain-specific entity implementations
+│   │   ├── customers/                ← Domain: Customers
+│   │   │   ├── dao/                  ← Data access & business logic
+│   │   │   │   ├── customers_dao.py
+│   │   │   │   └── __init__.py
+│   │   │   ├── api/                  ← Domain API wrapper
+│   │   │   │   ├── customers_api.py
+│   │   │   │   └── __init__.py
+│   │   │   ├── validators/           ← Custom validators
+│   │   │   │   ├── customer_db_validators.py
+│   │   │   │   ├── customer_validators.py
+│   │   │   │   └── __init__.py
+│   │   │   ├── models/               ← Pydantic models (runtime validation)
+│   │   │   │   ├── customer_model.py ← canonical Customer model
+│   │   │   │   └── __init__.py
+│   │   │   └── helpers/              ← Business & API logic
+│   │   │       ├── customers_helper.py
+│   │   │       └── __init__.py
+│   │   ├── products/                 ← Domain: Products (same structure)
+│   │   ├── orders/                   ← Domain: Orders (same structure)
+│   │   ├── coupons/                  ← Domain: Coupons (same structure)
+│   │   └── __init__.py
 │   │
 │   ├── shared/                       ← ⚠️ Reusable across all domains
 │   │   ├── assertions/               ← Common assertion helpers
@@ -180,7 +182,7 @@ EcommerceAPI/
 
 ### 📝 When to Edit
 
-- **Add new domain?** → Create `src/{domain}/` with DAOs, APIs, validators, models
+- **Add new domain?** → Create `src/entities/{domain}/` with DAOs, APIs, validators, models
 - **Add shared utility?** → Add to `src/utils/`
 - **Add new auth scheme?** → Add to `src/auth/`
 - **Add new fixture?** → Add to `plugins/api/{domain}.py` or `plugins/*_fixtures.py`
@@ -571,381 +573,341 @@ Project-level configuration and orchestration.
 
 ## 🗂️ Full Project Tree
 
-```
-TestEcommerceAPI (project suite/root)
-│
-├──.git/
-├──.github/                                          ← CI/CD & GitHub Actions
-│     ├── workflows/                                 ← GitHub Actions workflows
-│     │     ├── smoke.yml                            ← Smoke test pipeline
-│     │     ├── integration.yml                      ← Integration test pipeline
-│     │     ├── regression.yml                       ← Regression test pipeline
-│     │     ├── performance.yml                      ← Performance test pipeline
-│     │     ├── contract.yml                         ← Contract test pipeline
-│     │     ├── preflight.yml                        ← Pre-flight checks
-│     │     ├── e2e.yml                              ← Future development
-│     │     ├── ui.yml                               ← Playwright UI tests pipeline
-│     │     ├── security.yml                         ← Security test pipeline
-│     │     ├── dashboard-publisher.yml              ← Allure dashboard publishing
-│     │     ├── reusable-test-runner.yml             ← Reusable test execution
-│     │     └── reusable-allure-report.yml           ← Reusable report generation
-│     │
-│     ├── actions/                                   ← Custom GitHub Actions
-│     │     ├── setup-python-project/
-│     │     │   └── action.yml                       ← Python project setup
-│     │     ├── configure-ci-env/
-│     │     │   └── action.yml                       ← CI environment setup
-│     │     ├── docker-cleanup/
-│     │     │   └── action.yml                       ← Docker cleanup action
-│     │     └── setup-woocommerce/
-│     │         └── action.yml                       ← WooCommerce container setup
-│     │
-│     ├── scripts/
-│     │     ├── generate_matrix.py                   ← Generate test matrix
-│     │     └── __init__.py
-│     │
-│     └── portal/                                    ← Allure portal configuration
-│           ├── style.css                            ← Portal styling
-│           ├── generate_portal.py                   ← Generate Allure portal
-│           └── __init__.py
-│
-├── .venv/...                                        ← Local Python virtual environment
-│
-├── docs/...                                         ← Framework documentation
-│     ├── project_structure                          ← Project Structure
-│     │    └── README_project_navigation.md          ← Complete, unabridged directory tree and project details
-│     │
-│     ├── getting-started/
-│     │     ├── README_FRAMEWORK_OVERVIEW.md         ← High-level tour of the framework
-│     │     ├── README_QA_DEVELOPER_ONBOARDING.md    ← Onboarding steps for new contributors
-│     │     └── README_ARCHITECTURE_QUICK_START.md   ← Fast-track architecture primer
-│     │
-│     ├── development/
-│     │     ├── README_TEST_DEVELOPMENT_GUIDE.md     ← Canonical guide for writing tests
-│     │     ├── README_API_CLIENT.md                 ← How the API client layer works
-│     │     ├── README_GRAPHQL_TESTING_GUIDE.md      ← canonical GraphQL guide
-│     │     ├── README_UI_TESTING_GUIDE.md               ← Canonical Playwright UI testing guide
-│     │     ├── README_ARCHITECTURE.md               ← Framework internals in depth
-│     │     ├── README_VALIDATORS.md                 ← Writing and using validators
-│     │     └── team-guides/                         ← Per-entity guides (Customers, Orders, Coupons, Products)
-│     │            ├── README_CUSTOMERS.md
-│     │            ├── README_ORDERS.md
-│     │            ├── README_COUPONS.md
-│     │            └── README_PRODUCTS.md
-│     │
-│     ├── framework/
-│     │     ├── README_PLUGINS_REFERENCE.md          ← Pytest plugin architecture
-│     │     ├── README_ENVIRONMENT_CONFIG_GUIDE.md   ← API_ENV and configuration resolution
-│     │     ├── README_CONFIG_CONTRACT.md            ← Configuration schema/contract
-│     │     ├── README_AUTHENTICATION.md             ← Credential handling
-│     │     ├── README_LOGGING_ARCHITECTURE.md       ← Structured logging design
-│     │     └── README_ENTITY_DISCOVER_ARCHITECTURE_GUIDE.md  ←	Metadata-driven entity discovery
-│     │
-│     ├── ci/
-│     │     ├── README_CI_ARCHITECTURE.md            ← Workflow design & artifact strategy
-│     │     ├── README_ALLURE.md                     ← Report generation & GitHub Pages publishing
-│     │     ├── README_ENV_AND_CI.md                 ← How environments map to pipelines
-│     │     ├── README_DOCKER_INFRASTRUCTURE.md      ← Container setup used in CI
-│     │     └── README_GIT_WORKFLOW_HANDBOOK.md      ← Branching & PR conventions
-│     │
-│     └── contributing/
-│            ├── README_CONTRIBUTING.md              ← How to contribute
-│            ├── README_CHANGELOG_GUIDELINES.md      ← Changelog conventions
-│            └── README_PYPROJECT.md                 ← Packaging & dependency notes
-│
-├── EcommerceAPI (installable framework package)/    ← SHARED INSTALLABLE FRAMEWORK
-│     ├── ecommerceapitest.egg-info/..               ← editable-install metadata
-│     ├── plugins/                                   ← pytest plugin system
-│     │     ├── api/
-│     │     │     ├── shared_api.py                  ← Shared REST API fixtures
-│     │     │     ├── shared_graphql.py              ← Shared GraphQL fixtures
-│     │     │     ├── customers.py                   ← @pytest.fixture for customers
-│     │     │     ├── products.py                    ← @pytest.fixture for products
-│     │     │     ├── coupons.py                     ← @pytest.fixture for coupons
-│     │     │     └── orders.py                      ← @pytest.fixture for orders
-│     │     ├── __init__.py
-│     │     ├── config_pytest.py                     ← pytest hook implementations
-│     │     ├── allure_autogen.py                    ← Allure report auto-generation
-│     │     ├── api_fixtures.py                      ← Fixture setup & configuration
-│     │     ├── config_pytest.py                     ← pytest hook implementations
-│     │     ├── db_fixtures.py                       ← Database-related fixtures
-│     │     ├── entities.py                          ← Dependency container
-│     │     ├── entity_metadata.py                   ← Entity discovery metadata
-│     │     ├── reporting.py                         ← Report generation
-│     │     ├── logging_plugin.py                    ← Structured logging integration
-│     │     └── README_plugins.md                    ← Plugins documentation
-│     │
-│     │── src/                                       ← ⚠ ONLY reusable/shared/global
-│     ├── metadata/
-│     │     ├── entity_metadata.py                   ← Entity discovery data
-│     │     ├── runtime_metadata.py                  ← Runtime metadata (future)
-│     │     ├── deployment_metadata.py               ← Deployment metadata (future)
-│     │     └── __init__.py
-│     │
-│     ├── configs/
-│     │   ├── config_graphql.py                      ← GraphQL endpoint configuration by environment
-│     │   ├── config_loader.py                       ← Load environment and service configuration
-│     │   ├── runtime_config.py                      ← Framework runtime configuration
-│     │   ├── runtime_metadata.py                    ← Runtime session metadata (shared, plugin-agnostic)
-│     │   ├── README.md                              ← Configuration guide
-│     │   └── __init__.py
-│     │
-│     ├── auth/                                      ← Authentication implementations
-│     │   ├── base_auth.py                           ← Abstract auth base class
-│     │   ├── oauth1_auth.py                         ← OAuth1 handler
-│     │   ├── oauth2_auth.py                         ← OAuth2 handler
-│     │   ├── jwt_auth.py                            ← JWT handler
-│     │   ├── basic_auth.py                          ← Basic auth handler
-│     │   ├── auth_factory.py                        ← Auth strategy factory
-│     │   ├── auth_resolver.py                       ← Auth resolution logic
-│     │   └── __init__.py
-│     │
-│     ├── core/                                      ← Core HTTP transport and response models
-│     │   ├── http_client.py                         ← Low-level HTTP transport wrapper
-│     │   ├── http_response.py                       ← Generic HTTP response object model
-│     │   ├── graphql_response.py                    ← GraphQL response and error model
-│     │   ├── request_context.py                     ← Request context tracking
-│     │   └── __init__.py
-│     │
-│     ├── clients/                                   ← High-level API orchestration
-│     │   ├── api_client.py                          ← Main REST API client (uses http_client)
-│     │   ├── graphql_client.py                      ← Main GraphQL API client (uses http_client)
-│     │   └── __init__.py
-│     │
-│     ├── customers/                                 ← Domain: Customers
-│     │   ├── dao/                                   ← Data access & business logic
-│     │   │   ├── customers_dao.py
-│     │   │   └── __init__.py
-│     │   ├── api/                                   ← Domain API wrapper
-│     │   │   ├── customers_api.py
-│     │   │   └── __init__.py
-│     │   ├── validators/                            ← Custom validators
-│     │   │   ├── customer_db_validators.py
-│     │   │   ├── customer_validators.py
-│     │   │   └── __init__.py
-│     │   ├── models/                                ← Pydantic models (runtime validation)
-│     │   │   ├── customer_model.py                  ← canonical Customer model
-│     │   │   └── __init__.py
-│     │   └── helpers/                               ← Business & API logic
-│     │       ├── customers_helper.py
-│     │       └── __init__.py
-│     ├── products/                                  ← Domain: Products (same structure)
-│     ├── orders/                                    ← Domain: Orders (same structure)
-│     ├── coupons/                                   ← Domain: Coupons (same structure)
-│     │
-│     ├── shared/                                    ← ⚠️ Reusable across all domains
-│     │   ├── assertions/                            ← Common assertion helpers
-│     │   │   ├── common_assertions.py
-│     │   │   └── __init__.py
-│     │   ├── api/                                   ← Shared API utilities
-│     │   │   ├── common_api.py
-│     │   │   └── __init__.py
-│     │   └── helpers/                               ← Shared helpers
-│     │       ├── cleanup_helpers.py
-│     │       └── __init__.py
-│     │
-│     │── manual_cleanup_scripts/                    ← Manual cleanup utilities
-│     │
-│     ├── utils/                                     ← ⚠️ Universal reusable utilities
-│     │   ├── bulk_ops.py                            ← Bulk operations
-│     │   ├── credentials_utility.py                 ← Credential management
-│     │   ├── custom_logger.py                       ← Logging utilities
-│     │   ├── data_utils.py                          ← Data transformation
-│     │   ├── date_timestamp_utils.py                ← Date/time helpers
-│     │   ├── db_utility.py                          ← Database operations
-│     │   ├── entities_registry.py                   ← Entity registry
-│     │   ├── env_utils.py                           ← Environment utilities
-│     │   ├── exceptions.py                          ← Custom exceptions
-│     │   ├── filtering_utils.py                     ← Filtering helpers
-│     │   ├── generic_utilities.py                   ← Generic utilities
-│     │   ├── log_context.py                         ← Log context management
-│     │   ├── pagination_utils.py                    ← Pagination helpers
-│     │   ├── performance_utils.py                   ← Performance measurement
-│     │   ├── entity_discovery.py                    ← Dynamic entity discovery
-│     │   ├── truncate_logging_utils.py              ← Log truncation
-│     │   └── __init__.py
-│     │
-│     │── __init__.py
-│     └── pyproject.toml                             ← Python project metadata (in EcommerceAPI/)
-│
-├── reports/
-│     ├── allure-report/                             ← Interactive HTML report
-│     │   ├── data/                                  ← Allure data files
-│     │   ├── export/                                ← Export data
-│     │   ├── history/                               ← Historical trends
-│     │   ├── plugins/                               ← Allure plugins
-│     │   ├── widgets/                               ← Report widgets
-│     │   ├── app.js                                 ← Report application
-│     │   ├── favicon.ico
-│     │   ├── index.html                             ← Open this in browser
-│     │   └── style.css
-│     │
-│     ├── allure-results/                            ← Raw test results (JSON)
-│     │   ├── *-result.json                          ← Test execution results
-│     │   ├── *-container.json                       ← Test containers
-│     │   ├── *-attachment.txt                       ← Logs & attachments
-│     │   ├── categories.json                        ← Result categories
-│     │   ├── environment.properties                 ← Test environment info
-│     │   └── etc.
-│     │
-│     └── logs/                                      ← Structured test logs
-│         ├── customers/
-│         │   ├── docker/                            ← Docker environment logs
-│         │   │   └── test_debug_structured_*.jsonl
-│         │   └── test/                              ← Test environment logs
-│         │       └── test_debug_structured_*.jsonl
-│         ├── products/
-│         │   └── test/
-│         │       └── test_debug_structured_*.jsonl
-│         └── shared/
-│             ├── dev/
-│             │   └── test_debug_structured_*.jsonl
-│             └── test/
-│                 └── test_debug_structured_*.jsonl
-│
-├── tests/                                           ← The test suite root - Each team got its own file
-│     │
-│     ├── customers/                                 ← Domain: Customers
-│     │   ├── configs/
-│     │   │   ├── config_customers.py                ← API hosts & domain config
-│     │   │   ├── __init__.py
-│     │   │   └── Entity_Configuration_Guide.md
-│     │   ├── data/
-│     │   │   ├── __init__.py
-│     │   │   └── create_customer_payload.json       ← Test payloads
-│     │   ├── __init__.py
-│     │   ├── conftest.py                            ← Domain-specific fixtures
-│     │   ├── api/                                   ← REST API tests for this business entity
-│     │   │   ├── test_create_customer.py
-│     │   │   ├── test_customer_deletion.py
-│     │   │   ├── test_customer_filters.py
-│     │   │   ├── test_e2e_customer_lifecycle.py
-│     │   │   ├── test_get_all_customers.py
-│     │   │   ├── test_get_customer.py
-│     │   │   ├── test_soft_deleted_customer_handling.py
-│     │   │   ├── test_update_customer.py
-│     │   │   └── __init__.py
-│     │   ├── graphql/                               ← GraphQL queries/mutations for this business entity
-│     │   │   ├── test_create_customer.py
-│     │   │   ├── test_delete_customer.py
-│     │   │   ├── test_get_customer.py
-│     │   │   ├── test_get_all_customers.py
-│     │   │   ├── test_filter_customers.py
-│     │   │   ├── test_update_customer.py
-│     │   │   ├── test_customer_negative.py
-│     │   │   ├── test_search_product.py
-│     │   │   └── __init__.py
-│     │   └── performance/
-│     │       ├── test_customer_performance.py
-│     │       └── __init__.py
-│     │
-│     ├── products/                                  ← Domain: Products (same structure)
-│     ├── orders/                                    ← Domain: Orders (same structure)
-│     ├── coupons/                                   ← Domain: Coupons (same structure)
-│     │
-│     ├── shared/                                    ← Framework-level tests (run once)
-│     │   ├── __init__.py
-│     │   ├── contracts/                             ← Contract testing (response schemas)
-│     │   │    ├── rest/
-│     │   │    │    ├── error_schema.py              ← Error response contracts
-│     │   │    │    ├── test_response_format.py      ← Validate response format
-│     │   │    │    ├── test_api_connectivity.py     ← Basic rest connectivity checks
-│     │   │    │    └── __init__.py
-│     │   │    └── graphql/
-│     │   │         ├── test_graphql_connectivity.py  ← Basic graphql connectivity checks
-│     │   │         ├── test_product_mutation_schema.py  ← Validation of GraphQL schema
-│     │   │         └── __init__.py
-│     │   ├── security/                              ← Security & auth validation
-│     │   │   ├── test_authentication_matrix.py      ← Auth scheme matrix
-│     │   │   ├── test_authentication_success.py     ← Successful auth scenarios
-│     │   │   └── __init__.py
-│     │   └── preflight/                             ← Pre-test checks
-│     │       ├── test_logging_globals.py            ← Logging validation
-│     │       ├── __init__.py
-│     │       └── README_PREFLIGHT.md
-│     │
-│     ├── ui/                                        ← Playwright tests
-│     ├── tests
-│     │   ├──  __init__.py
-│     │   │
-│     │   ├───account
-│     │   │   │   test_customer_account.py
-│     │   │   │   test_customer_account_details.py
-│     │   │   │   test_customer_address.py
-│     │   │   └───  __init__.py
-│     │   │
-│     │   ├───admin
-│     │   │   │   test_admin_authentication.py
-│     │   │   └───  __init__.py
-│     │   ├───auth
-│     │   │   │   README Playwright Authentication & Page Object Architecture.md
-│     │   │   │   test_customer_login.py
-│     │   │   │   test_customer_login_security.py
-│     │   │   │   test_customer_password_recovery.py
-│     │   │   │   test_customer_registration.py
-│     │   │   │   test_customer_registration_security.py
-│     │   │   │   test_customer_session_security.py
-│     │   │   └─── __init__.py
-│     │   ├───catalog
-│     │   │   │   test_product_discovery.py
-│     │   │   │   test_product_review.py
-│     │   │   └───  __init__.py
-│     │   ├───home
-│     │   │   │   test_home_page.py
-│     │   │   └───  __init__.py
-│     │   └───shopping
-│     │       │   __init__.py
-│     │       │
-│     │       ├───cart
-│     │       │   │   test_add_product_to_cart.py
-│     │       │   │   test_apply_coupon.py
-│     │       │   │   test_cart_contents.py
-│     │       │   │   test_remove_product_from_cart.py
-│     │       │   │   test_update_cart_quantity.py
-│     │       │   └───  __init__.py
-│     │       │
-│     │       └───checkout
-│     │            │   test_customer_checkout.py
-│     │            │   test_guest_can_checkout.py
-│     │            │   test_order_confirmation.py
-│     │            └───  __init__.py
-│     │
-│     ├── pages/                                     ← Page Objects
-│     ├── fixtures/                                  ← UI pytest lifecycle/authentication fixtures
-│     ├── components/                                ← Reusable UI components
-│     ├── data/                                      ← UI test data/assets
-│     ├── config.py                                  ← UI environment configuration
-│     └── README.md                                  ← UI testing guide
-│
-├── __init__.py
-├── conftest.py                                      ← Shared root fixtures
-└── README.md                                        ← Test suite documentation
-│
-│─── scripts                                         ← Shared setup
-│     ├── setup.sh                                   ← Project setup script
-│     ├── seed_test_products.sh                      ← Seed deterministic baseline WooCommerce products
-│     ├── seed_test_users.sh                         ← Seed persistent test users required by UI/E2E tests
-│     └── write_env_credentials.sh                   ← Environment credential setup
-│
-│─── wp-data/...                                     ← WordPress infrastructure. Persistent storage for local WordPress and database data
-│─── Makefile                                        ← Environment/bootstrap orchestrationOrchestrates common tasks (make run, make test, etc.)
-│─── .dockerignore                                   ← Specifies files to exclude from Docker build context
-│─── .env                                            ← Local environment variables & credentials
-│─── .env.example                                    ← Template for .env file
-│─── .gitattributes                                  ← Configures file attributes like line endings and LFS
-│─── .gitignore                                      ← Specifies untracked files that Git should ignore
-│─── .gitlab-ci.yml                                  ← Defines the GitLab CI/CD pipeline automation workflows
-│─── .pre-commit-config.yaml                         ← Configures Git hooks to run automated code checks before commits
-│─── CHANGELOG.md                                    ← Project changelog
-│─── conftest.py                                     ← Shared root-level fixtures & hooks
-│─── docker-compose.matrix.yml                       ← Multi-container setup (WordPress, WooCommerce, MySQL)
-│─── Dockerfile                                      ← Container image for CI/CD execution
-│─── README.md                                       ← Project landing page & documentation index
-└──  pytest.ini                                      ← Pytest configuration & marker definitions
+The following tree is updated from the repository output provided on 22 October 2026:
 
+```text
+TestEcommerceAPI/
+├── .github/
+│   ├── actions/
+│   │   ├── configure-ci-env/
+│   │   │   └── action.yml
+│   │   ├── docker-cleanup/
+│   │   │   └── action.yml
+│   │   ├── setup-python-project/
+│   │   │   └── action.yml
+│   │   └── setup-woocommerce/
+│   │       └── action.yml
+│   ├── portal/
+│   │   ├── __init__.py
+│   │   ├── generate_portal.py
+│   │   └── style.css
+│   ├── scripts/
+│   │   ├── __init__.py
+│   │   └── generate_matrix.py
+│   ├── workflows/
+│   │   ├── contract.yml
+│   │   ├── dashboard-publisher.yml
+│   │   ├── integration.yml
+│   │   ├── performance.yml
+│   │   ├── preflight.yml
+│   │   ├── regression.yml
+│   │   ├── reusable-allure-report.yml
+│   │   ├── reusable-test-runner.yml
+│   │   ├── security.yml
+│   │   ├── smoke.yml
+│   │   └── ui.yml
+│   └── __init__.py
+├── .idea/
+│   ├── inspectionProfiles/
+│   │   └── profiles_settings.xml
+│   ├── .gitignore
+│   ├── .name
+│   ├── API_TESTING_MS.iml
+│   ├── misc.xml
+│   ├── modules.xml
+│   ├── vcs.xml
+│   └── workspace.xml
+├── EcommerceAPI/
+│   ├── plugins/
+│   │   ├── api/
+│   │   │   ├── __init__.py
+│   │   │   ├── coupons.py
+│   │   │   ├── customers.py
+│   │   │   ├── orders.py
+│   │   │   ├── products.py
+│   │   │   ├── shared_api.py
+│   │   │   └── shared_graphql.py
+│   │   ├── README_plugins.md
+│   │   ├── __init__.py
+│   │   ├── allure_autogen.py
+│   │   ├── config_pytest.py
+│   │   ├── db_fixtures.py
+│   │   ├── entities.py
+│   │   ├── logging_plugin.py
+│   │   └── reporting.py
+│   ├── src/
+│   │   ├── auth/
+│   │   │   ├── __init__.py
+│   │   │   ├── auth_factory.py
+│   │   │   ├── auth_resolver.py
+│   │   │   ├── base_auth.py
+│   │   │   ├── basic_auth.py
+│   │   │   ├── jwt_auth.py
+│   │   │   ├── oauth1_auth.py
+│   │   │   └── oauth2_auth.py
+│   │   ├── clients/
+│   │   │   ├── __init__.py
+│   │   │   ├── api_client.py
+│   │   │   └── graphql_client.py
+│   │   ├── configs/
+│   │   │   ├── __init__.py
+│   │   │   ├── config_graphql.py
+│   │   │   ├── config_loader.py
+│   │   │   ├── runtime_config.py
+│   │   │   └── runtime_metadata.py
+│   │   ├── core/
+│   │   │   ├── __init__.py
+│   │   │   ├── graphql_response.py
+│   │   │   ├── http_client.py
+│   │   │   ├── http_response.py
+│   │   │   └── request_context.py
+│   │   ├── entities/
+│   │   │   ├── coupons/
+│   │   │   ├── customers/
+│   │   │   ├── orders/
+│   │   │   ├── products/
+│   │   │   └── __init__.py
+│   │   ├── manual_cleanup_scripts/
+│   │   │   ├── __init__.py
+│   │   │   ├── coupons_cleaner.py
+│   │   │   ├── delete_coupon_individually.py
+│   │   │   └── delete_entities_from_code_and_CLI.py
+│   │   ├── metadata/
+│   │   │   ├── __init__.py
+│   │   │   └── entity_metadata.py
+│   │   ├── shared/
+│   │   │   ├── api/
+│   │   │   ├── assertions/
+│   │   │   ├── helpers/
+│   │   │   └── __init__.py
+│   │   ├── test_data/
+│   │   │   ├── builders/
+│   │   │   ├── factories/
+│   │   │   ├── ownership/
+│   │   │   ├── provisioning/
+│   │   │   ├── seeds/
+│   │   │   └── __init__.py
+│   │   ├── utils/
+│   │   │   ├── __init__.py
+│   │   │   ├── bulk_ops.py
+│   │   │   ├── credentials_utility.py
+│   │   │   ├── custom_logger.py
+│   │   │   ├── data_utils.py
+│   │   │   ├── date_timestamp_utils.py
+│   │   │   ├── db_utility.py
+│   │   │   ├── entities_registry.py
+│   │   │   ├── entity_discovery.py
+│   │   │   ├── env_utils.py
+│   │   │   ├── exceptions.py
+│   │   │   ├── filtering_utils.py
+│   │   │   ├── generic_utilities.py
+│   │   │   ├── log_context.py
+│   │   │   ├── pagination_utils.py
+│   │   │   ├── performance_utils.py
+│   │   │   └── truncate_logging_utils.py
+│   │   └── __init__.py
+│   ├── __init__.py
+│   └── pyproject.toml
+├── docs/
+│   ├── ci/
+│   │   ├── README_ALLURE.md
+│   │   ├── README_CI_ARCHITECTURE.md
+│   │   ├── README_DOCKER_INFRASTRUCTURE.md
+│   │   ├── README_ENV_AND_CI.md
+│   │   ├── README_GITHUB_PRODUCTION_SETTINGS.md
+│   │   └── README_GIT_WORKFLOW_HANDBOOK.md
+│   ├── contributing/
+│   │   ├── README_CHANGELOG_GUIDELINES.md
+│   │   ├── README_CONTRIBUTING.md
+│   │   └── README_PYPROJECT.md
+│   ├── development/
+│   │   ├── team-guides/
+│   │   │   ├── README_COUPONS.md
+│   │   │   ├── README_CUSTOMERS.md
+│   │   │   └── README_PRODUCTS.md
+│   │   ├── README_API_CLIENT.md
+│   │   ├── README_ARCHITECTURE.md
+│   │   ├── README_GRAPHQL_TESTING_GUIDE.md
+│   │   ├── README_TEST_DATA_ARCHITECTURE.md
+│   │   ├── README_TEST_DEVELOPMENT_GUIDE.md
+│   │   ├── README_UI_TESTING_GUIDE.md
+│   │   └── README_VALIDATORS.md
+│   ├── framework/
+│   │   ├── README_AUTHENTICATION.md
+│   │   ├── README_CONFIG_CONTRACT.md
+│   │   ├── README_ENTITY_DISCOVER_ARCHITECTURE_GUIDE.md
+│   │   ├── README_ENVIRONMENT_CONFIG_GUIDE.md
+│   │   ├── README_LOGGING_ARCHITECTURE.md
+│   │   └── README_PLUGINS_REFERENCE.md
+│   ├── getting-started/
+│   │   ├── README_ARCHITECTURE_QUICK_START.md
+│   │   ├── README_FRAMEWORK_OVERVIEW.md
+│   │   └── README_QA_DEVELOPER_ONBOARDING.md
+│   └── project-structure/
+│       └── README_project_navigation.md
+├── scripts/
+│   ├── seed_test_products.sh
+│   ├── seed_test_users.sh
+│   ├── setup.sh
+│   └── write_env_credentials.sh
+├── tests/
+│   ├── coupons/
+│   │   ├── api/
+│   │   │   ├── __init__.py
+│   │   │   ├── test_create_coupons.py
+│   │   │   └── test_get_coupon.py
+│   │   ├── configs/
+│   │   │   ├── Entity_Configuration_Guide.md
+│   │   │   ├── __init__.py
+│   │   │   └── config_coupons.py
+│   │   ├── data/
+│   │   │   └── __init__.py
+│   │   ├── performance/
+│   │   │   └── __init__.py
+│   │   ├── __init__.py
+│   │   └── conftest.py
+│   ├── customers/
+│   │   ├── api/
+│   │   │   ├── __init__.py
+│   │   │   ├── test_create_customer.py
+│   │   │   ├── test_customer_deletion.py
+│   │   │   ├── test_customer_filters.py
+│   │   │   ├── test_e2e_customer_lifecycle.py
+│   │   │   ├── test_get_all_customers.py
+│   │   │   ├── test_get_customer.py
+│   │   │   ├── test_soft_deleted_customer_handling.py
+│   │   │   └── test_update_customer.py
+│   │   ├── configs/
+│   │   │   ├── Entity_Configuration_Guide.md
+│   │   │   ├── __init__.py
+│   │   │   └── config_customers.py
+│   │   ├── data/
+│   │   │   └── __init__.py
+│   │   ├── performance/
+│   │   │   ├── __init__.py
+│   │   │   └── test_customer_performance.py
+│   │   ├── __init__.py
+│   │   └── conftest.py
+│   ├── orders/
+│   │   ├── api/
+│   │   │   ├── __init__.py
+│   │   │   ├── test_apply_valid_coupon_to_order.py
+│   │   │   ├── test_create_order.py
+│   │   │   ├── test_create_order_negative.py
+│   │   │   ├── test_get_order.py
+│   │   │   ├── test_orders_param_inside_module.py
+│   │   │   ├── test_orders_params_using_json_file.py
+│   │   │   └── test_update_order.py
+│   │   ├── configs/
+│   │   │   ├── README.md
+│   │   │   ├── __init__.py
+│   │   │   └── config_orders.py
+│   │   ├── data/
+│   │   │   ├── __init__.py
+│   │   │   ├── coupon_scenarios.json
+│   │   │   └── scenario_loader.py
+│   │   ├── __init__.py
+│   │   └── conftest.py
+│   ├── products/
+│   │   ├── api/
+│   │   │   ├── __init__.py
+│   │   │   ├── test_create_products.py
+│   │   │   ├── test_create_products_negative.py
+│   │   │   ├── test_get_products.py
+│   │   │   ├── test_get_products_with_filter.py
+│   │   │   └── test_update_product_price.py
+│   │   ├── configs/
+│   │   │   ├── Entity_Configuration_Guide.md
+│   │   │   ├── __init__.py
+│   │   │   └── config_products.py
+│   │   ├── data/
+│   │   │   └── __init__.py
+│   │   ├── graphql/
+│   │   │   ├── __init__.py
+│   │   │   ├── test_create_product.py
+│   │   │   ├── test_delete_product.py
+│   │   │   ├── test_filter_products.py
+│   │   │   ├── test_get_all_products.py
+│   │   │   ├── test_get_product.py
+│   │   │   ├── test_product_error_handling.py
+│   │   │   ├── test_search_product.py
+│   │   │   └── test_update_product.py
+│   │   ├── performance/
+│   │   │   ├── __init__.py
+│   │   │   └── test_product_performance.py
+│   │   ├── __init__.py
+│   │   └── conftest.py
+│   ├── shared/
+│   │   ├── contracts/
+│   │   │   ├── graphql/
+│   │   │   ├── rest/
+│   │   │   └── __init__.py
+│   │   ├── preflight/
+│   │   │   ├── README_PREFLIGHT.md
+│   │   │   ├── __init__.py
+│   │   │   └── test_logging_globals.py
+│   │   ├── security/
+│   │   │   ├── __init__.py
+│   │   │   ├── test_authentication_matrix.py
+│   │   │   └── test_authentication_success.py
+│   │   ├── unit_tests/
+│   │   │   ├── test_data_infrastructure/
+│   │   │   └── __init__.py
+│   │   └── __init__.py
+│   ├── ui/
+│   │   ├── components/
+│   │   │   ├── __init__.py
+│   │   │   └── site_header.py
+│   │   ├── config/
+│   │   │   ├── __init__.py
+│   │   │   └── config_ui.py
+│   │   ├── data/
+│   │   │   ├── images/
+│   │   │   ├── models/
+│   │   │   └── __init__.py
+│   │   ├── fixtures/
+│   │   │   ├── __init__.py
+│   │   │   ├── admin.py
+│   │   │   ├── authentication.py
+│   │   │   ├── browser.py
+│   │   │   ├── customer_auth.py
+│   │   │   └── resources.py
+│   │   ├── pages/
+│   │   │   ├── account/
+│   │   │   ├── admin/
+│   │   │   ├── authentication/
+│   │   │   ├── catalog/
+│   │   │   ├── common/
+│   │   │   ├── shopping/
+│   │   │   └── __init__.py
+│   │   ├── tests/
+│   │   │   ├── account/
+│   │   │   ├── admin/
+│   │   │   ├── auth/
+│   │   │   ├── catalog/
+│   │   │   ├── home/
+│   │   │   ├── shopping/
+│   │   │   └── __init__.py
+│   │   ├── README.md
+│   │   └── __init__.py
+│   ├── README.md
+│   ├── __init__.py
+│   └── conftest.py
+├── .dockerignore
+├── .env
+├── .env.example
+├── .gitattributes
+├── .gitignore
+├── .gitlab-ci.yml
+├── .pre-commit-config.yaml
+├── CHANGELOG.md
+├── Dockerfile
+├── Makefile
+├── README.md
+├── conftest.py
+├── docker-compose.wp.yml
+└── pytest.ini
 ```
-
----
 
 ## 💡 Key Design Principles
 
@@ -971,3 +933,5 @@ TestEcommerceAPI (project suite/root)
 ---
 
 **Happy testing! 🚀**
+
+````
