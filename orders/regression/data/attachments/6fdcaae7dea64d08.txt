@@ -1,0 +1,63 @@
+DEBUG    EcommerceAPI.src.entities.products.helpers.products_helper:products_helper.py:360 ⚙️ Creating product with payload keys: ['name', 'type', 'status', 'regular_price', 'sku', 'description', 'short_description']
+DEBUG    EcommerceAPI.src.entities.products.api.products_api:products_api.py:74 📡 POST /products payload_keys=['name', 'type', 'status', 'regular_price', 'sku', 'description', 'short_description']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/products → Status code: 201 (completed in 0.198s)
+INFO     EcommerceAPI.src.entities.products.validators.product_validators:product_validators.py:99 ✅ Product structure valid: id=59, name=Product-D3WTps788292, sku=TEST-SKU-A834DDCE2FEB
+DEBUG    EcommerceAPI.plugins.api.products:products.py:323 ℹ️ Registered product with ID: 59 for cleanup.
+DEBUG    EcommerceAPI.src.entities.orders.helpers.orders_helper:orders_helper.py:144 Creating Order with payload keys: ['line_items']
+DEBUG    EcommerceAPI.src.entities.orders.api.orders_api:orders_api.py:44 POST /orders payload_keys=['line_items']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/orders → Status code: 201 (completed in 0.221s)
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:100 Order structure valid: id=60 status=pending customer_id=0
+DEBUG    EcommerceAPI.plugins.api.orders:orders.py:168 Registered Order ID 60 for cleanup.
+DEBUG    EcommerceAPI.src.entities.orders.helpers.orders_helper:orders_helper.py:349 Updating Order 60 with payload keys: ['status']
+DEBUG    EcommerceAPI.src.entities.orders.api.orders_api:orders_api.py:91 PUT /orders/60 payload_keys=['status']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ PUT /wp-json/wc/v3/orders/60 → Status code: 400 (completed in 0.112s)
+DEBUG    EcommerceAPI.src.clients.api_client:api_client.py:625 {
+                                                                 "code": "rest_invalid_param",
+                                                                 "message": "Invalid parameter(s): status",
+                                                                 "data": {
+                                                                   "status": 400,
+                                                                   "params": {
+                                                                     "status": "status is not one of auto-draft, pending, processing, on-hold, completed, cancelled, refunded, failed, and checkout-draft."
+                                                                   },
+                                                                   "details": {
+                                                                     "status": {
+                                                                       "code": "rest_not_in_enum",
+                                                                       "message": "status is not one of auto-draft, pending, processing, on-hold, completed, cancelled, refunded, failed, and checkout-draft.",
+                                                                       "data": null
+                                                                     }
+                                                                   }
+                                                                 }
+                                                               }
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:497 Valid Order error response: code=rest_invalid_param status=400
+DEBUG    EcommerceAPI.src.entities.orders.helpers.orders_helper:orders_helper.py:202 Retrieving Order 60
+DEBUG    EcommerceAPI.src.entities.orders.api.orders_api:orders_api.py:61 GET /orders/60
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/orders/60 → Status code: 200 (completed in 0.132s)
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:100 Order structure valid: id=60 status=pending customer_id=0
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:310 Order identity verified: id=60
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:366 Order status verified: id=60 status=pending
+INFO     tests.orders.api.test_update_order:test_update_order.py:239 Invalid status 'not-a-valid-order-status' rejected; Order ID=60 remains pending.
+INFO     EcommerceAPI.plugins.entities:entities.py:718 🔧 Starting teardown of created test resources...
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up product(s)... (2 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 57
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/57?force=True → Status code: 200 (completed in 0.180s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 57
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 59
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/59?force=True → Status code: 200 (completed in 0.190s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 59
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for product(s).
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up order(s)... (2 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting order ID: 58
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/orders/58?force=True → Status code: 200 (completed in 0.162s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted order ID: 58
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting order ID: 60
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/orders/60?force=True → Status code: 200 (completed in 0.161s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted order ID: 60
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for order(s).
+INFO     EcommerceAPI.plugins.entities:entities.py:758 
+
+🧹 ====================================== CLEANUP SUMMARY ======================================
+INFO     EcommerceAPI.plugins.entities:entities.py:761 📊 Created during test run: {'products': 2, 'orders': 2}
+INFO     EcommerceAPI.plugins.entities:entities.py:762 🧾 Cleanup total summary:
+INFO     EcommerceAPI.plugins.entities:entities.py:764    • product: 2 deleted (2 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:764    • order: 2 deleted (2 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:765 ✅ All test data cleanup completed.
