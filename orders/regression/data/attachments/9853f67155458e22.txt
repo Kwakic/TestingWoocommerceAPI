@@ -1,0 +1,36 @@
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/orders → Status code: 400 (completed in 0.060s)
+DEBUG    EcommerceAPI.src.clients.api_client:api_client.py:625 {
+                                                                 "code": "rest_invalid_param",
+                                                                 "message": "Invalid parameter(s): line_items",
+                                                                 "data": {
+                                                                   "status": 400,
+                                                                   "params": {
+                                                                     "line_items": "line_items[0] is not of type object."
+                                                                   },
+                                                                   "details": {
+                                                                     "line_items": {
+                                                                       "code": "rest_invalid_type",
+                                                                       "message": "line_items[0] is not of type object.",
+                                                                       "data": {
+                                                                         "param": "line_items[0]"
+                                                                       }
+                                                                     }
+                                                                   }
+                                                                 }
+                                                               }
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:497 Valid Order error response: code=rest_invalid_param status=400
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:519 Order creation failure validated: code=rest_invalid_param
+INFO     tests.orders.api.test_create_order_negative:test_create_order_negative.py:119 Malformed Order line_items rejected with error code: rest_invalid_param
+INFO     EcommerceAPI.plugins.entities:entities.py:718 🔧 Starting teardown of created test resources...
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up product(s)... (1 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 26
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ DELETE /wp-json/wc/v3/products/26?force=True → Status code: 200 (completed in 0.103s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 26
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for product(s).
+INFO     EcommerceAPI.plugins.entities:entities.py:758 
+
+🧹 ====================================== CLEANUP SUMMARY ======================================
+INFO     EcommerceAPI.plugins.entities:entities.py:761 📊 Created during test run: {'products': 1}
+INFO     EcommerceAPI.plugins.entities:entities.py:762 🧾 Cleanup total summary:
+INFO     EcommerceAPI.plugins.entities:entities.py:764    • product: 1 deleted (1 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:765 ✅ All test data cleanup completed.
