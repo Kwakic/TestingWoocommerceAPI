@@ -1,0 +1,31 @@
+DEBUG    EcommerceAPI.plugins.entities:entities.py:461 ✅ [coupons] Loaded API client: CouponsApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:470 ✅ [coupons] Instantiated helper with API client
+DEBUG    EcommerceAPI.src.entities.coupons.dao.coupons_dao:coupons_dao.py:50 🗄️ CouponsDAO initialized: posts=wordpress.wp_posts, postmeta=wordpress.wp_postmeta
+DEBUG    EcommerceAPI.plugins.entities:entities.py:461 ✅ [customers] Loaded API client: CustomersApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:470 ✅ [customers] Instantiated helper with API client
+DEBUG    EcommerceAPI.plugins.entities:entities.py:461 ✅ [orders] Loaded API client: OrdersApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:470 ✅ [orders] Instantiated helper with API client
+DEBUG    EcommerceAPI.src.entities.orders.dao.orders_dao:orders_dao.py:67 OrdersDAO initialized: hpos_enabled=False, posts=wordpress.wp_posts, hpos_orders=wordpress.wp_wc_orders, order_items=wordpress.wp_woocommerce_order_items, order_itemmeta=wordpress.wp_woocommerce_order_itemmeta
+DEBUG    EcommerceAPI.plugins.entities:entities.py:461 ✅ [products] Loaded API client: ProductsApi
+DEBUG    EcommerceAPI.plugins.entities:entities.py:470 ✅ [products] Instantiated helper with API client
+DEBUG    EcommerceAPI.src.entities.products.dao.products_dao:products_dao.py:45 🗄️ ProductsDAO initialized: table=wordpress.wp_posts
+INFO     EcommerceAPI.plugins.entities:entities.py:534 🔍 ENTITY DISCOVERY SUMMARY
+INFO     EcommerceAPI.plugins.entities:entities.py:536    coupons      | ✅  READY
+INFO     EcommerceAPI.plugins.entities:entities.py:536    customers    | ✅  READY
+INFO     EcommerceAPI.plugins.entities:entities.py:536    orders       | ✅  READY
+INFO     EcommerceAPI.plugins.entities:entities.py:536    products     | ✅  READY
+INFO     tests.orders.api.test_get_order:test_get_order.py:196 Requesting non-existent Order ID=999999999.
+DEBUG    EcommerceAPI.src.entities.orders.helpers.orders_helper:orders_helper.py:202 Retrieving Order 999999999
+DEBUG    EcommerceAPI.src.entities.orders.api.orders_api:orders_api.py:61 GET /orders/999999999
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ GET /wp-json/wc/v3/orders/999999999 → Status code: 404 (completed in 0.080s)
+DEBUG    EcommerceAPI.src.clients.api_client:api_client.py:625 {
+                                                                 "code": "woocommerce_rest_shop_order_invalid_id",
+                                                                 "message": "Invalid ID.",
+                                                                 "data": {
+                                                                   "status": 404
+                                                                 }
+                                                               }
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:497 Valid Order error response: code=woocommerce_rest_shop_order_invalid_id status=404
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:537 Order not-found error validated: code=woocommerce_rest_shop_order_invalid_id
+INFO     tests.orders.api.test_get_order:test_get_order.py:214 Order not-found response validated for ID=999999999.
+DEBUG    EcommerceAPI.plugins.entities:entities.py:768 🧹 No test data created — skipping teardown.
