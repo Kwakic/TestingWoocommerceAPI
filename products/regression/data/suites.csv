@@ -1,28 +1,50 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Sun Nov 01 09:01:49 UTC 2026","Sun Nov 01 09:01:49 UTC 2026","59","tests.products.api","test_get_products","","","","test_get_nonexistent_product","
-Negative test for retrieving a non-existent Product.
-
-Endpoint tested:
-    GET /products/{id}
-
-Test flow:
-    1. Request a non-existent Product ID
-    2. Validate API returns HTTP 404
-    3. Validate the Product not-found error response
-"
-"passed","Sun Nov 01 09:01:47 UTC 2026","Sun Nov 01 09:01:47 UTC 2026","171","tests.products.api","test_create_products","","","","test_create_product_with_valid_prices[100.00-79.99]","
-Verify that valid regular and sale prices are accepted during creation.
-"
-"passed","Sun Nov 01 09:01:46 UTC 2026","Sun Nov 01 09:01:46 UTC 2026","182","tests.products.api","test_create_products","","","","test_create_product_with_populated_fields","
-Verify that commonly used product fields are accepted and persisted.
-"
-"passed","Sun Nov 01 09:01:45 UTC 2026","Sun Nov 01 09:01:46 UTC 2026","330","tests.products.api","test_create_products","","","","test_create_multiple_products[3]","
+"passed","Mon Nov 02 09:16:15 UTC 2026","Mon Nov 02 09:16:16 UTC 2026","978","tests.products.api","test_create_products","","","","test_create_multiple_products[5]","
 Verify that multiple valid products can be created successfully.
 
 Each product is created through the shared factory fixture, which owns
 POST status validation, response validation and cleanup registration.
 "
-"passed","Sun Nov 01 09:01:49 UTC 2026","Sun Nov 01 09:01:51 UTC 2026","2291","tests.products.graphql","test_get_all_products","","","","test_get_all_products_pagination","
+"passed","Mon Nov 02 09:16:18 UTC 2026","Mon Nov 02 09:16:18 UTC 2026","115","tests.products.api","test_create_products","","","","test_create_product_with_invalid_type","
+Negative test: an unsupported product type should be rejected
+by WooCommerce.
+"
+"passed","Mon Nov 02 09:16:16 UTC 2026","Mon Nov 02 09:16:17 UTC 2026","302","tests.products.api","test_create_products","","","","test_create_product_with_valid_prices[49.99-39.99]","
+Verify that valid regular and sale prices are accepted during creation.
+"
+"passed","Mon Nov 02 09:16:14 UTC 2026","Mon Nov 02 09:16:14 UTC 2026","196","tests.products.api","test_create_products","","","","test_create_multiple_products[1]","
+Verify that multiple valid products can be created successfully.
+
+Each product is created through the shared factory fixture, which owns
+POST status validation, response validation and cleanup registration.
+"
+"passed","Mon Nov 02 09:16:14 UTC 2026","Mon Nov 02 09:16:15 UTC 2026","558","tests.products.api","test_create_products","","","","test_create_multiple_products[3]","
+Verify that multiple valid products can be created successfully.
+
+Each product is created through the shared factory fixture, which owns
+POST status validation, response validation and cleanup registration.
+"
+"passed","Mon Nov 02 09:16:18 UTC 2026","Mon Nov 02 09:16:18 UTC 2026","285","tests.products.api","test_create_products","","","","test_create_product_with_duplicate_sku","
+Negative test: creating a second product with an existing SKU
+should be rejected by WooCommerce.
+
+The raw API fixture is used because this test must inspect the
+actual HTTP response from the failing POST.
+"
+"passed","Mon Nov 02 09:16:16 UTC 2026","Mon Nov 02 09:16:16 UTC 2026","291","tests.products.api","test_create_products","","","","test_create_product_with_valid_prices[10.00-None]","
+Verify that valid regular and sale prices are accepted during creation.
+"
+"passed","Mon Nov 02 09:16:17 UTC 2026","Mon Nov 02 09:16:18 UTC 2026","300","tests.products.api","test_create_products","","","","test_create_product_with_unique_sku","
+Verify that a product can be created with a unique SKU and that the
+SKU is persisted through the API and database.
+"
+"passed","Mon Nov 02 09:16:16 UTC 2026","Mon Nov 02 09:16:16 UTC 2026","311","tests.products.api","test_create_products","","","","test_create_product_with_populated_fields","
+Verify that commonly used product fields are accepted and persisted.
+"
+"passed","Mon Nov 02 09:16:17 UTC 2026","Mon Nov 02 09:16:17 UTC 2026","296","tests.products.api","test_create_products","","","","test_create_product_with_valid_prices[100.00-79.99]","
+Verify that valid regular and sale prices are accepted during creation.
+"
+"passed","Mon Nov 02 09:16:21 UTC 2026","Mon Nov 02 09:16:25 UTC 2026","3764","tests.products.graphql","test_get_all_products","","","","test_get_all_products_pagination","
 Verify cursor-based pagination for the GraphQL Product collection.
 
 The test creates a controlled dataset so that pagination does not depend
@@ -45,19 +67,18 @@ GraphQL pagination uses cursors rather than the REST API's page/per_page
 parameters, so this test intentionally exercises GraphQL's native
 connection pagination instead of the REST pagination utility.
 "
-"passed","Sun Nov 01 09:01:46 UTC 2026","Sun Nov 01 09:01:46 UTC 2026","172","tests.products.api","test_create_products","","","","test_create_product_with_valid_prices[10.00-None]","
-Verify that valid regular and sale prices are accepted during creation.
-"
-"passed","Sun Nov 01 09:01:45 UTC 2026","Sun Nov 01 09:01:45 UTC 2026","112","tests.products.api","test_create_products","","","","test_create_multiple_products[1]","
-Verify that multiple valid products can be created successfully.
+"passed","Mon Nov 02 09:16:21 UTC 2026","Mon Nov 02 09:16:21 UTC 2026","104","tests.products.api","test_get_products","","","","test_get_nonexistent_product","
+Negative test for retrieving a non-existent Product.
 
-Each product is created through the shared factory fixture, which owns
-POST status validation, response validation and cleanup registration.
+Endpoint tested:
+    GET /products/{id}
+
+Test flow:
+    1. Request a non-existent Product ID
+    2. Validate API returns HTTP 404
+    3. Validate the Product not-found error response
 "
-"passed","Sun Nov 01 09:01:46 UTC 2026","Sun Nov 01 09:01:47 UTC 2026","194","tests.products.api","test_create_products","","","","test_create_product_with_valid_prices[49.99-39.99]","
-Verify that valid regular and sale prices are accepted during creation.
-"
-"passed","Sun Nov 01 09:01:47 UTC 2026","Sun Nov 01 09:01:47 UTC 2026","170","tests.products.api","test_create_products","","","","test_create_product_with_generated_sale_price","
+"passed","Mon Nov 02 09:16:17 UTC 2026","Mon Nov 02 09:16:17 UTC 2026","292","tests.products.api","test_create_products","","","","test_create_product_with_generated_sale_price","
 Verify that a Product can be created with a sale price generated by
 ProductFactory and that the generated pricing relationship is accepted
 and persisted by WooCommerce.
@@ -103,25 +124,4 @@ Test flow:
     3. Retrieve the created Product through the API.
     4. Verify the regular and generated sale prices.
     5. Verify that the sale price is lower than the regular price.
-"
-"passed","Sun Nov 01 09:01:47 UTC 2026","Sun Nov 01 09:01:47 UTC 2026","62","tests.products.api","test_create_products","","","","test_create_product_with_invalid_type","
-Negative test: an unsupported product type should be rejected
-by WooCommerce.
-"
-"passed","Sun Nov 01 09:01:47 UTC 2026","Sun Nov 01 09:01:47 UTC 2026","162","tests.products.api","test_create_products","","","","test_create_product_with_duplicate_sku","
-Negative test: creating a second product with an existing SKU
-should be rejected by WooCommerce.
-
-The raw API fixture is used because this test must inspect the
-actual HTTP response from the failing POST.
-"
-"passed","Sun Nov 01 09:01:46 UTC 2026","Sun Nov 01 09:01:46 UTC 2026","542","tests.products.api","test_create_products","","","","test_create_multiple_products[5]","
-Verify that multiple valid products can be created successfully.
-
-Each product is created through the shared factory fixture, which owns
-POST status validation, response validation and cleanup registration.
-"
-"passed","Sun Nov 01 09:01:47 UTC 2026","Sun Nov 01 09:01:47 UTC 2026","172","tests.products.api","test_create_products","","","","test_create_product_with_unique_sku","
-Verify that a product can be created with a unique SKU and that the
-SKU is persisted through the API and database.
 "
