@@ -1,5 +1,24 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Thu Oct 22 18:49:47 UTC 2026","Thu Oct 22 18:49:48 UTC 2026","261","tests.coupons.api","test_create_coupons","","","","test_create_single_coupon","
+"passed","Tue Nov 03 18:34:25 UTC 2026","Tue Nov 03 18:34:25 UTC 2026","235","tests.coupons.api","test_get_coupon","","","","test_get_coupon_by_id","
+Verify that a coupon can be retrieved by ID.
+
+Endpoint tested:
+    GET /coupons/{id}
+
+Fixture responsibilities (``create_valid_coupon``):
+    - create valid Coupon test data through the Builder / Factory path
+    - POST /coupons through the Provisioner / Helper path
+    - validate the creation response
+    - register the Coupon for automatic cleanup
+
+Test flow:
+    1. Create a valid Coupon
+    2. Retrieve the Coupon by ID
+    3. Validate the GET HTTP status
+    4. Validate the Coupon response structure
+    5. Verify the returned Coupon identity
+"
+"passed","Tue Nov 03 18:34:24 UTC 2026","Tue Nov 03 18:34:25 UTC 2026","251","tests.coupons.api","test_create_coupons","","","","test_create_single_coupon","
 Create a Coupon using the minimum scenario-specific input.
 
 The test does not build or provision the Coupon directly. The
@@ -53,23 +72,4 @@ The payload is still only in-memory data until the provisioner sends it to WooCo
 As with Products, Orders and Customers, this payload is prepared in memory first.
 The coupon is created when the provisioner sends it to WooCommerce.
 
-"
-"passed","Thu Oct 22 18:49:48 UTC 2026","Thu Oct 22 18:49:48 UTC 2026","226","tests.coupons.api","test_get_coupon","","","","test_get_coupon_by_id","
-Verify that a coupon can be retrieved by ID.
-
-Endpoint tested:
-    GET /coupons/{id}
-
-Fixture responsibilities (``create_valid_coupon``):
-    - create valid Coupon test data through the Builder / Factory path
-    - POST /coupons through the Provisioner / Helper path
-    - validate the creation response
-    - register the Coupon for automatic cleanup
-
-Test flow:
-    1. Create a valid Coupon
-    2. Retrieve the Coupon by ID
-    3. Validate the GET HTTP status
-    4. Validate the Coupon response structure
-    5. Verify the returned Coupon identity
 "
