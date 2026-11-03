@@ -46,6 +46,27 @@ pytest -m ui --browser webkit
 
 The UI tests use the same Allure integration as the API tests.
 
+Playwright tracing can be enabled locally for failed tests or for every test:
+
+```bash
+# Keep traces only for failed tests
+pytest -m ui --browser chromium --tracing retain-on-failure --output reports/playwright
+
+# Keep a trace for every test
+pytest -m ui --browser chromium --tracing on --output reports/playwright
+```
+
+For a local run, the failed test's Allure result includes its trace ZIP as an
+attachment. Download it from the test's Attachments section and inspect it with:
+
+```bash
+playwright show-trace path/to/trace.zip
+```
+
+The session-persistence test launches persistent browser profiles directly, so
+its custom contexts use the same trace mode and output directory through the
+`trace_custom_context` fixture.
+
 
 
 ### Preview a report
@@ -109,6 +130,7 @@ reusable-test-runner.yml
      ├── Allure raw results
      ├── JUnit XML
      └── structured logs
+     └── failure-only Playwright traces (opt-in Actions artifact)
      │
      ▼
 reusable-allure-report.yml
@@ -176,6 +198,17 @@ The portal displays the UI report as:
 The UI tier is supplied by the UI workflow (`tier: critical`) rather than by
 the API entity metadata registry.
 
+Failed UI test results include trace evidence without embedding trace contents
+in the published Allure report. GitHub Actions uploads the trace ZIPs as
+browser-specific `ui-<browser>-playwright-traces` artifacts with seven-day
+retention when `PLAYWRIGHT_TRACE_ARTIFACT_ENABLED` is true. CI sets it to
+`false` by default in `.github/actions/configure-ci-env/action.yml`; change it
+to `true` to enable uploads. When enabled, the Allure result links to the
+workflow run. If disabled, Allure explains how to reproduce the trace locally.
+In a public repository, enabled artifacts are publicly accessible, so only
+enable uploads when trace contents are safe for public access. The local value
+is kept in `.env` and `.env.example` for configuration consistency.
+
 ---
 
 ## 🌐 Public vs internal reports
@@ -214,14 +247,17 @@ UI browser jobs use:
 ui-chromium-allure-results
 ui-chromium-structured-logs
 ui-chromium-junit-results
+ui-chromium-playwright-traces  (opt-in, failed tests only; 7 days)
 
 ui-firefox-allure-results
 ui-firefox-structured-logs
 ui-firefox-junit-results
+ui-firefox-playwright-traces  (opt-in, failed tests only; 7 days)
 
 ui-webkit-allure-results
 ui-webkit-structured-logs
 ui-webkit-junit-results
+ui-webkit-playwright-traces  (opt-in, failed tests only; 7 days)
 ```
 
 The browser-specific UI Allure results are merged before HTML generation.
@@ -292,4 +328,4 @@ It is the fastest way to inspect the latest local execution.
 
 ---
 
-**Last updated:** 2026-09-13
+**Last updated:** 2026-11-03

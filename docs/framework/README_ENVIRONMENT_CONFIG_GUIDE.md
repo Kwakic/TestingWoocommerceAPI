@@ -116,6 +116,8 @@ At pytest startup, the framework logs:
 FAIL_ON_EMPTY_LIST      : False
 PERF_ITERATIONS         : 5
 AUTO_ALLURE_REPORT      : True
+PLAYWRIGHT_TRACE_ARTIFACT_ENABLED : False
+REQUIRE_ENV             : False
 STRUCTURED_LOGS         : True
 LOG_DIR                 : reports/logs
 KEEP_STRUCTURED_LOGS    : 3
@@ -499,7 +501,14 @@ This makes the system:
 FAIL_ON_EMPTY_LIST=false
 PERF_ITERATIONS=5
 AUTO_ALLURE_REPORT=true
+PLAYWRIGHT_TRACE_ARTIFACT_ENABLED=false
 ```
+
+`PLAYWRIGHT_TRACE_ARTIFACT_ENABLED` controls whether failed UI traces are
+uploaded from CI as GitHub Actions artifacts. CI sets its default in
+`.github/actions/configure-ci-env/action.yml`; the value in `.env` is the local
+default. In a public repository, enabling CI uploads makes those artifacts
+publicly accessible.
 
 ---
 

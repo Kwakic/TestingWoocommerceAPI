@@ -1,121 +1,34 @@
-"""
-Browser and environment fixtures for Playwright UI tests. (Browser Context + Page + UI environment URL)
+"""UI environment fixtures.
 
-This module owns the low-level Playwright lifecycle used by the UI test
-framework.
-
-Architecture:
-
-    Playwright
-        |
-        v
-    Browser
-        |
-        +-- Browser Context ---- function-scoped
-                 |
-                 +-- Page -------- function-scoped
-
-Design principles:
-
-    - The browser process is managed by pytest-playwright.
-    - Every test receives a fresh Browser Context.
-    - Every test receives a fresh Page.
-    - Browser Context is the primary isolation boundary between tests.
-    - Cookies, local storage, session storage, and authentication state are
-      isolated between tests.
-    - Tests never create or close Browser, BrowserContext, or Page objects
-      themselves.
-    - The active UI environment follows the project's API_ENV convention.
+Browser, BrowserContext, and Page lifecycles are provided by
+``pytest-playwright``. Keeping those fixtures plugin-managed enables its
+per-test diagnostics (including failure-only Trace Viewer output) while
+preserving a fresh isolated context and page for each test.
 """
 
 import os
-from collections.abc import Generator
+import re
+import shutil
+from collections.abc import Callable, Generator, Iterator
+from contextlib import AbstractContextManager, contextmanager
+from pathlib import Path
 
 import pytest
-from playwright.sync_api import Browser, BrowserContext, Page
+from playwright.sync_api import BrowserContext
 
 from tests.ui.config.config_ui import UI_HOSTS
 
 
-@pytest.fixture
-def context(browser: Browser) -> Generator[BrowserContext, None, None]:
-    """
-    Create an isolated Playwright Browser Context for one test.
-
-    A Browser Context behaves like an independent browser profile. Each
-    context has its own cookies, local storage, session storage, and
-    authentication state.
-
-    Creating a new context for every test prevents authentication state from
-    leaking between tests. This is particularly important for UI tests that
-    exercise different customer profiles or access roles.
-
-    The Browser instance itself is provided and managed by pytest-playwright.
-    This fixture owns only the lifecycle of the test-scoped Browser Context.
-
-    Args:
-        browser: Browser instance provided by pytest-playwright.
-
-    Yields:
-        BrowserContext: Isolated context available to the current test.
-
-    """
-    context = browser.new_context()
-
-    try:
-        yield context
-    finally:
-        context.close()
-
-
-@pytest.fixture
-def page(context: BrowserContext) -> Generator[Page, None, None]:
-    """
-    Create an isolated Playwright Page for one test.
-
-    The page belongs to the test-scoped Browser Context created by the
-    ``context`` fixture.
-
-    Role and profile fixtures build on this generic page fixture. They should
-    authenticate or configure the page but must not create their own browser
-    lifecycle.
-
-    Args:
-        context: Isolated Browser Context provided by the ``context`` fixture.
-
-    Yields:
-        Page: Active Playwright page for the current test.
-
-    """
-    page = context.new_page()
-
-    try:
-        yield page
-    finally:
-        page.close()
-
-
 @pytest.fixture(scope="session")
 def ui_base_url() -> str:
-    """
-    Return the base URL for the active UI test environment.
+    """Return the storefront URL configured for the active UI environment.
 
-    The UI framework uses the same ``API_ENV`` convention as the API test
-    framework. The environment determines which storefront the Playwright
-    tests exercise.
-
-    ``API_ENV`` is intentionally resolved once per test session because the
-    target environment should remain constant for the complete pytest run.
-
-    If ``API_ENV`` is not provided, ``test`` is used as the default environment.
-
-    Returns:
-        str: Storefront base URL configured for the active environment.
+    The UI framework follows the same ``API_ENV`` convention as the API test
+    framework. If it is not set, the local ``test`` environment is used.
 
     Raises:
         ValueError: If ``API_ENV`` does not correspond to a configured UI
             environment.
-
     """
     environment = os.getenv("API_ENV", "test")
 
@@ -127,3 +40,64 @@ def ui_base_url() -> str:
             f"Unsupported UI environment '{environment}'. "
             f"Supported environments: {supported_environments}"
         ) from exc
+
+
+@pytest.fixture
+def trace_custom_context(
+    request: pytest.FixtureRequest,
+    tmp_path: Path,
+) -> Iterator[Callable[[BrowserContext, str], AbstractContextManager[None]]]:
+    """Trace an explicitly managed context using pytest-playwright settings.
+
+    Most tests should use pytest-playwright's ``context`` and ``page``
+    fixtures, which are traced automatically by ``--tracing``. This helper is
+    for exceptional tests that must launch their own context (for example, a
+    persistent profile restart scenario). With ``retain-on-failure``, it keeps
+    every recorded phase only when the complete test fails.
+    """
+    tracing_mode = request.config.getoption("tracing", default="off")
+    output_dir = Path(request.config.getoption("output", default="test-results"))
+    test_id = re.sub(r"[^A-Za-z0-9_.-]+", "_", request.node.nodeid)
+    temporary_dir = tmp_path / "playwright-traces"
+    temporary_traces: list[Path] = []
+
+    @contextmanager
+    def record(
+        context: BrowserContext,
+        phase: str,
+    ) -> Generator[None, None, None]:
+        if tracing_mode == "off":
+            yield
+            return
+
+        temporary_dir.mkdir(parents=True, exist_ok=True)
+        context.tracing.start(screenshots=True, snapshots=True, sources=True)
+        trace_path = temporary_dir / f"{phase}.zip"
+        try:
+            yield
+        except BaseException:
+            context.tracing.stop(path=trace_path)
+            temporary_traces.append(trace_path)
+            raise
+        else:
+            # Keep each phase temporarily until pytest knows whether the
+            # whole test passed. A later phase may fail and need both traces.
+            context.tracing.stop(path=trace_path)
+            temporary_traces.append(trace_path)
+
+    yield record
+
+    call_report = getattr(request.node, "rep_call", None)
+    setup_report = getattr(request.node, "rep_setup", None)
+    test_failed = bool(call_report and call_report.failed) or bool(
+        setup_report and setup_report.failed
+    )
+    retain_traces = tracing_mode == "on" or (
+        tracing_mode == "retain-on-failure" and test_failed
+    )
+
+    if retain_traces and temporary_traces:
+        destination = output_dir / "custom-traces" / test_id
+        destination.mkdir(parents=True, exist_ok=True)
+        for trace_path in temporary_traces:
+            shutil.move(str(trace_path), str(destination / trace_path.name))

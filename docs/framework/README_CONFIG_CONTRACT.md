@@ -33,7 +33,8 @@ This contract exists to guarantee:
 └──────────────┬───────────────┘
                ↓  (strings only)
 ┌──────────────────────────────┐
-│ plugins/_config.py           │
+│ EcommerceAPI/src/configs/    │
+│ runtime_config.py           │
 │  - env parsing               │
 │  - defaults                  │
 │  - validation                │
@@ -50,7 +51,8 @@ This contract exists to guarantee:
 
 ### **Key rule**
 
-> All environment variables are interpreted **exactly once** — in `plugins/_config.py`.
+> Environment variables are normalized and frozen in
+> `EcommerceAPI/src/configs/runtime_config.py`.
 
 ---
 
@@ -60,7 +62,7 @@ This contract exists to guarantee:
 |-------|----------------|
 | `.env` / CI | Declare intent only (values as strings) |
 | OS / Runner | Provide variables |
-| `_config.py` | Parse, normalize, validate, freeze |
+| `runtime_config.py` | Parse, normalize, validate, freeze |
 | Plugins | Consume resolved values |
 | Tests | **Never** read env vars directly |
 
@@ -81,7 +83,8 @@ Framework configuration values must:
 
 If a value affects framework behavior:
 
-> It **must** be defined, resolved, and exposed through `runtime_config.py`.
+> It **must** be defined, resolved, and exposed through
+> `EcommerceAPI/src/configs/runtime_config.py`.
 
 ### Compatibility
 
@@ -97,7 +100,7 @@ This compatibility lookup exists only to support older configurations and **must
 
 New framework code should use `API_ENV`.
 
-> It **must** appear in `_config.py`. **No exceptions.**
+> It **must** appear in `runtime_config.py`. **No exceptions.**
 
 ---
 
@@ -109,7 +112,7 @@ New framework code should use `API_ENV`.
 | Tests calling `os.getenv()` |
 | Helpers parsing env vars |
 | Multiple defaults for the same flag |
-| "Convenience" config accessors outside `_config.py` |
+| "Convenience" config accessors outside `runtime_config.py` |
 
 > **Violating these rules breaks determinism and CI parity.**
 
@@ -128,9 +131,18 @@ All flags are:
 ### **Example categories**
 
 - **Test behavior** (`FAIL_ON_EMPTY_LIST`, `PERF_ITERATIONS`)
-- **Logging** (`STRUCTURED_LOGS`, `LOG_DIR`, `KEEP_STRUCTURED_LOGS`)
-- **Reporting** (`AUTO_ALLURE_REPORT`)
+- **Logging** (`ENABLE_STRUCTURED_LOGS`, `LOG_DIR`, `KEEP_STRUCTURED_LOGS`)
+- **Reporting** (`AUTO_ALLURE_REPORT`, `PLAYWRIGHT_TRACE_ARTIFACT_ENABLED`)
 - **Safety** (`REQUIRE_ENV`)
+
+| Variable | Type | Default | Meaning |
+|----------|------|---------|---------|
+| `PLAYWRIGHT_TRACE_ARTIFACT_ENABLED` | Boolean | `false` | Upload failed UI trace ZIPs as a CI artifact and show the artifact link in Allure. |
+
+Playwright trace recording is controlled separately by pytest's `--tracing`
+option. The flag above controls CI artifact publishing; CI sets its default in
+`.github/actions/configure-ci-env/action.yml`, and local configuration lives in
+`.env` / `.env.example`.
 
 ---
 
@@ -142,7 +154,7 @@ The framework distinguishes between:
 - 🔒 Static
 - 🌍 Env-driven
 - ❄️ Frozen at startup
-- 📂 Lives in `_config.py`
+- 📂 Lives in `runtime_config.py`
 
 ### **Runtime metadata**
 - ⚡ Dynamic
@@ -164,7 +176,7 @@ Contextual logging values (node id, correlation id):
 
 - ✅ Are **runtime context**
 - ✅ Are **dynamic**
-- ❌ Must **NOT** be defined in `_config.py`
+- ❌ Must **NOT** be defined in `runtime_config.py`
 - ❌ Must **NOT** read env vars
 
 They live in `utilities/log_context.py` and are populated by:
@@ -189,7 +201,7 @@ By following this contract, the framework guarantees:
 ## 🔟 Final Principle (Non-Negotiable)
 
 > **If a value affects framework behavior,
-> it must be defined, parsed, and logged in `_config.py`.**
+> it must be defined, parsed, and logged in `runtime_config.py`.**
 
 **Everything else is runtime state.**
 

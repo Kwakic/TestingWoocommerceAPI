@@ -6,6 +6,11 @@ description: >
   including logging behavior, Allure integration,
   runtime metadata, and test execution settings.
 
+outputs:
+  playwright_trace_artifact_enabled:
+    description: Whether failed UI Playwright traces should be uploaded as an artifact.
+    value: ${{ steps.configure.outputs.playwright_trace_artifact_enabled }}
+
 runs:
   using: composite
 
@@ -24,6 +29,7 @@ runs:
     # - performance tests
     # --------------------------------------------------
     - name: Configure environment variables
+      id: configure
       shell: bash
       run: |
 
@@ -34,6 +40,17 @@ runs:
         # reusable-allure-report.yml
         # ----------------------------------------------
         echo "AUTO_ALLURE_REPORT=false" >> $GITHUB_ENV
+
+        # ----------------------------------------------
+        # Upload failed UI Playwright traces (opt-in)
+        #
+        # Set this to true only when captured page and
+        # network data are safe to share. On a public
+        # repository, anyone can access uploaded artifacts.
+        # ----------------------------------------------
+        PLAYWRIGHT_TRACE_ARTIFACT_ENABLED=true
+        echo "PLAYWRIGHT_TRACE_ARTIFACT_ENABLED=$PLAYWRIGHT_TRACE_ARTIFACT_ENABLED" >> "$GITHUB_ENV"
+        echo "playwright_trace_artifact_enabled=$PLAYWRIGHT_TRACE_ARTIFACT_ENABLED" >> "$GITHUB_OUTPUT"
 
         # ----------------------------------------------
         # Enable structured logging

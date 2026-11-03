@@ -143,6 +143,13 @@ The Playwright Allure report is published separately:
 
 The UI report combines browser-specific results from the Chromium, Firefox, and WebKit CI matrix when the full browser policy applies.
 
+When Playwright tracing is enabled, local Allure results attach a failed test's
+trace ZIP to that test. CI keeps trace contents out of the published QA Portal
+and uploads failed-test traces as seven-day GitHub Actions artifacts only when
+`PLAYWRIGHT_TRACE_ARTIFACT_ENABLED=true`. CI defaults to off in
+`.github/actions/configure-ci-env/action.yml`; change that value to enable it.
+In a public repository, enabled trace artifacts are publicly accessible.
+
 The portal is **metadata-driven**: when additional entities publish supported operational suites such as Smoke, Integration, Regression, or Performance, the corresponding reports can appear without requiring manual HTML or README changes.
 
 > Contract, Security, and Preflight intentionally remain artifact-oriented CI outputs and are not displayed in the public QA Portal.

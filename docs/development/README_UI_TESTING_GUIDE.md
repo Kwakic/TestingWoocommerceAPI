@@ -6,7 +6,7 @@
 > **Scope:** Playwright UI testing with pytest
 > **Current UI coverage:** Guest storefront + authenticated customer flows + admin authentication
 > **Browser coverage:** Chromium, Firefox, WebKit
-> **Last updated:** 2026-10-19
+> **Last updated:** 2026-11-03
 
 This document is the canonical guide for the browser-based UI test layer.
 
@@ -239,7 +239,7 @@ root conftest.py
        └── tests/ui/fixtures/
               │
               ├── browser.py
-              │      └── browser context + page lifecycle
+              │      └── UI environment URL + custom-context tracing helper
               │
               ├── authentication.py
               │      └── shared authentication implementation
@@ -256,8 +256,10 @@ root conftest.py
 
 ### Browser lifecycle
 
-The `browser` fixture is supplied by `pytest-playwright`. The UI fixture layer
-creates a fresh `BrowserContext` and `Page` for every test.
+The `browser`, `context`, and `page` fixtures are supplied and managed by
+`pytest-playwright`. UI tests use the plugin-managed `context` and `page`
+fixtures so built-in browser options, including tracing, apply consistently.
+The plugin provides a fresh `BrowserContext` and `Page` for every test.
 
 ```text
 pytest-playwright
@@ -266,7 +268,7 @@ pytest-playwright
    browser
       │
       ▼
-   context       ← fresh per test
+   context       ← plugin-managed, fresh per test
       │
       ▼
     page         ← fresh per test
@@ -352,7 +354,7 @@ it needs a fresh customer, independently of the role router.
 
 | Fixture module | Responsibility |
 |---|---|
-| `browser.py` | Browser context and page lifecycle |
+| `browser.py` | UI environment URL and tracing helper for exceptional custom contexts |
 | `authentication.py` | Shared authentication implementation |
 | `customers.py` | Customer authentication helpers, `dynamic_customer`, and `dynamic_customer_factory` fixtures |
 | `resources.py` | Function-scoped cleanup for resources created through the UI |
@@ -910,6 +912,20 @@ pytest -m ui --browser firefox
 pytest -m ui --browser webkit
 ```
 
+To retain Playwright traces only for failed tests, run:
+
+```bash
+pytest -m ui --browser chromium --tracing retain-on-failure --output reports/playwright
+```
+
+The plugin-managed `context` and `page` fixtures keep their normal per-test
+isolation. `tests/ui/fixtures/browser.py` also provides
+`trace_custom_context` for the session-persistence test, which deliberately
+launches persistent profiles to verify browser-restart behavior. That helper
+uses the same `--tracing` mode and output directory. With
+`retain-on-failure`, it keeps traces from all phases if the overall test fails,
+and discards them if the test passes.
+
 For debugging:
 
 ```bash
@@ -943,6 +959,38 @@ The reusable runner exposes the browser explicitly and passes it to pytest:
 ```text
 --browser <browser>
 ```
+
+📍 **For the UI suite only**, the reusable runner also passes:
+
+```text
+--tracing retain-on-failure --output reports/playwright
+```
+
+This keeps the API and shared test runs unchanged. On a failed UI test,
+the trace is saved under `reports/playwright/`. GitHub Actions uploads traces
+to a browser-specific artifact named `ui-<browser>-playwright-traces` for seven
+days when `PLAYWRIGHT_TRACE_ARTIFACT_ENABLED` is true. The CI default is
+`false`, configured in `.github/actions/configure-ci-env/action.yml`. Change
+that value to `true` to enable uploads; no GitHub repository setting is
+required. The local `.env` value controls local framework configuration, while
+the CI action sets the hosted-runner value. In a public repository, enabled
+trace artifacts are publicly accessible, so enable uploads only when the
+captured page and network data are safe to publish.
+
+When enabled, download the artifact from the matching Chromium, Firefox, or
+WebKit job, then open a trace with:
+
+```bash
+playwright show-trace path/to/trace.zip
+```
+
+The UI Allure report is published to the public QA Portal, so CI does not embed
+trace ZIP contents in Allure. When the flag is enabled in
+`.github/actions/configure-ci-env/action.yml`, a failed test's Allure result
+links to the GitHub Actions run containing the trace artifact. When disabled,
+Allure explains how to reproduce the trace locally. Traces can contain page and
+network data; keep uploads disabled unless those contents are safe for the
+repository's audience.
 
 The CI job installs the selected Playwright browser before execution:
 
@@ -1022,10 +1070,14 @@ Each browser execution also produces browser-specific diagnostic artifacts:
 ```text
 ui-<browser>-structured-logs
 ui-<browser>-junit-results
+ui-<browser>-playwright-traces  (opt-in, failed tests only; 7 days)
 ```
 
-This keeps browser failures traceable to the exact CI execution while still
-providing one combined Allure view for the UI suite.
+Playwright trace ZIPs are uploaded separately from Allure results because they
+can contain page and network details. The Allure result includes a link to the
+GitHub Actions run when the artifact toggle is enabled. This keeps browser
+failures traceable to the exact CI execution while still providing one combined
+Allure view for the UI suite.
 
 ### Browser coverage
 
@@ -1354,8 +1406,10 @@ clear reason for them.
 1. **Tests describe business behavior.**
 2. **Page Objects own page-level UI interaction.**
 3. **Components represent genuinely reusable UI regions.**
-4. **Fixtures own browser lifecycle, isolation and authentication.**
-5. **Tests do not manage browser lifecycle.**
+4. **Fixtures own the standard browser lifecycle, isolation and authentication.**
+5. **Tests use plugin-managed browser fixtures; explicit browser lifecycle
+   management is reserved for scenarios that verify browser restart or profile
+   persistence, and those contexts use `trace_custom_context`.**
 6. **Tests do not contain shared credentials.**
 7. **UI tests are organized by business domain.**
 8. **Browser selection belongs to execution configuration.**

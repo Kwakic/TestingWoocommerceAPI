@@ -184,8 +184,6 @@ jobs:
 
     timeout-minutes: ${{ inputs.timeout_minutes }}
 
-
-
     steps:
 
       # --------------------------------------------------
@@ -297,6 +295,7 @@ jobs:
       # - environment flags
       # --------------------------------------------------
       - name: Configure CI environment
+        id: configure_ci_env
         uses: ./.github/actions/configure-ci-env
 
       # --------------------------------------------------
@@ -522,9 +521,17 @@ jobs:
           # ----------------------------------------------
           set +e
 
+          # Playwright traces are enabled only for the standalone UI suite.
+          # API and shared test jobs keep using their existing diagnostics.
+          PYTEST_TRACE_ARGS=()
+          if [[ "${{ inputs.suite_name }}" == "ui" ]]; then
+            PYTEST_TRACE_ARGS+=(--tracing retain-on-failure --output reports/playwright)
+          fi
+
           python -m pytest "$TEST_TARGET" \
             -m "${{ inputs.pytest_markers }}" \
             --browser "${{ inputs.browser }}" \
+            "${PYTEST_TRACE_ARGS[@]}" \
             -ra \
             ${{ inputs.pytest_extra_args }} \
             --durations=${{ inputs.pytest_durations }} \
@@ -648,8 +655,26 @@ jobs:
             || format('{0}-{1}-junit-results', inputs.entity, inputs.suite_name) }}
           path: reports/junit/results.xml
           if-no-files-found: warn
+
       # --------------------------------------------------
-      # 12. Cleanup Docker environment
+      # 12. Publish failure-only Playwright traces
+      # --------------------------------------------------
+      # This opt-in may publish traces publicly when the
+      # repository is public. Enable only when trace content
+      # is safe for public access. Passing tests leave no files.
+      - name: Upload Playwright traces
+        if: >-
+          always() && inputs.suite_name == 'ui' &&
+          steps.configure_ci_env.outputs.playwright_trace_artifact_enabled == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-${{ inputs.browser }}-playwright-traces
+          path: reports/playwright/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      # --------------------------------------------------
+      # 13. Cleanup Docker environment
       #
       # Shared composite action:
       # - stop containers
