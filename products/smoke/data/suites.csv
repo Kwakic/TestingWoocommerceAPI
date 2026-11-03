@@ -1,5 +1,5 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Tue Nov 03 18:34:34 UTC 2026","Tue Nov 03 18:34:34 UTC 2026","281","tests.products.api","test_get_products","","","","test_get_product_by_id","
+"passed","Tue Nov 03 20:48:43 UTC 2026","Tue Nov 03 20:48:43 UTC 2026","298","tests.products.api","test_get_products","","","","test_get_product_by_id","
 Verify that a Product can be retrieved successfully by ID.
 
 Endpoint tested:
@@ -17,7 +17,7 @@ Test flow:
     4. Validate the Product response structure
     5. Verify the returned Product identity
 "
-"passed","Tue Nov 03 18:34:33 UTC 2026","Tue Nov 03 18:34:34 UTC 2026","303","tests.products.api","test_create_products","","","","test_create_single_simple_product","
+"passed","Tue Nov 03 20:48:43 UTC 2026","Tue Nov 03 20:48:43 UTC 2026","345","tests.products.api","test_create_products","","","","test_create_single_simple_product","
 Create a simple product using the minimum valid payload.
 
 The fixture `create_valid_product` already performs:
