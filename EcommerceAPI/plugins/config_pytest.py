@@ -87,6 +87,10 @@ def pytest_sessionstart(session):
     log.info("FAIL_ON_EMPTY_LIST      : %s", cfg.FAIL_ON_EMPTY_LIST)
     log.info("PERF_ITERATIONS         : %s", cfg.PERF_ITERATIONS)
     log.info("AUTO_ALLURE_REPORT      : %s", cfg.AUTO_ALLURE_REPORT)
+    log.info(
+        "PLAYWRIGHT_TRACE_ARTIFACT_ENABLED : %s",
+        cfg.PLAYWRIGHT_TRACE_ARTIFACT_ENABLED,
+    )
     log.info("REQUIRE_ENV             : %s", cfg.REQUIRE_ENV)
 
     log.info("STRUCTURED_LOGS         : %s", cfg.ENABLE_STRUCTURED_LOGS)

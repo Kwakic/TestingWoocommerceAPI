@@ -71,6 +71,7 @@ class FrameworkConfig:
 
     # Reporting
     AUTO_ALLURE_REPORT: bool
+    PLAYWRIGHT_TRACE_ARTIFACT_ENABLED: bool
 
     # CI / safety
     REQUIRE_ENV: bool
@@ -142,6 +143,9 @@ def _load_config_from_env() -> FrameworkConfig:
         FAIL_ON_EMPTY_LIST=env_bool("FAIL_ON_EMPTY_LIST", False),
         PERF_ITERATIONS=int(os.getenv("PERF_ITERATIONS", "5")),
         AUTO_ALLURE_REPORT=env_bool("AUTO_ALLURE_REPORT", True),
+        PLAYWRIGHT_TRACE_ARTIFACT_ENABLED=env_bool(
+            "PLAYWRIGHT_TRACE_ARTIFACT_ENABLED", False
+        ),
         REQUIRE_ENV=env_bool("REQUIRE_ENV", False),
     )
 

@@ -1,11 +1,12 @@
 # PREFLIGHT TEST (framework sanity)
 
 """
-Tests for structured logging metadata and LAST_STRUCTURED_LOG exposure.
+Tests for runtime configuration, structured logging metadata, and LAST_STRUCTURED_LOG exposure.
 
 preflight: verify environment/test framework before suite runs
 
 These tests validate:
+- Runtime configuration defaults and parses the UI trace artifact flag.
 - GLOBAL_METADATA receives all expected keys after attach_global_logging_metadata is called.
 - configure_logging exposes the most-recent structured logfile path via LAST_STRUCTURED_LOG
   when structured logging is enabled (best-effort, uses a temporary LOG_DIR).
@@ -23,6 +24,21 @@ from EcommerceAPI.src.utils import custom_logger
 pytestmark = [pytest.mark.preflight, pytest.mark.shared]
 
 log = logging.getLogger(__name__)
+
+
+def test_playwright_trace_artifact_flag_defaults_off_and_parses_true(monkeypatch):
+    from EcommerceAPI.src.configs.runtime_config import get_config
+
+    # Keep the module-level configuration cache in sync with the temporary env.
+    with monkeypatch.context() as environment:
+        environment.delenv("PLAYWRIGHT_TRACE_ARTIFACT_ENABLED", raising=False)
+        assert get_config(reload=True).PLAYWRIGHT_TRACE_ARTIFACT_ENABLED is False
+
+        environment.setenv("PLAYWRIGHT_TRACE_ARTIFACT_ENABLED", "true")
+        assert get_config(reload=True).PLAYWRIGHT_TRACE_ARTIFACT_ENABLED is True
+
+    # Restore the cache after monkeypatch restores the process environment.
+    get_config(reload=True)
 
 
 def test_attach_global_metadata_contains_expected_keys():
