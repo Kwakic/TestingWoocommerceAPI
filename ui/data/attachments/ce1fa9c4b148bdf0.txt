@@ -1,0 +1,10 @@
+DEBUG    EcommerceAPI.src.entities.customers.helpers.customers_helper:customers_helper.py:213 ⚙️ Creating customer with payload keys: ['email', 'password', 'billing', 'shipping']
+DEBUG    EcommerceAPI.src.entities.customers.api.customers_api:customers_api.py:74 📡 POST /customers payload_keys=['email', 'password', 'billing', 'shipping']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/customers → Status code: 201 (completed in 0.252s)
+INFO     EcommerceAPI.src.entities.customers.validators.customer_validators:customer_validators.py:97 ✅ Customer structure valid: id=30, email=testuser_zbksbkvnlg@supersqa.com
+DEBUG    EcommerceAPI.plugins.api.customers:customers.py:254 ℹ️ Registered customers with ID: 30 for cleanup.
+DEBUG    EcommerceAPI.src.entities.products.helpers.products_helper:products_helper.py:360 ⚙️ Creating product with payload keys: ['name', 'type', 'status', 'regular_price', 'sku', 'description', 'short_description']
+DEBUG    EcommerceAPI.src.entities.products.api.products_api:products_api.py:74 📡 POST /products payload_keys=['name', 'type', 'status', 'regular_price', 'sku', 'description', 'short_description']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:612 ✅ POST /wp-json/wc/v3/products → Status code: 201 (completed in 0.188s)
+INFO     EcommerceAPI.src.entities.products.validators.product_validators:product_validators.py:99 ✅ Product structure valid: id=32, name=UI Checkout Shipping Product 8ece295b, sku=ui-checkout-shipping-8ece295b
+DEBUG    EcommerceAPI.plugins.api.products:products.py:323 ℹ️ Registered product with ID: 32 for cleanup.
