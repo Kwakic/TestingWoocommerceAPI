@@ -105,34 +105,89 @@ class CheckoutPage:
         street_address: str,
         postal_code: str,
         city: str,
+        country: str,
+        province: str | None = None,
     ) -> None:
         """
-        Fill the shipping address shown in the Checkout Block.
+        Fill in the shipping address in the WooCommerce Checkout Block.
 
-        WooCommerce may display a saved shipping address as a summary
-        instead of showing the editable fields. When that happens, open
-        the shipping address form before entering the supplied address.
+        For logged-in customers, WooCommerce may initially display their
+        saved shipping address as a summary rather than editable fields.
+        If so, open the address editor before filling in the new address.
+
+        Select the country in the Checkout Block before entering the
+        address because the available fields depend on the selected country.
+        Blur the postcode and allow the caller to wait for the resulting
+        shipping option, which is the visible outcome of the address update.
         """
         first_name_input = self.shipping_address_section.get_by_label("First name")
 
         if not first_name_input.is_visible():
             self.edit_shipping_address()
 
+        # Select the country first so WooCommerce renders the correct
+        # country-specific fields (for example, Postal code for Spain).
+        # The Checkout Block country control is rendered differently from
+        # the Select2 control on the My Account address page. Use the
+        # country field container exposed by the Checkout Block.
+        self.page.locator("#shipping-country").get_by_text(
+            "Country/Region",
+            exact=True,
+        ).click()
+
+        self.page.get_by_role(
+            "option",
+            name=country,
+            exact=True,
+        ).click()
+
+        postal_code_input = self.shipping_address_section.get_by_label(
+            "Postal code", exact=True
+        )
+        expect(postal_code_input).to_be_visible(timeout=10_000)
+
         first_name_input.fill(first_name)
         self.shipping_address_section.get_by_label("Last name").fill(last_name)
         self.shipping_address_section.get_by_label("Address", exact=True).fill(
             street_address
         )
-        self.shipping_address_section.get_by_label("Postal code", exact=True).fill(
-            postal_code
-        )
+        postal_code_input.fill(postal_code)
+        # Checkout may process the postcode when the field loses focus.
+        postal_code_input.press("Tab")
         self.shipping_address_section.get_by_label("City").fill(city)
 
+        if province is not None:
+            province_input = self.shipping_address_section.get_by_role(
+                "combobox", name=re.compile(r"Province", re.I)
+            )
+            province_input.fill(province)
+
+            # Selecting a province schedules the final customer-address update.
+            # Wait for it before the caller checks shipping rates or submits the order.
+            with self.page.expect_response(
+                lambda response: (
+                    "/wc/store/v1/batch" in response.url
+                    and response.request.method == "POST"
+                ),
+                timeout=30_000,
+            ):
+                self.page.get_by_role("option", name=province, exact=True).click()
+
     def should_have_shipping_option(self) -> None:
-        """Verify that the configured flat-rate shipping option is available."""
-        expect(
-            self.page.get_by_role("radio", name=re.compile(r"Flat rate", re.I))
-        ).to_be_visible()
+        """Wait for the flat-rate option and shipping update to finish."""
+        flat_rate = self.page.get_by_role(
+            "radio",
+            name=re.compile(r"Flat rate", re.I),
+        )
+        # Shipping-rate calculation can exceed Playwright's default
+        # 5-second assertion timeout while WooCommerce updates the cart.
+        expect(flat_rate).to_be_visible(timeout=30_000)
+
+        shipping_spinner = self.page.locator(
+            "#shipping-option .wc-block-components-spinner"
+        )
+        expect(shipping_spinner).to_be_hidden(timeout=30_000)
+        expect(self.place_order_button).to_be_enabled(timeout=30_000)
 
     def add_order_note(self, note: str) -> None:
         """Enable the order-note field and enter the supplied note."""
@@ -141,8 +196,9 @@ class CheckoutPage:
 
     def place_order(self) -> None:
         """Submit the order and wait for WooCommerce order confirmation."""
-        self.place_order_button.click()
-        self.page.wait_for_url(
-            re.compile(r".*/checkout/order-received/\d+/.*"),
+        with self.page.expect_navigation(
+            url=re.compile(r".*/checkout/order-received/\d+/.*"),
             wait_until="domcontentloaded",
-        )
+            timeout=30_000,
+        ):
+            self.place_order_button.click()

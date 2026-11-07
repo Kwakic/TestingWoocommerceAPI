@@ -885,8 +885,9 @@ the workaround is kept at the appropriate Page Object or infrastructure
 boundary.
 
 ---
-
 # 11. 💻 Local Execution
+
+## Environment bootstrap
 
 The recommended local bootstrap remains:
 
@@ -894,52 +895,111 @@ The recommended local bootstrap remains:
 make run
 ```
 
-This prepares the Dockerized WooCommerce environment, installs the framework
-dependencies and Playwright browser binaries, provisions the required UI/E2E
-environment and baseline data, installs the repository pre-commit Git hook, and
-runs pytest.
+This prepares the complete local testing environment:
 
-The WooCommerce bootstrap also enables Cash on Delivery so checkout tests have
-a deterministic payment method available. The Git hook is a local developer
-tool; CI does not depend on `.git/hooks` and runs its checks directly.
+- Starts the Dockerized WooCommerce environment.
+- Installs framework dependencies and Playwright browser binaries.
+- Provisions the required UI/E2E environment and baseline data.
+- Enables Cash on Delivery as a deterministic payment method for checkout tests.
+- Installs the repository pre-commit Git hook.
+- Executes pytest.
 
-After the environment is prepared, browser-specific UI runs can be executed
-directly:
+> **Note:** The pre-commit Git hook is a local developer tool. CI does not depend on `.git/hooks`; it executes its checks directly through GitHub Actions.
+
+## Running UI tests locally
+
+Once the environment is ready, execute the UI suite against the desired browser:
 
 ```bash
+# Chromium
 pytest -m ui --browser chromium
+
+# Firefox
 pytest -m ui --browser firefox
+
+# WebKit
 pytest -m ui --browser webkit
 ```
 
-To retain Playwright traces only for failed tests, run:
-
-```bash
-pytest -m ui --browser chromium --tracing retain-on-failure --output reports/playwright
-```
-
-The plugin-managed `context` and `page` fixtures keep their normal per-test
-isolation. `tests/ui/fixtures/browser.py` also provides
-`trace_custom_context` for the session-persistence test, which deliberately
-launches persistent profiles to verify browser-restart behavior. That helper
-uses the same `--tracing` mode and output directory. With
-`retain-on-failure`, it keeps traces from all phases if the overall test fails,
-and discards them if the test passes.
-
-For debugging:
+For interactive debugging, run the browser in headed mode:
 
 ```bash
 pytest -m ui --browser chromium --headed
 ```
 
-A developer can therefore choose the browser and headed/headless mode locally
-without changing framework code.
+Without `--headed`, Playwright runs headlessly.
+
+## Playwright tracing
+
+Playwright tracing can capture browser activity to help investigate failed tests, including actions, snapshots, network activity, and other diagnostic information.
+
+To retain traces only when a test fails:
+
+```bash
+pytest -m ui --browser chromium \
+    --tracing retain-on-failure \
+    --output reports/playwright
+```
+
+The `pytest-playwright` plugin supports three tracing modes:
+
+| Option | Behaviour |
+|---|---|
+| `on` | Records traces for every test |
+| `off` | Disables tracing |
+| `retain-on-failure` | Keeps traces only for failed tests |
+
+**Opening a trace**
+
+When a test fails, locate the generated `trace.zip` file under `reports/playwright/`.
+
+You can inspect it using either:
+
+- **Online Trace Viewer:** [https://trace.playwright.dev/](https://trace.playwright.dev/) — open the generated trace archive.
+- **Local Trace Viewer:**
+
+```bash
+playwright show-trace path/to/trace.zip
+
+# example:
+playwright show-trace reports/playwright/tests-ui-tests-shopping-checkout-test-customer-checkout-py-test-customer-can-complete-checkout-with-different-shipping-address-firefox/trace.zip
+
+# alternatively:
+python -m playwright show-trace trace.zip
+```
+
+### Browser context isolation and custom tracing
+
+The standard `context` and `page` fixtures remain managed by `pytest-playwright`, preserving their normal per-test isolation.
+
+The framework also provides `trace_custom_context` in `tests/ui/fixtures/browser.py` for the session-persistence test.
+
+This test deliberately launches persistent browser profiles to verify browser-restart behavior. Because it manages its own browser contexts, the helper applies the same `--tracing` mode and output directory explicitly.
+
+With `retain-on-failure`:
+
+- Traces from all phases are retained if the overall test fails.
+- Traces are discarded if the overall test passes.
+
+This allows both standard and custom browser contexts to follow the same tracing policy.
+
+**Local execution summary**
+
+Developers can independently choose:
+
+- Browser: Chromium, Firefox, or WebKit.
+- Execution mode: Headed or headless.
+- Tracing: Disabled, always enabled, or retained on failure.
+
+All of this is configurable through pytest command-line options without changing framework code.
 
 ---
 
 # 12. 🤖 CI Execution
 
-UI tests run through:
+## Execution architecture
+
+UI tests run through a dedicated GitHub Actions workflow, separate from the API entity matrix.
 
 ```text
 .github/workflows/ui.yml
@@ -952,47 +1012,98 @@ pytest-playwright
         │
         ▼
 Selected browser
+        │
+        ▼
+UI test execution
 ```
 
-The reusable runner exposes the browser explicitly and passes it to pytest:
+The reusable runner exposes browser selection explicitly and passes it to pytest:
 
 ```text
 --browser <browser>
 ```
 
-📍 **For the UI suite only**, the reusable runner also passes:
+### UI-specific tracing configuration
+
+For the UI suite only, the reusable runner also passes:
 
 ```text
 --tracing retain-on-failure --output reports/playwright
 ```
 
-This keeps the API and shared test runs unchanged. On a failed UI test,
-the trace is saved under `reports/playwright/`. GitHub Actions uploads traces
-to a browser-specific artifact named `ui-<browser>-playwright-traces` for seven
-days when `PLAYWRIGHT_TRACE_ARTIFACT_ENABLED` is true. The CI default is
-`false`, configured in `.github/actions/configure-ci-env/action.yml`. Change
-that value to `true` to enable uploads; no GitHub repository setting is
-required. The local `.env` value controls local framework configuration, while
-the CI action sets the hosted-runner value. In a public repository, enabled
-trace artifacts are publicly accessible, so enable uploads only when the
-captured page and network data are safe to publish.
+This keeps API and shared test executions unchanged.
 
-When enabled, download the artifact from the matching Chromium, Firefox, or
-WebKit job, then open a trace with:
+When a UI test fails, Playwright retains its trace under:
+
+```text
+reports/playwright/
+```
+
+## Trace artifact management
+
+GitHub Actions can upload failed-test traces as browser-specific artifacts:
+
+```text
+ui-chromium-playwright-traces
+ui-firefox-playwright-traces
+ui-webkit-playwright-traces
+```
+
+The upload behavior is controlled by:
+
+```yaml
+PLAYWRIGHT_TRACE_ARTIFACT_ENABLED: false
+```
+
+The setting is configured in:
+
+```text
+.github/actions/configure-ci-env/action.yml
+```
+
+| Configuration | Behaviour |
+|---|---|
+| `false` (default) | Trace artifacts are not uploaded |
+| `true` | Failed-test traces are uploaded for seven days |
+
+To enable uploads, change the value to `true` in the CI configuration. No GitHub repository setting is required.
+
+The local `.env` value controls local framework configuration, while the CI action sets the value for hosted runners.
+
+> **Security consideration:** In a public repository, enabled trace artifacts are publicly accessible. Playwright traces can contain page content, browser state, and network data. Keep uploads disabled unless the captured information is safe to publish.
+
+### Downloading and inspecting CI traces
+
+When trace uploads are enabled:
+
+1. Open the relevant GitHub Actions workflow run.
+2. Navigate to the failed Chromium, Firefox, or WebKit job.
+3. Download the corresponding `ui-<browser>-playwright-traces` artifact.
+4. Extract the archive.
+5. Open the trace using:
 
 ```bash
 playwright show-trace path/to/trace.zip
 ```
 
-The UI Allure report is published to the public QA Portal, so CI does not embed
-trace ZIP contents in Allure. When the flag is enabled in
-`.github/actions/configure-ci-env/action.yml`, a failed test's Allure result
-links to the GitHub Actions run containing the trace artifact. When disabled,
-Allure explains how to reproduce the trace locally. Traces can contain page and
-network data; keep uploads disabled unless those contents are safe for the
-repository's audience.
+Alternatively, use the [online Playwright Trace Viewer](https://trace.playwright.dev/).
 
-The CI job installs the selected Playwright browser before execution:
+## Allure integration
+
+The UI Allure report is published to the public QA Portal. Trace ZIP contents are therefore kept separate from the Allure report.
+
+The integration behaves as follows:
+
+| Trace artifact setting | Allure behaviour |
+|---|---|
+| Enabled | A failed test's Allure result links to the GitHub Actions run containing the trace artifact. |
+| Disabled | Allure provides instructions for reproducing the trace locally. |
+
+This provides a direct debugging path from an Allure failure to its corresponding CI execution without embedding potentially sensitive trace data in the public report.
+
+## Browser installation
+
+Before execution, the CI job installs the selected Playwright browser and its system dependencies:
 
 ```bash
 python -m playwright install --with-deps "${{ inputs.browser }}"
@@ -1000,21 +1111,22 @@ python -m playwright install --with-deps "${{ inputs.browser }}"
 
 ## Browser execution policy
 
-The current CI policy is:
+The current CI execution strategy is:
 
 | Execution | Browser | Mode | Purpose |
 |---|---|---|---|
 | Pull request | Chromium | Headless | Fast feedback |
 | Push to `main` | Chromium + Firefox + WebKit | Headless | Cross-browser coverage |
 | Manual `workflow_dispatch` | Chromium + Firefox + WebKit | Headless | Full UI validation |
-| Local debugging | Developer choice | Headed or headless | Debugging |
+| Local debugging | Developer choice | Headed or headless | Interactive debugging |
 
-The pull-request workflow intentionally does not run the complete browser
-matrix. This keeps normal feedback faster and reduces unnecessary CI cost.
+The pull-request workflow intentionally runs only Chromium to keep feedback fast and reduce unnecessary CI cost.
+
+The complete browser matrix runs after changes reach `main` or when manually triggered.
 
 CI does not pass `--headed`; headless execution is therefore the default.
 
-The UI workflow is intentionally separate from the API entity matrix.
+**The UI workflow remains independent of the API entity matrix**, ensuring that browser-specific configuration, execution, and reporting do not affect existing API and shared test suites.
 
 ---
 
