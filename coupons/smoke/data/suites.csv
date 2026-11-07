@@ -1,5 +1,5 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Sat Nov 07 17:28:27 UTC 2026","Sat Nov 07 17:28:27 UTC 2026","189","tests.coupons.api","test_get_coupon","","","","test_get_coupon_by_id","
+"passed","Sat Nov 07 20:37:38 UTC 2026","Sat Nov 07 20:37:38 UTC 2026","146","tests.coupons.api","test_get_coupon","","","","test_get_coupon_by_id","
 Verify that a coupon can be retrieved by ID.
 
 Endpoint tested:
@@ -18,7 +18,7 @@ Test flow:
     4. Validate the Coupon response structure
     5. Verify the returned Coupon identity
 "
-"passed","Sat Nov 07 17:28:26 UTC 2026","Sat Nov 07 17:28:27 UTC 2026","220","tests.coupons.api","test_create_coupons","","","","test_create_single_coupon","
+"passed","Sat Nov 07 20:37:38 UTC 2026","Sat Nov 07 20:37:38 UTC 2026","171","tests.coupons.api","test_create_coupons","","","","test_create_single_coupon","
 Create a Coupon using the minimum scenario-specific input.
 
 The test does not build or provision the Coupon directly. The
