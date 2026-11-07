@@ -196,28 +196,18 @@ def customer_page(checkout_customer_page: Page) -> Page:
     """
     Provide the default authenticated customer access role.
 
-    ``customer_page`` represents the generic ``customer`` access role used
-    by the UI role router. It is not a separate customer profile.
+    The default identity is Customer A, the dedicated checkout customer
+    profile. This fixture is an alias for ``checkout_customer_page``.
 
-    The default identity behind this role is the dedicated checkout customer
-    profile. Tests that require a specific customer profile should request
-    that profile directly.
+    Customer A is provisioned by ``seed_test_users.sh``:
+        - The account is created using WP-CLI if it does not exist.
+        - Billing and shipping addresses are configured using WC_Customer.
 
-    This fixture keeps the distinction between access roles and customer
-    profiles explicit:
+    See:
+        scripts/seed_test_users.sh
 
-        Role:
-            customer
-
-        Default profile:
-            checkout_customer_page
-
-    Args:
-        checkout_customer_page: Authenticated default customer profile.
-
-    Returns:
-        Page: Authenticated page representing the customer access role.
-
+    The fixture only provides authenticated access. It does not create
+    or modify the customer account or its application data.
     """
     return checkout_customer_page
 
@@ -228,20 +218,26 @@ def checkout_customer_page(
     ui_base_url: str,
 ) -> Page:
     """
-    Provide the dedicated checkout customer profile.
+    Provide the dedicated checkout customer profile (Customer A).
 
-    This profile uses the credentials defined by:
+    Provisioning:
+        The customer account and baseline addresses are provisioned by
+        ``scripts/seed_test_users.sh`` during environment setup.
 
+        The seed script:
+            - Creates the WooCommerce customer using WP-CLI.
+            - Configures the billing and shipping addresses using WC_Customer.
+            - Uses environment-provided credentials.
+
+    Credentials:
         UI_CUSTOMER_USERNAME
         UI_CUSTOMER_PASSWORD
 
-    The profile is intended for customer checkout scenarios.
+    This fixture only authenticates the existing account. It does not
+    create the customer or provision its addresses.
 
-    The fixture only authenticates the account. It does not create or modify
-    billing addresses, products, orders, or other application state.
-
-    Tests that require specific customer state should establish that state
-    explicitly as part of their own scenario.
+    Tests requiring different initial customer states should use the
+    appropriate customer profile or dynamic customer fixtures.
 
     Args:
         page: Fresh page belonging to the test's isolated Browser Context.
@@ -249,7 +245,6 @@ def checkout_customer_page(
 
     Returns:
         Page: Authenticated checkout-customer page.
-
     """
     return _login_customer(
         page=page,
@@ -266,18 +261,27 @@ def no_address_customer_page(
     ui_base_url: str,
 ) -> Page:
     """
-    Provide the dedicated no-address customer profile.
+    Provide the dedicated no-address customer profile (Customer B).
 
-    This profile uses:
+    Provisioning:
+        The customer account is provisioned by
+        ``scripts/seed_test_users.sh`` during environment setup.
 
+        The seed script creates the WooCommerce customer using WP-CLI if the
+        account does not already exist.
+
+    Credentials:
         UI_CUSTOMER_NO_ADDRESS_USERNAME
         UI_CUSTOMER_NO_ADDRESS_PASSWORD
 
     The profile is intended for scenarios that need to exercise billing or
     shipping address entry.
 
-    The fixture does not enforce the absence of an address. That state is a
-    responsibility of the test environment and/or the scenario itself.
+    Important:
+        The fixture only authenticates the existing account. It does not
+        create the customer or guarantee that the account has no saved
+        addresses. The no-address state must be established by the seed
+        script or the test environment.
 
     Args:
         page: Fresh page belonging to the test's isolated Browser Context.
@@ -285,7 +289,6 @@ def no_address_customer_page(
 
     Returns:
         Page: Authenticated no-address-customer page.
-
     """
     return _login_customer(
         page=page,
@@ -302,19 +305,25 @@ def profile_customer_page(
     ui_base_url: str,
 ) -> Page:
     """
-    Provide the dedicated customer profile used for account/profile tests.
+    Provide the dedicated account/profile test customer (Customer C).
 
-    This profile uses:
+    Provisioning:
+        The customer account is provisioned by
+        ``scripts/seed_test_users.sh`` during environment setup.
 
+        The seed script creates the WooCommerce customer using WP-CLI if the
+        account does not already exist.
+
+    Credentials:
         UI_CUSTOMER_PROFILE_USERNAME
         UI_CUSTOMER_PROFILE_PASSWORD
 
-    It is intentionally isolated from the checkout customer so account
-    modification tests can change customer information without affecting
-    checkout scenarios.
+    This profile is intentionally isolated from Customer A (the checkout
+    customer) so account modification tests can change customer information
+    without affecting checkout scenarios.
 
-    The fixture only authenticates the account. It does not establish or
-    restore application state automatically.
+    The fixture only authenticates the existing account. It does not create
+    the customer or establish/restore application state automatically.
 
     Args:
         page: Fresh page belonging to the test's isolated Browser Context.
@@ -322,7 +331,6 @@ def profile_customer_page(
 
     Returns:
         Page: Authenticated profile-customer page.
-
     """
     return _login_customer(
         page=page,
