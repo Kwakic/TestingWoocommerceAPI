@@ -56,11 +56,16 @@ def _login_customer(
     profile_name: str,
 ) -> Page:
     """
-    Authenticate a customer profile using environment-provided credentials.
+    Authenticate a seeded customer profile from environment variables.
 
-    This is the single authentication implementation shared by all customer
-    profile fixtures. Keeping the login workflow here prevents individual
-    fixtures from duplicating credential validation and login-page handling.
+    This internal helper is called by the profile fixtures below, such as
+    ``checkout_customer_page`` and ``no_address_customer_page``. Pass the
+    environment variable names for that profile's username and password.
+    The helper validates those values, adds the profile name to any missing-
+    credential error, and performs the shared Page Object login flow.
+
+    Tests that already have credentials (for example, from a dynamically
+    created customer) should call the public ``login_customer`` helper instead.
 
     Args:
         page: Fresh Playwright page belonging to an isolated Browser Context.
@@ -112,12 +117,14 @@ def login_customer(
     username: str,
     password: str,
 ) -> Page:
-    """Authenticate a customer using explicitly supplied credentials.
+    """Authenticate a page using credentials supplied by the test.
 
-    This helper is intended for dynamically provisioned test customers whose
-    credentials are held by ``TestCustomer`` rather than environment variables.
-    The login workflow remains centralized in this module and uses the same
-    customer login Page Object as the seeded customer profiles.
+    Use this public helper when the test already has a customer's username
+    and password, commonly from a dynamically created customer returned by
+    ``dynamic_customer`` or ``dynamic_customer_factory``. It performs the
+    shared ``CustomerLoginPage`` login flow and returns the authenticated
+    page. Seeded profile fixtures should use the internal ``_login_customer``
+    helper instead, since their credentials are read from environment variables.
     """
     assert username, "Customer username is required for UI authentication."
     assert password, "Customer password is required for UI authentication."

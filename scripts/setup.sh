@@ -336,6 +336,42 @@ else
 fi
 
 # ------------------------------------------------------------------
+# STEP 1.1 — Allow parallel review-submission UI tests
+#
+# WordPress core blocks a second comment from the same source IP when it
+# arrives within 15 seconds. Playwright's Chromium, Firefox, and WebKit
+# runs share localhost, so valid parallel review tests can otherwise fail
+# with HTTP 429 ("You are posting comments too quickly").
+#
+# WordPress has no option for this policy. A must-use plugin is the right
+# configuration boundary because it is loaded for every request and cannot
+# be accidentally deactivated through the WordPress admin UI.
+#
+# The plugin checks WP_ENVIRONMENT_TYPE before changing the policy. Docker
+# sets it to "local" in docker-compose.wp.yml, so this configuration cannot
+# disable comment flood protection in a non-local environment.
+# ------------------------------------------------------------------
+echo "🧪 Configuring comment flood protection for local UI tests..."
+
+mkdir -p wp-data/wp-content/mu-plugins
+
+cat > wp-data/wp-content/mu-plugins/ui-test-comment-flood.php <<'PHP'
+<?php
+/**
+ * Plugin Name: UI Test Comment Flood Configuration
+ * Description: Allows parallel product-review tests in the local test environment.
+ */
+
+// Keep WordPress's normal anti-spam protection everywhere except local tests.
+if ( wp_get_environment_type() === 'local' ) {
+    // Run after WordPress's default 15-second throttle and override its block.
+    add_filter( 'comment_flood_filter', '__return_false', PHP_INT_MAX );
+}
+PHP
+
+echo "✅ Comment flood protection disabled for local UI tests"
+
+# ------------------------------------------------------------------
 # STEP 1.5 — Ensure the default WordPress theme is installed and active.
 #
 # Twenty Twenty-Four is the default WordPress theme used by the
