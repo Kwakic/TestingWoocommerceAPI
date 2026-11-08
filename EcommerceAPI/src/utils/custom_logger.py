@@ -15,7 +15,7 @@ This module configures two complementary logging targets:
    - Optional payload inclusion (env or runtime toggle)
    - Includes CI metadata (ci_provider, job_id), git metadata (branch, commit),
     session_id, test_name, status_code, duration_ms, url, env, etc.
-   - If enabled, retains complete runs according to KEEP_STRUCTURED_LOGS (default: 3)
+   - If enabled, retains complete runs according to KEEP_STRUCTURED_RUNS (default: 1)
 
 
         logging_plugin.py
@@ -40,7 +40,7 @@ ENABLE_STRUCTURED_LOGS    (default: off)  # structured JSONL writing is opt-in
 ENABLE_JSON_PRETTY        (compatibility flag; JSONL event files remain compact)
 DISABLE_LOG_EMOJIS        (disable emojis in console)
 LOG_DIR                   (override logs directory)
-KEEP_STRUCTURED_LOGS      (files to keep, default 3; applies only when structured logging is enabled)
+KEEP_STRUCTURED_RUNS      (complete runs to keep, default 1; applies only when structured logging is enabled)
 
 Runtime toggles
 ---------------
@@ -749,14 +749,28 @@ def _safe_log_component(value: str) -> str:
 
 
 def prune_structured_logs(base_dir: Path, keep: int, current_run_id: str) -> None:
-    """Apply retention by run, preserving every worker file from retained runs."""
+    """Keep the newest complete runs globally across teams and environments.
+
+    A run is identified by its run ID. Its worker/controller files and manifest
+    are retained or pruned together, so runs that did not produce logs for a
+    particular team do not leave unrelated historical files behind.
+    """
     root = base_dir.resolve()
     if not root.is_dir():
         return
 
     keep = max(1, int(keep))
     active_run_id = _safe_log_component(current_run_id)
+    resolved_root = root.resolve(strict=True)
+    files_by_run: Dict[str, list[Path]] = {}
+    manifests_by_run: Dict[str, Path] = {}
+    modified_by_run: Dict[str, float] = {}
 
+    def record_run_activity(run_id: str, modified_time: float) -> None:
+        modified_by_run[run_id] = max(modified_by_run.get(run_id, 0.0), modified_time)
+
+    # Gather logs from every team/environment first; retention is applied to
+    # this combined set rather than independently to each directory.
     for team_dir in root.iterdir():
         if team_dir.is_symlink() or not team_dir.is_dir():
             continue
@@ -768,10 +782,12 @@ def prune_structured_logs(base_dir: Path, keep: int, current_run_id: str) -> Non
             try:
                 resolved_team_dir = team_dir.resolve(strict=True)
                 resolved_env_dir = env_dir.resolve(strict=True)
-                if resolved_env_dir.parent != resolved_team_dir:
+                if (
+                    resolved_team_dir.parent != resolved_root
+                    or resolved_env_dir.parent != resolved_team_dir
+                ):
                     continue
 
-                run_files: Dict[str, list[Path]] = {}
                 for path in env_dir.glob("test_debug_structured_*.jsonl"):
                     if path.is_symlink() or not path.is_file():
                         continue
@@ -781,25 +797,24 @@ def prune_structured_logs(base_dir: Path, keep: int, current_run_id: str) -> Non
                         r"([A-Za-z0-9.-]+)\.jsonl$",
                         path.name,
                     )
-                    run_key = match.group(1) if match else path.stem
-                    run_files.setdefault(run_key, []).append(path)
-
-                active_files = run_files.pop(active_run_id, None)
-                ordered_runs = sorted(
-                    run_files.items(),
-                    key=lambda item: max(path.stat().st_mtime for path in item[1]),
-                    reverse=True,
-                )
-
-                other_runs_to_keep = max(0, keep - (1 if active_files else 0))
-                old_runs = ordered_runs[other_runs_to_keep:]
-                for _, paths in old_runs:
-                    for path in paths:
-                        if path.is_symlink():
+                    if not match:
+                        # Older releases wrote one timestamp-named JSONL per run.
+                        legacy_match = re.match(
+                            r"^test_debug_structured_([A-Za-z0-9.-]+)\.jsonl$",
+                            path.name,
+                        )
+                        if not legacy_match:
+                            # Leave files from unknown naming schemes alone.
                             continue
-                        resolved_path = path.resolve(strict=True)
-                        if resolved_path.parent == resolved_env_dir:
-                            path.unlink()
+                        run_id = legacy_match.group(1)
+                    else:
+                        run_id = match.group(1)
+
+                    resolved_path = path.resolve(strict=True)
+                    if resolved_path.parent != resolved_env_dir:
+                        continue
+                    files_by_run.setdefault(run_id, []).append(path)
+                    record_run_activity(run_id, path.stat().st_mtime)
             except (OSError, ValueError) as prune_err:
                 log.debug(
                     "Could not apply structured-log retention in %s: %s",
@@ -808,34 +823,115 @@ def prune_structured_logs(base_dir: Path, keep: int, current_run_id: str) -> Non
                     exc_info=True,
                 )
 
+    # Manifests participate in the same global retention decision as logs.
     try:
-        manifests = [
-            path
-            for path in root.glob("run_manifest_*.json")
-            if not path.is_symlink() and path.is_file()
-        ]
-        active_manifest = root / f"run_manifest_{active_run_id}.json"
-        other_manifests = sorted(
-            (path for path in manifests if path != active_manifest),
-            key=lambda path: path.stat().st_mtime,
-            reverse=True,
-        )
-        other_manifests_to_keep = max(
-            0,
-            keep - (1 if active_manifest in manifests else 0),
-        )
-        for path in other_manifests[other_manifests_to_keep:]:
-            if path.is_symlink():
+        for path in root.glob("run_manifest_*.json"):
+            if path.is_symlink() or not path.is_file():
                 continue
-            if path.resolve(strict=True).parent == root:
-                path.unlink()
+            match = re.match(r"^run_manifest_([A-Za-z0-9.-]+)\.json$", path.name)
+            if not match:
+                continue
+            run_id = match.group(1)
+            if path.resolve(strict=True).parent != root:
+                continue
+            manifests_by_run[run_id] = path
+            record_run_activity(run_id, path.stat().st_mtime)
     except (OSError, ValueError) as prune_err:
         log.debug(
-            "Could not apply run-manifest retention in %s: %s",
+            "Could not inspect run manifests in %s: %s",
             root,
             prune_err,
             exc_info=True,
         )
+
+    # A historical run is retainable only when its manifest exists and indexes
+    # exactly the files still on disk. This also cleans up orphaned files left
+    # by older per-team retention behavior.
+    complete_run_ids = set()
+    for run_id, manifest_path in manifests_by_run.items():
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            indexed_files = manifest.get("structured_log_files")
+            if manifest.get("run_id") != run_id or not isinstance(indexed_files, list):
+                continue
+
+            actual_files = {
+                path.resolve(strict=True) for path in files_by_run.get(run_id, [])
+            }
+            manifest_files = set()
+            manifest_is_valid = True
+            for relative_path in indexed_files:
+                if not isinstance(relative_path, str):
+                    manifest_is_valid = False
+                    break
+                indexed_path = Path(relative_path)
+                if indexed_path.is_absolute():
+                    manifest_is_valid = False
+                    break
+                resolved_path = (root / indexed_path).resolve(strict=True)
+                if (
+                    root not in resolved_path.parents
+                    or not resolved_path.is_file()
+                    or resolved_path not in actual_files
+                ):
+                    manifest_is_valid = False
+                    break
+                manifest_files.add(resolved_path)
+
+            if manifest_is_valid and manifest_files == actual_files:
+                complete_run_ids.add(run_id)
+        except (OSError, ValueError, TypeError) as manifest_err:
+            log.debug(
+                "Could not validate run manifest %s: %s",
+                manifest_path,
+                manifest_err,
+                exc_info=True,
+            )
+
+    # Keep the active run even if it has no files yet, then fill the remaining
+    # slots with the most recently modified complete historical run IDs.
+    retained_run_ids = {active_run_id}
+    other_run_ids = sorted(
+        (run_id for run_id in complete_run_ids if run_id != active_run_id),
+        key=lambda run_id: (modified_by_run[run_id], run_id),
+        reverse=True,
+    )
+    retained_run_ids.update(other_run_ids[: max(0, keep - 1)])
+
+    for run_id, paths in files_by_run.items():
+        if run_id in retained_run_ids:
+            continue
+        for path in paths:
+            try:
+                if path.is_symlink() or not path.is_file():
+                    continue
+                if path.resolve(strict=True).parent.parent.parent == root:
+                    path.unlink()
+            except (OSError, ValueError) as prune_err:
+                log.debug(
+                    "Could not prune structured log %s: %s",
+                    path,
+                    prune_err,
+                    exc_info=True,
+                )
+
+    for run_id, path in manifests_by_run.items():
+        if run_id in retained_run_ids:
+            continue
+        try:
+            if (
+                not path.is_symlink()
+                and path.is_file()
+                and path.resolve(strict=True).parent == root
+            ):
+                path.unlink()
+        except (OSError, ValueError) as prune_err:
+            log.debug(
+                "Could not prune run manifest %s: %s",
+                path,
+                prune_err,
+                exc_info=True,
+            )
 
 
 def write_run_manifest(

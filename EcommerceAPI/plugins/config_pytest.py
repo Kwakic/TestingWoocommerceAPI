@@ -100,4 +100,4 @@ def pytest_sessionstart(session):
     log.info("DISABLE_LOG_EMOJIS      : %s", cfg.DISABLE_LOG_EMOJIS)
 
     log.info("LOG_DIR                 : %s", cfg.LOG_DIR)
-    log.info("KEEP_STRUCTURED_LOGS    : %s", cfg.KEEP_STRUCTURED_LOGS)
+    log.info("KEEP_STRUCTURED_RUNS    : %s", cfg.KEEP_STRUCTURED_RUNS)

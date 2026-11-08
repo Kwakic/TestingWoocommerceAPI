@@ -120,7 +120,7 @@ PLAYWRIGHT_TRACE_ARTIFACT_ENABLED : False
 REQUIRE_ENV             : False
 STRUCTURED_LOGS         : True
 LOG_DIR                 : reports/logs
-KEEP_STRUCTURED_LOGS    : 3
+KEEP_STRUCTURED_RUNS    : 1
 ===================================================
 ```
 

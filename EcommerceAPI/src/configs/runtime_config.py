@@ -62,7 +62,7 @@ class FrameworkConfig:
     LOG_PAYLOADS: bool
     REDACT_SENSITIVE_FIELDS: bool
     DISABLE_LOG_EMOJIS: bool
-    KEEP_STRUCTURED_LOGS: int
+    KEEP_STRUCTURED_RUNS: int
     LOG_DIR: Path
 
     # Schema / behavior
@@ -138,7 +138,7 @@ def _load_config_from_env() -> FrameworkConfig:
         LOG_PAYLOADS=env_bool("LOG_PAYLOADS", False),
         REDACT_SENSITIVE_FIELDS=env_bool("REDACT_SENSITIVE_FIELDS", True),
         DISABLE_LOG_EMOJIS=env_bool("DISABLE_LOG_EMOJIS", False),
-        KEEP_STRUCTURED_LOGS=int(os.getenv("KEEP_STRUCTURED_LOGS", "3")),
+        KEEP_STRUCTURED_RUNS=int(os.getenv("KEEP_STRUCTURED_RUNS", "1")),
         LOG_DIR=Path(os.getenv("LOG_DIR", "reports/logs")),
         FAIL_ON_EMPTY_LIST=env_bool("FAIL_ON_EMPTY_LIST", False),
         PERF_ITERATIONS=int(os.getenv("PERF_ITERATIONS", "5")),
