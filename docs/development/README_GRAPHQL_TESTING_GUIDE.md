@@ -926,7 +926,11 @@ capture identifier
 query/update/delete using identifier
 ```
 
-This makes tests deterministic and suitable for fresh Docker environments and CI.
+This makes tests deterministic and suitable for fresh Docker environments, CI,
+and parallel execution. The shared CI runner uses `-n auto`, so each GraphQL
+test must create or identify its own resources and register its created
+resources for cleanup. Tests must not rely on a fixed record or on state left
+by another worker.
 
 ---
 
@@ -961,32 +965,35 @@ pytest tests/products/graphql/test_create_product.py -v
 Run the complete Product GraphQL suite:
 
 ```bash
-pytest tests/products/graphql/ -v
+pytest tests/products/graphql/ -n auto -v
 ```
 
 Run all GraphQL tests:
 
 ```bash
-pytest -m graphql -v
+pytest -m graphql -n auto -v
 ```
 
 Run GraphQL contract tests:
 
 ```bash
-pytest -m "graphql and contract" -v
+pytest -m "graphql and contract" -n auto -v
 ```
 
 Run Product GraphQL integration tests:
 
 ```bash
-pytest -m "products and graphql and integration" -v
+pytest -m "products and graphql and integration" -n auto -v
 ```
 
 Run GraphQL negative tests:
 
 ```bash
-pytest -m "graphql and negative" -v
+pytest -m "graphql and negative" -n auto -v
 ```
+
+For one test being debugged, omit `-n auto` to keep its execution in one
+process.
 
 ---
 

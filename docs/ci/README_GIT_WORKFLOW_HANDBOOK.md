@@ -1916,9 +1916,13 @@ You can extend CI with:
 * 🧪 Parallel execution:
 
   ```bash
-  pip install pytest-xdist
+  python -m pip install -e "./EcommerceAPI[dev]"
   pytest -n auto
   ```
+
+  This project installs `pytest-xdist[psutil]` through the `dev` dependency
+  group. The shared GitHub Actions runner uses `-n auto` by default; `psutil`
+  selects the available physical CPU cores.
 
 ---
 

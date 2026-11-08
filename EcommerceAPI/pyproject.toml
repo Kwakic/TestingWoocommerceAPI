@@ -63,8 +63,7 @@ dev = [
   "pytest>=8.3.5",             # Core testing framework
   "allure-pytest",             # Allure pytest adapter (replaces pytest-html)
   "pytest-metadata>=3.1.1",    # Metadata for pytest reports
-  "pytest-xdist",              # Running tests in parallel across multiple CPUs or even remote machines
-  "pytest-xdist[psutil]",      # Enforces physical core detection with psutil!
+  "pytest-xdist[psutil]",      # Parallel tests; psutil selects available physical CPU cores for -n auto
   "Faker>=37.4.0",             # Generate fake data
   "freezegun>=1.5.3",          # Freeze time in tests
   "playwright>=1.55.0",        # Browser automation and end-to-end testing framework

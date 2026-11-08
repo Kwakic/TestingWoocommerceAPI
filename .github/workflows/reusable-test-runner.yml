@@ -87,6 +87,19 @@ on:
         default: ""
 
       # --------------------------------------------------
+      # Parallel pytest execution
+      #
+      # pytest-xdist[psutil] is installed through EcommerceAPI[dev].
+      # "auto" selects the runner's available physical CPU count when
+      # psutil is available, keeping local and CI worker selection aligned.
+      # Individual workflows can override this for a constrained suite.
+      # --------------------------------------------------
+      pytest_workers:
+        required: false
+        type: string
+        default: "auto"
+
+      # --------------------------------------------------
       # Execution scope
       #
       # entity
@@ -531,6 +544,7 @@ jobs:
           python -m pytest "$TEST_TARGET" \
             -m "${{ inputs.pytest_markers }}" \
             --browser "${{ inputs.browser }}" \
+            -n "${{ inputs.pytest_workers }}" \
             "${PYTEST_TRACE_ARGS[@]}" \
             -ra \
             ${{ inputs.pytest_extra_args }} \

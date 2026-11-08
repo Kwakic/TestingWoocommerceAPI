@@ -180,6 +180,16 @@ Run the complete suite:
 pytest
 ```
 
+Run the complete suite in parallel:
+
+```bash
+pytest -n auto
+```
+
+`pytest-xdist[psutil]` is installed through the development dependencies.
+`-n auto` uses the available physical CPU cores. Tests must create and clean up
+their own mutable data so their result does not depend on worker order.
+
 For marker-based execution, see the Test Development Guide.
 
 ---

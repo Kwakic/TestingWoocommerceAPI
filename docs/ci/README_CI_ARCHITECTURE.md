@@ -464,6 +464,39 @@ standalone UI testing domain independent from the API entity matrix.
 
 ---
 
+## ⚡ Parallel pytest execution
+
+Every workflow that calls `reusable-test-runner.yml` runs pytest with
+`-n auto`. The shared `pytest_workers` input defaults to `auto`, and the
+project's `pytest-xdist[psutil]` development dependency selects the available
+physical CPU count on the runner.
+
+This is a second layer of concurrency. GitHub Actions matrices split work
+between jobs, while xdist runs tests concurrently inside each job:
+
+```text
+GitHub Actions matrix job
+        │
+        └── pytest -n auto
+              ├── worker 1
+              ├── worker 2
+              └── worker N
+```
+
+Parallel execution requires tests to own their mutable data. Customers,
+products, carts, orders, review data, and other mutable resources must not be
+shared across workers or depend on execution order.
+
+A workflow can limit its worker count when a suite has a deliberate resource
+constraint:
+
+```yaml
+with:
+  pytest_workers: "1"
+```
+
+---
+
 ## 🤖 GitHub Pages limitation
 
 GitHub Pages accepts only one deployment at a time.
@@ -1237,7 +1270,7 @@ ui.yml
 reusable-test-runner.yml
          │
          ├── install selected Playwright browser
-         └── pytest --browser <browser>
+         └── pytest --browser <browser> -n auto
 ```
 
 The reusable runner installs only the selected browser in each CI matrix job.

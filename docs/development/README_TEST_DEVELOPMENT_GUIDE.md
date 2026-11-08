@@ -1881,12 +1881,21 @@ Contract, Security and Preflight).
 
 | Pipeline | Command |
 |---|---|
-| Fast (PR / commit) | `pytest -m "smoke or sanity or preflight"` |
-| Full validation | `pytest -m "not performance and not security"` |
-| Nightly | `pytest -m regression` |
-| Scheduled | `pytest -m performance` / `pytest -m security` |
+| Fast (PR / commit) | `pytest -n auto -m "smoke or sanity or preflight"` |
+| Full validation | `pytest -n auto -m "not performance and not security"` |
+| Nightly | `pytest -n auto -m regression` |
+| Scheduled | `pytest -n auto -m performance` / `pytest -n auto -m security` |
 
 These pytest markers map onto dedicated GitHub Actions workflows — see the table in §14.
+
+The shared CI runner passes `-n auto` to every workflow. The
+`pytest-xdist[psutil]` development dependency chooses the available physical
+CPU cores, so tests may execute in any order and on different workers.
+
+Every test that creates or changes application data must own that data, use
+unique identifiers where needed, and register the resource for cleanup. Do not
+use a shared mutable seed, a fixed customer, or state created by another test
+as a normal prerequisite.
 
 ---
 

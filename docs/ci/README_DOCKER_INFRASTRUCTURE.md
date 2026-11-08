@@ -54,7 +54,8 @@ This document describes the Docker layer of the [TestingWoocommerceAPI](https://
 The same infrastructure is used locally and in GitHub Actions.
 
 Both environments execute the same `scripts/setup.sh` bootstrap, so WooCommerce
-checkout configuration is applied consistently in local development and CI.
+checkout configuration and local test-only WordPress policies are applied
+consistently in local development and CI.
 
 Running tests against the same Dockerized services
 helps ensure consistency between local development
@@ -105,6 +106,17 @@ The stack gives you a disposable, reproducible WooCommerce instance to run API +
 | `wpcli`  | WP-CLI — runs one-off commands (install WP, install/activate WooCommerce, generate API keys) |
 
 This is orchestrated by `docker-compose.wp.yml` at the repo root, and bootstrapped by `scripts/setup.sh`.
+
+### Test-only WordPress policies
+
+`setup.sh` provisions application settings required by UI tests rather than
+making each test change the environment. Alongside checkout configuration, it
+creates a must-use plugin in `wp-content/mu-plugins/` that disables WordPress's
+15-second comment flood limit only when `WP_ENVIRONMENT_TYPE=local`.
+
+This lets parallel review-submission tests run from the shared localhost source
+IP without receiving HTTP 429. The plugin is recreated on each bootstrap and
+does not relax comment protection in non-local environments.
 
 ### 🌐 GraphQL uses the same Docker environment
 

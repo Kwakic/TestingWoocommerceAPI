@@ -102,9 +102,9 @@ Playwright UI tests support Chromium, Firefox and WebKit.
 Local developers can select the browser explicitly:
 
 ```bash
-pytest -m ui --browser chromium
-pytest -m ui --browser firefox
-pytest -m ui --browser webkit
+pytest -m ui --browser chromium -n auto
+pytest -m ui --browser firefox -n auto
+pytest -m ui --browser webkit -n auto
 ```
 
 For interactive debugging, headed execution can be requested explicitly:
@@ -133,6 +133,14 @@ pytest using:
 ```bash
 --browser <browser>
 ```
+
+The reusable runner also passes `-n auto`. `pytest-xdist[psutil]` is installed
+through `EcommerceAPI[dev]` and selects the available physical CPU cores. This
+parallelism happens inside each browser matrix job; it is separate from the
+Chromium, Firefox, and WebKit job matrix.
+
+Tests must own their mutable customers, products, carts, orders, and review
+data so that their outcome does not depend on worker order.
 
 CI does not pass `--headed`, so UI tests execute headlessly.
 
@@ -247,6 +255,12 @@ WordPress installation. These credentials are then merged into
 The WooCommerce bootstrap also enables **Cash on Delivery**. This is an
 environment prerequisite for the checkout UI tests, so the payment method is
 configured by `setup.sh` rather than by individual Playwright tests.
+
+The bootstrap also writes a local-only WordPress must-use plugin that disables
+the default 15-second comment flood limit. Parallel browser workers share the
+localhost source IP, and valid product-review tests would otherwise receive
+HTTP 429 responses. The plugin checks `WP_ENVIRONMENT_TYPE` and applies only
+when it is `local`.
 
 The same `make run` bootstrap also installs the project's Python
 development dependencies and Playwright browser binaries.

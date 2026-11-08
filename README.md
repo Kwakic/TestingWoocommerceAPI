@@ -39,6 +39,7 @@ The framework supports:
 - **🐳 Reproducible infrastructure** through Docker
 - **📊 Automated reporting** with Allure and GitHub Pages
 - **🧪 Enterprise-style test data architecture** with Factory, Builder, Provisioner, Ownership, Seeds, and pytest lifecycle integration
+- **⚡ Parallel-ready execution** with `pytest-xdist`, physical-core worker detection, and test-owned resources
 - **🔁 Segmented CI/CD** through independent GitHub Actions workflows
 - **⚙️ One-command setup** (`make run`)
 
@@ -80,6 +81,8 @@ The framework is designed around clear separation of responsibilities and busine
 - 📝 **Structured Logging Architecture** — Implements a dual-layer logging system with developer-friendly console output and optional structured JSONL artifacts enriched with test context, correlation IDs, Git metadata, CI metadata, request details, and automatic payload redaction.
 
 - 🧪 **Test Data Architecture** — Separates test-data generation, scenario customization, system provisioning, resource ownership, stable seed data, cleanup, and pytest lifecycle management through Factory, Builder, Provisioner, Ownership, and Fixture layers. The same data-preparation model is designed for REST, GraphQL, and Playwright UI scenarios.
+
+- ⚡ **Parallel Test Execution** — Uses `pytest-xdist[psutil]` to run tests across available physical CPU cores. CI passes `-n auto` through the shared runner; tests own mutable data and do not depend on execution order.
 
 - 🔄 **Segmented CI/CD Pipelines** — Independent Smoke, Integration, Regression, Performance, Contract, Security, and Preflight workflows execute in isolation, publish dedicated artifacts, and scale independently.
 
@@ -319,10 +322,14 @@ For direct framework installation and pytest execution:
 
 ```bash
 python -m pip install -e "./EcommerceAPI[dev]"
-python -m pytest -v
+python -m pytest -n auto -v
 ```
 
-Manual pytest execution is primarily intended for framework development. Playwright browsers are installed automatically as part of the project development/bootstrap flow.
+`pytest-xdist[psutil]` is installed through the `dev` dependency group. `-n auto`
+uses the available physical CPU cores; omit it when debugging one test in one
+process. Manual pytest execution is primarily intended for framework
+development. Playwright browsers are installed automatically as part of the
+project development/bootstrap flow.
 
 > ⚠️ Install the framework in editable mode rather than relying on a `sys.path` workaround from the repository root.
 

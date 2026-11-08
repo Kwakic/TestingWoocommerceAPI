@@ -449,6 +449,7 @@ Automation, workflows, and GitHub-specific configuration.
 - **Add new test pipeline?** → Create `workflows/new-test-type.yml`
 - **Modify CI environment?** → Edit `actions/configure-ci-env/action.yml`
 - **Update Docker setup?** → Edit `actions/setup-woocommerce/action.yml`
+- **Change CI pytest workers or shared flags?** → Edit `workflows/reusable-test-runner.yml`
 
 ### 📖 Read Also
 
@@ -496,7 +497,8 @@ Project-level configuration and orchestration.
 
 ### 📝 When to Edit
 
-- **Changing test execution?** → Edit `Makefile`, `pytest.ini`, `conftest.py`
+- **Changing local test execution?** → Edit `Makefile`, `pytest.ini`, `conftest.py`
+- **Changing CI pytest workers or shared flags?** → Edit `.github/workflows/reusable-test-runner.yml`
 - **Adding environment variable?** → Edit `.env.example` & `.env`
 - **Changing Docker setup?** → Edit `docker-compose.matrix.yml`
 - **Recording changes?** → Update `CHANGELOG.md`

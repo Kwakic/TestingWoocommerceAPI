@@ -1039,6 +1039,17 @@ Ownership is particularly important for:
 - UI/API combined tests
 - preventing accidental deletion of seed data
 
+### Parallel execution
+
+The shared CI runner invokes pytest with `-n auto`, so any test can run beside
+another test that targets the same application environment. A fresh factory or
+builder payload must therefore become a test-owned resource when it is
+provisioned, and its cleanup must use the recorded identity rather than a
+shared name, fixed identifier, or broad search.
+
+Stable seeds remain environment-owned. They provide a documented baseline but
+must not be used as mutable working state for normal parallel tests.
+
 ### 🎯 Advantage:
 >safe cleanup.
 

@@ -827,15 +827,21 @@ alone should not be assumed to remove every related record.
   syntax checks alone do not establish parallel safety. For example:
 
   ```bash
-  pytest -m ui --browser chromium -n 2
+  pytest -m ui --browser chromium -n auto
   ```
 
 ## Bootstrap and application configuration
 
-`scripts/setup.sh` configures WooCommerce capabilities required by the
-environment, such as Cash on Delivery for checkout. Seed scripts may provision
-baseline data for other explicitly documented purposes, but they are not a
-substitute for per-test resource setup.
+`scripts/setup.sh` configures WooCommerce capabilities and local test policies
+required by the environment. It enables Cash on Delivery for checkout and
+creates a local-only must-use plugin that disables WordPress's 15-second
+comment flood limit. That policy lets valid parallel review tests share the
+localhost source IP without receiving HTTP 429 responses.
+
+CI invokes the same suite through the reusable runner with `-n auto` inside
+each browser matrix job. Seed scripts may provision baseline data for other
+explicitly documented purposes, but they are not a substitute for per-test
+resource setup.
 
 The repository-local image fixtures under `tests/ui/data/images/` may still be
 used by seed/bootstrap tooling. Tests that create products through the API
