@@ -1,0 +1,57 @@
+# Optional bridge from the framework's JSONL artifacts to an OTLP/HTTP backend.
+# The test framework itself does not load this file or depend on the Collector.
+receivers:
+  file_log/framework:
+    # Read only the files belonging to the run started with the same E2E_RUN_ID.
+    # The mounted directory contains reports/logs/<team>/<environment>/*.jsonl.
+    include:
+      - /var/log/ecommerceapi/**/test_debug_structured_${env:E2E_RUN_ID}_*.jsonl
+    start_at: beginning
+    include_file_path: true
+    storage: file_storage
+    operators:
+      # Each JSONL line is one record. Promote its timestamp, level, and fields.
+      - type: json_parser
+        timestamp:
+          parse_from: attributes.timestamp
+          layout_type: strptime
+          layout: '%Y-%m-%dT%H:%M:%SZ'
+        severity:
+          parse_from: attributes.level
+      # Use the event message as the searchable OpenTelemetry log body.
+      - type: move
+        from: attributes.message
+        to: body
+
+processors:
+  # Identify these records as belonging to the test automation service.
+  resource/framework:
+    attributes:
+      - key: service.name
+        value: test-ecommerce-api
+        action: upsert
+      - key: service.namespace
+        value: quality-engineering
+        action: upsert
+  batch:
+
+exporters:
+  # Configure the target company/backend endpoint through the environment.
+  # Add your organization's authentication extension or secret-backed headers
+  # here when required. Do not commit credentials to this file.
+  otlp_http/company:
+    endpoint: ${env:OTEL_EXPORTER_OTLP_ENDPOINT}
+
+extensions:
+  # File offsets let the Collector resume reading after a restart instead of
+  # starting from the beginning of every already-processed file.
+  file_storage:
+    directory: /var/lib/otelcol/file_storage
+
+service:
+  extensions: [file_storage]
+  pipelines:
+    logs:
+      receivers: [file_log/framework]
+      processors: [resource/framework, batch]
+      exporters: [otlp_http/company]

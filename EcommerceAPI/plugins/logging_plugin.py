@@ -218,6 +218,18 @@ def pytest_addoption(parser):
         ),
     )
 
+    group.addoption(
+        "--keep-structured-runs",
+        action="store",
+        type=int,
+        default=None,
+        metavar="COUNT",
+        help=(
+            "Number of complete structured-log runs to retain globally "
+            "(overrides KEEP_STRUCTURED_RUNS; default: 1)."
+        ),
+    )
+
 
 # ======================================================================================
 # Configure logging before test collection starts (runs once at startup)
@@ -298,29 +310,44 @@ def pytest_configure(config):
         "REDACT_SENSITIVE_FIELDS", default=True
     )
 
-    # keep_structured_logs: prefer CLI, then env, then default 3
-    keep_structured_cli = getattr(opt, "keep_structured_logs", None)
-    if keep_structured_cli is not None:
+    # Retain complete runs globally. CLI wins over the environment setting.
+    keep_structured_runs_cli = getattr(opt, "keep_structured_runs", None)
+    if keep_structured_runs_cli is not None:
         try:
-            keep_structured_logs = int(keep_structured_cli)
+            keep_structured_runs = int(keep_structured_runs_cli)
         except (TypeError, ValueError):
-            keep_structured_logs = 3
+            keep_structured_runs = 1
             log.warning(
-                "Invalid CLI keep_structured_logs=%r, falling back to %s",
-                keep_structured_cli,
-                keep_structured_logs,
+                "Invalid CLI keep_structured_runs=%r, falling back to %s",
+                keep_structured_runs_cli,
+                keep_structured_runs,
             )
     else:
-        ks_env = os.getenv("KEEP_STRUCTURED_LOGS")
+        ks_env = os.getenv("KEEP_STRUCTURED_RUNS")
         try:
-            keep_structured_logs = int(ks_env) if ks_env is not None else 3
+            keep_structured_runs = int(ks_env) if ks_env is not None else 1
         except (TypeError, ValueError):
-            keep_structured_logs = 3
+            keep_structured_runs = 1
             log.warning(
-                "Invalid KEEP_STRUCTURED_LOGS=%r in env, falling back to %s",
+                "Invalid KEEP_STRUCTURED_RUNS=%r in env, falling back to %s",
                 ks_env,
-                keep_structured_logs,
+                keep_structured_runs,
             )
+
+    if keep_structured_runs < 1:
+        log.warning(
+            "KEEP_STRUCTURED_RUNS must be at least 1; using 1 instead of %s",
+            keep_structured_runs,
+        )
+        keep_structured_runs = 1
+
+    # Warn about the removed environment name so a developer can update a
+    # local .env file without silently wondering why the old value is ignored.
+    if os.getenv("KEEP_STRUCTURED_LOGS") is not None:
+        log.warning(
+            "KEEP_STRUCTURED_LOGS is no longer used; set KEEP_STRUCTURED_RUNS. "
+            "The default is 1 complete run."
+        )
 
     # Default LOG_DIR: use pytest root / reports / logs (can be overridden by LOG_DIR env)
     log_dir_cli = getattr(opt, "log_dir", None)
@@ -446,7 +473,7 @@ def pytest_configure(config):
             os.environ["LOG_DIR"] = str(log_dir)
 
         # propagate retention policy for structured logs
-        os.environ["KEEP_STRUCTURED_LOGS"] = str(keep_structured_logs)
+        os.environ["KEEP_STRUCTURED_RUNS"] = str(keep_structured_runs)
 
         configure_logging()
     except (OSError, RuntimeError, ValueError) as cfg_err:
@@ -586,6 +613,31 @@ def pytest_configure(config):
         )
 
 
+@pytest.hookimpl(tryfirst=True)
+def pytest_sessionstart(session):
+    """Apply the framework formatter before plugins emit session-level logs.
+
+    Pytest creates its live console handler for ``pytest_sessionstart`` using
+    ``log_cli_format`` from pytest.ini. That format references test-only fields
+    (nodeid and correlation_id), which are unavailable for run-level messages
+    such as the configuration banner. Apply CustomFormatter while pytest's live
+    handler is active so session messages render safely and match test logs.
+    """
+    pytest_logging = session.config.pluginmanager.get_plugin("logging-plugin")
+    live_handler = getattr(pytest_logging, "log_cli_handler", None)
+    if live_handler is None:
+        return
+
+    live_handler.setFormatter(
+        CustomFormatter(
+            LOG_FORMAT,
+            datefmt=LOG_DATEFMT,
+            use_emojis=not os.getenv("DISABLE_LOG_EMOJIS", "").lower()
+            in ("1", "true", "yes", "on"),
+        )
+    )
+
+
 @pytest.hookimpl(optionalhook=True)
 def pytest_configure_node(node):
     """Pass the controller's run ID into each xdist worker process."""
@@ -604,7 +656,7 @@ def pytest_sessionfinish(session, exitstatus):
         log_dir = Path(
             os.getenv("LOG_DIR") or Path(session.config.rootpath) / "reports" / "logs"
         )
-        keep = int(os.getenv("KEEP_STRUCTURED_LOGS", "3"))
+        keep = int(os.getenv("KEEP_STRUCTURED_RUNS", "1"))
         write_run_manifest(
             log_dir,
             run_id=RUN_ID,

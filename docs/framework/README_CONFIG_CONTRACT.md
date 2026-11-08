@@ -131,7 +131,7 @@ All flags are:
 ### **Example categories**
 
 - **Test behavior** (`FAIL_ON_EMPTY_LIST`, `PERF_ITERATIONS`)
-- **Logging** (`ENABLE_STRUCTURED_LOGS`, `LOG_DIR`, `KEEP_STRUCTURED_LOGS`)
+- **Logging** (`ENABLE_STRUCTURED_LOGS`, `LOG_DIR`, `KEEP_STRUCTURED_RUNS`)
 - **Reporting** (`AUTO_ALLURE_REPORT`, `PLAYWRIGHT_TRACE_ARTIFACT_ENABLED`)
 - **Safety** (`REQUIRE_ENV`)
 

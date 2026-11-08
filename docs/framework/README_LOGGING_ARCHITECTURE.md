@@ -22,7 +22,7 @@ The framework exposes two complementary logging surfaces:
   - Produces compact, one-record-per-line JSONL with run ID, process/worker ID, nodeid, correlation ID, and session/git/CI metadata.
   - Each process writes its own file under the run ID, avoiding concurrent worker writes to the same file.
   - A run manifest lists the process log files and final run status.
-  - The controller prunes complete runs according to `KEEP_STRUCTURED_LOGS`, keeping all worker files from each retained run.
+  - The controller prunes complete runs according to `KEEP_STRUCTURED_RUNS`, keeping all worker files and the manifest for each retained run across every team/environment folder.
   - Redaction is applied to structured output as well.
   - There are no human rotating “.log” files produced by the framework — structured JSONL is the only on-disk log artifact the logger may write.
 
@@ -227,9 +227,10 @@ Set these in CI or a local `.env` file as needed.
 - `ENABLE_JSON_PRETTY=false`
   - Compatibility setting only; machine-readable JSONL stays compact with one event per line.
 - `LOG_DIR `(optional)
-  - Base directory for structured files when enabled (defaults to `EcommerceAPItest/tests/api/logs`).
-- `KEEP_STRUCTURED_LOGS=3`
-  - Number of complete runs to keep per team and environment (pruning applies only when structured logging is enabled).
+  - Base directory for structured files when enabled (defaults to `<pytest root>/reports/logs`).
+- `KEEP_STRUCTURED_RUNS=1`
+  - Number of complete runs to keep globally across all team/environment folders (pruning applies only when structured logging is enabled). Increase this temporarily when you need more local history for debugging. The CLI option `--keep-structured-runs COUNT` overrides the environment setting.
+  - The previous `KEEP_STRUCTURED_LOGS` name is no longer read; update it in a local `.env` file if present.
 
 ### Security / payloads
 - `REDACT_SENSITIVE_FIELDS=true`
@@ -259,9 +260,10 @@ Set these in CI or a local `.env` file as needed.
 
 📌 Where structured logs are written
 -------------------------------
-- `{LOG_DIR or default}/<ENV>/test_debug_structured_<TIMESTAMP>.jsonl`
-  - Default base: `EcommerceAPItest/reports/logs/<entity>/`
-  - Files are timestamped and pruned by modification time; pruning keeps the newest `KEEP_STRUCTURED_LOGS`.
+- `{LOG_DIR or default}/<team>/<ENV>/test_debug_structured_<RUN_ID>_<PROCESS_ID>.jsonl`
+  - Default base: `<pytest root>/reports/logs/`.
+  - The run manifest is written beside the team folders as `run_manifest_<RUN_ID>.json`.
+  - Retention counts unique run IDs globally, so all logs and the matching manifest from each retained run are kept or removed together.
 
 ---
 

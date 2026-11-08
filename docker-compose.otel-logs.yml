@@ -1,0 +1,22 @@
+# Optional only: this service reads the existing per-worker JSONL artifacts.
+# It does not participate in pytest startup, test execution, or test results.
+services:
+  otel-collector:
+    # Pin the Collector Contrib version in your shell/CI environment.
+    # This example config uses the current `file_log` and `otlp_http` component names.
+    image: otel/opentelemetry-collector-contrib:${OTEL_COLLECTOR_VERSION:?Set a pinned Collector Contrib version, for example 0.164.0}
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    environment:
+      # Use the same ID for Collector and pytest so only this run is shipped.
+      E2E_RUN_ID: ${E2E_RUN_ID:?Set E2E_RUN_ID before starting Collector and pytest}
+      # This is the base OTLP/HTTP URL; the Collector appends /v1/logs.
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:?Set your organization's OTLP/HTTP endpoint}
+    volumes:
+      # Read the framework's artifacts without modifying or owning them.
+      - ./reports/logs:/var/log/ecommerceapi:ro
+      - ./docs/observability/otel-collector.yaml:/etc/otelcol-contrib/config.yaml:ro
+      # Preserve file offsets and exporter queue state between Collector restarts.
+      - otelcol-state:/var/lib/otelcol/file_storage
+
+volumes:
+  otelcol-state:

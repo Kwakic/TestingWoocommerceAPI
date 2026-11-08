@@ -78,7 +78,7 @@ The framework is designed around clear separation of responsibilities and busine
 
 - 🧩 **Metadata-Driven Framework** — Automatically discovers entities, registers pytest plugins, generates CI matrices, and scales as new business domains are added with minimal configuration.
 
-- 📝 **Structured Logging Architecture** — Implements a dual-layer logging system with developer-friendly console output and optional structured JSONL artifacts enriched with test context, correlation IDs, Git metadata, CI metadata, request details, and automatic payload redaction.
+- 📝 **Structured Logging Architecture** — Implements a dual-layer logging system with developer-friendly console output and optional structured JSONL artifacts enriched with test context, correlation IDs, Git metadata, CI metadata, request details, and automatic payload redaction. An optional OpenTelemetry Collector integration can forward a run's JSONL records to an organization's OTLP endpoint without changing the test runner's logging path.
 
 - 🧪 **Test Data Architecture** — Separates test-data generation, scenario customization, system provisioning, resource ownership, stable seed data, cleanup, and pytest lifecycle management through Factory, Builder, Provisioner, Ownership, and Fixture layers. The same data-preparation model is designed for REST, GraphQL, and Playwright UI scenarios.
 
@@ -358,6 +358,7 @@ This README is the **landing page**. Detailed implementation and operational gui
 | | [Authentication Guide](./docs/framework/README_AUTHENTICATION.md) | Credential handling |
 | | [Logging Architecture](./docs/framework/README_LOGGING_ARCHITECTURE.md) | Structured logging design |
 | | [Entity Discovery Guide](./docs/framework/README_ENTITY_DISCOVER_ARCHITECTURE_GUIDE.md) | Metadata-driven discovery |
+| **Observability** | [Optional OpenTelemetry log export](./docs/observability/README_OPENTELEMETRY_LOG_EXPORT.md) | Forward structured test logs to an OTLP/HTTP endpoint |
 | **CI/CD** | [CI/CD Architecture Guide](./docs/ci/README_CI_ARCHITECTURE.md) | Workflow design and artifact strategy |
 | | [Allure Reporting Guide](./docs/ci/README_ALLURE.md) | Report generation and publication |
 | | [Environment & CI Guide](./docs/ci/README_ENV_AND_CI.md) | Environment-to-pipeline mapping |

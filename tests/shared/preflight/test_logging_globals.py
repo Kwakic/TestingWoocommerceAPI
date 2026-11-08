@@ -74,7 +74,7 @@ def test_last_structured_log_set_when_enabled(tmp_path, monkeypatch):
     tmp_log_dir = tmp_path / "logs"
     monkeypatch.setenv("LOG_DIR", str(tmp_log_dir))
     monkeypatch.setenv("ENABLE_STRUCTURED_LOGS", "1")
-    monkeypatch.setenv("KEEP_STRUCTURED_LOGS", "1")  # keep pruning simple
+    monkeypatch.setenv("KEEP_STRUCTURED_RUNS", "1")  # keep pruning simple
 
     # Ensure a clean state
     custom_logger.LAST_STRUCTURED_LOG = None
@@ -93,7 +93,7 @@ def test_last_structured_log_set_when_enabled(tmp_path, monkeypatch):
     # Cleanup: unset envs to avoid leaking into other tests
     monkeypatch.delenv("LOG_DIR", raising=False)
     monkeypatch.delenv("ENABLE_STRUCTURED_LOGS", raising=False)
-    monkeypatch.delenv("KEEP_STRUCTURED_LOGS", raising=False)
+    monkeypatch.delenv("KEEP_STRUCTURED_RUNS", raising=False)
     # Best-effort cleanup of temp logs directory
     try:
         shutil.rmtree(tmp_log_dir)
