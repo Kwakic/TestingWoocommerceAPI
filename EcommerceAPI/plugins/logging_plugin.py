@@ -53,6 +53,8 @@ from EcommerceAPI.src.utils.custom_logger import (
     set_redaction,
     set_include_payloads,
     configure_logging,
+    prune_structured_logs,
+    write_run_manifest,
     attach_global_logging_metadata,
     LOG_FORMAT,
     LOG_DATEFMT,
@@ -70,6 +72,15 @@ from EcommerceAPI.src.configs.runtime_metadata import SESSION_METADATA
 # Logger for this module
 # --------------------------------------------------------------------------------------
 log = logging.getLogger(__name__)
+
+RUN_ID = os.getenv("E2E_RUN_ID") or SESSION_ID
+PROCESS_ID = os.getenv("PYTEST_XDIST_WORKER") or "master"
+IS_XDIST_WORKER = bool(os.getenv("PYTEST_XDIST_WORKER"))
+STRUCTURED_LOGS_ENABLED = False
+_RUN_ID_WORKERINPUT_KEY = "ecommerce_run_id"
+_CORRELATION_PROPERTY_KEY = "ecommerce_correlation_id"
+_WORKER_PROPERTY_KEY = "ecommerce_worker_id"
+_RUN_PROPERTY_KEY = "ecommerce_run_id"
 
 # --------------------------------------------------------------------------------------
 # Preserve Python's original LogRecord factory
@@ -118,6 +129,14 @@ def _record_factory(*args, **kwargs):
 
     if corr is not None:
         record.correlation_id = corr
+
+    try:
+        worker_id = log_context.worker_id.get()
+    except LookupError:
+        worker_id = None
+    record.run_id = RUN_ID
+    record.process_id = PROCESS_ID
+    record.worker_id = worker_id or PROCESS_ID
 
     # environment tag for convenience in handlers/formatters
     record.env = get_config(reload=True).ENV
@@ -193,7 +212,10 @@ def pytest_addoption(parser):
         "--enable-json-pretty",
         action="store_true",
         default=False,
-        help="Pretty-print JSONL structured logs (overrides ENABLE_JSON_PRETTY env).",
+        help=(
+            "Compatibility flag; structured event logs remain compact JSONL "
+            "for reliable ingestion."
+        ),
     )
 
 
@@ -220,6 +242,8 @@ def pytest_configure(config):
     After this hook finishes, every test uses the same logging
     configuration.
     """
+    global RUN_ID, PROCESS_ID, IS_XDIST_WORKER, STRUCTURED_LOGS_ENABLED
+
     # Resolve rootdir safely (fall back to cwd in odd contexts)
     try:
         rootdir = Path(config.rootpath)
@@ -238,12 +262,32 @@ def pytest_configure(config):
                 "Failed loading .env from %s: %s", env_path, load_err, exc_info=True
             )
 
+    workerinput = getattr(config, "workerinput", None) or {}
+    worker_env_id = os.getenv("PYTEST_XDIST_WORKER")
+    IS_XDIST_WORKER = bool(worker_env_id or workerinput)
+    PROCESS_ID = worker_env_id or workerinput.get("workerid") or "master"
+    RUN_ID = (
+        workerinput.get(_RUN_ID_WORKERINPUT_KEY)
+        or (os.getenv("E2E_RUN_ID") if IS_XDIST_WORKER else None)
+        or uuid.uuid4().hex
+    )
+    os.environ["E2E_RUN_ID"] = RUN_ID
+    log_context.worker_id.set(PROCESS_ID)
+    SESSION_METADATA.update(
+        {
+            "run_id": RUN_ID,
+            "process_id": PROCESS_ID,
+            "worker_id": PROCESS_ID,
+        }
+    )
+
     # 2) Resolve CLI/env toggles (CLI wins)
     opt = getattr(config, "option", None)
 
     enable_structured = bool(getattr(opt, "enable_structured_logs", False)) or env_bool(
         "ENABLE_STRUCTURED_LOGS", default=False
     )
+    STRUCTURED_LOGS_ENABLED = enable_structured
     enable_json_pretty = bool(getattr(opt, "enable_json_pretty", False)) or env_bool(
         "ENABLE_JSON_PRETTY", default=False
     )
@@ -478,11 +522,14 @@ def pytest_configure(config):
     # sentinels).
     try:
         # NOTE: pass extra={"suppress_nodeid": True} so this startup message does not display
-        # the nodeid block (which would otherwise be "[🧪 unknown]").
+        # a test node ID; no individual test is active during configuration.
         log.info(
             "Custom LogRecord factory installed — enriches records with nodeid, test_name, "
-            "correlation_id and env. session_id=%s",
+            "correlation_id, run_id and worker identity. "
+            "session_id=%s run_id=%s process_id=%s",
             SESSION_ID,
+            RUN_ID,
+            PROCESS_ID,
             extra={"suppress_nodeid": True},
         )
     except (TypeError, ValueError, AttributeError) as emit_err:
@@ -498,6 +545,9 @@ def pytest_configure(config):
         attach_global_logging_metadata(
             env=get_config(reload=True).ENV,
             session_id=SESSION_METADATA["session_id"],
+            run_id=RUN_ID,
+            process_id=PROCESS_ID,
+            worker_id=PROCESS_ID,
             ci_info={
                 "ci_provider": SESSION_METADATA["ci"]["provider"],
                 "ci_job_id": SESSION_METADATA["ci"]["job_id"],
@@ -532,6 +582,41 @@ def pytest_configure(config):
         log.debug(
             "Failed to remove temporary startup handler: %s",
             rem_temp_err,
+            exc_info=True,
+        )
+
+
+@pytest.hookimpl(optionalhook=True)
+def pytest_configure_node(node):
+    """Pass the controller's run ID into each xdist worker process."""
+    workerinput = getattr(node, "workerinput", None)
+    if isinstance(workerinput, dict):
+        workerinput[_RUN_ID_WORKERINPUT_KEY] = RUN_ID
+
+
+@pytest.hookimpl(trylast=True)
+def pytest_sessionfinish(session, exitstatus):
+    """Prune old structured logs once, from the controller after workers finish."""
+    if IS_XDIST_WORKER or not STRUCTURED_LOGS_ENABLED:
+        return
+
+    try:
+        log_dir = Path(
+            os.getenv("LOG_DIR") or Path(session.config.rootpath) / "reports" / "logs"
+        )
+        keep = int(os.getenv("KEEP_STRUCTURED_LOGS", "3"))
+        write_run_manifest(
+            log_dir,
+            run_id=RUN_ID,
+            process_id=PROCESS_ID,
+            exit_status=int(exitstatus),
+        )
+        prune_structured_logs(log_dir, keep=keep, current_run_id=RUN_ID)
+    except (OSError, TypeError, ValueError) as prune_err:
+        log.warning(
+            "Could not apply structured-log retention for run %s: %s",
+            RUN_ID,
+            prune_err,
             exc_info=True,
         )
 
@@ -741,8 +826,37 @@ def session_metadata():
 
 
 # ============================================================================================
-# Write Structured JSON test-result logging (call phase)
+# Preserve per-test context in reports and write structured test-result logging
 # ============================================================================================
+@pytest.hookimpl(hookwrapper=True, tryfirst=True)
+def pytest_runtest_makereport(item, call):
+    """Carry correlation and worker IDs with reports sent from xdist workers."""
+    outcome = yield
+    report = outcome.get_result()
+
+    try:
+        correlation_id = log_context.correlation_id.get()
+    except LookupError:
+        correlation_id = None
+
+    report_properties = list(getattr(report, "user_properties", ()) or ())
+    reserved_keys = {
+        _CORRELATION_PROPERTY_KEY,
+        _WORKER_PROPERTY_KEY,
+        _RUN_PROPERTY_KEY,
+    }
+    report_properties = [
+        prop
+        for prop in report_properties
+        if not (isinstance(prop, tuple) and prop and prop[0] in reserved_keys)
+    ]
+    if correlation_id:
+        report_properties.append((_CORRELATION_PROPERTY_KEY, correlation_id))
+    report_properties.append((_WORKER_PROPERTY_KEY, PROCESS_ID))
+    report_properties.append((_RUN_PROPERTY_KEY, RUN_ID))
+    report.user_properties = report_properties
+
+
 @pytest.hookimpl(tryfirst=True)
 def pytest_runtest_logreport(report):
     """
@@ -761,7 +875,9 @@ def pytest_runtest_logreport(report):
     LogRecord object, because the custom LogRecord factory
     adds those automatically.
     """
-    if report.when != "call":
+    # In parallel runs the worker has the full live context. The controller
+    # writes the one authoritative result event after receiving the report.
+    if IS_XDIST_WORKER or report.when != "call":
         return
 
     # Safely compute duration in milliseconds
@@ -777,8 +893,16 @@ def pytest_runtest_logreport(report):
     except (AttributeError, TypeError):
         pass
 
+    report_properties = dict(getattr(report, "user_properties", ()) or ())
+    report_nodeid = getattr(report, "nodeid", None)
+    report_correlation_id = report_properties.get(_CORRELATION_PROPERTY_KEY)
+    report_worker_id = (
+        getattr(report, "worker_id", None)
+        or report_properties.get(_WORKER_PROPERTY_KEY)
+        or PROCESS_ID
+    )
+
     # Build extra using only safe keys that do not overlap LogRecord attributes.
-    # We intentionally do NOT include "test_name" or "nodeid" here because those are added by record factory.
     extra = {
         "event": "test_result",
         "outcome": getattr(report, "outcome", None),
@@ -786,8 +910,17 @@ def pytest_runtest_logreport(report):
     if duration_ms is not None:
         extra["duration_ms"] = duration_ms
 
-    if report.passed:
-        logging.getLogger().info(
-            "✅ Test completed",
-            extra=extra,
-        )
+    nodeid_token = log_context.test_nodeid.set(report_nodeid)
+    correlation_token = log_context.correlation_id.set(report_correlation_id)
+    worker_token = log_context.worker_id.set(report_worker_id)
+    try:
+        if report.passed:
+            logging.getLogger().info("✅ Test passed", extra=extra)
+        elif report.failed:
+            logging.getLogger().error("❌ Test failed", extra=extra)
+        else:
+            logging.getLogger().warning("⏭ Test skipped", extra=extra)
+    finally:
+        log_context.worker_id.reset(worker_token)
+        log_context.correlation_id.reset(correlation_token)
+        log_context.test_nodeid.reset(nodeid_token)
