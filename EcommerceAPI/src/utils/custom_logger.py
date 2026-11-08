@@ -10,12 +10,12 @@ This module configures two complementary logging targets:
    - No file-based .log output for human logs (console via pytest live-logging is the human surface)
 
 2. Optional structured JSONL file logging (CI-friendly, opt-in)
-   - One JSON object per line
+   - One compact JSON object per line, isolated by run and process/worker
    - Redaction of sensitive fields
    - Optional payload inclusion (env or runtime toggle)
    - Includes CI metadata (ci_provider, job_id), git metadata (branch, commit),
     session_id, test_name, status_code, duration_ms, url, env, etc.
-   - If enabled, rotates old structured logs according to KEEP_STRUCTURED_LOGS (default: 3)
+   - If enabled, retains complete runs according to KEEP_STRUCTURED_LOGS (default: 3)
 
 
         logging_plugin.py
@@ -37,7 +37,7 @@ Environment variables
 REDACT_SENSITIVE_FIELDS   (default: on)
 LOG_PAYLOADS              (default: off)
 ENABLE_STRUCTURED_LOGS    (default: off)  # structured JSONL writing is opt-in
-ENABLE_JSON_PRETTY        (pretty-print JSON logs)
+ENABLE_JSON_PRETTY        (compatibility flag; JSONL event files remain compact)
 DISABLE_LOG_EMOJIS        (disable emojis in console)
 LOG_DIR                   (override logs directory)
 KEEP_STRUCTURED_LOGS      (files to keep, default 3; applies only when structured logging is enabled)
@@ -65,6 +65,7 @@ import sys
 import re
 import json
 import logging
+import uuid
 from pathlib import Path
 from datetime import datetime, timezone
 from typing import Any, Iterable, Optional, Dict, TextIO
@@ -88,7 +89,13 @@ GLOBAL_METADATA: Dict[str, Any] = {}
 
 
 def attach_global_logging_metadata(
-    env: str, session_id: str, ci_info: dict, git_info: dict
+    env: str,
+    session_id: str,
+    ci_info: dict,
+    git_info: dict,
+    run_id: Optional[str] = None,
+    process_id: Optional[str] = None,
+    worker_id: Optional[str] = None,
 ) -> None:
     """
     Store metadata that will be included in every structured log entry.
@@ -106,14 +113,22 @@ def attach_global_logging_metadata(
 
     The pytest logging plugin calls this function once during startup.
     """
-    GLOBAL_METADATA.update(
-        {
-            "env": env,
-            "session_id": session_id,
-            **ci_info,
-            **git_info,
-        }
-    )
+    metadata = {
+        "env": env,
+        "session_id": session_id,
+        **ci_info,
+        **git_info,
+    }
+    for key, value in (
+        ("run_id", run_id),
+        ("process_id", process_id),
+        ("worker_id", worker_id),
+    ):
+        if value is None:
+            GLOBAL_METADATA.pop(key, None)
+        else:
+            metadata[key] = value
+    GLOBAL_METADATA.update(metadata)
 
 
 # ----------------------------------------------------------------------
@@ -271,7 +286,7 @@ def redact_obj(obj: Any, sensitive_keys: Optional[Iterable[str]] = None) -> Any:
 
 LOG_FORMAT = (
     "[%(asctime)s] [%(levelname)-8s] "
-    "%(nodeid_block)s%(correlation_block)s%(env_block)s%(message)s"
+    "%(worker_block)s%(nodeid_block)s%(correlation_block)s%(env_block)s%(message)s"
 )
 
 # LOG_FORMAT = "[%(asctime)s] [%(levelname)-8s] %(nodeid_block)s%(env_block)s%(message)s"
@@ -331,9 +346,8 @@ class CustomFormatter(logging.Formatter):
         Build nodeid_block, correlation_block, and env_block for human display.
 
         Rules:
-        - Preserve record-provided values (including "unknown" or "-").
-        - Only fall back to ContextVars when the attribute is missing.
-        - Hide correlation block when correlation_id is missing or sentinel ("-").
+        - Use the current test context when the record has no explicit value.
+        - Omit test and correlation blocks for session-level records.
         """
 
         # ------------------------------------------------------------
@@ -387,6 +401,14 @@ class CustomFormatter(logging.Formatter):
             record.correlation_block = f"[🔗 {corr_val}] "
         else:
             record.correlation_block = ""
+
+        worker_val = getattr(record, "worker_id", None)
+        if worker_val in (None, "", "unknown"):
+            try:
+                worker_val = log_context.worker_id.get()
+            except LookupError:
+                worker_val = None
+        record.worker_block = f"[worker={worker_val}] " if worker_val else ""
 
         # ------------------------------------------------------------
         # Message redaction + optional emoji stripping
@@ -534,6 +556,9 @@ class JSONFormatter(logging.Formatter):
 
         # Extras: include known extras; omit payload when payloads are disabled
         extras_keys = (
+            "run_id",
+            "process_id",
+            "worker_id",
             "method",
             "endpoint",
             "status",
@@ -607,8 +632,10 @@ class TeamRoutingJSONLHandler(logging.Handler):
         self.base_dir = base_dir
         self.formatter = formatter
         self._streams: Dict[str, TextIO] = {}
-        self._timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-        self._keep = int(os.getenv("KEEP_STRUCTURED_LOGS", "3"))
+        self.run_id = _safe_log_component(os.getenv("E2E_RUN_ID") or uuid.uuid4().hex)
+        self.process_id = _safe_log_component(
+            os.getenv("PYTEST_XDIST_WORKER") or "master"
+        )
 
     def emit(self, record: logging.LogRecord) -> None:
         """
@@ -623,12 +650,9 @@ class TeamRoutingJSONLHandler(logging.Handler):
         team = None
         try:
             nodeid = getattr(record, "nodeid", None)
-            if not nodeid:
-                return
-
-            team = extract_entity_from_nodeid(nodeid)
+            team = extract_entity_from_nodeid(nodeid) if nodeid else None
             if not team:
-                return
+                team = "session"
 
             stream = self._get_stream(team)
             stream.write(self.format(record) + "\n")
@@ -666,14 +690,11 @@ class TeamRoutingJSONLHandler(logging.Handler):
           reports/
             logs/
               <team>/
-                logs/
                   <ENV>/  # dynamic environment (test/dev/staging/prod)
-                    test_debug_structured_<timestamp>.jsonl
+                    test_debug_structured_<run-id>_<process-id>.jsonl
 
-        When a stream is first created we also populate LAST_STRUCTURED_LOG with the path
-        of the created file (useful for CI or test harness that wants to know the file location).
-
-        Enforces KEEP_STRUCTURED_LOGS per team + environment.
+        Each process writes to its own run-scoped file. The controller applies
+        retention once after the run, so workers never prune one another's logs.
         """
         global LAST_STRUCTURED_LOG
 
@@ -691,36 +712,9 @@ class TeamRoutingJSONLHandler(logging.Handler):
             # Ensure directory exists
             logs_dir.mkdir(parents=True, exist_ok=True)
 
-            # ------------------------------------------------------------------
-            # Retention: prune older structured logs (per team + per ENV)
-            # ------------------------------------------------------------------
-            keep = int(os.getenv("KEEP_STRUCTURED_LOGS", "3"))
-            try:
-                existing = sorted(
-                    logs_dir.glob("test_debug_structured_*.jsonl"),
-                    key=lambda p: p.stat().st_mtime,
-                    reverse=True,
-                )
-                for old in existing[keep:]:
-                    try:
-                        old.unlink()
-                    except (OSError, PermissionError) as e:
-                        log.debug(
-                            "Failed to remove old structured log %s: %s",
-                            old,
-                            e,
-                            exc_info=True,
-                        )
-            except OSError as e:
-                log.debug(
-                    "Could not prune structured logs in %s: %s",
-                    logs_dir,
-                    e,
-                    exc_info=True,
-                )
-            # ------------------------------------------------------------------
-
-            path = logs_dir / f"test_debug_structured_{self._timestamp}.jsonl"
+            path = logs_dir / (
+                f"test_debug_structured_{self.run_id}_{self.process_id}.jsonl"
+            )
 
             try:
                 self._streams[team] = path.open("a", encoding="utf-8")
@@ -746,6 +740,154 @@ class TeamRoutingJSONLHandler(logging.Handler):
                 log.debug("Error closing stream for %s: %s", name, e, exc_info=True)
         self._streams.clear()
         super().close()
+
+
+def _safe_log_component(value: str) -> str:
+    """Return a filesystem-safe identifier for a log path component."""
+    safe_value = re.sub(r"[^A-Za-z0-9.-]+", "-", value).strip(".-")
+    return safe_value or "run"
+
+
+def prune_structured_logs(base_dir: Path, keep: int, current_run_id: str) -> None:
+    """Apply retention by run, preserving every worker file from retained runs."""
+    root = base_dir.resolve()
+    if not root.is_dir():
+        return
+
+    keep = max(1, int(keep))
+    active_run_id = _safe_log_component(current_run_id)
+
+    for team_dir in root.iterdir():
+        if team_dir.is_symlink() or not team_dir.is_dir():
+            continue
+
+        for env_dir in team_dir.iterdir():
+            if env_dir.is_symlink() or not env_dir.is_dir():
+                continue
+
+            try:
+                resolved_team_dir = team_dir.resolve(strict=True)
+                resolved_env_dir = env_dir.resolve(strict=True)
+                if resolved_env_dir.parent != resolved_team_dir:
+                    continue
+
+                run_files: Dict[str, list[Path]] = {}
+                for path in env_dir.glob("test_debug_structured_*.jsonl"):
+                    if path.is_symlink() or not path.is_file():
+                        continue
+
+                    match = re.match(
+                        r"^test_debug_structured_([A-Za-z0-9.-]+)_"
+                        r"([A-Za-z0-9.-]+)\.jsonl$",
+                        path.name,
+                    )
+                    run_key = match.group(1) if match else path.stem
+                    run_files.setdefault(run_key, []).append(path)
+
+                active_files = run_files.pop(active_run_id, None)
+                ordered_runs = sorted(
+                    run_files.items(),
+                    key=lambda item: max(path.stat().st_mtime for path in item[1]),
+                    reverse=True,
+                )
+
+                other_runs_to_keep = max(0, keep - (1 if active_files else 0))
+                old_runs = ordered_runs[other_runs_to_keep:]
+                for _, paths in old_runs:
+                    for path in paths:
+                        if path.is_symlink():
+                            continue
+                        resolved_path = path.resolve(strict=True)
+                        if resolved_path.parent == resolved_env_dir:
+                            path.unlink()
+            except (OSError, ValueError) as prune_err:
+                log.debug(
+                    "Could not apply structured-log retention in %s: %s",
+                    env_dir,
+                    prune_err,
+                    exc_info=True,
+                )
+
+    try:
+        manifests = [
+            path
+            for path in root.glob("run_manifest_*.json")
+            if not path.is_symlink() and path.is_file()
+        ]
+        active_manifest = root / f"run_manifest_{active_run_id}.json"
+        other_manifests = sorted(
+            (path for path in manifests if path != active_manifest),
+            key=lambda path: path.stat().st_mtime,
+            reverse=True,
+        )
+        other_manifests_to_keep = max(
+            0,
+            keep - (1 if active_manifest in manifests else 0),
+        )
+        for path in other_manifests[other_manifests_to_keep:]:
+            if path.is_symlink():
+                continue
+            if path.resolve(strict=True).parent == root:
+                path.unlink()
+    except (OSError, ValueError) as prune_err:
+        log.debug(
+            "Could not apply run-manifest retention in %s: %s",
+            root,
+            prune_err,
+            exc_info=True,
+        )
+
+
+def write_run_manifest(
+    base_dir: Path,
+    run_id: str,
+    process_id: str,
+    exit_status: int,
+) -> Optional[Path]:
+    """Write an index of all structured files created by this pytest run."""
+    root = base_dir.resolve()
+    root.mkdir(parents=True, exist_ok=True)
+    safe_run_id = _safe_log_component(run_id)
+    log_pattern = f"test_debug_structured_{safe_run_id}_*.jsonl"
+
+    log_paths = []
+    process_ids = set()
+    for path in root.rglob(log_pattern):
+        if path.is_symlink() or not path.is_file():
+            continue
+        try:
+            relative_path = path.resolve(strict=True).relative_to(root)
+        except (OSError, ValueError):
+            continue
+        log_paths.append(relative_path.as_posix())
+        process_ids.add(path.stem.removeprefix(f"test_debug_structured_{safe_run_id}_"))
+
+    manifest = {
+        "schema_version": 1,
+        "run_id": safe_run_id,
+        "controller_process_id": process_id,
+        "exit_status": int(exit_status),
+        "status": "passed" if exit_status == 0 else "failed",
+        "finished_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "process_ids": sorted(process_ids),
+        "structured_log_files": sorted(log_paths),
+    }
+
+    manifest_path = root / f"run_manifest_{safe_run_id}.json"
+    temporary_path = root / f"run_manifest_{safe_run_id}.json.tmp"
+    try:
+        temporary_path.write_text(
+            json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        os.replace(temporary_path, manifest_path)
+        return manifest_path
+    except OSError:
+        try:
+            temporary_path.unlink(missing_ok=True)
+        except OSError:
+            pass
+        raise
 
 
 # ======================================================================================
@@ -851,7 +993,12 @@ def configure_logging() -> logging.Logger:
         datefmt=LOG_DATEFMT,
         use_emojis=use_emojis,
     )
-    json_formatter = JSONFormatter(pretty=enable_pretty)
+    if enable_pretty:
+        log.debug(
+            "ENABLE_JSON_PRETTY is ignored for JSONL event files; "
+            "records stay compact and one-per-line."
+        )
+    json_formatter = JSONFormatter(pretty=False)
 
     # ------------------------------------------------------------------
     # Root logger

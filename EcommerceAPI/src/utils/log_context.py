@@ -18,5 +18,6 @@ log_context can grow over time e.g:
 
 import contextvars
 
-correlation_id = contextvars.ContextVar("correlation_id", default="-")
-test_nodeid = contextvars.ContextVar("test_nodeid", default="unknown")
+correlation_id = contextvars.ContextVar("correlation_id", default=None)
+test_nodeid = contextvars.ContextVar("test_nodeid", default=None)
+worker_id = contextvars.ContextVar("worker_id", default=None)

@@ -13,13 +13,16 @@ The framework exposes two complementary logging surfaces:
 
 - **Console** (human)
   - Pytest's live-logging is the single console emitter during test runs.
-  - Console formatting is readable and includes test context (nodeid, correlation_id) and optional emojis.
+  - Console formatting is readable and includes worker and test context (nodeid, correlation_id) when a test is active.
   - Messages are redacted (when enabled) before any handler sees them.
+  - xdist worker stdout/stderr is not forwarded to the controller terminal; use the worker files for full details.
 
 - **Structured JSONL file output** (optional, CI-friendly)
   - Opt-in: enabled by setting `ENABLE_STRUCTURED_LOGS=true`.
-  - Produces one JSON object per line with rich metadata (timestamp, level, logger, message, nodeid, correlation_id, session/git/CI info, extras like method/endpoint/status/duration/payload/url).
-  - Files are timestamped and pruned locally according to `KEEP_STRUCTURED_LOGS`.
+  - Produces compact, one-record-per-line JSONL with run ID, process/worker ID, nodeid, correlation ID, and session/git/CI metadata.
+  - Each process writes its own file under the run ID, avoiding concurrent worker writes to the same file.
+  - A run manifest lists the process log files and final run status.
+  - The controller prunes complete runs according to `KEEP_STRUCTURED_LOGS`, keeping all worker files from each retained run.
   - Redaction is applied to structured output as well.
   - There are no human rotating “.log” files produced by the framework — structured JSONL is the only on-disk log artifact the logger may write.
 
@@ -39,6 +42,7 @@ Responsibilities include:
 - configuring runtime logging options
 - installing the custom `LogRecord` factory
 - attaching ContextVar metadata (nodeid, correlation_id, environment)
+- sharing the run ID across xdist workers and carrying correlation IDs in test reports
 - configuring pytest console logging
 - collecting Git / CI / session metadata
 - emitting session lifecycle events
@@ -63,6 +67,7 @@ Responsibilities include:
 - emoji handling
 - log routing
 - structured log retention
+- run-scoped, process-specific file routing
 - logging handlers
 - runtime logging configuration
 
@@ -218,13 +223,13 @@ Set these in CI or a local `.env` file as needed.
 
 ### Core toggles
 - `ENABLE_STRUCTURED_LOGS=false`
-  - When `true` the framework writes a structured JSONL file for the run (opt-in).
+  - When `true` the framework writes structured JSONL files for the run and each process/worker.
 - `ENABLE_JSON_PRETTY=false`
-  - When `true` pretty-prints structured JSON (larger files).
+  - Compatibility setting only; machine-readable JSONL stays compact with one event per line.
 - `LOG_DIR `(optional)
   - Base directory for structured files when enabled (defaults to `EcommerceAPItest/tests/api/logs`).
 - `KEEP_STRUCTURED_LOGS=3`
-  - Number of structured JSONL files to keep (pruning applies only when structured logging is enabled).
+  - Number of complete runs to keep per team and environment (pruning applies only when structured logging is enabled).
 
 ### Security / payloads
 - `REDACT_SENSITIVE_FIELDS=true`

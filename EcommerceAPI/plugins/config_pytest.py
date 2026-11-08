@@ -94,7 +94,7 @@ def pytest_sessionstart(session):
     log.info("REQUIRE_ENV             : %s", cfg.REQUIRE_ENV)
 
     log.info("STRUCTURED_LOGS         : %s", cfg.ENABLE_STRUCTURED_LOGS)
-    log.info("JSON_PRETTY             : %s", cfg.ENABLE_JSON_PRETTY)
+    log.info("JSONL_FORMAT            : compact one-record-per-line")
     log.info("LOG_PAYLOADS            : %s", cfg.LOG_PAYLOADS)
     log.info("REDACT_SENSITIVE_FIELDS : %s", cfg.REDACT_SENSITIVE_FIELDS)
     log.info("DISABLE_LOG_EMOJIS      : %s", cfg.DISABLE_LOG_EMOJIS)
