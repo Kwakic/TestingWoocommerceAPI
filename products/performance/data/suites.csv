@@ -1,5 +1,5 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Sun Nov 01 11:05:44 UTC 2026","Sun Nov 01 11:05:44 UTC 2026","368","tests.products.performance","test_product_performance","","","","test_product_response_times","
+"passed","Sun Nov 08 11:06:47 UTC 2026","Sun Nov 08 11:06:48 UTC 2026","591","tests.products.performance","test_product_performance","","","","test_product_response_times","
 Benchmark the Products endpoint.
 
 The benchmark executes multiple requests, measures their response times,
