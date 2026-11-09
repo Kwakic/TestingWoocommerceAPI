@@ -1,5 +1,5 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Mon Nov 09 21:38:47 UTC 2026","Mon Nov 09 21:38:48 UTC 2026","788","tests.orders.api","test_update_order","","","","test_update_order_status[cancelled]","Update an Order to a supported status and verify it persists.
+"passed","Mon Nov 09 21:45:36 UTC 2026","Mon Nov 09 21:45:37 UTC 2026","462","tests.orders.api","test_update_order","","","","test_update_order_status[on-hold]","Update an Order to a supported status and verify it persists.
 
 Test flow:
 
@@ -8,16 +8,7 @@ Test flow:
     3. Apply the state through OrderStateProvisioner.
     4. Validate the update response and retrieve the Order again.
 "
-"passed","Mon Nov 09 21:38:47 UTC 2026","Mon Nov 09 21:38:48 UTC 2026","601","tests.orders.api","test_create_order","","","","test_create_single_order","Create a minimal Order and compare its API response with the database.
-
-Test flow:
-
-    1. Create a Product for the Order line item.
-    2. Create an Order with the standard fixture.
-    3. Retrieve the Order through the API.
-    4. Compare API data with the Order and line-item database records.
-"
-"passed","Mon Nov 09 21:38:46 UTC 2026","Mon Nov 09 21:38:47 UTC 2026","826","tests.orders.api","test_apply_valid_coupon_to_order","","","","test_valid_coupon_applies_50_percent_discount","Apply a 50% coupon when the Order meets its minimum spend.
+"passed","Mon Nov 09 21:45:35 UTC 2026","Mon Nov 09 21:45:35 UTC 2026","461","tests.orders.api","test_apply_valid_coupon_to_order","","","","test_valid_coupon_applies_50_percent_discount","Apply a 50% coupon when the Order meets its minimum spend.
 
 Test flow:
 
@@ -26,7 +17,7 @@ Test flow:
     3. Create an Order containing the Product and Coupon.
     4. Retrieve the Order and verify the Coupon and discount totals.
 "
-"passed","Mon Nov 09 21:38:48 UTC 2026","Mon Nov 09 21:38:49 UTC 2026","923","tests.orders.api","test_update_order","","","","test_update_order_status[completed]","Update an Order to a supported status and verify it persists.
+"passed","Mon Nov 09 21:45:35 UTC 2026","Mon Nov 09 21:45:36 UTC 2026","437","tests.orders.api","test_update_order","","","","test_update_order_status[cancelled]","Update an Order to a supported status and verify it persists.
 
 Test flow:
 
@@ -35,7 +26,16 @@ Test flow:
     3. Apply the state through OrderStateProvisioner.
     4. Validate the update response and retrieve the Order again.
 "
-"passed","Mon Nov 09 21:38:46 UTC 2026","Mon Nov 09 21:38:46 UTC 2026","641","tests.orders.api","test_get_order","","","","test_get_order_by_id","Retrieve a valid Order by ID and verify its identity and line items.
+"passed","Mon Nov 09 21:45:36 UTC 2026","Mon Nov 09 21:45:36 UTC 2026","345","tests.orders.api","test_create_order","","","","test_create_single_order","Create a minimal Order and compare its API response with the database.
+
+Test flow:
+
+    1. Create a Product for the Order line item.
+    2. Create an Order with the standard fixture.
+    3. Retrieve the Order through the API.
+    4. Compare API data with the Order and line-item database records.
+"
+"passed","Mon Nov 09 21:45:35 UTC 2026","Mon Nov 09 21:45:35 UTC 2026","349","tests.orders.api","test_get_order","","","","test_get_order_by_id","Retrieve a valid Order by ID and verify its identity and line items.
 
 Fixture responsibilities:
     - Create a Product for the Order line item.
@@ -49,7 +49,7 @@ Test flow:
     4. Validate the Order response structure.
     5. Verify the Order ID and Product line item.
 "
-"passed","Mon Nov 09 21:38:48 UTC 2026","Mon Nov 09 21:38:49 UTC 2026","840","tests.orders.api","test_update_order","","","","test_update_order_status[on-hold]","Update an Order to a supported status and verify it persists.
+"passed","Mon Nov 09 21:45:36 UTC 2026","Mon Nov 09 21:45:36 UTC 2026","493","tests.orders.api","test_update_order","","","","test_update_order_status[completed]","Update an Order to a supported status and verify it persists.
 
 Test flow:
 
