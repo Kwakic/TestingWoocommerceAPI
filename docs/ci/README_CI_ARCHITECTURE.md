@@ -100,6 +100,44 @@ Your pipelines should answer **one specific question each**:
 | **security.yml** | Are auth/permission rules still safe? | Auth boundaries; internal audit |
 | **ui.yml** | Can users complete critical browser-based journeys? | Playwright UI validation; cross-browser coverage |
 
+### GitHub Actions dependency updates
+
+The repository configures Dependabot in `.github/dependabot.yml` to check the
+`github-actions` ecosystem at the repository root once a week. It opens a pull
+request when it finds a newer action version; it does not merge the update
+automatically. External actions are pinned to full commit SHAs, and Dependabot
+updates both the SHA and its version comment. The configuration allows up to
+five open update PRs at a time.
+
+These version-update PRs change the action implementation referenced by a
+workflow, not the Python or Java runtime version selected by the project.
+
+For each update PR:
+
+1. Review **Files changed** to confirm which action reference is changing.
+2. Wait for the required checks. Dependabot PRs can show skipped jobs; that is
+   expected for work that requires repository secrets.
+3. Merge when the required checks pass. The merged change triggers workflows on
+   `main`, where the full trusted test configuration runs.
+
+GitHub does not provide regular **Actions secrets** to Dependabot-triggered
+workflows; those runs can access only **Dependabot secrets**. This repository's
+Playwright UI suite requires the `UI_CUSTOMER_*` Actions secrets to seed test
+accounts, so `ui.yml` skips the UI test and report jobs for Dependabot PRs. UI
+tests still run for eligible human pull requests, pushes to `main`, and manual
+runs. The credentials are not missing from the repository; the bot-triggered
+run is intentionally not given access to them.
+
+If a Dependabot run fails in the UI seeding step, check whether the PR was
+opened by Dependabot before changing or recreating the customer secrets. For
+this repository, the intended response is to keep the secrets in Actions and
+let the UI suite run after the update is merged to `main`.
+
+The current config also requests the `dependencies` and `github-actions`
+labels. Those labels must exist in the repository; missing labels produce a
+Dependabot comment but do not fail the checks. Create the labels or remove
+them from `.github/dependabot.yml`.
+
 
 
 ## 🚨 Environment Gate (Runtime Validation)
