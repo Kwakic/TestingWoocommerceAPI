@@ -1,5 +1,23 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Sun Nov 08 22:38:10 UTC 2026","Sun Nov 08 22:38:11 UTC 2026","347","tests.products.api","test_create_products","","","","test_create_single_simple_product","
+"passed","Mon Nov 09 13:47:47 UTC 2026","Mon Nov 09 13:47:48 UTC 2026","344","tests.products.api","test_get_products","","","","test_get_product_by_id","
+Verify that a Product can be retrieved successfully by ID.
+
+Endpoint tested:
+    GET /products/{id}
+
+Fixture responsibilities (``create_valid_product``):
+    - POST /products
+    - response validation (Pydantic)
+    - automatic cleanup registration
+
+Test flow:
+    1. Create a valid Product
+    2. Retrieve the Product by ID
+    3. Validate HTTP transport status
+    4. Validate the Product response structure
+    5. Verify the returned Product identity
+"
+"passed","Mon Nov 09 13:47:47 UTC 2026","Mon Nov 09 13:47:48 UTC 2026","352","tests.products.api","test_create_products","","","","test_create_single_simple_product","
 Create a simple product using the minimum valid payload.
 
 The fixture `create_valid_product` already performs:
@@ -39,22 +57,4 @@ values passed by the test replace the corresponding defaults.
 
 So product_data is the in-memory request payload; WooCommerce creates the Product
 later, when the provisioner sends it.
-"
-"passed","Sun Nov 08 22:38:10 UTC 2026","Sun Nov 08 22:38:11 UTC 2026","330","tests.products.api","test_get_products","","","","test_get_product_by_id","
-Verify that a Product can be retrieved successfully by ID.
-
-Endpoint tested:
-    GET /products/{id}
-
-Fixture responsibilities (``create_valid_product``):
-    - POST /products
-    - response validation (Pydantic)
-    - automatic cleanup registration
-
-Test flow:
-    1. Create a valid Product
-    2. Retrieve the Product by ID
-    3. Validate HTTP transport status
-    4. Validate the Product response structure
-    5. Verify the returned Product identity
 "
