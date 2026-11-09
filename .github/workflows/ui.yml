@@ -56,12 +56,15 @@ jobs:
   # ==================================================
 
   test:
-    # Forked PRs do not receive repository secrets. Skip the secret-backed
-    # UI environment for those runs; same-repository PRs and trusted runs keep
-    # the existing browser matrix.
+    # Forked PRs and Dependabot PRs do not receive Actions secrets. UI tests
+    # need the dedicated customer credentials, so run them for trusted PRs,
+    # pushes, and manual runs; the main-branch push validates merged updates.
     if: >-
-      github.event_name != 'pull_request' ||
-      github.event.pull_request.head.repo.full_name == github.repository
+      github.actor != 'dependabot[bot]' &&
+      (
+        github.event_name != 'pull_request' ||
+        github.event.pull_request.head.repo.full_name == github.repository
+      )
 
     # --------------------------------------------------
     # 🌐 Browser execution policy
@@ -201,7 +204,9 @@ jobs:
   publish-ui-report:
     name: Publish UI Allure Report
     needs: test
-    if: always()
+    # A Dependabot PR skips the secret-backed UI job, so there are no UI
+    # results to publish for that run.
+    if: always() && github.actor != 'dependabot[bot]'
 
     uses: ./.github/workflows/reusable-allure-report.yml
 

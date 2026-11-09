@@ -187,6 +187,19 @@ runs:
              grep -q '^WC_SECRET=' <<< "$CREDENTIALS" && \
              grep -q '^WP_ADMIN_APP_PASSWORD=' <<< "$CREDENTIALS"; then
 
+            # These values are generated for the temporary CI WooCommerce
+            # stack. Mask them before placing them in GITHUB_ENV so the
+            # runner's later environment summaries cannot expose them.
+            while IFS='=' read -r NAME VALUE; do
+              case "$NAME" in
+                WC_KEY|WC_SECRET|WP_ADMIN_APP_PASSWORD)
+                  if [ -n "$VALUE" ]; then
+                    echo "::add-mask::$VALUE"
+                  fi
+                  ;;
+              esac
+            done <<< "$CREDENTIALS"
+
             echo "$CREDENTIALS" >> "$GITHUB_ENV"
             echo "✅ Fresh WooCommerce and GraphQL credentials generated"
 
