@@ -42,13 +42,13 @@ runs:
         echo "AUTO_ALLURE_REPORT=false" >> $GITHUB_ENV
 
         # ----------------------------------------------
-        # Upload failed UI Playwright traces (opt-in)
+        # Upload failure-only UI Playwright traces (disabled by default)
         #
-        # Set this to true only when captured page and
-        # network data are safe to share. On a public
-        # repository, anyone can access uploaded artifacts.
+        # Traces can contain page and network data. Enable uploads
+        # only when those details are safe to share. In a public
+        # repository, uploaded artifacts may be public.
         # ----------------------------------------------
-        PLAYWRIGHT_TRACE_ARTIFACT_ENABLED=true
+        PLAYWRIGHT_TRACE_ARTIFACT_ENABLED=false
         echo "PLAYWRIGHT_TRACE_ARTIFACT_ENABLED=$PLAYWRIGHT_TRACE_ARTIFACT_ENABLED" >> "$GITHUB_ENV"
         echo "playwright_trace_artifact_enabled=$PLAYWRIGHT_TRACE_ARTIFACT_ENABLED" >> "$GITHUB_OUTPUT"
 

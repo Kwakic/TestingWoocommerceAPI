@@ -466,6 +466,11 @@ Directory structure:
 
 ```text
 tests/shared/
+├── unit_tests/
+│   ├── test_api_client_retries.py
+│   └── test_data_infrastructure/
+│       ├── test_product_factory.py
+│       └── test_resource_ownership.py
 ├── preflight/
 │   └── test_logging_globals.py
 ├── security/
@@ -480,6 +485,17 @@ tests/shared/
         ├── test_graphql_connectivity.py
         └── test_product_mutation_schema.py
 ```
+
+## Unit tests
+
+The shared unit tests cover framework logic without calling WooCommerce,
+accessing a database, or making network requests. Run them with:
+
+```bash
+pytest tests/shared/unit_tests -m unit -v
+```
+
+The CI fast-check workflow runs Unit first and Preflight second.
 
 ## Preflight tests
 
@@ -526,8 +542,10 @@ tests/shared/contracts/
     └── test_product_mutation_schema.py
 ```
 
-REST contract tests validate the HTTP/REST response contract, including
-response format, connectivity, and error structure.
+The shared REST contract tests check collection endpoint availability and the
+basic response format: HTTP 200, JSON content type, and a JSON array. These
+checks call the live WooCommerce API. They do not validate each entity's fields;
+some domain and security tests validate entity behavior and error payloads.
 
 GraphQL contract tests validate the GraphQL transport and schema contract,
 including endpoint connectivity and the schema required by GraphQL operations.

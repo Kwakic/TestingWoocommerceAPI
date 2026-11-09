@@ -35,6 +35,9 @@ on:
   workflow_dispatch:
 
 
+permissions:
+  contents: read
+
 jobs:
 
   # ==================================================
@@ -53,6 +56,13 @@ jobs:
   # ==================================================
 
   test:
+    # Forked PRs do not receive repository secrets. Skip the secret-backed
+    # UI environment for those runs; same-repository PRs and trusted runs keep
+    # the existing browser matrix.
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+
     # --------------------------------------------------
     # 🌐 Browser execution policy
     #

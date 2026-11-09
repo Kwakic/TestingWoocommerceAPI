@@ -20,28 +20,10 @@ ENTITIES = discover_framework_entities()
 @pytest.mark.parametrize("endpoint", ENTITIES)
 def test_api_returns_json(api_client, endpoint):
     """
-    API response format guard.
-    It ensures that every public endpoint follows the transport contract.
+    Verify the collection response's basic HTTP and JSON format contract.
 
-    Ensures endpoints return JSON responses and
-    correct content-type headers.
-
-    Detects:
-        - PHP errors returning HTML
-        - proxy misconfiguration
-        - incorrect content types
-        - broken JSON serialization
-
-    This test validates:
-        - response content-type
-        - JSON serialization
-        - response structure expectations
-        - schema-ish transport guarantees
-
-    That is:
-        - contract validation
-        - transport contract validation
-        - API format guarantee
+    Checks for HTTP 200, an application/json content type, and a decoded
+    JSON array. Entity-specific fields are outside this transport-level check.
     """
 
     response = api_client.get(endpoint)

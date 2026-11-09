@@ -611,6 +611,11 @@ Directory structure:
 
 ```
 tests/shared/
+    unit_tests/
+        test_api_client_retries.py
+        test_data_infrastructure/
+            test_product_factory.py
+            test_resource_ownership.py
     preflight/
         test_logging_globals.py
     security/
@@ -627,15 +632,25 @@ tests/shared/
 
 Purpose of each category:
 
+Unit tests
+----------
+Verify isolated framework logic without WooCommerce, a database, or network
+access. Run them with `pytest tests/shared/unit_tests -m unit -v`.
+
+The CI fast-check workflow runs Unit first, then Preflight.
+
 Preflight tests
 ---------------
 Verify the test environment and framework configuration before executing
 the full test suite.
 
 Examples:
-- API connectivity
 - logging configuration
-- response format validation
+- correlation ID and nodeid propagation
+- pytest configuration and marker registration
+
+Preflight does not call the live API. API connectivity and REST response
+format checks belong to the shared REST contract suite.
 
 ---
 
@@ -656,7 +671,9 @@ Contract tests
 ------------------
 Contract tests validate the expected API response structure.
 
-REST contract tests validate REST response contracts.
+The shared REST contract tests check collection endpoint availability and the
+basic response format: HTTP 200, JSON content type, and a JSON array. They call
+the live WooCommerce API and do not validate each entity's fields.
 
 GraphQL contract tests validate GraphQL schema-level expectations,
 such as the availability of required GraphQL types and mutation

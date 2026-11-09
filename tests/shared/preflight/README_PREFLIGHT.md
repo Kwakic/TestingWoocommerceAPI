@@ -42,6 +42,9 @@ Those checks belong to **Contract** and **Environment Verification** stages.
 
 ## 🧪 Local Execution
 
+In CI, the shared unit suite runs first; preflight follows only after unit
+tests pass. Run the unit suite with `pytest tests/shared/unit_tests -m unit -v`.
+
 Run preflight checks locally to validate your framework setup:
 
 ```bash

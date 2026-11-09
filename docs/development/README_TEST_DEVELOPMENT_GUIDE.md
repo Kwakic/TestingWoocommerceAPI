@@ -1845,6 +1845,7 @@ tests/
 
 | Marker | Meaning |
 |---|---|
+| `unit` | Isolated logic tests without external services |
 | `integration` | API + DB validation |
 | `contract` | API contract and transport validation, including schema validation |
 | `negative` | Invalid input tests |
@@ -1864,15 +1865,15 @@ pytestmark = [
 ]
 ```
 
-GitHub Actions executes these marker groups through dedicated
-workflows (Smoke, Integration, Regression, Performance,
-Contract, Security and Preflight).
+GitHub Actions runs the shared Unit suite before Preflight in its fast-check
+workflow, then executes Smoke, Integration, Regression, Performance, Contract,
+Security, and UI suites through their dedicated workflows.
 
 **Big picture:**
 
 - Domain → `customers`, `orders`, etc.
 - Execution → `smoke`, `sanity`, `regression`
-- Type → `integration`, `contract`, `negative`, `e2e`, `graphql`
+- Type → `unit`, `integration`, `contract`, `negative`, `e2e`, `graphql`
 - Special → `performance`, `security`, `preflight`, `bulk`
 
 ---
@@ -1881,7 +1882,8 @@ Contract, Security and Preflight).
 
 | Pipeline | Command |
 |---|---|
-| Fast (PR / commit) | `pytest -n auto -m "smoke or sanity or preflight"` |
+| Fast shared checks (CI order) | `pytest tests/shared/unit_tests -m unit` then `pytest -m preflight` |
+| Smoke | `pytest -n auto -m "smoke or sanity"` |
 | Full validation | `pytest -n auto -m "not performance and not security"` |
 | Nightly | `pytest -n auto -m regression` |
 | Scheduled | `pytest -n auto -m performance` / `pytest -n auto -m security` |
@@ -1901,10 +1903,21 @@ as a normal prerequisite.
 
 ## 14. 🧪 Shared Test Suites (Framework-Level Tests)
 
-The framework also contains shared tests that validate framework infrastructure, API contracts, security, and environment-related behavior **before** entity-specific tests run. These execute once for the whole framework rather than once per entity — where a suite must cover every entity (Contract, Security), it discovers entities dynamically and iterates internally, so CI reports show **Scope: Shared Framework** rather than an entity name, and adding a new entity extends coverage automatically without touching the tests.
+The framework also contains shared tests for isolated framework logic, API
+contracts, security, and environment behavior. These suites execute once for
+the whole framework rather than once per entity. The fast-check lane runs Unit
+then Preflight; other entity-specific workflows remain independently
+triggered. Contract and Security discover entities dynamically and iterate
+internally, so CI reports show **Scope: Shared Framework** rather than an
+entity name.
 
 ```
 tests/shared/
+    unit_tests/
+        test_api_client_retries.py
+        test_data_infrastructure/
+            test_product_factory.py
+            test_resource_ownership.py
     preflight/
         test_logging_globals.py
     security/
@@ -1918,6 +1931,16 @@ tests/shared/
               test_graphql_connectivity.py
               test_product_mutation_schema.py
 ```
+
+**Unit** — verifies isolated framework logic such as API client retry behavior,
+test-data factories, and resource ownership. These tests do not use live APIs,
+WooCommerce, or the database. Run them with:
+
+```bash
+pytest tests/shared/unit_tests -m unit -v
+```
+
+The fast-check CI workflow runs Unit first, then Preflight.
 
 **Preflight** — verifies the test harness itself before the full suite runs:
 logging configuration, correlation/nodeid propagation, structured logging,
@@ -1943,7 +1966,7 @@ while GraphQL business behavior remains under the corresponding entity's
 
 | Workflow | Type | Scope | Public report |
 |---|---|---|:---:|
-| Preflight | Shared | Framework | ❌ |
+| Unit + Preflight | Shared | Framework (Unit runs first) | ❌ |
 | Contract | Shared | Framework | ❌ |
 | Security | Shared | Framework | ❌ |
 | Smoke | Entity | Customers / Orders / ... | ✅ |

@@ -1,37 +1,12 @@
-# CONTRACT TEST
+"""Live REST collection endpoint availability checks.
 
-"""
-Overview
---------
-These lightweight schema tests verify that WooCommerce API endpoints return responses
-matching expected JSON models. They act as early warnings for schema drift or
-environment misconfiguration before running the full test suite.
+Run this with the shared REST contract suite; it requires a configured,
+reachable WooCommerce API. It verifies that each supported collection endpoint
+returns HTTP 200 and a JSON array. It does not validate entity fields.
 
-Configuration
--------------
-FAIL_ON_EMPTY_LIST:
-    - Environment variable (CI pipelines): export FAIL_ON_EMPTY_LIST=true
-    - Pytest CLI flag: --fail-on-empty-list
-    - CLI flag always has priority over the environment variable.
-
-Usage examples:
----------------
-Local quick run:
-    pytest -m preflight -q -r s
-
-Force strict behavior (fail on empty lists):
-    pytest --fail-on-empty-list
-
-CI JUnit output:
-    pytest -m preflight --junitxml=reports/preflight-junit.xml
-
-Show logs:
-    pytest -m preflight -s -q -r s
-
-This acts as:
-  - API availability guard
-  - environment sanity check
-  - basic contract check
+Examples:
+    pytest tests/shared/contracts/rest/test_api_connectivity.py -q
+    pytest tests/shared/contracts/rest -v
 """
 
 import pytest
@@ -60,25 +35,10 @@ ENTITIES = discover_framework_entities()
 @pytest.mark.parametrize("endpoint", ENTITIES)
 def test_api_endpoint_available(api_client, endpoint):
     """
-    Preflight API availability check.
+    Check that a supported REST collection endpoint is available.
 
-    Fail fast if API is broken
-
-    Ensures core API endpoints respond correctly before
-    running the full test suite.
-
-    This requires:
-        - live API
-        - auth
-        - environment
-        - infrastructure
-        - WooCommerce bootstrapping
-
-    It is:
-
-        - environment validation
-        - API availability
-        - lightweight contract/integration validation
+    This live API contract check requires valid API configuration and
+    authentication. A successful response must contain a JSON array.
     """
 
     response = api_client.get(endpoint)

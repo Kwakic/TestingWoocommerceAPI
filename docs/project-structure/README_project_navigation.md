@@ -240,6 +240,7 @@ tests/
 ├── coupons/                          ← Domain: Coupons (same structure)
 ├── shared/                           ← Framework-level tests (run once)
 │   ├── __init__.py
+│   ├── unit_tests/                   ← Isolated unit tests; no live services
 │   ├── contracts/                             ← Contract testing (response schemas)
 │   │    ├── rest/
 │   │    │    ├── error_schema.py              ← Error response contracts
@@ -338,7 +339,8 @@ Each domain (`customers/`, `products/`, `orders/`, `coupons/`) contains:
 - **Add domain test?** → Create `tests/{domain}/api/test_*.py`
 - **Add test data?** → Add to `tests/{domain}/data/`
 - **Add domain fixture?** → Add to `tests/{domain}/conftest.py`
-- **Add shared test?** → Add to `tests/shared/{contracts,security,preflight}/`
+- **Add shared unit test?** → Add to `tests/shared/unit_tests/` and mark it `unit`
+- **Add shared API/environment test?** → Add to `tests/shared/{contracts,security,preflight}/`
 
 ### 📖 Read Also
 

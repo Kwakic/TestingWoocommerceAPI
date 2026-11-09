@@ -44,6 +44,9 @@ on:
         default: ""
 
 
+permissions:
+  contents: read
+
 jobs:
 
   # ==================================================
@@ -75,7 +78,7 @@ jobs:
     timeout-minutes: ${{ inputs.report_timeout_minutes }}
 
     # --------------------------------------------------
-    # Required for GitHub Pages deployment
+    # Required to read source code and restore Allure history
     # --------------------------------------------------
     # Permissions
     #
@@ -95,7 +98,9 @@ jobs:
       # 1. Checkout repository
       # --------------------------------------------------
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       # --------------------------------------------------
       # 2. Download Allure raw results
@@ -122,7 +127,7 @@ jobs:
         id: download_ui_allure
         if: inputs.suite_name == 'ui'
         continue-on-error: true
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: ui-*-allure-results
           path: reports/allure-results
@@ -134,12 +139,30 @@ jobs:
         id: download_api_allure
         if: inputs.suite_name != 'ui'
         continue-on-error: true
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: ${{ inputs.scope == 'shared'
-            && format('shared-{0}-allure-results', inputs.suite_name)
-            || format('{0}-{1}-allure-results', inputs.entity, inputs.suite_name) }}
+          name: ${{ format('{0}-{1}-allure-results', inputs.entity, inputs.suite_name) }}
           path: reports/allure-results
+
+      - name: Validate report path inputs
+        shell: bash
+        env:
+          SUITE_NAME: ${{ inputs.suite_name }}
+          ENTITY_NAME: ${{ inputs.entity }}
+        run: |
+          set -euo pipefail
+
+          case "$SUITE_NAME" in
+            smoke|integration|regression|performance|ui) ;;
+            *) echo "Unsupported report suite: $SUITE_NAME"; exit 1 ;;
+          esac
+
+          if [[ "$SUITE_NAME" != "ui" ]]; then
+            if [[ ! "$ENTITY_NAME" =~ ^[A-Za-z0-9_-]+$ ]]; then
+              echo "Invalid report entity: $ENTITY_NAME"
+              exit 1
+            fi
+          fi
 
       # --------------------------------------------------
       # 2a.Detect whether Allure results exist
@@ -158,6 +181,9 @@ jobs:
       - name: Check Allure results
         id: allure_check
         shell: bash
+        env:
+          SUITE_NAME: ${{ inputs.suite_name }}
+          ENTITY_NAME: ${{ inputs.entity }}
         run: |
 
           if [ ! -d "reports/allure-results" ] || [ -z "$(ls -A reports/allure-results 2>/dev/null)" ]; then
@@ -166,10 +192,10 @@ jobs:
 
             echo "## Report Summary" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
-            if [ "${{ inputs.suite_name }}" = "ui" ]; then
+            if [ "$SUITE_NAME" = "ui" ]; then
               echo "- Scope: UI / Playwright" >> "$GITHUB_STEP_SUMMARY"
             else
-              echo "- Entity: ${{ inputs.entity }}" >> "$GITHUB_STEP_SUMMARY"
+              echo "- Entity: $ENTITY_NAME" >> "$GITHUB_STEP_SUMMARY"
             fi
             echo "- Status: SKIPPED" >> "$GITHUB_STEP_SUMMARY"
             echo "- Reason: No Allure results artifact found" >> "$GITHUB_STEP_SUMMARY"
@@ -187,8 +213,9 @@ jobs:
       # --------------------------------------------------
       - name: Checkout gh-pages branch
         if: env.HAS_ALLURE_RESULTS == 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           ref: gh-pages
           path: gh-pages
           fetch-depth: 0
@@ -201,13 +228,16 @@ jobs:
       # --------------------------------------------------
       - name: Restore Allure history
         if: env.HAS_ALLURE_RESULTS == 'true'
+        env:
+          SUITE_NAME: ${{ inputs.suite_name }}
+          ENTITY_NAME: ${{ inputs.entity }}
         run: |
           mkdir -p reports/allure-results/history
 
-          if [ "${{ inputs.suite_name }}" = "ui" ]; then
+          if [ "$SUITE_NAME" = "ui" ]; then
             HISTORY_PATH="gh-pages/ui/history"
           else
-            HISTORY_PATH="gh-pages/${{ inputs.entity }}/${{ inputs.suite_name }}/history"
+            HISTORY_PATH="gh-pages/$ENTITY_NAME/$SUITE_NAME/history"
           fi
 
           if [ -d "$HISTORY_PATH" ]; then
@@ -225,7 +255,7 @@ jobs:
       # --------------------------------------------------
       - name: Setup Java
         if: env.HAS_ALLURE_RESULTS == 'true'
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: temurin
           java-version: "17"
@@ -247,11 +277,14 @@ jobs:
       # --------------------------------------------------
       - name: Generate Allure report
         if: env.HAS_ALLURE_RESULTS == 'true'
+        env:
+          SUITE_NAME: ${{ inputs.suite_name }}
+          ENTITY_NAME: ${{ inputs.entity }}
         run: |
-          if [ "${{ inputs.suite_name }}" = "ui" ]; then
+          if [ "$SUITE_NAME" = "ui" ]; then
             REPORT_PATH="reports/allure-report/ui"
           else
-            REPORT_PATH="reports/allure-report/${{ inputs.entity }}/${{ inputs.suite_name }}"
+            REPORT_PATH="reports/allure-report/$ENTITY_NAME/$SUITE_NAME"
           fi
 
           allure generate reports/allure-results \
@@ -263,7 +296,7 @@ jobs:
       # --------------------------------------------------
       - name: Publish report artifact
         if: env.HAS_ALLURE_RESULTS == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ inputs.suite_name == 'ui'
             && 'report-ui'
@@ -286,3 +319,4 @@ jobs:
             && 'reports/allure-report/ui'
             || format('reports/allure-report/{0}/{1}', inputs.entity, inputs.suite_name) }}
           if-no-files-found: warn
+          retention-days: 30

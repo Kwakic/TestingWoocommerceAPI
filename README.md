@@ -18,7 +18,7 @@ Python · pytest · Playwright · Docker · REST · GraphQL · MySQL · GitHub A
 [![Performance](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/performance.yml/badge.svg)](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/performance.yml)
 [![Contract](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/contract.yml/badge.svg)](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/contract.yml)
 [![Security](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/security.yml/badge.svg)](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/security.yml)
-[![Preflight](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/preflight.yml/badge.svg)](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/preflight.yml)
+[![Unit + Preflight](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/preflight.yml/badge.svg)](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/preflight.yml)
 
 [🌐 QA Portal](https://kwakic.github.io/TestingWoocommerceAPI) · [🎭 UI Report](https://kwakic.github.io/TestingWoocommerceAPI/ui/) · [⚙️ GitHub Actions](https://github.com/Kwakic/TestingWoocommerceAPI/actions)
 
@@ -40,7 +40,7 @@ The framework supports:
 - **📊 Automated reporting** with Allure and GitHub Pages
 - **🧪 Enterprise-style test data architecture** with Factory, Builder, Provisioner, Ownership, Seeds, and pytest lifecycle integration
 - **⚡ Parallel-ready execution** with `pytest-xdist`, physical-core worker detection, and test-owned resources
-- **🔁 Segmented CI/CD** through independent GitHub Actions workflows
+- **🔁 Segmented CI/CD** through GitHub Actions and GitLab CI, with shared unit tests running before preflight
 - **⚙️ One-command setup** (`make run`)
 
 Playwright is intentionally integrated into the same pytest architecture rather than maintained as a separate UI automation project.
@@ -84,7 +84,7 @@ The framework is designed around clear separation of responsibilities and busine
 
 - ⚡ **Parallel Test Execution** — Uses `pytest-xdist[psutil]` to run tests across available physical CPU cores. CI passes `-n auto` through the shared runner; tests own mutable data and do not depend on execution order.
 
-- 🔄 **Segmented CI/CD Pipelines** — Independent Smoke, Integration, Regression, Performance, Contract, Security, and Preflight workflows execute in isolation, publish dedicated artifacts, and scale independently.
+- 🔄 **Segmented CI/CD Pipelines** — GitHub Actions runs shared unit tests before preflight in its fast-check workflow; dedicated workflows cover Smoke, Integration, Regression, Performance, Contract, Security, and UI validation.
 
 - 📊 **Automated QA Reporting** — Generates interactive Allure reports and publishes a dynamic GitHub Pages QA Portal that automatically grows as new entity reports become available.
 
@@ -110,6 +110,7 @@ The framework validates the application across multiple complementary layers rat
 
 | Quality layer | Coverage |
 |---|---|
+| **Unit** | Isolated client retry, test-data factory, and resource-ownership logic |
 | **Functional API** | Positive, negative, CRUD, lifecycle, entity and business-flow validation |
 | **GraphQL** | Queries, mutations, authentication, schema and connectivity contracts |
 | **UI / E2E** | Browser workflows and cross-browser validation with Playwright |
@@ -226,9 +227,11 @@ flowchart TD
     L --> W[Playwright UI Tests]
     W --> X[Chromium · Firefox · WebKit]
 
-    L --> T[Shared Contract Tests]
-    T --> U[REST Contracts]
-    T --> V[GraphQL Contracts]
+    L --> T[Shared Framework Tests]
+    T --> U[Unit Tests]
+    T --> V[Preflight]
+    T --> AA[REST and GraphQL Contracts]
+    T --> AB[Security]
 
     L --> M[Allure Reports]
 ```
@@ -311,6 +314,15 @@ For normal development:
 ```bash
 make test
 ```
+
+Run the isolated shared unit tests first:
+
+```bash
+python -m pytest tests/shared/unit_tests -m unit -v
+```
+
+The CI fast-check workflow runs this suite before preflight. These tests do
+not require the local WooCommerce environment.
 
 For a CI-style, Allure-ready run:
 
@@ -397,13 +409,14 @@ coupons/
 Within the broader test architecture, framework-level concerns remain under `tests/shared/`, including:
 
 ```text
+tests/shared/unit_tests/
+tests/shared/preflight/
 tests/shared/contracts/rest/
 tests/shared/contracts/graphql/
 tests/shared/security/
-tests/shared/preflight/
 ```
 
-The intent is to keep **business-domain validation** separate from **framework- and protocol-level contracts**.
+The intent is to keep **business-domain validation** separate from **framework-level unit and preflight checks**, and from **protocol-level contracts**.
 
 📚 [Full Project Structure](./docs/project-structure/README_project_navigation.md)
 

@@ -41,6 +41,9 @@ on:
   workflow_dispatch:
 
 
+permissions:
+  contents: read
+
 jobs:
 
   # ==================================================
@@ -103,6 +106,8 @@ jobs:
     if: always()
 
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
 
     steps:
 

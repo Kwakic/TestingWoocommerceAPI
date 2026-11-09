@@ -1027,7 +1027,7 @@ For example:
 ``` yaml
 - name: Upload artifacts
   if: always()
-  uses: actions/upload-artifact@v4
+  uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
 ```
 
 Do not hide test failures with:
@@ -1256,6 +1256,43 @@ ADMINISTRATIVE
 
 # 32.🥇 The Golden Rule
 
+## Workflow security baseline
+
+The workflows in this repository use these safeguards:
+
+- Each test workflow grants `GITHUB_TOKEN` only `contents: read`; the Pages
+  publisher starts with no token permissions and grants `actions: read` to
+  validate/download a source run, then grants `contents: write` only to its
+  deploy job.
+- All external actions are pinned to full commit SHAs. Dependabot checks the
+  GitHub Actions ecosystem weekly so those pins receive reviewed update PRs.
+- Checkout steps disable persisted Git credentials, so test code cannot reuse
+  the checkout token through `.git/config`.
+- The privileged `workflow_run` publisher validates the source repository,
+  default branch, event and workflow before downloading its artifacts. Manual
+  republishing requires a source workflow run ID and must start from the
+  default branch.
+
+Workflow YAML cannot verify repository settings. In **Settings → Actions →
+General**, set the default `GITHUB_TOKEN` permissions to read-only and keep the
+option that lets Actions create/approve pull requests disabled. In **Rules →
+Rulesets** (or **Settings → Branches**), confirm that `main` requires the
+intended stable checks and blocks force pushes/deletion.
+
+The GitHub settings screen and branch rules were not part of this repository
+change, so their live values still need to be checked in GitHub.
+
+### Action pinning example
+
+Use a complete commit SHA and keep the release tag in a comment for readability:
+
+```yaml
+- uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+```
+
+The tag comment helps reviewers identify the release; the SHA makes the
+reference immutable. Dependabot keeps the pinned commit current.
+
 The most important principle is:
 
 > **Protect `main`, but do not make the protection dependent on the
@@ -1368,10 +1405,16 @@ The latter are implementation details of the CI pipeline.
 -   GitHub required status-check troubleshooting:
     https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks
 
+-   GitHub Actions secure use:
+    https://docs.github.com/en/actions/reference/security/secure-use
+
+-   GitHub Actions workflow dependency lockfiles:
+    https://docs.github.com/en/actions/concepts/security/workflow-dependency-lockfiles
+
 ------------------------------------------------------------------------
 
 **Document purpose:** Practical GitHub branch protection and CI Quality
 Gate guide\
 **Audience:** Developers, QA Engineers, SDETs, juniors, and engineers
 migrating from other CI/CD platforms\
-**Last reviewed:** 2026-08-19
+**Last reviewed:** 2026-11-09

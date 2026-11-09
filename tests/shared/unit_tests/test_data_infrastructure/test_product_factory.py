@@ -21,6 +21,8 @@ from EcommerceAPI.src.test_data.factories.products.product_factory import (
     ProductFactory,
 )
 
+pytestmark = [pytest.mark.shared, pytest.mark.unit]
+
 
 class TestProductFactorySalePrice:
     """Verify ProductFactory sale-price generation in isolation."""

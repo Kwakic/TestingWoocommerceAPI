@@ -39,6 +39,8 @@ Developer
      ▼
     PR
      │
+     ├── FAST CHECKS: shared unit tests → preflight
+     │
      ├───────────────┬────────────────┐
      │               │                │
      ▼               ▼                ▼
@@ -89,7 +91,7 @@ Your pipelines should answer **one specific question each**:
 
 | Workflow | Question | Purpose |
 |----------|----------|---------|
-| **preflight.yml** | Can the framework start safely? | Ultra-fast validation; fast feedback |
+| **preflight.yml** | Do shared unit tests and framework preflight pass? | Unit tests first, then fast harness validation |
 | **smoke.yml** | Are critical business flows healthy? | Deployment gate; powers badge |
 | **contract.yml** | Did the REST/GraphQL API contract or schema change? | Contract validation; diagnostics |
 | **integration.yml** | Does API state match DB state? | End-to-end integration validation |
@@ -501,15 +503,17 @@ with:
 
 GitHub Pages accepts only one deployment at a time.
 
-If two report-producing workflows (for example Smoke and Integration)
-finish simultaneously, GitHub may cancel one of the deployments.
+Test workflows upload their reports as run artifacts. The single
+`dashboard-publisher.yml` workflow downloads those artifacts and serializes
+publishing through a concurrency group, so test workflows never write to the
+`gh-pages` branch directly.
 
 This is a GitHub Pages platform limitation rather than a framework limitation.
 
-For this project each workflow remains independently executable and
-independently publishes its own report.
-
-This keeps the CI architecture simple, reusable and easy to understand.
+Before downloading artifacts, the publisher verifies that the source run came
+from an approved report workflow on this repository's default branch. This is
+important because the publisher has permission to update `gh-pages`, while a
+pull request's test artifacts are untrusted input.
 
 Environments commonly publish reports to dedicated artifact
 repositories or static hosting platforms (Azure Storage, Amazon S3,
@@ -530,16 +534,9 @@ customers/
     performance/
 ```
 
-GitHub Pages deployments are serialized by GitHub.
-
-If multiple workflows finish simultaneously,
-one deployment may remain queued or be cancelled.
-
-The generated artifacts are still preserved and
-rerunning the workflow republishes the report.
-
-This is a GitHub Pages limitation rather than
-a framework limitation.
+GitHub Pages deployments are serialized by the workflow's publisher
+concurrency group. If a report artifact needs to be republished manually, run
+`Deploy GitHub Pages 🚀` from the default branch and provide the source run ID.
 
 ---
 ## 🎨 Design principles
@@ -589,6 +586,7 @@ Shared Framework suites validate the testing framework or platform itself rather
 
 Examples:
 
+- Unit
 - Preflight
 - Contract
 - Security
@@ -600,6 +598,7 @@ rather than individual business domains.
 
 Typical validations include:
 
+- isolated framework logic
 - framework startup
 - authentication
 - API contracts
@@ -651,21 +650,38 @@ disappear without requiring workflow changes.
 
 ---
 
-## 2.1 preflight.yml ⚡
+## 2.1 Unit Tests + Preflight Checks ⚡
 
-### Purpose
+The `preflight.yml` workflow runs shared unit tests before framework preflight.
+The `preflight` job depends on the `unit` job, so a unit failure stops this
+fast-check workflow before preflight begins. GitLab's `shared_preflight` job
+runs the same two commands in order before its deploy and entity-test stages.
+
+### Unit tests
+
+The unit suite lives under `tests/shared/unit_tests/` and uses the `unit`
+pytest marker. It covers isolated client retry, factory, and ownership logic
+without starting WooCommerce, Docker, MySQL, or making network requests.
+
+```bash
+pytest tests/shared/unit_tests -m unit -v
+```
+
+### Preflight checks
+
+#### Purpose
 Ultra-fast validation before expensive infrastructure tests (it checks framework sanity).
 
-### What It Tests
+#### What It Tests
 - Framework imports & boot
 - Environment loading & configuration
 - Fixture sanity checks
-- Basic connectivity validation
+- Pytest configuration and framework logging
 
-### Typical Runtime
+#### Typical Runtime
 **1–3 minutes**
 
-### Pytest Command
+#### Pytest Command
 ```bash
  pytest \
    -m "preflight" \
@@ -678,38 +694,38 @@ Ultra-fast validation before expensive infrastructure tests (it checks framework
    --alluredir=reports/allure-results
 ```
 
-### Triggers
+#### Triggers
 ```yaml
 on:
   pull_request:          # Every PR
   workflow_dispatch:     # Manual
 ```
 
-### Allure Report?
+#### Allure Report?
 ❌ **NO** — Operationally low-value for dashboards
 
-### GitHub Pages?
+#### GitHub Pages?
 ❌ **NO** — Skip report generation entirely
 
-### Artifacts produced during runtime?
+#### Artifacts produced during runtime?
 ✅ **YES**
 * `preflight-allure-results/` — Diagnostic raw data
 * `preflight-structured-logs/` — Structured logs for troubleshooting
 * `preflight-junit-results/` — A structured text file (XML) listing all tests and their results
 
-### Key CI Variables
+#### Key CI Variables
 ```yaml
 # Minimal setup — no Docker needed
 cache: pip  # Critical for speed
 ```
 
-### Report Structure
+#### Report Structure
 - **Dashboard location:** `https://username.github.io/repo/`
   (Each implemented entity publishes its own report. As new entities are added to the framework, reports become
 available automatically.)
 - **Badge:** Shows last smoke run status
 
-### Why This Configuration?
+#### Why This Configuration?
 - **PR-only trigger** ensures developers get instant feedback
 - **No Docker** means no infrastructure spin-up delays
 - **No Allure** keeps dashboard clean (preflight is developer-focused, not operational)
@@ -1958,7 +1974,7 @@ Contract tests cover both REST and GraphQL API contracts while remaining part of
 
 | Workflow | Trigger | Reason |
 |----------|---------|--------|
-| **preflight** | `pull_request:` | Fast PR feedback (1–3 min) |
+| **preflight.yml (Unit → Preflight)** | `pull_request:` | Fast PR feedback (unit checks run first) |
 | **smoke** | `push: [main]` | Deployment gate; powers badge |
 | **contract** | `push: [main]` + `workflow_dispatch:` | Catch schema changes; on-demand debug |
 | **regression** | `schedule:` (nightly) + `workflow_dispatch:` | Full coverage; historical trends |
@@ -1977,7 +1993,7 @@ Contract tests cover both REST and GraphQL API contracts while remaining part of
   continue-on-error: true  # ← WRONG! Forces job to pass
 
 - name: Upload artifacts
-  uses: actions/upload-artifact@v4
+  uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
 ```
 
 **Result:**
@@ -1997,7 +2013,7 @@ Contract tests cover both REST and GraphQL API contracts while remaining part of
 
 - name: Upload artifacts
   if: always()  # ← Run even on failure
-  uses: actions/upload-artifact@v4
+  uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
 
 - name: Generate report
   if: always()  # ← Run even on failure
@@ -2038,24 +2054,34 @@ When tests fail, the proper sequence is:
 
 # 15. GitHub Pages Behavior
 
-Your report deployment pattern:
+This repository uses a dedicated publisher. Test workflows only upload report
+artifacts; they do not receive write permission for the Pages branch.
 
 ```yaml
-- name: Deploy to GitHub Pages
-  uses: peaceiris/actions-gh-pages@v4
-  with:
-    github_token: ${{ secrets.GITHUB_TOKEN }}
-    publish_dir: reports/allure-report/${{ inputs.entity }}/${{ inputs.suite_name }}
-    publish_branch: gh-pages
-    keep_files: true
+on:
+  workflow_run:
+    workflows: ["Smoke Tests 🔥", "Integration Tests 🔗", "Regression Tests 🔬", "Performance Tests ⏱️", "UI Tests 🎭"]
+    types: [completed]
+
+permissions: {}
+
+jobs:
+  validate-source-run:
+    permissions:
+      actions: read
+  deploy-dashboard:
+    needs: validate-source-run
+    permissions:
+      actions: read
+      contents: write
 ```
 
 ### How It Works
 
-- 📍 Workflow runs on: `main` branch
+- 📍 Only report runs from the repository's default branch are accepted
 - 📍 Report published to: `gh-pages` branch
 - 📍 Accessible at: `https://username.github.io/repo/[destination_dir]`
-- 📝 `keep_files: true` preserves history (allows trend analysis)
+- 📝 The publisher restores the previous site before updating reports, preserving Allure history.
 
 ### Result
 
@@ -2076,11 +2102,9 @@ gh-pages/     Generated reports (indexed by destination_dir)
 
 ### Note:
 
-> Because GitHub Pages accepts only one deployment at a time,
-> concurrent workflow executions may occasionally result in one
-> deployment being cancelled. The generated reports and artifacts
-> remain available in GitHub Actions. Running the affected
-> workflow again republishes the report successfully.
+> The publisher uses a concurrency group with `cancel-in-progress: false`,
+> so simultaneous report updates are serialized. If deployment fails, the
+> source run's artifacts remain available and can be republished by run ID.
 
 ---
 

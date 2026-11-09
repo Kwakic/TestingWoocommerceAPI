@@ -44,10 +44,8 @@ name: Deploy GitHub Pages 🚀
 #   • publishes GitHub Pages
 #
 # GitHub Pages allows only one deployment at a time.
-# Therefore concurrent workflow executions may
-# occasionally result in one deployment being
-# cancelled. This is a GitHub Pages platform
-# limitation rather than a framework limitation.
+# The publisher uses a concurrency group so deployment
+# requests are handled one at a time instead of racing.
 # ==================================================
 
 # ==================================================
@@ -88,13 +86,18 @@ name: Deploy GitHub Pages 🚀
 # The workflow is started automatically whenever a
 # report-producing workflow completes.
 #
-# A manual trigger is also available for debugging
-# or republishing existing report artifacts.
+# A manual trigger is also available to republish an
+# existing report run by its workflow run ID.
 # ==================================================
 
 on:
 
   workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: Workflow run ID containing the reports to republish
+        required: true
+        type: number
 
   workflow_run:
 
@@ -108,23 +111,94 @@ on:
     types:
       - completed
 
-# --------------------------------------------------
-# Permissions
-#
-# contents: write
-#   Publish the rebuilt QA Portal to the gh-pages branch.
-#
-# actions: read
-#   Required to query and download report artifacts
-#   produced by completed workflow runs.
-# --------------------------------------------------
-permissions:
-  contents: write
-  actions: read
+# Every job starts with no token permissions. Each job grants only the
+# permissions it needs below.
+permissions: {}
 
 jobs:
 
+  # Validate the source run before any privileged job downloads its files.
+  # workflow_run grants this workflow access to write credentials even though
+  # the completed test workflow may have been triggered by less-trusted code.
+  validate-source-run:
+    name: Validate report source
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.head_branch == github.event.repository.default_branch &&
+       github.event.workflow_run.head_repository.full_name == github.repository &&
+       contains(fromJSON('["push", "schedule", "workflow_dispatch"]'), github.event.workflow_run.event))
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      actions: read
+    outputs:
+      run_id: ${{ steps.validate.outputs.run_id }}
+      head_sha: ${{ steps.validate.outputs.head_sha }}
+    steps:
+      - name: Validate source workflow run
+        id: validate
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          EVENT_NAME: ${{ github.event_name }}
+          SOURCE_RUN_ID: ${{ github.event.workflow_run.id || inputs.source_run_id }}
+        run: |
+          set -euo pipefail
+
+          if [[ ! "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]]; then
+            echo "A numeric source_run_id is required."
+            exit 1
+          fi
+
+          if [[ "$EVENT_NAME" == "workflow_dispatch" && "$GITHUB_REF" != "refs/heads/$DEFAULT_BRANCH" ]]; then
+            echo "Manual report publishing must run from the default branch ($DEFAULT_BRANCH)."
+            exit 1
+          fi
+
+          run_json=$(gh api "repos/$REPOSITORY/actions/runs/$SOURCE_RUN_ID")
+          head_branch=$(jq -r '.head_branch // ""' <<< "$run_json")
+          head_repository=$(jq -r '.head_repository.full_name // ""' <<< "$run_json")
+          source_event=$(jq -r '.event // ""' <<< "$run_json")
+          source_name=$(jq -r '.name // ""' <<< "$run_json")
+          head_sha=$(jq -r '.head_sha // ""' <<< "$run_json")
+
+          if [[ "$head_branch" != "$DEFAULT_BRANCH" || "$head_repository" != "$REPOSITORY" ]]; then
+            echo "Reports may only be published from runs on this repository's default branch."
+            exit 1
+          fi
+
+          case "$source_event" in
+            push|schedule|workflow_dispatch) ;;
+            *) echo "Source event '$source_event' is not approved for report publishing."; exit 1 ;;
+          esac
+
+          case "$source_name" in
+            "Smoke Tests 🔥"|"Integration Tests 🔗"|"Regression Tests 🔬"|"Performance Tests ⏱️"|"UI Tests 🎭") ;;
+            *) echo "Workflow '$source_name' does not produce publishable reports."; exit 1 ;;
+          esac
+
+          if [[ ! "$head_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Source workflow returned an invalid commit SHA."
+            exit 1
+          fi
+
+          echo "run_id=$SOURCE_RUN_ID" >> "$GITHUB_OUTPUT"
+          echo "head_sha=$head_sha" >> "$GITHUB_OUTPUT"
+
   deploy-dashboard:
+
+    needs: validate-source-run
+
+    permissions:
+      contents: write
+      actions: read
+
+    timeout-minutes: 15
+
+    env:
+      REPORTS_DIR: ${{ runner.temp }}/downloaded-reports
 
     concurrency:
 
@@ -148,7 +222,9 @@ jobs:
       # Checkout repository
       # --------------------------------------------------
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       # --------------------------------------------------
       # Checkout the currently published GitHub Pages site.
@@ -163,8 +239,9 @@ jobs:
       # are overwritten. All previously published reports remain available.
       # --------------------------------------------------
       - name: Checkout GitHub Pages
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           ref: gh-pages
           path: gh-pages
         continue-on-error: true
@@ -179,29 +256,19 @@ jobs:
       #   report-products-regression
       #   report-ui
       #
-      # Therefore we search using a regular expression
-      # instead of an exact artifact name.
+      # The `report-*` glob matches every entity report
+      # and the standalone UI report.
       # --------------------------------------------------
 
 
       - name: Download report artifacts
-        uses: dawidd6/action-download-artifact@v9
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-
-          run_id: ${{ github.event.workflow_run.id }}
-
-          search_artifacts: true
-
-          # Treat the artifact name as a regular expression.
-          name_is_regexp: true
-
-          # Download every generated report artifact.
-          # API reports use the report-<entity>-<suite> convention.
-          # The standalone Playwright UI report is report-ui.
-          name: "^report-.*$"
-
-          path: downloaded-reports
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.validate-source-run.outputs.run_id }}
+          pattern: report-*
+          path: ${{ runner.temp }}/downloaded-reports
 
 
 
@@ -221,9 +288,9 @@ jobs:
 
           echo "Downloaded artifacts"
 
-          find downloaded-reports || true
+          find "$REPORTS_DIR" || true
 
-          if [ ! -d downloaded-reports ]; then
+          if [ ! -d "$REPORTS_DIR" ]; then
             echo "No report artifacts found."
             exit 1
           fi
@@ -288,12 +355,12 @@ jobs:
 
           echo
           echo "===== Downloaded artifacts ====="
-          find downloaded-reports
+          find "$REPORTS_DIR"
 
           echo
           echo "===== Building website ====="
 
-          for artifact in downloaded-reports/report-*; do
+          for artifact in "$REPORTS_DIR"/report-*; do
 
             [ -d "$artifact" ] || continue
 
@@ -403,7 +470,7 @@ jobs:
 
           echo
           echo "Downloaded report artifacts:"
-          find downloaded-reports | sort
+          find "$REPORTS_DIR" | sort
 
       # --------------------------------------------------
       # Publish website
@@ -421,50 +488,29 @@ jobs:
       # site and then updates only the reports generated
       # by the current workflow run.
       # --------------------------------------------------
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: site
-          keep_files: false
-
-      # --------------------------------------------------
-      # Deployment metadata
-      #
-      # Purpose
-      # -------
-      # Generate a small metadata file that records which
-      # Git commit and workflow run produced this GitHub
-      # Pages deployment.
-      #
-      # This file is intended for troubleshooting only.
-      #
-      # Example use:
-      #
-      # https://kwakic.github.io/TestingWoocommerceAPI/build.json
-      #
-      # If the QA Portal appears stale, compare the commit
-      # shown in build.json with the latest repository
-      # commit.
-      #
-      # If build.json already contains the latest commit,
-      # but the browser still displays an older report,
-      # the delay is most likely caused by GitHub Pages/CDN
-      # caching rather than the deployment workflow.
-      # --------------------------------------------------
       - name: Create deployment metadata
         shell: bash
+        env:
+          SOURCE_SHA: ${{ needs.validate-source-run.outputs.head_sha }}
+          SOURCE_RUN_ID: ${{ needs.validate-source-run.outputs.run_id }}
         run: |
           cat > site/build.json <<EOF
           {
             "framework": "TestEcommerceAPI",
-            "commit": "${{ github.sha }}",
+            "commit": "$SOURCE_SHA",
             "workflow": "Deploy GitHub Pages 🚀",
-            "run_id": "${{ github.run_id }}",
+            "source_run_id": "$SOURCE_RUN_ID",
             "published_at": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
           }
           EOF
 
           echo "Deployment metadata:"
           cat site/build.json
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: site
+          keep_files: false

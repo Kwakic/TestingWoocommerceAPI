@@ -110,6 +110,7 @@ on:
       #   Executes once for the entire framework.
       #
       # Used by:
+      # - Unit
       # - Preflight
       # - Contract
       # - Security
@@ -169,6 +170,9 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: read
+
 jobs:
 
   # ==================================================
@@ -197,13 +201,18 @@ jobs:
 
     timeout-minutes: ${{ inputs.timeout_minutes }}
 
+    permissions:
+      contents: read
+
     steps:
 
       # --------------------------------------------------
       # 1. Checkout repository
       # --------------------------------------------------
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       # --------------------------------------------------
       # 2. Setup Python project
@@ -223,8 +232,10 @@ jobs:
       - name: Install Playwright browser
         if: inputs.install_playwright
         shell: bash
+        env:
+          PLAYWRIGHT_BROWSER: ${{ inputs.browser }}
         run: |
-          python -m playwright install --with-deps "${{ inputs.browser }}"
+          python -m playwright install --with-deps "$PLAYWRIGHT_BROWSER"
 
       # --------------------------------------------------
       # 🔍 Diagnostic — verify Playwright browser installation
@@ -232,10 +243,12 @@ jobs:
       - name: Verify Playwright browser
         if: inputs.install_playwright
         shell: bash
+        env:
+          PLAYWRIGHT_BROWSER: ${{ inputs.browser }}
         run: |
           python -m playwright --version
-          echo "Browser: ${{ inputs.browser }}"
-          python -m playwright install --dry-run "${{ inputs.browser }}"
+          echo "Browser: $PLAYWRIGHT_BROWSER"
+          python -m playwright install --dry-run "$PLAYWRIGHT_BROWSER"
 
       # --------------------------------------------------
       # 4. Setup WooCommerce environment
@@ -337,15 +350,29 @@ jobs:
       # --------------------------------------------------
       - name: Determine test target
         shell: bash
+        env:
+          TEST_SCOPE: ${{ inputs.scope }}
+          TEST_ENTITY: ${{ inputs.entity }}
         run: |
+          set -euo pipefail
 
-          if [ "${{ inputs.scope }}" = "shared" ]; then
+          if [[ "$TEST_SCOPE" != "shared" && "$TEST_SCOPE" != "entity" ]]; then
+            echo "Unsupported test scope: $TEST_SCOPE"
+            exit 1
+          fi
+
+          if [[ "$TEST_SCOPE" == "shared" ]]; then
 
             TARGET="tests/shared"
 
-          elif [ -n "${{ inputs.entity }}" ]; then
+          elif [[ -n "$TEST_ENTITY" ]]; then
 
-            TARGET="tests/${{ inputs.entity }}"
+            if [[ ! "$TEST_ENTITY" =~ ^[A-Za-z0-9_-]+$ ]]; then
+              echo "Invalid entity name: $TEST_ENTITY"
+              exit 1
+            fi
+
+            TARGET="tests/$TEST_ENTITY"
 
           else
 
@@ -504,6 +531,15 @@ jobs:
       - name: Run pytest
         shell: bash
         env:
+          TEST_SCOPE: ${{ inputs.scope }}
+          TEST_ENTITY: ${{ inputs.entity }}
+          TEST_SUITE: ${{ inputs.suite_name }}
+          PYTEST_MARKERS: ${{ inputs.pytest_markers }}
+          PYTEST_BROWSER: ${{ inputs.browser }}
+          PYTEST_WORKERS: ${{ inputs.pytest_workers }}
+          PYTEST_EXTRA_ARGS: ${{ inputs.pytest_extra_args }}
+          PYTEST_DURATIONS: ${{ inputs.pytest_durations }}
+          PYTEST_MAXFAIL: ${{ inputs.pytest_maxfail }}
           # --------------------------------------------------
           # 🔐 UI test credentials
           #
@@ -532,24 +568,53 @@ jobs:
           # Allow pytest to return non-zero exit codes
           # so we can evaluate them explicitly.
           # ----------------------------------------------
-          set +e
+          set -uo pipefail
+
+          if [[ "$PYTEST_BROWSER" != "chromium" && "$PYTEST_BROWSER" != "firefox" && "$PYTEST_BROWSER" != "webkit" ]]; then
+            echo "Unsupported Playwright browser: $PYTEST_BROWSER"
+            exit 1
+          fi
+
+          if [[ ! "$PYTEST_WORKERS" =~ ^(auto|[0-9]+)$ ]]; then
+            echo "pytest_workers must be 'auto' or an integer."
+            exit 1
+          fi
+
+          if [[ ! "$PYTEST_DURATIONS" =~ ^[0-9]+$ ]]; then
+            echo "pytest_durations must be a non-negative integer."
+            exit 1
+          fi
+
+          PYTEST_EXTRA_ARGS_ARRAY=()
+          if [[ -n "$PYTEST_EXTRA_ARGS" ]]; then
+            read -r -a PYTEST_EXTRA_ARGS_ARRAY <<< "$PYTEST_EXTRA_ARGS"
+          fi
+
+          PYTEST_MAXFAIL_ARGS=()
+          if [[ -n "$PYTEST_MAXFAIL" ]]; then
+            if [[ ! "$PYTEST_MAXFAIL" =~ ^[1-9][0-9]*$ ]]; then
+              echo "pytest_maxfail must be a positive integer when set."
+              exit 1
+            fi
+            PYTEST_MAXFAIL_ARGS+=("--maxfail=$PYTEST_MAXFAIL")
+          fi
 
           # Playwright traces are enabled only for the standalone UI suite.
           # API and shared test jobs keep using their existing diagnostics.
           PYTEST_TRACE_ARGS=()
-          if [[ "${{ inputs.suite_name }}" == "ui" ]]; then
+          if [[ "$TEST_SUITE" == "ui" ]]; then
             PYTEST_TRACE_ARGS+=(--tracing retain-on-failure --output reports/playwright)
           fi
 
           python -m pytest "$TEST_TARGET" \
-            -m "${{ inputs.pytest_markers }}" \
-            --browser "${{ inputs.browser }}" \
-            -n "${{ inputs.pytest_workers }}" \
+            -m "$PYTEST_MARKERS" \
+            --browser "$PYTEST_BROWSER" \
+            -n "$PYTEST_WORKERS" \
             "${PYTEST_TRACE_ARGS[@]}" \
             -ra \
-            ${{ inputs.pytest_extra_args }} \
-            --durations=${{ inputs.pytest_durations }} \
-            ${{ inputs.pytest_maxfail && format('--maxfail={0}', inputs.pytest_maxfail) || '' }} \
+            "${PYTEST_EXTRA_ARGS_ARRAY[@]}" \
+            --durations="$PYTEST_DURATIONS" \
+            "${PYTEST_MAXFAIL_ARGS[@]}" \
             --clean-alluredir \
             --junitxml=reports/junit/results.xml \
             --alluredir=reports/allure-results
@@ -567,7 +632,7 @@ jobs:
           if [ "$PYTEST_EXIT_CODE" -eq 5 ]; then
 
             echo "No eligible tests collected."
-            echo "Entity: ${{ inputs.entity }}"
+            echo "Entity: $TEST_ENTITY"
             echo "Result: SKIPPED"
 
             # ----------------------------------------------
@@ -580,10 +645,10 @@ jobs:
             echo "## Execution Summary" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
 
-            if [ "${{ inputs.scope }}" = "shared" ]; then
+            if [[ "$TEST_SCOPE" == "shared" ]]; then
               echo "- Scope: Shared Framework" >> "$GITHUB_STEP_SUMMARY"
             else
-              echo "- Entity: ${{ inputs.entity }}" >> "$GITHUB_STEP_SUMMARY"
+              echo "- Entity: $TEST_ENTITY" >> "$GITHUB_STEP_SUMMARY"
             fi
 
             echo "- Status: SKIPPED" >> "$GITHUB_STEP_SUMMARY"
@@ -597,10 +662,10 @@ jobs:
 
             echo "## Execution Summary" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
-            if [ "${{ inputs.scope }}" = "shared" ]; then
+            if [[ "$TEST_SCOPE" == "shared" ]]; then
               echo "- Scope: Shared Framework" >> "$GITHUB_STEP_SUMMARY"
             else
-              echo "- Entity: ${{ inputs.entity }}" >> "$GITHUB_STEP_SUMMARY"
+              echo "- Entity: $TEST_ENTITY" >> "$GITHUB_STEP_SUMMARY"
             fi
             echo "- Status: EXECUTED" >> "$GITHUB_STEP_SUMMARY"
             echo "- Result: SUCCESS" >> "$GITHUB_STEP_SUMMARY"
@@ -630,7 +695,7 @@ jobs:
       # --------------------------------------------------
       - name: Upload Allure results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ inputs.scope == 'shared'
             && format('shared-{0}-allure-results', inputs.suite_name)
@@ -639,13 +704,14 @@ jobs:
             || format('{0}-{1}-allure-results', inputs.entity, inputs.suite_name) }}
           path: reports/allure-results
           if-no-files-found: ignore
+          retention-days: 14
 
       # --------------------------------------------------
       # 10. Publish structured logs artifact
       # --------------------------------------------------
       - name: Publish structured logs artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ inputs.scope == 'shared'
             && format('shared-{0}-structured-logs', inputs.suite_name)
@@ -654,13 +720,14 @@ jobs:
             || format('{0}-{1}-structured-logs', inputs.entity, inputs.suite_name) }}
           path: reports/logs
           if-no-files-found: ignore
+          retention-days: 14
 
       # --------------------------------------------------
       # 11. Publish JUnit artifact
       # --------------------------------------------------
       - name: Publish JUnit artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ inputs.scope == 'shared'
             && format('shared-{0}-junit-results', inputs.suite_name)
@@ -669,6 +736,7 @@ jobs:
             || format('{0}-{1}-junit-results', inputs.entity, inputs.suite_name) }}
           path: reports/junit/results.xml
           if-no-files-found: warn
+          retention-days: 14
 
       # --------------------------------------------------
       # 12. Publish failure-only Playwright traces
@@ -680,7 +748,7 @@ jobs:
         if: >-
           always() && inputs.suite_name == 'ui' &&
           steps.configure_ci_env.outputs.playwright_trace_artifact_enabled == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ui-${{ inputs.browser }}-playwright-traces
           path: reports/playwright/

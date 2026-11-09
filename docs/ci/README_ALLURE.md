@@ -195,19 +195,30 @@ The portal displays the UI report as:
     └── Allure Report
 ```
 
+Only `dashboard-publisher.yml` writes the assembled portal to `gh-pages`.
+It checks that an artifact run belongs to an approved workflow on the
+repository's default branch before downloading it. To republish manually,
+start that workflow from the default branch and enter the report-producing
+workflow run ID.
+
 The UI tier is supplied by the UI workflow (`tier: critical`) rather than by
 the API entity metadata registry.
 
-Failed UI test results include trace evidence without embedding trace contents
-in the published Allure report. GitHub Actions uploads the trace ZIPs as
-browser-specific `ui-<browser>-playwright-traces` artifacts with seven-day
-retention when `PLAYWRIGHT_TRACE_ARTIFACT_ENABLED` is true. CI sets it to
-`false` by default in `.github/actions/configure-ci-env/action.yml`; change it
-to `true` to enable uploads. When enabled, the Allure result links to the
-workflow run. If disabled, Allure explains how to reproduce the trace locally.
-In a public repository, enabled artifacts are publicly accessible, so only
-enable uploads when trace contents are safe for public access. The local value
-is kept in `.env` and `.env.example` for configuration consistency.
+UI tests use repository secrets to seed their isolated test accounts. For
+security, the UI job is skipped for pull requests from forks, which do not
+receive repository secrets. Same-repository pull requests and trusted runs
+continue to run UI tests.
+
+Failed UI tests still produce traces on the runner, but CI does not upload the
+trace ZIPs by default because they can contain page and network data. Set
+`PLAYWRIGHT_TRACE_ARTIFACT_ENABLED=true` in
+`.github/actions/configure-ci-env/action.yml` to upload browser-specific
+`ui-<browser>-playwright-traces` artifacts, which are retained for seven days.
+Uploaded artifacts may be public in a public repository. When trace upload is
+disabled, the Allure result explains how to reproduce the trace locally. This
+setting does not disable the separate Allure results, JUnit, or structured-log
+artifacts. The local value is kept in `.env` and `.env.example` for
+configuration consistency.
 
 ---
 
@@ -232,6 +243,12 @@ information is not exposed through the public portal.
 ---
 
 ## 📦 CI artifacts
+
+Raw Allure results, JUnit files and structured logs are retained for 14 days.
+Generated HTML report artifacts are retained for 30 days. Playwright trace
+artifacts are disabled by default; if enabled, they are retained for seven
+days. The GitHub Pages portal keeps the published reports and their trend
+history separately.
 
 API entity jobs use predictable artifacts such as:
 

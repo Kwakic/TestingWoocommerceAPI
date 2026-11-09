@@ -4,7 +4,7 @@
 #
 # DESIGN GOALS
 # ------------------------------------------------------------
-# - Shared gates (preflight, verify) run ONCE
+# - Shared unit tests and preflight run ONCE before deploy/test fan-out
 # - Entity tests fan out dynamically via child pipeline
 # - Environments are visible in GitLab UI
 # - Deployments are manual & approval-gated
@@ -54,20 +54,20 @@ variables:
 # SHARED PREFLIGHT (RUNS ONCE — HARD GATE)
 # ============================================================
 # Purpose:
-# - Fast failure before ANY deploy or test fan-out
-# - Schema validation
-# - Contract checks
-# - Test data sanity
+# - Run isolated unit tests, then framework preflight
+# - Stop before deployment or entity test fan-out if either fails
 
 shared_preflight:
   stage: preflight
-  image: python:3.11
+  image: python:3.13
   tags:
     - pytest
   script:
-    - echo "🚦 Running shared preflight checks"
+    - echo "🧪 Running shared unit tests first"
     - pip install --upgrade pip
     - pip install -e './EcommerceAPI[dev]'
+    - pytest tests/shared/unit_tests -m unit -s --maxfail=1
+    - echo "🚦 Running shared preflight checks"
     - pytest tests/shared/preflight -s --maxfail=1
   variables:
     WC_KEY: $WC_KEY

@@ -9,6 +9,8 @@ import requests
 from EcommerceAPI.src.clients.api_client import APIClient
 from EcommerceAPI.src.core.request_context import RequestContext
 
+pytestmark = [pytest.mark.shared, pytest.mark.unit]
+
 
 def _make_client() -> APIClient:
     auth_strategy = Mock()

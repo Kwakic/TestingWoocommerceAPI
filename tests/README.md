@@ -27,6 +27,7 @@ tests/
 │   ├── graphql/
 │   └── performance/
 ├── shared/
+│   ├── unit_tests/              ← Isolated framework unit tests
 │   ├── preflight/              ← Environment/framework checks
 │   ├── contracts/
 │   │   ├── rest/               ← REST contract tests
@@ -97,10 +98,29 @@ request count for all performance tests.
 
 Examples include:
 
+- Isolated unit tests
 - Preflight checks
 - REST contract validation
 - GraphQL contract validation
 - Security validation
+
+### Unit tests
+
+`tests/shared/unit_tests/` contains tests for framework logic that runs without
+WooCommerce, a database, or network access. GitHub Actions and GitLab CI run
+this suite before preflight.
+
+Run the unit tests locally with:
+
+```bash
+pytest tests/shared/unit_tests -m unit -v
+```
+
+Run both fast checks in CI order with:
+
+```bash
+pytest tests/shared/unit_tests -m unit -v && pytest -m preflight -v
+```
 
 Contract tests are separated by protocol:
 
@@ -110,7 +130,15 @@ tests/shared/contracts/
 └── graphql/
 ```
 
-REST contract tests validate REST response contracts.
+The shared REST checks verify successful collection responses and their JSON
+transport format. They call the live WooCommerce API and require its URL and
+credentials to be configured; they are not part of preflight.
+
+Run the shared REST contract tests with:
+
+```bash
+pytest tests/shared/contracts/rest -v
+```
 
 GraphQL contract tests validate framework-level GraphQL schema expectations,
 such as required types, fields, and mutation structure.

@@ -34,6 +34,9 @@ on:
   workflow_dispatch:
 
 
+permissions:
+  contents: read
+
 jobs:
  # ==================================================
   # 🧪 JOB 1 — EXECUTE SECURITY TESTS

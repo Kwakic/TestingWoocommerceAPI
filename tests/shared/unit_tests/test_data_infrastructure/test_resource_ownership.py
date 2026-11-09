@@ -7,9 +7,13 @@ The registry does not delete resources itself. Actual deletion remains the
 responsibility of the existing entity cleanup mechanism.
 """
 
+import pytest
+
 from EcommerceAPI.src.test_data.ownership.resource_ownership import (
     ResourceOwnershipRegistry,
 )
+
+pytestmark = [pytest.mark.shared, pytest.mark.unit]
 
 
 def test_register_resource_tracks_owned_id():

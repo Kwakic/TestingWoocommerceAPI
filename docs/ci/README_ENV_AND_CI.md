@@ -491,7 +491,7 @@ Example steps (insert into your job):
 
 - name: Upload Allure results & report
   if: always()
-  uses: actions/upload-artifact@v4
+  uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
   with:
     name: allure-${{ matrix.service }}
     path: |
@@ -535,13 +535,22 @@ The CI reporting flow performs the following:
 
 ### GitHub Pages history preservation
 
-The deployment step uses:
+The publisher restores the existing `gh-pages` site into `site/`, adds the new
+reports and their history, then deploys the assembled directory. The final
+deploy uses `keep_files: false` because all retained content is already in
+`site/`.
+
+The publisher also serializes deployments with `cancel-in-progress: false` so
+simultaneous report runs queue instead of racing to update `gh-pages`.
+
+The deploy action is configured with:
 
 ```yaml
-keep_files: true
+keep_files: false
 ```
 
-This prevents previous Allure history/trend files from being deleted during deployment.
+The previous reports and Allure history remain because they were copied into
+the staged site before deployment.
 
 ### Restore previous Allure history
 
@@ -570,7 +579,9 @@ restore previous history
   ↓
 generate new report
   ↓
-deploy to gh-pages
+upload report artifact
+  ↓
+dashboard-publisher restores gh-pages and deploys the assembled portal
   ↓
 preserve trends for next execution
 ```

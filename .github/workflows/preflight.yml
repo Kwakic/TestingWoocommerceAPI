@@ -1,10 +1,11 @@
-name: Preflight Checks ⚡
+name: Unit Tests + Preflight Checks ⚡
 
 # ==================================================
 # The philosophy:
 #
-# Preflight validates the framework itself before
-# any infrastructure-dependent suites execute.
+# Isolated shared unit tests run first, followed by
+# preflight validation, before infrastructure-dependent
+# suites execute.
 #
 # It provides fast developer feedback and prevents
 # expensive CI resources from being consumed when
@@ -18,7 +19,40 @@ on:
 
   workflow_dispatch:  # Allow manual execution from GitHub UI
 
+permissions:
+  contents: read
+
 jobs:
+
+  # ==================================================
+  # 🧪 SHARED UNIT TESTS (FIRST)
+  #
+  # Pure unit tests run without WooCommerce, Docker,
+  # network access, or database setup.
+  # ==================================================
+  unit:
+
+    permissions:
+      contents: read
+
+    uses: ./.github/workflows/reusable-test-runner.yml
+
+    with:
+      scope: shared
+
+      suite_name: unit
+
+      pytest_markers: unit
+
+      timeout_minutes: 5
+
+      pytest_durations: 5
+
+      pytest_maxfail: "1"
+
+      pytest_extra_args: "-v"
+
+      setup_woocommerce: false
 
   # ==================================================
   # ⚡ PRE-FLIGHT VALIDATION
@@ -40,6 +74,8 @@ jobs:
   # during pull request validation.
   # ==================================================
   preflight:
+
+    needs: unit
 
     permissions:
       contents: read

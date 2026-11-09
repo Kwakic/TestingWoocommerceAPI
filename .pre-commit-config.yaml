@@ -6,8 +6,9 @@
 #2. Fix EOF newline automatically ✅
 #3. Format code with black ✅
 #4. Run flake8 ✅
-#5. Run smoke tests ✅
-#6. Block commit if anything fails ❌
+#5. Run shared unit tests ✅
+#6. Run preflight tests ✅
+#7. Block commit if anything fails ❌
 
 
 # When you change hooks, always do:
@@ -52,6 +53,11 @@ repos:
   # 🔹 Your TEST gate (important for QA)
   - repo: local
     hooks:
+      - id: pytest-unit
+        name: pytest shared unit tests
+        entry: python -m pytest tests/shared/unit_tests -m unit -q
+        language: system
+        pass_filenames: false
       - id: pytest-preflight
         name: pytest preflight tests
         entry: python -m pytest -m preflight -q
