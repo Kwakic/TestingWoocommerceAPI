@@ -198,7 +198,7 @@ jobs:
     timeout-minutes: 15
 
     env:
-      REPORTS_DIR: ${{ runner.temp }}/downloaded-reports
+      REPORTS_DIR: ${{ github.workspace }}/downloaded-reports
 
     concurrency:
 
@@ -268,7 +268,7 @@ jobs:
           repository: ${{ github.repository }}
           run-id: ${{ needs.validate-source-run.outputs.run_id }}
           pattern: report-*
-          path: ${{ runner.temp }}/downloaded-reports
+          path: ${{ github.workspace }}/downloaded-reports
 
 
 
