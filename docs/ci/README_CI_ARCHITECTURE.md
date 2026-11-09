@@ -1097,13 +1097,18 @@ API_ENV=ci
 Track API latency & response times over time. Detect performance regressions early.
 
 ### What It Tests
-- Endpoint response times (p50, p95, p99)
-- Request duration validation
-- Performance anomaly detection
-- SLA compliance
+- Entity-specific response-time summaries and configured thresholds. Current
+  suites report average and approximate P95.
+- Changes in response-time trends across runs
+- Request failures and suspicious measurements
+
+The customer benchmark sends three warm-up requests, then measures thirty
+customer-list requests one at a time. Warm-up requests are excluded from the
+summary. This is a response-time trend check; it does not simulate concurrent
+users or measure throughput. Use a dedicated load-testing tool for those goals.
 
 ### Typical Runtime
-**Varies** (usually 10–30 min with iterations)
+**Varies** with the entity profiles, request latency, and any iteration override.
 
 ### Pytest Command
 ```bash
@@ -1118,11 +1123,15 @@ pytest \
 
 ### Environment Variables
 ```yaml
-PERF_ITERATIONS=5           # Run each test 5x for stats
 ENABLE_STRUCTURED_LOGS=true
 SESSION_ID=${{ github.run_id }}
 API_ENV=ci
 ```
+
+`PERF_ITERATIONS` is an optional global override. When it is unset, each
+performance test uses the request count in its own profile. For example,
+`PERF_ITERATIONS=40 pytest -m performance` runs forty measured requests per
+test; warm-up requests remain excluded where the profile defines them.
 
 ### Triggers
 ```yaml
@@ -1149,12 +1158,14 @@ on:
 ### Report Structure
 - **Dashboard location:** `https://username.github.io/repo/customers/performance`
 - **Metrics tracked:** Response times, durations, outliers
-- **History enabled** for SLA trending
+- **History enabled** for response-time trend comparisons
 - **Badge:** Shows last smoke run status
 
 ### Why This Configuration?
 - **Weekly schedule** (Sunday) reduces costs while catching degradation
-- **Iterations** enable statistical analysis (p95 detection)
+- **Profile-based sample counts** make repeat runs easier to compare
+- **Average and approximate P95** highlight broad response-time changes; treat
+  them as trend signals, not formal service-level or load-test measurements
 - **Separate destination** keeps performance trends isolated
 - **Structured logs** capture detailed request/response data
 
@@ -1921,7 +1932,12 @@ pytest \
   --alluredir=reports/allure-results
 ```
 
-- `PERF_ITERATIONS=5` — Run each test 5x for statistical confidence
+- By default, each entity uses its profile's measured request count. Customers
+  use 30 requests after 3 excluded warm-ups.
+- `--perf-iterations=40` or `PERF_ITERATIONS=40` — Set a global measured-request
+  count when intentionally overriding profiles.
+- The benchmark is sequential; it does not measure concurrent-user capacity
+  or throughput.
 - `--durations=20` — Identify slowest tests
 
 ### Contract Tests

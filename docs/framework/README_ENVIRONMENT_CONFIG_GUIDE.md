@@ -114,7 +114,7 @@ At pytest startup, the framework logs:
 ```
 ================= FRAMEWORK CONFIG =================
 FAIL_ON_EMPTY_LIST      : False
-PERF_ITERATIONS         : 5
+PERF_ITERATIONS         : entity profile default
 AUTO_ALLURE_REPORT      : True
 PLAYWRIGHT_TRACE_ARTIFACT_ENABLED : False
 REQUIRE_ENV             : False
@@ -499,7 +499,8 @@ This makes the system:
 
 ```bash
 FAIL_ON_EMPTY_LIST=false
-PERF_ITERATIONS=5
+# Optional global override; unset uses each entity's performance profile.
+# PERF_ITERATIONS=30
 AUTO_ALLURE_REPORT=true
 PLAYWRIGHT_TRACE_ARTIFACT_ENABLED=false
 ```

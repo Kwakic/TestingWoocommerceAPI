@@ -76,7 +76,10 @@ import os  # Read environment variables (e.g. ENV).
 import time  # Measure request durations, use sleep for backoff.
 import json
 import logging
+import math
 import typing
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from random import uniform  # Adds random jitter to exponential backoff.
 import requests
 from urllib.parse import urlparse
@@ -110,6 +113,45 @@ LOG_PAYLOADS = is_include_payloads() or os.getenv("LOG_PAYLOADS", "").lower() in
     "on",
 )
 SENSITIVE_KEYS = {k.lower() for k in DEFAULT_SENSITIVE_KEYS}
+IDEMPOTENT_HTTP_METHODS = {"GET", "HEAD", "OPTIONS", "PUT", "DELETE"}
+RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
+
+
+def _retry_after_seconds(response: requests.Response) -> float | None:
+    """Return a valid Retry-After delay in seconds, if the response has one."""
+    headers = getattr(response, "headers", None) or {}
+    retry_after = headers.get("Retry-After")
+
+    # requests uses a case-insensitive header mapping; tolerate ordinary dicts too.
+    if retry_after is None:
+        retry_after = next(
+            (
+                value
+                for key, value in headers.items()
+                if str(key).lower() == "retry-after"
+            ),
+            None,
+        )
+
+    if retry_after is None:
+        return None
+
+    try:
+        delay = float(retry_after)
+        if math.isfinite(delay):
+            return max(0.0, delay)
+    except (TypeError, ValueError):
+        pass
+
+    try:
+        retry_at = parsedate_to_datetime(str(retry_after))
+    except (TypeError, ValueError, OverflowError):
+        return None
+
+    if retry_at.tzinfo is None:
+        retry_at = retry_at.replace(tzinfo=timezone.utc)
+
+    return max(0.0, (retry_at - datetime.now(timezone.utc)).total_seconds())
 
 
 def _mask_sensitive(payload: typing.Any) -> typing.Any:
@@ -261,6 +303,12 @@ class APIClient:
             - HTTP status codes: 429, 500, 502, 503, 504
             - Network/connection exceptions raised by requests
 
+        Automatic retries are limited to idempotent HTTP methods (GET, HEAD,
+        OPTIONS, PUT, and DELETE). POST, PATCH, and other methods are attempted
+        once because a timeout or transient response cannot prove that the
+        server did not apply a mutation. A Retry-After response header is
+        honored for 429 and 503 responses when the method is retryable.
+
         Behavior:
             - Retries up to `self.max_attempts`
             - Uses exponential backoff with jitter to reduce "thundering herd"
@@ -279,6 +327,7 @@ class APIClient:
         params = ctx.params
         json_payload = ctx.json
         method = ctx.method
+        retry_allowed = method.upper() in IDEMPOTENT_HTTP_METHODS
 
         last_exception: requests.RequestException | None = None
 
@@ -299,10 +348,11 @@ class APIClient:
                     raise RuntimeError("HttpClient.request() returned no response")
 
                 if (
-                    response.status_code in {429, 500, 502, 503, 504}
+                    retry_allowed
+                    and response.status_code in RETRYABLE_STATUS_CODES
                     and attempt < self.max_attempts
                 ):
-                    sleep_time = self.backoff_factor**attempt + uniform(0, 1)
+                    sleep_time = self._retry_delay(attempt, response)
                     logger.warning(
                         f"Retry {attempt} on {url} after {sleep_time:.2f}s "
                         f"(status {response.status_code})",
@@ -320,8 +370,8 @@ class APIClient:
             except requests.RequestException as exc:
                 last_exception = exc
 
-                if attempt < self.max_attempts:
-                    sleep_time = self.backoff_factor**attempt + uniform(0, 1)
+                if retry_allowed and attempt < self.max_attempts:
+                    sleep_time = self._retry_delay(attempt)
 
                     logger.warning(
                         "⚠️ Retry %d/%d — %s (waiting %.2fs)",
@@ -341,6 +391,11 @@ class APIClient:
 
                 parsed = urlparse(url)
                 endpoint = parsed.path.split("/wc/v3/")[-1]
+                retry_outcome = (
+                    "suppressed for non-idempotent method"
+                    if not retry_allowed
+                    else "exhausted"
+                )
 
                 if parsed.query:
                     endpoint += f"?{parsed.query}"
@@ -354,7 +409,7 @@ class APIClient:
                     "Request URL : %s\n"
                     "Reason      : %s\n"
                     "Attempts    : %d\n"
-                    "Retries     : %d/%d (exhausted)\n\n"
+                    "Retries     : %d/%d (%s)\n\n"
                     "%s",
                     self.env,
                     self.base_url,
@@ -365,6 +420,7 @@ class APIClient:
                     attempt,
                     attempt - 1,
                     self.max_attempts - 1,
+                    retry_outcome,
                     exc,
                     extra={
                         "event": "request.exception",
@@ -383,6 +439,19 @@ class APIClient:
         if last_exception is not None:
             raise last_exception
         raise RuntimeError("Connection Error! Exhausted retries for request")
+
+    def _retry_delay(
+        self, attempt: int, response: requests.Response | None = None
+    ) -> float:
+        """Calculate backoff, honoring Retry-After when the server supplies it."""
+        delay = self.backoff_factor**attempt + uniform(0, 1)
+
+        if response is not None and response.status_code in {429, 503}:
+            retry_after = _retry_after_seconds(response)
+            if retry_after is not None:
+                delay = max(delay, retry_after)
+
+        return delay
 
     # -------------------------------------------------------------------------
     # 🧪 Low-level utility for raw REST API calls (mainly for negative tests or debugging).

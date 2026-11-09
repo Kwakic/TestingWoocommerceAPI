@@ -532,9 +532,17 @@ def pytest_runtest_call(item):
 @pytest.hookimpl(trylast=True)
 def pytest_runtest_logreport(report):
     """
-    Collect per-test execution results and attach run summary + CI links on last test.
+    Collect entity ownership and per-test results from pytest's report stream.
+
+    With pytest-xdist, this hook also runs in the controller process as worker
+    reports arrive. Collecting the entity here lets the controller write the
+    complete run-wide team list to Allure environment.properties.
     """
     global _COMPLETED_TESTS
+
+    team = extract_entity_from_nodeid(report.nodeid)
+    if team:
+        _EXECUTED_TEAMS.add(team)
 
     if report.when != "call":
         return
@@ -584,6 +592,12 @@ def pytest_sessionfinish(session, exitstatus):
     """
     config = getattr(session, "config", None)
     if config is None:
+        return
+
+    # xdist workers share allure-results with the controller. Only the
+    # controller has the complete report stream, so it must write the final
+    # environment metadata and generate the consolidated HTML report.
+    if os.getenv("PYTEST_XDIST_WORKER"):
         return
 
     results_dir = _locate_alluredir(config)

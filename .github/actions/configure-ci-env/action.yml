@@ -91,13 +91,8 @@ runs:
         # ----------------------------------------------
         echo "API_ENV=ci" >> $GITHUB_ENV
 
-        # ----------------------------------------------
-        # Default performance iterations
-        #
-        # Used primarily by performance suites.
-        # Can still be overridden later if needed.
-        # ----------------------------------------------
-        echo "PERF_ITERATIONS=5" >> $GITHUB_ENV
+        # Leave PERF_ITERATIONS unset so each performance suite uses its own
+        # profile default. Set it explicitly only for a global override.
 
         # ----------------------------------------------
         # Optional:

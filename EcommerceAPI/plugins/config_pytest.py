@@ -85,7 +85,14 @@ def pytest_sessionstart(session):
         },
     )
     log.info("FAIL_ON_EMPTY_LIST      : %s", cfg.FAIL_ON_EMPTY_LIST)
-    log.info("PERF_ITERATIONS         : %s", cfg.PERF_ITERATIONS)
+    log.info(
+        "PERF_ITERATIONS         : %s",
+        (
+            cfg.PERF_ITERATIONS
+            if cfg.PERF_ITERATIONS is not None
+            else "entity profile default"
+        ),
+    )
     log.info("AUTO_ALLURE_REPORT      : %s", cfg.AUTO_ALLURE_REPORT)
     log.info(
         "PLAYWRIGHT_TRACE_ARTIFACT_ENABLED : %s",

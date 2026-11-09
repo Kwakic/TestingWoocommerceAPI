@@ -67,7 +67,7 @@ class FrameworkConfig:
 
     # Schema / behavior
     FAIL_ON_EMPTY_LIST: bool
-    PERF_ITERATIONS: int
+    PERF_ITERATIONS: int | None
 
     # Reporting
     AUTO_ALLURE_REPORT: bool
@@ -126,6 +126,7 @@ def _load_config_from_env() -> FrameworkConfig:
     """
 
     ACTIVE_ENV = os.getenv("API_ENV") or os.getenv("ENV", "test")
+    perf_iterations = os.getenv("PERF_ITERATIONS")
 
     return FrameworkConfig(
         ENV=ACTIVE_ENV,
@@ -141,7 +142,7 @@ def _load_config_from_env() -> FrameworkConfig:
         KEEP_STRUCTURED_RUNS=int(os.getenv("KEEP_STRUCTURED_RUNS", "1")),
         LOG_DIR=Path(os.getenv("LOG_DIR", "reports/logs")),
         FAIL_ON_EMPTY_LIST=env_bool("FAIL_ON_EMPTY_LIST", False),
-        PERF_ITERATIONS=int(os.getenv("PERF_ITERATIONS", "5")),
+        PERF_ITERATIONS=int(perf_iterations) if perf_iterations else None,
         AUTO_ALLURE_REPORT=env_bool("AUTO_ALLURE_REPORT", True),
         PLAYWRIGHT_TRACE_ARTIFACT_ENABLED=env_bool(
             "PLAYWRIGHT_TRACE_ARTIFACT_ENABLED", False

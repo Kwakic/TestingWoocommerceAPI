@@ -195,9 +195,12 @@ def pytest_addoption(parser):
     group.addoption(
         "--perf-iterations",
         action="store",
-        default=5,
+        default=None,
         type=int,
-        help="Number of iterations per API endpoint for performance tests (default: 5).",
+        help=(
+            "Global number of measured requests for performance tests. "
+            "When omitted, each entity uses its profile default."
+        ),
     )
 
     # Lightweight logging-related flags (mirror ENV toggles if desired)
@@ -354,9 +357,9 @@ def pytest_configure(config):
     # Default: use <pytest root>/reports/logs unless overridden by CLI or LOG_DIR env
     log_dir = log_dir_cli or os.getenv("LOG_DIR") or str(rootdir / "reports" / "logs")
 
-    # PERF_ITERATIONS: allow PERF_ITERATIONS env var to override the default when the CLI flag wasn't provided.
-    # Rationale: pytest_addoption registers --perf-iterations with a default; to allow .env/CI to change it without
-    # requiring the user to pass the CLI flag, we update config.option only when the CLI argument is absent.
+    # PERF_ITERATIONS is a global override. If the CLI flag is omitted, use the
+    # environment value when present; otherwise each entity keeps its profile
+    # default.
     try:
         # Only consider env override if the user didn't explicitly pass the CLI flag.
         # Use startswith to match both "--perf-iterations" and "--perf-iterations=<value>"

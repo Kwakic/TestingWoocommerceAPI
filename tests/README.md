@@ -76,6 +76,19 @@ Examples:
 - README_ORDERS.md
 - README_COUPONS.md
 
+## Performance tests
+
+Performance tests measure API response time with sequential requests. The
+customer benchmark sends 3 warm-up requests, excludes those timings, and then
+measures 30 customer-list requests by default. It reports the average and an
+approximate P95 against configured thresholds.
+
+This is useful for spotting broad response-time changes between runs. It does
+not measure how many simultaneous users the API can handle or its throughput;
+use a dedicated load-testing tool for that. The `PERF_ITERATIONS` environment
+variable or `--perf-iterations` option can intentionally override the measured
+request count for all performance tests.
+
 ---
 
 ## 🧪 Shared Framework Tests

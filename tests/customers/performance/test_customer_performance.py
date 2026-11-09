@@ -6,6 +6,14 @@ Purpose
 -------
 Validate the response time of the Customers API.
 
+This is a sequential trend check: three warm-up requests are excluded, then
+thirty measured requests are used for the summary. Warm-ups help avoid skew
+from the first request opening a connection or initializing server-side work.
+P95 means that 95% of measured requests are at or below that response time;
+with thirty samples, treat it as a rough trend signal. This test does not
+simulate multiple users or measure throughput; use a dedicated load-testing
+tool for those questions.
+
 Unlike Contract, Security and Preflight, performance tests belong to each
 business entity.
 
@@ -14,10 +22,10 @@ Each entity owns:
     • benchmark scenarios
     • query parameters
     • performance thresholds
-    • SLA expectations
+    • response-time thresholds
 
-This allows every microservice team to evolve its own benchmarks independently
-while reusing the shared performance utilities provided by the framework.
+This allows each API entity to evolve its own benchmarks independently while
+reusing the shared performance utilities provided by the framework.
 
 Future examples
 ---------------
@@ -58,29 +66,24 @@ pytestmark = [
 ENV = get_config().ENV
 
 # ==============================================================================
-# Entity performance profile.
+# Customer performance profile.
 #
-# Every business entity owns its benchmark configuration.
-#
-# The shared framework is responsible only for measuring request duration.
-# Individual entities define:
-#
-# • endpoint under test
-# • benchmark request parameters
-# • performance thresholds
-# • default benchmark iterations
-
-# These values may evolve independently as each API grows.
+# This profile configures the customer-list benchmark. Warm-up requests let
+# the connection and server settle; their times are excluded from the results.
+# Thirty measured requests provide a steadier average and a more informative
+# approximate P95 trend than the old five-request sample.
+# This remains a sequential trend check, not a concurrent load test.
 # ==============================================================================
 
-PRODUCTS_PERFORMANCE = {
-    "endpoint": "products",
+CUSTOMERS_PERFORMANCE = {
+    "endpoint": "customers",
     "params": {
         "per_page": 100,
     },
     "max_avg_response": 6.20,
     "max_p95_response": 11.50,
-    "iterations": 5,
+    "warmup_iterations": 3,
+    "iterations": 30,
 }
 
 
@@ -107,11 +110,11 @@ def _resolve_iterations(pytestconfig) -> int:
         return int(
             os.getenv(
                 "PERF_ITERATIONS",
-                str(PRODUCTS_PERFORMANCE["iterations"]),
+                str(CUSTOMERS_PERFORMANCE["iterations"]),
             )
         )
     except ValueError:
-        return PRODUCTS_PERFORMANCE["iterations"]
+        return CUSTOMERS_PERFORMANCE["iterations"]
 
 
 @pytest.mark.performance
@@ -123,14 +126,50 @@ def test_customer_response_times(
     """
     Benchmark the Customers endpoint.
 
-    The benchmark executes multiple requests, measures their response times,
-    calculates summary statistics, and validates the configured performance
-    thresholds.
+    The benchmark first sends excluded warm-up requests, then measures the
+    configured number of sequential customer-list requests. It summarizes
+    those measured responses and checks the configured thresholds.
     """
 
     iterations = _resolve_iterations(pytestconfig)
+    warmup_iterations = CUSTOMERS_PERFORMANCE["warmup_iterations"]
 
-    logger.info("🔁 Customers benchmark (%d iterations)", iterations)
+    if iterations < 20:
+        logger.warning(
+            "Only %d measured requests are configured; P95 will be very rough. "
+            "Use at least 20 for trend checks, or omit the override to use the profile default.",
+            iterations,
+        )
+
+    logger.info(
+        "🔥 Warming up Customers endpoint (%d requests; excluded from results)",
+        warmup_iterations,
+    )
+
+    for warmup_run in range(warmup_iterations):
+        duration, response = measure_get_response_time(
+            api_client=api_client,
+            endpoint=CUSTOMERS_PERFORMANCE["endpoint"],
+            params=CUSTOMERS_PERFORMANCE["params"],
+        )
+
+        if response is None:
+            logger.warning(
+                "Warm-up request %02d failed; it will not be included in the benchmark.",
+                warmup_run + 1,
+            )
+            continue
+
+        logger.debug(
+            "Warm-up %02d → %.3fs (excluded)",
+            warmup_run + 1,
+            duration,
+        )
+
+    logger.info(
+        "🔁 Customers benchmark (%d measured requests)",
+        iterations,
+    )
 
     response_times: list[float] = []
 
@@ -140,8 +179,8 @@ def test_customer_response_times(
 
         duration, response = measure_get_response_time(
             api_client=api_client,
-            endpoint=PRODUCTS_PERFORMANCE["endpoint"],
-            params=PRODUCTS_PERFORMANCE["params"],
+            endpoint=CUSTOMERS_PERFORMANCE["endpoint"],
+            params=CUSTOMERS_PERFORMANCE["params"],
         )
 
         if response is None:
@@ -183,8 +222,10 @@ def test_customer_response_times(
 
     average = statistics.mean(response_times)
 
+    # The inclusive method interpolates within observed timings instead of
+    # projecting beyond the sample's fastest or slowest observation.
     p95 = (
-        statistics.quantiles(response_times, n=100)[94]
+        statistics.quantiles(response_times, n=20, method="inclusive")[18]
         if len(response_times) > 1
         else max(response_times)
     )
@@ -198,11 +239,11 @@ def test_customer_response_times(
     # -------------------------------------------------------------------------
 
     assert (
-        average <= PRODUCTS_PERFORMANCE["max_avg_response"]
+        average <= CUSTOMERS_PERFORMANCE["max_avg_response"]
     ), f"Average response time exceeded threshold ({average:.3f}s)"
 
     assert (
-        p95 <= PRODUCTS_PERFORMANCE["max_p95_response"]
+        p95 <= CUSTOMERS_PERFORMANCE["max_p95_response"]
     ), f"P95 exceeded threshold ({p95:.3f}s)"
 
     # -------------------------------------------------------------------------
@@ -234,6 +275,11 @@ def test_customer_response_times(
 
     logger.info("Average     : %.3fs", average)
     logger.info("P95         : %.3fs", p95)
+    logger.info(
+        "Samples     : %d measured; %d warm-up requests excluded",
+        len(response_times),
+        warmup_iterations,
+    )
     logger.info("Minimum     : %.3fs", minimum)
     logger.info("Maximum     : %.3fs", maximum)
 

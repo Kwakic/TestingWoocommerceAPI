@@ -321,7 +321,7 @@ Each domain (`customers/`, `products/`, `orders/`, `coupons/`) contains:
 | **Smoke** | `api/` | Create, read, delete basic operations |
 | **Integration** | `api/` | Multi-step workflows, cross-entity tests |
 | **Regression** | `api/` | Bug fixes, edge cases, known issues |
-| **Performance** | `performance/` | Load tests, response times, bulk ops |
+| **Performance** | `performance/` | Sequential response-time trend checks and thresholds |
 
 ### 📖 Team Guides
 
