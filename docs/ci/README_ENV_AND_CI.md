@@ -444,6 +444,11 @@ chmod +x scripts/generate_allure.sh
   - GitHub Actions: *Repository → Settings → Secrets → Actions*
   - GitLab CI: *Project → Settings → CI/CD → Variables* (use protected/masked for sensitive values)
 
+Dependabot-triggered workflows cannot read GitHub Actions secrets; they can
+read only Dependabot secrets. Keep the seeded UI customer credentials in
+Actions secrets. In this repository, UI tests are skipped on Dependabot PRs and
+run on trusted pushes to `main`, where those credentials are available.
+
 Recommended CI habits:
 1. Use a matrix of jobs (one per microservice) to get fast, isolated feedback.
 2. Install Allure CLI in the job runtime (per-job installation) — do not bake it into the runtime Docker image.

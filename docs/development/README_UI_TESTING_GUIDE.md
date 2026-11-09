@@ -1121,12 +1121,13 @@ The current CI execution strategy is:
 
 | Execution | Browser | Mode | Purpose |
 |---|---|---|---|
-| Pull request | Chromium | Headless | Fast feedback |
+| Same-repository human pull request | Chromium | Headless | Fast feedback |
+| Fork or Dependabot pull request | Skipped | — | UI tests need Actions secrets, which these runs do not receive |
 | Push to `main` | Chromium + Firefox + WebKit | Headless | Cross-browser coverage |
 | Manual `workflow_dispatch` | Chromium + Firefox + WebKit | Headless | Full UI validation |
 | Local debugging | Developer choice | Headed or headless | Interactive debugging |
 
-The pull-request workflow intentionally runs only Chromium to keep feedback fast and reduce unnecessary CI cost.
+The pull-request workflow intentionally runs only Chromium to keep feedback fast and reduce unnecessary CI cost. Fork and Dependabot pull requests skip the secret-backed UI jobs; the full UI suite still runs on trusted pushes to `main`.
 
 The complete browser matrix runs after changes reach `main` or when manually triggered.
 

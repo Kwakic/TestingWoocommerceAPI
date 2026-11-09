@@ -86,6 +86,8 @@ The framework is designed around clear separation of responsibilities and busine
 
 - 🔄 **Segmented CI/CD Pipelines** — GitHub Actions runs shared unit tests before preflight in its fast-check workflow; dedicated workflows cover Smoke, Integration, Regression, Performance, Contract, Security, and UI validation.
 
+- 🤖 **Automated Action Updates** — Dependabot checks pinned GitHub Actions weekly and opens update PRs for review. Secret-backed UI tests are skipped on Dependabot PRs and run on trusted pushes to `main`. See the [CI guide](./docs/ci/README_CI_ARCHITECTURE.md#github-actions-dependency-updates).
+
 - 📊 **Automated QA Reporting** — Generates interactive Allure reports and publishes a dynamic GitHub Pages QA Portal that automatically grows as new entity reports become available.
 
 - 🎭 **Multi-Layer Test Automation** — Combines REST API, GraphQL API, database validation, and Playwright browser testing in a single pytest-based automation framework.

@@ -205,9 +205,14 @@ The UI tier is supplied by the UI workflow (`tier: critical`) rather than by
 the API entity metadata registry.
 
 UI tests use repository secrets to seed their isolated test accounts. For
-security, the UI job is skipped for pull requests from forks, which do not
-receive repository secrets. Same-repository pull requests and trusted runs
-continue to run UI tests.
+security, the UI test job is skipped for pull requests from forks and
+Dependabot. The UI report job is also skipped on Dependabot runs. Forks do not
+receive repository secrets, and Dependabot-triggered runs can access Dependabot
+secrets but not regular Actions secrets. The seeded `UI_CUSTOMER_*` values are
+Actions secrets, so the UI suite runs on eligible same-repository human pull
+requests, trusted pushes to `main`, and manual workflow runs. This keeps the
+customer credentials unavailable to Dependabot while still testing merged
+changes on `main`.
 
 Failed UI tests still produce traces on the runner, but CI does not upload the
 trace ZIPs by default because they can contain page and network data. Set
