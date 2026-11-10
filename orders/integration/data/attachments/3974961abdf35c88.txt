@@ -1,0 +1,79 @@
+DEBUG    EcommerceAPI.src.entities.coupons.helpers.coupons_helper:coupons_helper.py:174 ⚙️ Creating coupon with payload keys: ['code', 'discount_type', 'amount', 'minimum_amount']
+DEBUG    EcommerceAPI.src.entities.coupons.api.coupons_api:coupons_api.py:69 📡 POST /coupons payload_keys=['code', 'discount_type', 'amount', 'minimum_amount']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ POST /wp-json/wc/v3/coupons → Status code: 201 (completed in 0.103s)
+INFO     EcommerceAPI.src.entities.coupons.validators.coupon_validators:coupon_validators.py:46 ✅ Coupon structure valid: id=45 code=test-ajewhdcldh
+DEBUG    EcommerceAPI.plugins.api.coupons:coupons.py:333 ℹ️ Registered coupon with ID: 45 for cleanup.
+DEBUG    EcommerceAPI.src.entities.products.helpers.products_helper:products_helper.py:360 ⚙️ Creating product with payload keys: ['name', 'type', 'status', 'regular_price', 'sku', 'description', 'short_description']
+DEBUG    EcommerceAPI.src.entities.products.api.products_api:products_api.py:74 📡 POST /products payload_keys=['name', 'type', 'status', 'regular_price', 'sku', 'description', 'short_description']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ POST /wp-json/wc/v3/products → Status code: 201 (completed in 0.156s)
+INFO     EcommerceAPI.src.entities.products.validators.product_validators:product_validators.py:99 ✅ Product structure valid: id=47, name=Product-PSOIOJ307618, sku=TEST-SKU-41FB29DF806B
+DEBUG    EcommerceAPI.plugins.api.products:products.py:323 ℹ️ Registered product with ID: 47 for cleanup.
+DEBUG    EcommerceAPI.src.entities.orders.helpers.orders_helper:orders_helper.py:144 Creating Order with payload keys: ['line_items']
+DEBUG    EcommerceAPI.src.entities.orders.api.orders_api:orders_api.py:44 POST /orders payload_keys=['line_items']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ POST /wp-json/wc/v3/orders → Status code: 201 (completed in 0.186s)
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:100 Order structure valid: id=49 status=pending customer_id=0
+DEBUG    EcommerceAPI.plugins.api.orders:orders.py:168 Registered Order ID 49 for cleanup.
+DEBUG    EcommerceAPI.src.entities.orders.helpers.orders_helper:orders_helper.py:349 Updating Order 49 with payload keys: ['coupon_lines']
+DEBUG    EcommerceAPI.src.entities.orders.api.orders_api:orders_api.py:91 PUT /orders/49 payload_keys=['coupon_lines']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ PUT /wp-json/wc/v3/orders/49 → Status code: 400 (completed in 0.113s)
+DEBUG    EcommerceAPI.src.clients.api_client:api_client.py:694 {
+                                                                 "code": "woocommerce_rest_invalid_coupon",
+                                                                 "message": "The minimum spend for this coupon is <span class=\"woocommerce-Price-amount amount\"><bdi><span class=\"woocommerce-Price-currencySymbol\">&#36;</span>35.00</bdi></span>.",
+                                                                 "data": {
+                                                                   "status": 400
+                                                                 }
+                                                               }
+INFO     EcommerceAPI.src.entities.orders.validators.order_validators:order_validators.py:497 Valid Order error response: code=woocommerce_rest_invalid_coupon status=400
+INFO     tests.orders.api.test_orders_param_inside_module:test_orders_param_inside_module.py:284 Coupon test-ajewhdcldh correctly rejected for Order ID=49 below minimum 35.00.
+INFO     EcommerceAPI.plugins.entities:entities.py:718 🔧 Starting teardown of created test resources...
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up coupon(s)... (4 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting coupon ID: 31
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/coupons/31?force=True → Status code: 200 (completed in 0.175s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted coupon ID: 31
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting coupon ID: 36
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/coupons/36?force=True → Status code: 200 (completed in 0.117s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted coupon ID: 36
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting coupon ID: 42
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/coupons/42?force=True → Status code: 200 (completed in 0.153s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted coupon ID: 42
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting coupon ID: 45
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/coupons/45?force=True → Status code: 200 (completed in 0.138s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted coupon ID: 45
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for coupon(s).
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up product(s)... (4 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 33
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/products/33?force=True → Status code: 200 (completed in 0.158s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 33
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 38
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/products/38?force=True → Status code: 200 (completed in 0.136s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 38
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 43
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/products/43?force=True → Status code: 200 (completed in 0.137s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 43
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting product ID: 47
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/products/47?force=True → Status code: 200 (completed in 0.121s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted product ID: 47
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for product(s).
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up order(s)... (4 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting order ID: 34
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/orders/34?force=True → Status code: 200 (completed in 0.125s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted order ID: 34
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting order ID: 39
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/orders/39?force=True → Status code: 200 (completed in 0.130s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted order ID: 39
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting order ID: 44
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/orders/44?force=True → Status code: 200 (completed in 0.116s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted order ID: 44
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting order ID: 49
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/orders/49?force=True → Status code: 200 (completed in 0.122s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted order ID: 49
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for order(s).
+INFO     EcommerceAPI.plugins.entities:entities.py:758 
+
+🧹 ====================================== CLEANUP SUMMARY ======================================
+INFO     EcommerceAPI.plugins.entities:entities.py:761 📊 Created during test run: {'coupons': 4, 'products': 4, 'orders': 4}
+INFO     EcommerceAPI.plugins.entities:entities.py:762 🧾 Cleanup total summary:
+INFO     EcommerceAPI.plugins.entities:entities.py:764    • coupon: 4 deleted (4 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:764    • product: 4 deleted (4 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:764    • order: 4 deleted (4 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:765 ✅ All test data cleanup completed.
