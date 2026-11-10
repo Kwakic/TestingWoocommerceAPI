@@ -25,6 +25,7 @@ from tests.ui.pages.authentication.customer_login_page import CustomerLoginPage
 pytestmark = [
     pytest.mark.ui,
     pytest.mark.smoke,
+    pytest.mark.pr,
 ]
 
 

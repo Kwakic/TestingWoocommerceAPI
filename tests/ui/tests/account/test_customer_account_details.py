@@ -18,6 +18,7 @@ from tests.ui.pages.account.customer_account_page import CustomerAccountPage
 pytestmark = [
     pytest.mark.ui,
     pytest.mark.smoke,
+    pytest.mark.pr,
 ]
 
 

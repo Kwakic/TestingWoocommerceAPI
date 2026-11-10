@@ -12,7 +12,7 @@ from tests.ui.fixtures.customer_auth import login_customer
 from tests.ui.pages.common.home_page import HomePage
 
 
-pytestmark = [pytest.mark.ui, pytest.mark.smoke]
+pytestmark = [pytest.mark.ui, pytest.mark.smoke, pytest.mark.pr]
 
 
 def test_home_page_loads(guest_page: Page, ui_base_url: str) -> None:

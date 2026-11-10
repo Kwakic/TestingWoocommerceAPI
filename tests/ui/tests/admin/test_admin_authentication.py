@@ -18,6 +18,7 @@ from tests.ui.pages.admin.admin_dashboard_page import AdminDashboardPage
 
 @pytest.mark.ui
 @pytest.mark.smoke
+@pytest.mark.pr
 def test_admin_can_access_wordpress_dashboard(
     admin_page: Page,
     ui_base_url: str,
@@ -41,6 +42,7 @@ def test_admin_can_access_wordpress_dashboard(
 
 @pytest.mark.ui
 @pytest.mark.smoke
+@pytest.mark.pr
 @pytest.mark.security
 def test_customer_cannot_access_wordpress_dashboard(
     page: Page,

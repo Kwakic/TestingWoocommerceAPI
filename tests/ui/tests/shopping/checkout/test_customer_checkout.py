@@ -24,6 +24,7 @@ from tests.ui.pages.shopping.order_confirmation_page import OrderConfirmationPag
 pytestmark = [
     pytest.mark.ui,
     pytest.mark.smoke,
+    pytest.mark.pr,
 ]
 
 

@@ -16,11 +16,12 @@ from EcommerceAPI.src.entities.customers.validators.customer_validators import (
 logger = logging.getLogger(__name__)
 #  logger.setLevel(logging.DEBUG)  # already set in pytest.ini
 
-pytestmark = [pytest.mark.integration]
+pytestmark = [pytest.mark.integration, pytest.mark.customers]
 
 
 @pytest.mark.tcid("TCID-016")
 @pytest.mark.smoke  # Critical → smoke
+@pytest.mark.pr
 @pytest.mark.sanity  # Fast → sanity
 @pytest.mark.integration
 def test_get_customer_by_email(customer_helper, customers_dao, create_valid_customer):
@@ -114,6 +115,7 @@ def test_get_customer_by_email(customer_helper, customers_dao, create_valid_cust
 
 @pytest.mark.tcid("TCID-017")
 @pytest.mark.smoke  # critical endpoint → smoke
+@pytest.mark.pr
 @pytest.mark.contract  # includes response validation → contract
 def test_get_customer_by_id(customer_helper, customers_dao, create_valid_customer):
     """

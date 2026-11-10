@@ -14,6 +14,8 @@ What we're testing with the schema contract is essentially:
 
 import pytest
 
+pytestmark = [pytest.mark.shared]
+
 
 @pytest.mark.contract
 @pytest.mark.graphql

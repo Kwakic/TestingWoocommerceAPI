@@ -13,7 +13,7 @@ from EcommerceAPI.src.test_data.ownership.resource_ownership import (
     ResourceOwnershipRegistry,
 )
 
-pytestmark = [pytest.mark.shared, pytest.mark.unit]
+pytestmark = [pytest.mark.shared, pytest.mark.unit, pytest.mark.pr]
 
 
 def test_register_resource_tracks_owned_id():

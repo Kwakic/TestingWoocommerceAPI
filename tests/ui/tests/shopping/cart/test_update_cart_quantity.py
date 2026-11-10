@@ -16,6 +16,7 @@ from tests.ui.pages.shopping.cart_page import CartPage
 pytestmark = [
     pytest.mark.ui,
     pytest.mark.smoke,
+    pytest.mark.pr,
 ]
 
 

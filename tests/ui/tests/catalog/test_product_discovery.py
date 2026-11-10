@@ -16,7 +16,7 @@ from tests.ui.fixtures.customer_auth import login_customer
 from tests.ui.pages.common.home_page import HomePage
 
 
-pytestmark = [pytest.mark.ui, pytest.mark.smoke]
+pytestmark = [pytest.mark.ui, pytest.mark.smoke, pytest.mark.pr]
 
 
 def test_guest_can_open_product(

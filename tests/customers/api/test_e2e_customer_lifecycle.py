@@ -4,7 +4,7 @@ from EcommerceAPI.src.entities.customers.validators.customer_validators import (
     assert_customer_exists_and_matches_api,
 )
 
-pytestmark = [pytest.mark.integration]
+pytestmark = [pytest.mark.integration, pytest.mark.customers]
 
 
 @pytest.mark.tcid("TCID-011")

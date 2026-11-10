@@ -21,6 +21,7 @@ from tests.ui.pages.account.customer_address_page import CustomerAddressPage
 pytestmark = [
     pytest.mark.ui,
     pytest.mark.smoke,
+    pytest.mark.pr,
 ]
 
 

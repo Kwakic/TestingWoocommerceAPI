@@ -11,7 +11,8 @@ name: Integration Tests 🔗
 #
 # The philosophy:
 # Integration tests validate API + database consistency
-# independently for every discovered entity.
+# independently for every discovered entity. PRs run only the curated
+# `pr` slice; pushes to main and manual runs execute the full integration set.
 #
 # Each entity runs in isolated matrix jobs:
 # - customers
@@ -194,7 +195,8 @@ jobs:
       # Test suite metadata
       # ==================================================
       suite_name: integration
-      pytest_markers: integration
+      pytest_markers: ${{ github.event_name == 'pull_request' && 'integration and pr and not smoke' || 'integration' }}
+      fail_on_empty: ${{ github.event_name == 'pull_request' }}
 
       # ==================================================
       # Pytest runtime configuration

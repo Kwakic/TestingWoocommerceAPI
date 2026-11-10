@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 #  logger.setLevel(logging.DEBUG)  # already set in pytest.ini
 
 # Apply shared markers for the test module
-pytestmark = [pytest.mark.integration]
+pytestmark = [pytest.mark.integration, pytest.mark.customers]
 
 
 @pytest.mark.tcid("TCID-009")
