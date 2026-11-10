@@ -61,6 +61,7 @@ logger = logging.getLogger(__name__)
 
 pytestmark = [
     pytest.mark.performance,
+    pytest.mark.customers,
 ]
 
 ENV = get_config().ENV

@@ -425,18 +425,21 @@ A good structure for this project is:
 
 ``` text
 Preflight
-   └── framework validation workflow
+   └── unit + preflight tests
+       └── Preflight Quality Gate       (required)
 
 Smoke
    ├── entity tests
-   └── Smoke Quality Gate           (required)
+   ├── shared authentication smoke
+   └── Smoke Quality Gate                (required)
 
 Contract
    └── REST/GraphQL contract tests  (informational)
 
 Integration
-   ├── entity tests
-   └── Integration Quality Gate     (required)
+   ├── curated `pr` tests on pull requests
+   ├── full integration on main/manual runs
+   └── Integration Quality Gate          (required on pull requests)
 ```
 
 The Quality Gate is deliberately independent from whether GitHub
@@ -467,25 +470,30 @@ For this repository, the pull-request policy is:
 [x] Require status checks to pass before merging
 
 Required:
+    ✓ Preflight Quality Gate
     ✓ Smoke Quality Gate
     ✓ Integration Quality Gate
 
 Informational PR workflows:
-    • Preflight
     • Contract
+    • UI
 ```
 
-Preflight remains on pull requests because CI must validate the change on a
-clean GitHub runner. Local `pre-commit` checks provide fast developer feedback,
-but local hooks can be bypassed and can depend on the developer's environment.
-They are therefore not a replacement for CI validation.
+Preflight is required because unit and framework validation are fast and run
+without Docker or WooCommerce. Local `pre-commit` checks provide fast developer
+feedback, but local hooks can be bypassed and depend on the developer's
+environment. They are not a replacement for CI validation.
+
+The Integration Quality Gate runs a curated, explicitly `pr`-marked integration
+slice on pull requests. The full integration suite runs after pushes to `main`
+and on manual runs, keeping broad API/database coverage while limiting PR wait
+time.
 
 Contract tests also run on pull requests, but the Contract Quality Gate is not
 a required branch-protection check in the current policy.
 
-This keeps the merge policy focused on the two required signals that provide
-the strongest protection for this project: critical business health and
-API/database consistency.
+This makes the merge policy require quick framework checks, critical business
+paths, and a small set of high-value integration cases.
 
 # 12.⚠️ Important: Select the Job Name, Not the Workflow Name
 
@@ -818,12 +826,13 @@ CI:
     [x] Require branches to be up to date
 
 Required checks:
+    ✓ Preflight Quality Gate
     ✓ Smoke Quality Gate
     ✓ Integration Quality Gate
 
 Informational PR checks:
-    • Preflight (workflow validation)
     • Contract tests / Contract Quality Gate
+    • UI Tests
 
 History/security:
     [ ] Require signed commits
@@ -868,12 +877,13 @@ Recommended:
 [x] Require status checks
 
 Required:
+    ✓ Preflight Quality Gate
     ✓ Smoke Quality Gate
     ✓ Integration Quality Gate
 
 Informational:
-    • Preflight
     • Contract tests / Contract Quality Gate
+    • UI Tests
 
 [x] Require branches to be up to date
 
@@ -1136,10 +1146,10 @@ Do not confuse these two purposes.
 ``` text
 PR → main
 
-Preflight       (informational)
+Preflight       (required gate)
 Smoke           (required gate)
 Contract        (informational)
-Integration     (required gate)
+Integration     (required, curated `pr` slice)
 
         ↓
 
@@ -1152,6 +1162,7 @@ Can this change safely enter main?
 main
 
 Smoke
+Integration (full suite)
 Regression
 Performance
 Security
@@ -1176,15 +1187,23 @@ For this project:
 ``` text
 Required PR gates
 
+Preflight       Unit + framework checks
 Smoke           Critical business paths
-Integration     API + DB consistency
+Integration     Curated API + DB cases marked `pr`
 ```
 
-PR validation that is not required for merge:
+Broader validation after merge or on demand:
 
 ``` text
-Preflight       Framework validation
-Contract        API compatibility
+Integration     Full API + DB suite
+Regression      Broad functional coverage
+```
+
+Informational PR workflows:
+
+``` text
+Contract        Shared API compatibility
+UI              Browser validation
 ```
 
 While:
@@ -1228,8 +1247,8 @@ QUALITY GATES / PR CI
 
 [x] Smoke Quality Gate
 [x] Integration Quality Gate
+[x] Preflight Quality Gate
 [ ] Contract Quality Gate (informational)
-[ ] Preflight Quality Gate (not used)
 
 SAFETY
 ────────────────────────────────────────
@@ -1339,29 +1358,12 @@ currently optional---is a useful production practice.
 For this project, the target state is:
 
 ``` text
-                         Pull Request → main
-                                  │
-                    ┌─────────────┼─────────────┐
-                    │             │             │
-                Preflight       Smoke        Contract
-                    │             │             │
-             informational       ▼       informational
-                                  │
-                         Smoke Quality Gate
-                                  │
-                                  ├───────────────┐
-                                  │               │
-                            Integration       Required
-                                  │            PR checks
-                                  ▼
-                     Integration Quality Gate
-                                  │
-                         ┌────────┴────────┐
-                         ▼                 ▼
-                       FAIL              PASS
-                         │                 │
-                         ▼                 ▼
-                    Block merge       Allow merge
+Pull Request → main
+  ├── Preflight Quality Gate       ┐
+  ├── Smoke Quality Gate           ├── Required checks → block or allow merge
+  ├── Integration Quality Gate     ┘
+  ├── Contract Quality Gate            Informational
+  └── UI Tests                         Informational
 ```
 
 And the GitHub branch protection/ruleset should know only about the
@@ -1370,10 +1372,11 @@ stable required gates:
 ``` text
 Smoke Quality Gate
 Integration Quality Gate
+Preflight Quality Gate
 ```
 
-Preflight and Contract remain CI workflows, but they are not required
-branch-protection checks in the current policy.
+Contract and UI remain informational CI workflows. Add these three stable gate
+names to the branch protection rule or ruleset for `main`.
 
 not:
 

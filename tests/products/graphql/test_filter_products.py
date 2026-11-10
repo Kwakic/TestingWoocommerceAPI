@@ -6,6 +6,7 @@ import pytest
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.graphql,
+    pytest.mark.products,
 ]
 
 

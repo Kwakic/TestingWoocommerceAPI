@@ -28,6 +28,7 @@ pytestmark = [pytest.mark.orders, pytest.mark.integration]
 # ---------------------------------------
 @pytest.mark.sanity
 @pytest.mark.smoke
+@pytest.mark.pr
 @pytest.mark.contract
 def test_valid_coupon_applies_50_percent_discount(
     create_valid_coupon,

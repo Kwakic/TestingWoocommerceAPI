@@ -81,6 +81,11 @@ on:
         type: string # If not optional we set output to: number
         default: ""  # optional
 
+      fail_on_empty:
+        required: false
+        type: boolean
+        default: false
+
       pytest_extra_args:
         required: false
         type: string
@@ -496,7 +501,7 @@ jobs:
       #   2+ = execution / infrastructure issues
       #   5 = no tests collected
       #
-      # In a growing multi-entity framework, "no tests collected" is NOT considered a CI failure.
+      # Empty collection behavior is configurable with `fail_on_empty`.
       #
       # Examples:
       #
@@ -505,13 +510,14 @@ jobs:
       # - marker filtering excludes all tests
       # - entity is under development
       #
-      # In all cases, Exit Code 5 is treated as:
+      # By default, Exit Code 5 is treated as:
       #
       #   SUCCESS (Skipped Entity)
       #
-      # This allows the matrix to represent ownership
-      # boundaries even when a team has not yet
-      # implemented or enabled its tests.
+      # `fail_on_empty: true` is used for required PR lanes and curated suites
+      # where an empty marker selection would otherwise silently green the gate.
+      # `fail_on_empty: false` keeps entity matrices usable while a domain is
+      # still being adopted or has no tests in a particular optional suite.
       #
       # This preserves:
       # - matrix stability
@@ -524,7 +530,8 @@ jobs:
       # - Tests temporarily disabled        -> Skip
       # - Marker filtering excludes tests   -> Skip
       # - Entity under development          -> Skip
-      # - No tests yet                      -> Skip
+      # - No tests yet with fail_on_empty=false -> Skip
+      # - No tests yet with fail_on_empty=true  -> Fail
       # - Test failures                     -> Fail
       # - Infrastructure failures           -> Fail
       # --------------------------------------------------
@@ -540,6 +547,7 @@ jobs:
           PYTEST_EXTRA_ARGS: ${{ inputs.pytest_extra_args }}
           PYTEST_DURATIONS: ${{ inputs.pytest_durations }}
           PYTEST_MAXFAIL: ${{ inputs.pytest_maxfail }}
+          FAIL_ON_EMPTY: ${{ inputs.fail_on_empty }}
           # --------------------------------------------------
           # 🔐 UI test credentials
           #
@@ -630,6 +638,11 @@ jobs:
           # Treat as successful skipped entity.
           # ----------------------------------------------
           if [ "$PYTEST_EXIT_CODE" -eq 5 ]; then
+
+            if [[ "$FAIL_ON_EMPTY" == "true" ]]; then
+              echo "No eligible tests were collected, but this suite requires at least one test."
+              exit 1
+            fi
 
             echo "No eligible tests collected."
             echo "Entity: $TEST_ENTITY"

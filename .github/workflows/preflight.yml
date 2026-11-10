@@ -42,13 +42,15 @@ jobs:
 
       suite_name: unit
 
-      pytest_markers: unit
+      pytest_markers: "unit and pr"
 
       timeout_minutes: 5
 
       pytest_durations: 5
 
       pytest_maxfail: "1"
+
+      fail_on_empty: true
 
       pytest_extra_args: "-v"
 
@@ -87,7 +89,7 @@ jobs:
 
       suite_name: preflight
 
-      pytest_markers: preflight
+      pytest_markers: "preflight and pr"
 
       timeout_minutes: 5
 
@@ -95,9 +97,32 @@ jobs:
 
       pytest_maxfail: "1"
 
+      fail_on_empty: true
+
       pytest_extra_args: "-v"
 
       # No Docker or WordPress bootstrap required.
       #
       # Preflight validates the framework only.
       setup_woocommerce: false
+
+  # Stable status check for branch protection. It runs even when either
+  # reusable workflow fails or is skipped, so a required check cannot vanish.
+  preflight-gate:
+    name: Preflight Quality Gate
+    needs:
+      - unit
+      - preflight
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Validate unit and preflight results
+        run: |
+          if [ "${{ needs.unit.result }}" != "success" ] || [ "${{ needs.preflight.result }}" != "success" ]; then
+            echo "Unit or preflight checks failed."
+            exit 1
+          fi
+
+          echo "Unit and preflight checks passed."

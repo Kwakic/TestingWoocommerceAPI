@@ -46,6 +46,7 @@ pytestmark = [pytest.mark.products, pytest.mark.integration]
 # ---------------------------------------
 @pytest.mark.sanity
 @pytest.mark.smoke
+@pytest.mark.pr
 @pytest.mark.contract
 def test_get_product_by_id(
     product_helper,

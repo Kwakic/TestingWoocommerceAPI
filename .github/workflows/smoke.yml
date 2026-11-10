@@ -191,7 +191,7 @@ jobs:
       # Test suite metadata
       # ==================================================
       suite_name: smoke
-      pytest_markers: smoke
+      pytest_markers: "smoke and pr"
 
       # ==================================================
       # Pytest runtime configuration
@@ -199,6 +199,8 @@ jobs:
       timeout_minutes: 20
       pytest_durations: 10
       pytest_maxfail: 3
+
+      fail_on_empty: true
 
       # ==================================================
       # Entity ownership boundary
@@ -226,11 +228,25 @@ jobs:
       team: ${{ matrix.team }}
       tier: ${{ matrix.tier }}
 
+  # Shared critical smoke checks are outside the entity matrix, so execute
+  # them once and include their result in the stable gate.
+  shared-smoke:
+    name: Shared smoke tests
+    uses: ./.github/workflows/reusable-test-runner.yml
+    with:
+      scope: shared
+      suite_name: smoke
+      pytest_markers: "smoke and pr"
+      timeout_minutes: 10
+      pytest_durations: 5
+      pytest_maxfail: 1
+      fail_on_empty: true
+
   # ==================================================
   # 🚦 JOB 3 — SMOKE QUALITY GATE
   # ==================================================
   #
-  # Aggregates the result of all entity matrix jobs.
+  # Aggregates the entity matrix and shared authentication smoke results.
   #
   # This is the stable PR status check.
   #
@@ -245,6 +261,7 @@ jobs:
   # ├── Test • orders
   # ├── Test • products
   # ├── Test • coupons
+  # ├── Shared smoke tests
   # │
   # └── Smoke Quality Gate
   # ==================================================
@@ -255,6 +272,7 @@ jobs:
 
     needs:
       - test
+      - shared-smoke
 
     if: always()
 
@@ -266,7 +284,8 @@ jobs:
 
       - name: Validate smoke results
         run: |
-          if [ "${{ needs.test.result }}" != "success" ]; then
+          if [ "${{ needs.test.result }}" != "success" ] ||
+             [ "${{ needs.shared-smoke.result }}" != "success" ]; then
             echo "Smoke tests failed."
             exit 1
           fi

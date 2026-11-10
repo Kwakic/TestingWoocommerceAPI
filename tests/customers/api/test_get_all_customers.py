@@ -16,12 +16,13 @@ from EcommerceAPI.src.utils.date_timestamp_utils import (
 logger = logging.getLogger(__name__)
 #  logger.setLevel(logging.DEBUG)  # already set in pytest.ini
 
-pytestmark = [pytest.mark.integration]
+pytestmark = [pytest.mark.integration, pytest.mark.customers]
 
 
 @pytest.mark.tcid("TCID-012")
 @pytest.mark.contract
 @pytest.mark.smoke
+@pytest.mark.pr
 def test_get_all_customers_list_not_empty_and_valid_schema(
     customer_helper,
     create_valid_customer,

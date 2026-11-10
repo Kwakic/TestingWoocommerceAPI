@@ -85,6 +85,7 @@ def test_create_order_with_invalid_status(
 @pytest.mark.negative
 @pytest.mark.contract
 @pytest.mark.regression
+@pytest.mark.pr
 def test_create_order_with_malformed_line_items(order_api_raw):
     """Reject an Order payload whose line_items field is not a list.
 

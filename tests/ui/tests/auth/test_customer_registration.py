@@ -21,6 +21,7 @@ from tests.ui.pages.authentication.customer_registration_page import (
 pytestmark = [
     pytest.mark.ui,
     pytest.mark.smoke,
+    pytest.mark.pr,
 ]
 
 

@@ -21,7 +21,7 @@ from EcommerceAPI.src.test_data.factories.products.product_factory import (
     ProductFactory,
 )
 
-pytestmark = [pytest.mark.shared, pytest.mark.unit]
+pytestmark = [pytest.mark.shared, pytest.mark.unit, pytest.mark.pr]
 
 
 class TestProductFactorySalePrice:

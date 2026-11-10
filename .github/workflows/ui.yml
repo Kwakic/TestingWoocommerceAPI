@@ -110,7 +110,10 @@ jobs:
       # @pytest.mark.ui
       #
       # --------------------------------------------------
-      pytest_markers: ui
+      # PRs run the explicitly tagged UI smoke slice. Main/manual runs retain
+      # the complete UI suite.
+      pytest_markers: ${{ github.event_name == 'pull_request' && 'ui and pr' || 'ui' }}
+      fail_on_empty: ${{ github.event_name == 'pull_request' }}
 
       # --------------------------------------------------
       # Runtime configuration

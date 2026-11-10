@@ -26,6 +26,7 @@ pytestmark = [pytest.mark.coupons, pytest.mark.integration]
 # ---------------------------------------
 @pytest.mark.sanity
 @pytest.mark.smoke
+@pytest.mark.pr
 @pytest.mark.contract
 def test_create_single_coupon(
     coupon_helper,
@@ -321,6 +322,7 @@ def test_create_coupon_with_valid_restrictions(
 @pytest.mark.negative
 @pytest.mark.contract
 @pytest.mark.regression
+@pytest.mark.pr
 def test_create_coupon_fails_for_existing_code(
     create_valid_coupon,
     coupon_api_raw,

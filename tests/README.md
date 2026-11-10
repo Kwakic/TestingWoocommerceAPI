@@ -77,6 +77,29 @@ Examples:
 - README_ORDERS.md
 - README_COUPONS.md
 
+## Pytest marker policy
+
+Markers describe separate dimensions and should be combined intentionally:
+
+- **Execution lane:** `pr`, `smoke`, `regression`, and `preflight` describe when
+  a test is selected. Add `pr` only to stable, high-signal cases intended for
+  the focused pull-request checks.
+- **Test type:** `unit`, `integration`, `contract`, `ui`, and `performance`
+  describe what the test exercises. These can overlap with an execution lane.
+- **Test traits:** `negative`, `bulk`, `e2e`, `security`, and `graphql` describe
+  scenario characteristics and can overlap with both type and lane markers.
+
+Use module-level markers only when every test in that module shares the
+classification. Use function-level markers to select individual cases. The
+`integration` marker means the test uses the live application/API environment;
+it does not by itself mean that the test belongs in the PR lane. Full integration
+coverage runs on pushes to `main` and manual runs, while the PR Integration Gate
+selects only tests marked `integration` and `pr` that are not already smoke tests.
+
+All marker names and descriptions live in [`pytest.ini`](../pytest.ini). Strict
+marker validation is enabled, and required PR lanes fail when their marker
+filter collects no tests.
+
 ## Performance tests
 
 Performance tests measure API response time with sequential requests. The

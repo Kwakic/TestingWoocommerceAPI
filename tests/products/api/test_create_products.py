@@ -68,6 +68,7 @@ pytestmark = [pytest.mark.products, pytest.mark.integration]
 # ---------------------------
 @pytest.mark.sanity
 @pytest.mark.smoke
+@pytest.mark.pr
 @pytest.mark.contract
 def test_create_single_simple_product(
     product_helper,
@@ -444,6 +445,7 @@ def test_create_product_with_duplicate_sku(
 @pytest.mark.negative
 @pytest.mark.contract
 @pytest.mark.regression
+@pytest.mark.pr
 def test_create_product_with_invalid_type(product_api_raw):
     """
     Negative test: an unsupported product type should be rejected

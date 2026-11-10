@@ -35,6 +35,7 @@ pytestmark = [pytest.mark.orders, pytest.mark.integration]
 # -------------------------------------------
 @pytest.mark.sanity
 @pytest.mark.smoke
+@pytest.mark.pr
 @pytest.mark.contract
 def test_get_order_by_id(
     order_helper,
