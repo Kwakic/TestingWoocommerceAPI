@@ -1,46 +1,71 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Tue Nov 10 10:41:49 UTC 2026","Tue Nov 10 10:41:50 UTC 2026","654","tests.orders.api","test_orders_params_using_json_file","","","","test_apply_coupon_scenario_from_json[percentage coupon meets minimum]","Apply each eligible JSON-defined Coupon and verify the Order totals.
+"passed","Wed Nov 11 19:55:49 UTC 2026","Wed Nov 11 19:55:49 UTC 2026","384","tests.orders.api","test_create_order","","","","test_create_order_with_multiple_units","Create an Order line item with a quantity greater than the default."
+"passed","Wed Nov 11 19:55:54 UTC 2026","Wed Nov 11 19:55:54 UTC 2026","430","tests.orders.api","test_orders_params_using_json_file","","","","test_apply_coupon_scenario_from_json[fixed cart coupon meets minimum]","Apply each eligible JSON-defined Coupon and verify the Order totals.
 
 The test checks that the scenario's derived product price meets its
 minimum spend and that the JSON expected discount matches the configured
 discount rule before comparing those expectations with the API response.
 "
-"passed","Tue Nov 10 10:41:46 UTC 2026","Tue Nov 10 10:41:47 UTC 2026","472","tests.orders.api","test_get_order","","","","test_get_order_by_id_matches_db","Verify that a retrieved Order matches its WooCommerce database records.
+"passed","Wed Nov 11 19:55:52 UTC 2026","Wed Nov 11 19:55:53 UTC 2026","435","tests.orders.api","test_orders_param_inside_module","","","","test_coupon_application_rejected_below_minimum[percentage-below-minimum]","Reject applying a Coupon when the Order is below its minimum spend.
 
-Test flow:
-    1. Create a Product and an Order through their fixtures.
-    2. Retrieve the Order through GET /orders/{id}.
-    3. Validate the GET response structure.
-    4. Retrieve the Order, metadata, and line-item records through OrdersDAO.
-    5. Compare the API response with the database records.
+The Order is created without a Coupon and registered by create_valid_order.
+The negative operation updates that existing Order, so the resource
+remains owned by the fixture even when WooCommerce rejects the Coupon.
 "
-"passed","Tue Nov 10 10:41:52 UTC 2026","Tue Nov 10 10:41:53 UTC 2026","714","tests.orders.api","test_update_order","","","","test_update_order_status[on-hold]","Update an Order to a supported status and verify it persists.
+"passed","Wed Nov 11 19:55:52 UTC 2026","Wed Nov 11 19:55:52 UTC 2026","474","tests.orders.api","test_orders_param_inside_module","","","","test_apply_eligible_coupon_to_order[free-shipping-only]","Apply an eligible Coupon and verify its Order discount and shipping.
 
-Test flow:
-
-    1. Create a Product and a valid Order through their fixtures.
-    2. Build a partial state containing the requested status.
-    3. Apply the state through OrderStateProvisioner.
-    4. Validate the update response and retrieve the Order again.
+The Product price is derived from the Coupon minimum plus the scenario
+offset. The fixture pipeline owns creation and cleanup for the Coupon,
+Product, and Order.
 "
-"passed","Tue Nov 10 10:41:45 UTC 2026","Tue Nov 10 10:41:45 UTC 2026","253","tests.orders.api","test_create_order_negative","","","","test_create_order_with_invalid_status","Reject an Order creation request with an unsupported status.
+"passed","Wed Nov 11 19:55:56 UTC 2026","Wed Nov 11 19:55:57 UTC 2026","424","tests.orders.api","test_update_order","","","","test_update_order_customer_note","Update an Order customer note and verify it persists through the API."
+"passed","Wed Nov 11 19:55:53 UTC 2026","Wed Nov 11 19:55:53 UTC 2026","424","tests.orders.api","test_orders_param_inside_module","","","","test_coupon_application_rejected_below_minimum[fixed-cart-below-minimum]","Reject applying a Coupon when the Order is below its minimum spend.
 
-Test flow:
-
-    1. Create a valid Product to satisfy the Order line-item requirement.
-    2. Send an Order payload with an unsupported status.
-    3. Verify HTTP 400 and the WooCommerce error response contract.
+The Order is created without a Coupon and registered by create_valid_order.
+The negative operation updates that existing Order, so the resource
+remains owned by the fixture even when WooCommerce rejects the Coupon.
 "
-"passed","Tue Nov 10 10:41:52 UTC 2026","Tue Nov 10 10:41:53 UTC 2026","661","tests.orders.api","test_update_order","","","","test_update_order_customer_note","Update an Order customer note and verify it persists through the API."
-"passed","Tue Nov 10 10:41:42 UTC 2026","Tue Nov 10 10:41:42 UTC 2026","461","tests.orders.api","test_create_order","","","","test_create_order_with_multiple_units","Create an Order line item with a quantity greater than the default."
-"passed","Tue Nov 10 10:41:48 UTC 2026","Tue Nov 10 10:41:49 UTC 2026","615","tests.orders.api","test_orders_params_using_json_file","","","","test_apply_coupon_scenario_from_json[fixed cart coupon meets minimum]","Apply each eligible JSON-defined Coupon and verify the Order totals.
+"passed","Wed Nov 11 19:55:51 UTC 2026","Wed Nov 11 19:55:52 UTC 2026","450","tests.orders.api","test_orders_param_inside_module","","","","test_apply_eligible_coupon_to_order[fixed-cart-discount]","Apply an eligible Coupon and verify its Order discount and shipping.
+
+The Product price is derived from the Coupon minimum plus the scenario
+offset. The fixture pipeline owns creation and cleanup for the Coupon,
+Product, and Order.
+"
+"passed","Wed Nov 11 19:55:54 UTC 2026","Wed Nov 11 19:55:55 UTC 2026","727","tests.orders.api","test_orders_params_using_json_file","","","","test_apply_coupon_scenario_from_json[percentage coupon meets minimum]","Apply each eligible JSON-defined Coupon and verify the Order totals.
 
 The test checks that the scenario's derived product price meets its
 minimum spend and that the JSON expected discount matches the configured
 discount rule before comparing those expectations with the API response.
 "
-"passed","Tue Nov 10 10:41:43 UTC 2026","Tue Nov 10 10:41:44 UTC 2026","686","tests.orders.api","test_create_order","","","","test_create_order_for_registered_customer","Create an Order for an existing Customer and verify its association."
-"passed","Tue Nov 10 10:41:44 UTC 2026","Tue Nov 10 10:41:44 UTC 2026","464","tests.orders.api","test_create_order","","","","test_create_single_order","Create a minimal Order and compare its API response with the database.
+"passed","Wed Nov 11 19:55:49 UTC 2026","Wed Nov 11 19:55:50 UTC 2026","447","tests.orders.api","test_apply_valid_coupon_to_order","","","","test_coupon_is_rejected_below_minimum_amount","Reject a Coupon application when the Order is below its minimum spend.
+
+A valid Order is created first and registered for teardown cleanup. The
+invalid update then exercises the Coupon restriction without relying on
+an unsuccessful create request that could leave an unowned Order record.
+"
+"passed","Wed Nov 11 19:55:51 UTC 2026","Wed Nov 11 19:55:51 UTC 2026","524","tests.orders.api","test_orders_param_inside_module","","","","test_apply_eligible_coupon_to_order[percentage-discount]","Apply an eligible Coupon and verify its Order discount and shipping.
+
+The Product price is derived from the Coupon minimum plus the scenario
+offset. The fixture pipeline owns creation and cleanup for the Coupon,
+Product, and Order.
+"
+"passed","Wed Nov 11 19:55:55 UTC 2026","Wed Nov 11 19:55:55 UTC 2026","414","tests.orders.api","test_orders_params_using_json_file","","","","test_reject_coupon_scenario_below_minimum_from_json[fixed cart coupon below minimum]","Reject each JSON-defined Coupon application below its minimum spend.
+
+A valid Order is created before applying the Coupon. The expected failure
+therefore leaves an Order registered with the shared cleanup lifecycle.
+"
+"passed","Wed Nov 11 19:55:57 UTC 2026","Wed Nov 11 19:55:57 UTC 2026","412","tests.orders.api","test_update_order","","","","test_update_order_status_to_invalid_value","Reject an unsupported status and verify the Order remains unchanged.
+
+The Order is created through the standard fixture and remains registered
+for cleanup. The invalid partial state is sent through the same update
+provisioner used by successful state changes.
+"
+"passed","Wed Nov 11 19:55:55 UTC 2026","Wed Nov 11 19:55:55 UTC 2026","426","tests.orders.api","test_orders_params_using_json_file","","","","test_reject_coupon_scenario_below_minimum_from_json[percentage coupon below minimum]","Reject each JSON-defined Coupon application below its minimum spend.
+
+A valid Order is created before applying the Coupon. The expected failure
+therefore leaves an Order registered with the shared cleanup lifecycle.
+"
+"passed","Wed Nov 11 19:55:50 UTC 2026","Wed Nov 11 19:55:51 UTC 2026","340","tests.orders.api","test_create_order","","","","test_create_single_order","Create a minimal Order and compare its API response with the database.
 
 Test flow:
 
@@ -49,57 +74,7 @@ Test flow:
     3. Retrieve the Order through the API.
     4. Compare API data with the Order and line-item database records.
 "
-"passed","Tue Nov 10 10:41:42 UTC 2026","Tue Nov 10 10:41:43 UTC 2026","620","tests.orders.api","test_apply_valid_coupon_to_order","","","","test_coupon_is_rejected_below_minimum_amount","Reject a Coupon application when the Order is below its minimum spend.
-
-A valid Order is created first and registered for teardown cleanup. The
-invalid update then exercises the Coupon restriction without relying on
-an unsuccessful create request that could leave an unowned Order record.
-"
-"passed","Tue Nov 10 10:41:42 UTC 2026","Tue Nov 10 10:41:42 UTC 2026","630","tests.orders.api","test_apply_valid_coupon_to_order","","","","test_valid_coupon_applies_50_percent_discount","Apply a 50% coupon when the Order meets its minimum spend.
-
-Test flow:
-
-    1. Create a Coupon requiring at least 35.00 in Order value.
-    2. Create a Product priced at 40.00.
-    3. Create an Order containing the Product and Coupon.
-    4. Retrieve the Order and verify the Coupon and discount totals.
-"
-"passed","Tue Nov 10 10:41:46 UTC 2026","Tue Nov 10 10:41:47 UTC 2026","590","tests.orders.api","test_orders_param_inside_module","","","","test_apply_eligible_coupon_to_order[free-shipping-only]","Apply an eligible Coupon and verify its Order discount and shipping.
-
-The Product price is derived from the Coupon minimum plus the scenario
-offset. The fixture pipeline owns creation and cleanup for the Coupon,
-Product, and Order.
-"
-"passed","Tue Nov 10 10:41:47 UTC 2026","Tue Nov 10 10:41:48 UTC 2026","564","tests.orders.api","test_orders_param_inside_module","","","","test_coupon_application_rejected_below_minimum[percentage-below-minimum]","Reject applying a Coupon when the Order is below its minimum spend.
-
-The Order is created without a Coupon and registered by create_valid_order.
-The negative operation updates that existing Order, so the resource
-remains owned by the fixture even when WooCommerce rejects the Coupon.
-"
-"passed","Tue Nov 10 10:41:46 UTC 2026","Tue Nov 10 10:41:46 UTC 2026","644","tests.orders.api","test_orders_param_inside_module","","","","test_apply_eligible_coupon_to_order[fixed-cart-discount]","Apply an eligible Coupon and verify its Order discount and shipping.
-
-The Product price is derived from the Coupon minimum plus the scenario
-offset. The fixture pipeline owns creation and cleanup for the Coupon,
-Product, and Order.
-"
-"passed","Tue Nov 10 10:41:47 UTC 2026","Tue Nov 10 10:41:48 UTC 2026","579","tests.orders.api","test_orders_param_inside_module","","","","test_coupon_application_rejected_below_minimum[fixed-cart-below-minimum]","Reject applying a Coupon when the Order is below its minimum spend.
-
-The Order is created without a Coupon and registered by create_valid_order.
-The negative operation updates that existing Order, so the resource
-remains owned by the fixture even when WooCommerce rejects the Coupon.
-"
-"passed","Tue Nov 10 10:41:50 UTC 2026","Tue Nov 10 10:41:51 UTC 2026","746","tests.orders.api","test_orders_params_using_json_file","","","","test_reject_coupon_scenario_below_minimum_from_json[fixed cart coupon below minimum]","Reject each JSON-defined Coupon application below its minimum spend.
-
-A valid Order is created before applying the Coupon. The expected failure
-therefore leaves an Order registered with the shared cleanup lifecycle.
-"
-"passed","Tue Nov 10 10:41:53 UTC 2026","Tue Nov 10 10:41:54 UTC 2026","620","tests.orders.api","test_update_order","","","","test_update_order_status_to_invalid_value","Reject an unsupported status and verify the Order remains unchanged.
-
-The Order is created through the standard fixture and remains registered
-for cleanup. The invalid partial state is sent through the same update
-provisioner used by successful state changes.
-"
-"passed","Tue Nov 10 10:41:52 UTC 2026","Tue Nov 10 10:41:52 UTC 2026","667","tests.orders.api","test_update_order","","","","test_update_order_status[completed]","Update an Order to a supported status and verify it persists.
+"passed","Wed Nov 11 19:55:56 UTC 2026","Wed Nov 11 19:55:56 UTC 2026","431","tests.orders.api","test_update_order","","","","test_update_order_status[cancelled]","Update an Order to a supported status and verify it persists.
 
 Test flow:
 
@@ -108,30 +83,31 @@ Test flow:
     3. Apply the state through OrderStateProvisioner.
     4. Validate the update response and retrieve the Order again.
 "
-"passed","Tue Nov 10 10:41:49 UTC 2026","Tue Nov 10 10:41:50 UTC 2026","642","tests.orders.api","test_orders_params_using_json_file","","","","test_reject_coupon_scenario_below_minimum_from_json[percentage coupon below minimum]","Reject each JSON-defined Coupon application below its minimum spend.
+"passed","Wed Nov 11 19:55:50 UTC 2026","Wed Nov 11 19:55:50 UTC 2026","516","tests.orders.api","test_create_order","","","","test_create_order_for_registered_customer","Create an Order for an existing Customer and verify its association."
+"passed","Wed Nov 11 19:55:56 UTC 2026","Wed Nov 11 19:55:56 UTC 2026","483","tests.orders.api","test_update_order","","","","test_update_order_status[completed]","Update an Order to a supported status and verify it persists.
 
-A valid Order is created before applying the Coupon. The expected failure
-therefore leaves an Order registered with the shared cleanup lifecycle.
+Test flow:
+
+    1. Create a Product and a valid Order through their fixtures.
+    2. Build a partial state containing the requested status.
+    3. Apply the state through OrderStateProvisioner.
+    4. Validate the update response and retrieve the Order again.
 "
-"passed","Tue Nov 10 10:41:49 UTC 2026","Tue Nov 10 10:41:49 UTC 2026","643","tests.orders.api","test_orders_params_using_json_file","","","","test_apply_coupon_scenario_from_json[free shipping only coupon]","Apply each eligible JSON-defined Coupon and verify the Order totals.
+"passed","Wed Nov 11 19:55:51 UTC 2026","Wed Nov 11 19:55:51 UTC 2026","213","tests.orders.api","test_create_order_negative","","","","test_create_order_with_invalid_status","Reject an Order creation request with an unsupported status.
+
+Test flow:
+
+    1. Create a valid Product to satisfy the Order line-item requirement.
+    2. Send an Order payload with an unsupported status.
+    3. Verify HTTP 400 and the WooCommerce error response contract.
+"
+"passed","Wed Nov 11 19:55:54 UTC 2026","Wed Nov 11 19:55:55 UTC 2026","704","tests.orders.api","test_orders_params_using_json_file","","","","test_apply_coupon_scenario_from_json[free shipping only coupon]","Apply each eligible JSON-defined Coupon and verify the Order totals.
 
 The test checks that the scenario's derived product price meets its
 minimum spend and that the JSON expected discount matches the configured
 discount rule before comparing those expectations with the API response.
 "
-"passed","Tue Nov 10 10:41:45 UTC 2026","Tue Nov 10 10:41:45 UTC 2026","111","tests.orders.api","test_create_order_negative","","","","test_create_order_with_malformed_line_items","Reject an Order payload whose line_items field is not a list.
-
-WooCommerce expects line_items to be an array of line-item objects. This
-test sends a string to exercise request-schema validation before a valid
-Order can be created.
-"
-"passed","Tue Nov 10 10:41:45 UTC 2026","Tue Nov 10 10:41:46 UTC 2026","995","tests.orders.api","test_orders_param_inside_module","","","","test_apply_eligible_coupon_to_order[percentage-discount]","Apply an eligible Coupon and verify its Order discount and shipping.
-
-The Product price is derived from the Coupon minimum plus the scenario
-offset. The fixture pipeline owns creation and cleanup for the Coupon,
-Product, and Order.
-"
-"passed","Tue Nov 10 10:41:45 UTC 2026","Tue Nov 10 10:41:46 UTC 2026","576","tests.orders.api","test_get_order","","","","test_get_order_by_id","Retrieve a valid Order by ID and verify its identity and line items.
+"passed","Wed Nov 11 19:55:51 UTC 2026","Wed Nov 11 19:55:52 UTC 2026","348","tests.orders.api","test_get_order","","","","test_get_order_by_id","Retrieve a valid Order by ID and verify its identity and line items.
 
 Fixture responsibilities:
     - Create a Product for the Order line item.
@@ -145,17 +121,32 @@ Test flow:
     4. Validate the Order response structure.
     5. Verify the Order ID and Product line item.
 "
-"passed","Tue Nov 10 10:41:52 UTC 2026","Tue Nov 10 10:41:52 UTC 2026","622","tests.orders.api","test_update_order","","","","test_update_order_status[cancelled]","Update an Order to a supported status and verify it persists.
+"passed","Wed Nov 11 19:55:51 UTC 2026","Wed Nov 11 19:55:51 UTC 2026","90","tests.orders.api","test_create_order_negative","","","","test_create_order_with_malformed_line_items","Reject an Order payload whose line_items field is not a list.
+
+WooCommerce expects line_items to be an array of line-item objects. This
+test sends a string to exercise request-schema validation before a valid
+Order can be created.
+"
+"passed","Wed Nov 11 19:55:52 UTC 2026","Wed Nov 11 19:55:52 UTC 2026","407","tests.orders.api","test_get_order","","","","test_get_order_by_id_matches_db","Verify that a retrieved Order matches its WooCommerce database records.
+
+Test flow:
+    1. Create a Product and an Order through their fixtures.
+    2. Retrieve the Order through GET /orders/{id}.
+    3. Validate the GET response structure.
+    4. Retrieve the Order, metadata, and line-item records through OrdersDAO.
+    5. Compare the API response with the database records.
+"
+"passed","Wed Nov 11 19:55:49 UTC 2026","Wed Nov 11 19:55:49 UTC 2026","488","tests.orders.api","test_apply_valid_coupon_to_order","","","","test_valid_coupon_applies_50_percent_discount","Apply a 50% coupon when the Order meets its minimum spend.
 
 Test flow:
 
-    1. Create a Product and a valid Order through their fixtures.
-    2. Build a partial state containing the requested status.
-    3. Apply the state through OrderStateProvisioner.
-    4. Validate the update response and retrieve the Order again.
+    1. Create a Coupon requiring at least 35.00 in Order value.
+    2. Create a Product priced at 40.00.
+    3. Create an Order containing the Product and Coupon.
+    4. Retrieve the Order and verify the Coupon and discount totals.
 "
-"passed","Tue Nov 10 10:41:42 UTC 2026","Tue Nov 10 10:41:43 UTC 2026","662","tests.orders.api","test_create_order","","","","test_create_order_with_multiple_line_items","Create an Order with two Products and verify both line items."
-"passed","Tue Nov 10 10:41:45 UTC 2026","Tue Nov 10 10:41:45 UTC 2026","90","tests.orders.api","test_get_order","","","","test_get_nonexistent_order","Validate the not-found response when retrieving an unknown Order ID.
+"passed","Wed Nov 11 19:55:49 UTC 2026","Wed Nov 11 19:55:50 UTC 2026","507","tests.orders.api","test_create_order","","","","test_create_order_with_multiple_line_items","Create an Order with two Products and verify both line items."
+"passed","Wed Nov 11 19:55:51 UTC 2026","Wed Nov 11 19:55:51 UTC 2026","77","tests.orders.api","test_get_order","","","","test_get_nonexistent_order","Validate the not-found response when retrieving an unknown Order ID.
 
 No setup resource is required because the unknown ID is the scenario under
 test.
@@ -164,4 +155,13 @@ Test flow:
     1. Request an Order ID that does not exist.
     2. Assert that the GET operation returns HTTP 404.
     3. Validate the WooCommerce not-found error contract.
+"
+"passed","Wed Nov 11 19:55:56 UTC 2026","Wed Nov 11 19:55:57 UTC 2026","461","tests.orders.api","test_update_order","","","","test_update_order_status[on-hold]","Update an Order to a supported status and verify it persists.
+
+Test flow:
+
+    1. Create a Product and a valid Order through their fixtures.
+    2. Build a partial state containing the requested status.
+    3. Apply the state through OrderStateProvisioner.
+    4. Validate the update response and retrieve the Order again.
 "

@@ -1,0 +1,5 @@
+INFO     EcommerceAPI.src.clients.graphql_client:graphql_client.py:184 🔷 GraphQL mutation CreateErrorHandlingProduct → HTTP 200 (completed in 0.16s)
+INFO     EcommerceAPI.src.clients.graphql_client:graphql_client.py:184 🔷 GraphQL mutation DeleteErrorHandlingProduct → HTTP 200 (completed in 0.16s)
+ERROR    EcommerceAPI.src.clients.graphql_client:graphql_client.py:157 ❌ GraphQL mutation UpdateDeletedProduct → HTTP 200 (completed in 0.11s)
+ERROR    EcommerceAPI.src.clients.graphql_client:graphql_client.py:170    GraphQL error: Internal server error
+ERROR    EcommerceAPI.src.clients.graphql_client:graphql_client.py:177    GraphQL error path: updateProduct
