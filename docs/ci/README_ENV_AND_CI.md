@@ -150,6 +150,30 @@ running the UI suite.
 For `main` and manual runs, each browser executes as its own CI matrix job.
 Their Allure raw-result artifacts are later merged into one UI Allure report.
 
+### 🧪 PR test selection and quality gates
+
+The `pr` marker identifies tests selected for focused pull-request validation.
+It is combined with a test-type or suite marker; it does not by itself make a
+test a required check. GitHub branch protection determines which workflow
+quality-gate results block a merge.
+
+| PR workflow | Test selection | Merge policy |
+| --- | --- | --- |
+| Preflight | Shared tests marked `unit and pr`, then `preflight and pr`; no WooCommerce setup | Required gate |
+| Smoke | Entity tests marked `smoke and pr`, plus shared authentication smoke | Required gate |
+| Integration | Per-entity tests marked `integration and pr and not smoke` | Required gate; full integration runs on pushes to `main` and manual runs |
+| UI | Tests marked `ui and pr`; Chromium on PRs | Informational in the documented branch-protection policy |
+| Contract | Shared tests marked `contract` | Informational in the documented branch-protection policy |
+
+The intended required status checks are **Preflight Quality Gate**, **Smoke
+Quality Gate**, and **Integration Quality Gate**. Confirm these names are
+selected in the GitHub ruleset or branch-protection settings for `main`; the
+workflow files alone cannot enforce merge requirements.
+
+For marker assignment conventions, see [`tests/README.md`](../../tests/README.md)
+and the declarations in [`pytest.ini`](../../pytest.ini). The branch-protection
+policy is described in [`README_GITHUB_PRODUCTION_SETTINGS.md`](README_GITHUB_PRODUCTION_SETTINGS.md).
+
 ---
 
 ### 📊 UI Allure reporting in CI
