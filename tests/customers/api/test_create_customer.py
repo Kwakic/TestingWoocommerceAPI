@@ -55,6 +55,7 @@ logger = logging.getLogger(
 
 pytestmark = [
     pytest.mark.integration,
+    pytest.mark.customers,
 ]
 
 INVALID_EMAIL_PAYLOADS = [
@@ -356,6 +357,7 @@ def test_bulk_create_customers_edge_cases(
 @pytest.mark.tcid("TCID-003")
 @pytest.mark.sanity
 @pytest.mark.smoke  # smoke ✔ (VERY important endpoint)
+@pytest.mark.pr
 @pytest.mark.contract
 def test_create_single_customer_with_email_and_password_only(
     customer_helper, customers_dao, create_valid_customer
@@ -580,6 +582,7 @@ def test_create_customer_with_varied_addresses(
 @pytest.mark.negative
 @pytest.mark.contract  # validates error_schema → contract ✔
 @pytest.mark.regression
+@pytest.mark.pr
 @pytest.mark.parametrize("payload, expected_status_code", INVALID_EMAIL_PAYLOADS)
 def test_create_customer_email_field_validation(
     customer_api_raw,

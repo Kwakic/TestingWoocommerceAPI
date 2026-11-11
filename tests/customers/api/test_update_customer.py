@@ -24,7 +24,7 @@ from tests.shared.contracts.rest.error_schema import error_schema
 
 logger = logging.getLogger(__name__)
 
-pytestmark = [pytest.mark.integration]
+pytestmark = [pytest.mark.integration, pytest.mark.customers]
 
 # ------------------------------------------------------------------
 # Invalid payloads used for negative update tests
@@ -65,6 +65,7 @@ INVALID_UPDATE_PAYLOADS = [
 
 @pytest.mark.tcid("TCID-021")
 @pytest.mark.smoke
+@pytest.mark.pr
 @pytest.mark.contract
 def test_update_customer_first_name(customer_helper, create_valid_customer):
     """

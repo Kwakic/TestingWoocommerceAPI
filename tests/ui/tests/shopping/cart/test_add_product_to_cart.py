@@ -14,7 +14,7 @@ from tests.ui.pages.common.home_page import HomePage
 from tests.ui.pages.shopping.cart_page import CartPage
 
 
-pytestmark = [pytest.mark.ui, pytest.mark.smoke]
+pytestmark = [pytest.mark.ui, pytest.mark.smoke, pytest.mark.pr]
 
 
 @pytest.mark.parametrize(

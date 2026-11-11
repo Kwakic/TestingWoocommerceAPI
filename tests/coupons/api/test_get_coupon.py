@@ -46,6 +46,7 @@ pytestmark = [pytest.mark.coupons, pytest.mark.integration]
 # ---------------------------------------
 @pytest.mark.sanity
 @pytest.mark.smoke
+@pytest.mark.pr
 @pytest.mark.contract
 def test_get_coupon_by_id(
     coupon_helper,

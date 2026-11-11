@@ -4,6 +4,9 @@ import pytest
 pytestmark = [
     pytest.mark.negative,
     pytest.mark.graphql,
+    pytest.mark.integration,
+    pytest.mark.pr,
+    pytest.mark.products,
 ]
 
 

@@ -25,7 +25,12 @@ from EcommerceAPI.src.metadata.entity_metadata import (
     discover_framework_entities,
 )
 
-pytestmark = [pytest.mark.security, pytest.mark.smoke, pytest.mark.shared]
+pytestmark = [
+    pytest.mark.security,
+    pytest.mark.smoke,
+    pytest.mark.shared,
+    pytest.mark.pr,
+]
 
 
 # ------------------------------------------------------------------

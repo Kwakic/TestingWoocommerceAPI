@@ -34,6 +34,7 @@ pytestmark = [pytest.mark.orders, pytest.mark.integration]
 # 🧪 Test: Update Order Status
 # ---------------------------------------
 @pytest.mark.smoke
+@pytest.mark.pr
 @pytest.mark.contract
 @pytest.mark.parametrize(
     "new_status",
