@@ -157,18 +157,28 @@ It is combined with a test-type or suite marker; it does not by itself make a
 test a required check. GitHub branch protection determines which workflow
 quality-gate results block a merge.
 
-| PR workflow | Test selection | Merge policy |
+| PR validation | Test selection | Gate policy |
 | --- | --- | --- |
-| Preflight | Shared tests marked `unit and pr`, then `preflight and pr`; no WooCommerce setup | Required gate |
-| Smoke | Entity tests marked `smoke and pr`, plus shared authentication smoke | Required gate |
-| Integration | Per-entity tests marked `integration and pr and not smoke` | Required gate; full integration runs on pushes to `main` and manual runs |
-| UI | Tests marked `ui and pr`; Chromium on PRs | Informational in the documented branch-protection policy |
-| Contract | Shared tests marked `contract` | Informational in the documented branch-protection policy |
+| Unit | Shared tests marked `unit and pr`; no WooCommerce setup | Mandatory input to `PR Quality Gate` |
+| Preflight | Shared tests marked `preflight and pr`; no WooCommerce setup; runs independently of Unit | Mandatory input to `PR Quality Gate` |
+| Smoke | Entity and shared tests marked `smoke and pr` | Mandatory input to `PR Quality Gate` |
+| Integration | Per-entity tests marked `integration and pr and not smoke` | Mandatory curated PR subset; full integration runs on pushes to `main` and manual runs |
+| UI | Tests marked `ui and pr`; Chromium on trusted PRs | Informational |
+| Contract | Shared tests marked `contract` | Informational |
 
-The intended required status checks are **Preflight Quality Gate**, **Smoke
-Quality Gate**, and **Integration Quality Gate**. Confirm these names are
-selected in the GitHub ruleset or branch-protection settings for `main`; the
-workflow files alone cannot enforce merge requirements.
+`Pull Request Validation` is the central PR workflow. Its **PR Quality Gate**
+depends on Unit, Preflight, entity Smoke, shared Smoke, and the curated
+Integration matrix. Unit and Preflight run independently. Allure report jobs
+are separate from the gate and run after their test matrix finishes, including
+when tests fail.
+
+During migration, the existing PR triggers and the currently configured
+**Smoke Quality Gate** and **Integration Quality Gate** branch checks remain in
+place while the new gate is verified. Do not select the new gate in branch
+protection until it has completed successfully. The target branch-protection
+policy is to require **PR Quality Gate** only; Contract and UI remain
+informational. Workflow files do not change GitHub's branch-protection
+settings.
 
 For marker assignment conventions, see [`tests/README.md`](../../tests/README.md)
 and the declarations in [`pytest.ini`](../../pytest.ini). The branch-protection
