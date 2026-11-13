@@ -293,6 +293,8 @@ jobs:
       - discover-entities
       - test
 
+    if: always() && needs.discover-entities.result == 'success'
+
     strategy:
 
       fail-fast: false

@@ -8,10 +8,14 @@ This guide is written for developers, QA engineers, SDETs, and juniors
 who may already know similar concepts from GitLab, Bitbucket, Jenkins,
 or another CI/CD platform but are new to GitHub Actions.
 
-> **Project context:** This guide reflects the CI architecture used by
-> this project: separate Preflight, Smoke, Contract, Integration,
-> Regression, Performance, and Security workflows, with entity-based
-> test matrices where appropriate.
+> **Project policy:** The target PR policy for this repository is one required
+> check, **PR Quality Gate**, aggregating Unit, Preflight, Smoke, and the
+> curated Integration PR subset. Contract and UI remain informational. During
+> migration, the existing required Smoke and Integration checks stay enabled
+> until the new gate has been verified. Examples below that name `Smoke Quality
+> Gate` or `Integration Quality Gate` illustrate the general per-suite pattern;
+> they are not this repository's target branch-protection policy unless a
+> section explicitly says otherwise.
 
 ------------------------------------------------------------------------
 
@@ -30,28 +34,21 @@ feature/my-change
    │  push
    ▼
 GitHub Pull Request → main
-   │
-   ├── Preflight
-   ├── Smoke
-   ├── Contract
-   └── Integration
-          │
-          ▼
-     Quality Gates
-          │
-     ┌────┴────┐
-     │         │
-    FAIL      PASS
-     │         │
-     ▼         ▼
-  Block PR   Merge
+   ├── Unit ───────────────┐
+   ├── Preflight ──────────┤
+   ├── Smoke ──────────────┼── PR Quality Gate
+   └── Curated Integration┘          │
+                                      ├── FAIL → Block PR
+                                      └── PASS → Merge allowed
+
+Contract and UI run separately as informational checks.
 ```
 
 The important distinction is:
 
 -   **CI workflow** = performs the tests.
--   **Quality Gate** = gives GitHub one stable result representing that
-    suite.
+-   **Quality Gate** = gives GitHub one stable result representing a test
+    suite or the repository's required PR validation set.
 -   **Required status check** = tells GitHub that the Quality Gate must
     pass before `main` can be merged.
 
@@ -72,7 +69,7 @@ familiar even though the names differ.
 | Pull request | Pull Request | Merge Request | PR / Pull Request |
 | Protected default branch | Branch protection / Ruleset | Protected branch | Branch permissions |
 | CI result used to block merge | Required status check | Required pipeline/check | Build status / merge check |
-| Quality Gate | A job such as `Smoke Quality Gate` | Job/check used as gate | Quality gate / build gate |
+| Quality Gate | A job such as `Suite Quality Gate` | Job/check used as gate | Quality gate / build gate |
 | Matrix execution | Matrix strategy | Parallel/matrix-style jobs | Parallel stages |
 | Scheduled CI | `schedule` | `schedule` | Jenkins cron |
 | Manual CI | `workflow_dispatch` | Manual job/pipeline | Build manually |
@@ -295,6 +292,10 @@ Instead, create stable **Quality Gate** jobs and make those required.
 
 # 8.💡 Why Quality Gates Are Useful
 
+The following is a **generic per-suite example**. This repository's target
+branch-protection policy uses the central `PR Quality Gate` described in
+section 10.
+
 Imagine Smoke uses a matrix:
 
 ``` text
@@ -351,6 +352,9 @@ your repository protection.
 
 A Quality Gate is simply a GitHub Actions job that aggregates the result
 of another job or group of jobs.
+
+Generic example only: this shows a gate for one suite, not this repository's
+target PR check.
 
 Example:
 
@@ -419,31 +423,43 @@ A skipped gate is much less useful as a required status check.
 
 ------------------------------------------------------------------------
 
-# 10.🎯 One Quality Gate Per Protected Suite
+# 10.🎯 One Stable PR Quality Gate
 
-A good structure for this project is:
+A central PR workflow can run the mandatory suites and expose one stable
+status check for branch protection:
 
 ``` text
-Preflight
-   └── unit + preflight tests
-       └── Preflight Quality Gate       (required)
+Pull Request Validation
+   ├── Unit ───────────────┐
+   ├── Preflight ──────────┤
+   ├── Smoke matrix ───────┤
+   ├── Shared Smoke ───────┼── PR Quality Gate (required after migration)
+   └── Curated Integration┘
 
-Smoke
-   ├── entity tests
-   ├── shared authentication smoke
-   └── Smoke Quality Gate                (required)
-
-Contract
-   └── REST/GraphQL contract tests  (informational)
-
-Integration
-   ├── curated `pr` tests on pull requests
-   ├── full integration on main/manual runs
-   └── Integration Quality Gate          (required on pull requests)
+Contract and UI remain separate informational workflows.
 ```
 
-The Quality Gate is deliberately independent from whether GitHub
-requires it.
+The gate does not run tests itself. It checks that every mandatory test job
+completed successfully. Test markers still determine which tests execute.
+Unit and Preflight run independently so a Unit failure does not suppress
+Preflight diagnostics. Allure reports run separately and do not affect the
+gate result.
+
+### Why Shared Smoke is a separate job
+
+Shared Smoke is not a duplicate run of every entity's Smoke tests. It
+collects framework-level tests from `tests/shared/` and runs them once.
+The current example, `test_authentication_success.py`, discovers the
+supported entities and verifies that authenticated collection GET requests
+return HTTP 200 with a JSON list.
+
+Entity Smoke and Shared Smoke therefore provide complementary coverage:
+entity Smoke validates critical entity behavior; Shared Smoke validates a
+common framework/application path across the discovered entities.
+
+The Shared Smoke job is a direct input to `PR Quality Gate`, just like the
+entity Smoke matrix. Allure report generation is separate and does not
+determine whether the gate passes.
 
 That gives you an important choice:
 
@@ -462,38 +478,37 @@ when you are still experimenting.
 
 ------------------------------------------------------------------------
 
-# 11.🔥 Recommended Required Checks for This Project
+# 11.🔥 Required Check Policy for This Project
 
-For this repository, the pull-request policy is:
+The target pull-request policy is:
 
 ``` text
 [x] Require status checks to pass before merging
 
 Required:
-    ✓ Preflight Quality Gate
-    ✓ Smoke Quality Gate
-    ✓ Integration Quality Gate
+    ✓ PR Quality Gate
 
 Informational PR workflows:
     • Contract
     • UI
 ```
 
-Preflight is required because unit and framework validation are fast and run
-without Docker or WooCommerce. Local `pre-commit` checks provide fast developer
-feedback, but local hooks can be bypassed and depend on the developer's
-environment. They are not a replacement for CI validation.
+The PR Quality Gate requires Unit, Preflight, Smoke, and the curated Integration
+subset. Local `pre-commit` checks provide fast developer feedback, but local
+hooks can be bypassed and depend on the developer's environment. They are not a
+replacement for CI validation.
 
-The Integration Quality Gate runs a curated, explicitly `pr`-marked integration
-slice on pull requests. The full integration suite runs after pushes to `main`
-and on manual runs, keeping broad API/database coverage while limiting PR wait
-time.
+The PR Quality Gate includes the curated, explicitly `pr`-marked integration
+slice on pull requests. The full integration suite continues to run after
+pushes to `main` and on manual runs, keeping broad API/database coverage while
+limiting PR wait time.
 
 Contract tests also run on pull requests, but the Contract Quality Gate is not
 a required branch-protection check in the current policy.
 
-This makes the merge policy require quick framework checks, critical business
-paths, and a small set of high-value integration cases.
+Contract and UI continue to run for diagnostics but are not included in the
+required gate. The gate is a stable branch-protection interface; suite jobs
+remain visible to show which validation failed.
 
 # 12.⚠️ Important: Select the Job Name, Not the Workflow Name
 
@@ -512,6 +527,9 @@ integration-gate:
 
   name: Integration Quality Gate
 ```
+
+The following names illustrate a per-suite gate. For this repository, the
+target required job is `PR Quality Gate` (see section 10).
 
 GitHub may display:
 
@@ -826,9 +844,7 @@ CI:
     [x] Require branches to be up to date
 
 Required checks:
-    ✓ Preflight Quality Gate
-    ✓ Smoke Quality Gate
-    ✓ Integration Quality Gate
+    ✓ PR Quality Gate
 
 Informational PR checks:
     • Contract tests / Contract Quality Gate
@@ -877,9 +893,7 @@ Recommended:
 [x] Require status checks
 
 Required:
-    ✓ Preflight Quality Gate
-    ✓ Smoke Quality Gate
-    ✓ Integration Quality Gate
+    ✓ PR Quality Gate
 
 Informational:
     • Contract tests / Contract Quality Gate
@@ -912,6 +926,9 @@ This gives you a very strong portfolio story:
 ------------------------------------------------------------------------
 
 # 24.📟 Why You Should Not Require Every Matrix Job
+
+Generic example only: a repository that chooses a separate Smoke gate could
+have:
 
 Suppose you currently have:
 
@@ -963,7 +980,8 @@ The workflow changes; the external contract stays stable.
 
 # 25.💡 Why Quality Gates Should Be in the Workflow Even If They Are Not Required
 
-This is an important design choice.
+This is an important design choice. The example below is generic; this
+repository's target required status is `PR Quality Gate`.
 
 You can have:
 
@@ -1080,14 +1098,15 @@ build
 run
 ```
 
-Better:
+For a design with separate per-suite gates, descriptive names might be:
 
 ``` text
 Smoke Quality Gate
 Integration Quality Gate
 ```
 
-These names communicate exactly what the check means.
+These names communicate exactly what each check means. This repository's
+target policy uses one required `PR Quality Gate` instead.
 
 They also create a stable interface between:
 
@@ -1105,6 +1124,10 @@ repository rule.
 ------------------------------------------------------------------------
 
 # 28. 🤝 Keep CI Workflow Names and Quality Gate Names Different
+
+Generic example only: this illustrates how one suite's workflow and gate can
+have distinct names. This repository's target required check is `PR Quality
+Gate`.
 
 For example:
 
@@ -1245,9 +1268,7 @@ REVIEWS
 QUALITY GATES / PR CI
 ────────────────────────────────────────
 
-[x] Smoke Quality Gate
-[x] Integration Quality Gate
-[x] Preflight Quality Gate
+[x] PR Quality Gate
 [ ] Contract Quality Gate (informational)
 
 SAFETY
@@ -1355,28 +1376,28 @@ currently optional---is a useful production practice.
 
 # 33. 🏆 Final Recommended Setup for This Repository
 
-For this project, the target state is:
+For this project, the target PR validation state is:
 
 ``` text
 Pull Request → main
-  ├── Preflight Quality Gate       ┐
-  ├── Smoke Quality Gate           ├── Required checks → block or allow merge
-  ├── Integration Quality Gate     ┘
+  ├── Unit + Preflight ────────────┐
+  ├── Smoke (entity + shared) ─────┼── PR Quality Gate → block or allow merge
+  └── Curated Integration subset ──┘
   ├── Contract Quality Gate            Informational
   └── UI Tests                         Informational
 ```
 
-And the GitHub branch protection/ruleset should know only about the
-stable required gates:
+After the migration is verified, GitHub branch protection/rulesets should
+require only this stable check:
 
 ``` text
-Smoke Quality Gate
-Integration Quality Gate
-Preflight Quality Gate
+PR Quality Gate
 ```
 
-Contract and UI remain informational CI workflows. Add these three stable gate
-names to the branch protection rule or ruleset for `main`.
+Contract and UI remain informational CI workflows. During the migration,
+retain the currently required Smoke and Integration checks until the new gate
+has passed and branch protection has been updated. The new gate is not
+automatically required merely because it exists in the workflow.
 
 not:
 

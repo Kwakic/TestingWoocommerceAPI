@@ -1823,7 +1823,7 @@ tests/
 - ✅ Scales easily as new entities are added
 - ❌ Do **not** reorganize by smoke/regression folders
 
-> Each business entity owns its own smoke, integration, regression, and performance tests. `tests/shared/` is reserved exclusively for framework-level test suites (see §13).
+> Each business entity owns its entity-specific smoke, integration, regression, and performance tests. `tests/shared/` is reserved for framework-level suites that validate common behavior across the framework (see §14).
 
 **Arrange → Act → Assert** is the required structure within a test (see the example in §4).
 
@@ -1831,64 +1831,109 @@ tests/
 
 ## 12. 🏷️ Marker Strategy
 
-**1. Domain** (auto-applied via conftest — never add manually): `customers`, `orders`, `products`, `coupons`, `shared`
+Markers are labels pytest uses to select tests. They describe different
+dimensions, so combine them when each label is useful:
 
-**2. Execution tier:**
+1. **Domain** (auto-applied via `conftest.py`; do not add manually):
+   `customers`, `orders`, `products`, `coupons`, `shared`.
+2. **Test type** (what the test exercises): `unit`, `integration`,
+   `contract`, `ui`, `performance`.
+3. **Execution or scenario labels** (which run can select it, or what the case
+   covers): `pr`, `smoke`, `sanity`, `regression`, `negative`, `e2e`,
+   `graphql`, `security`, `preflight`, `bulk`.
 
-| Marker | Meaning |
+### What `pr` does
+
+`pr` is an execution-selection label. It opts a test into a focused PR lane
+when that lane's pytest expression includes `pr`. It is not a test type, it
+does not replace `unit`, `smoke`, or `integration`, and it does not by itself
+create a GitHub check or block a merge.
+
+The current PR selectors are:
+
+| Lane | Pytest marker expression |
 |---|---|
-| `smoke` | Critical API health — broad, shallow, fast. Confirms the build is stable enough to test further. |
-| `sanity` | Narrow and deep. Targets only the modules that recently changed; runs after smoke has passed. |
-| `regression` | Full coverage |
+| Unit | `unit and pr` |
+| Preflight | `preflight and pr` |
+| Smoke | `smoke and pr` |
+| Curated Integration | `integration and pr and not smoke` |
 
- **3. Test type**
+Pytest treats these as boolean filters. For example, `integration and pr and
+not smoke` means a test must have both `integration` and `pr`, and must not
+have `smoke`. A test with `pr` alone does not match that expression. The
+Integration PR lane excludes smoke-marked cases because the Smoke lane
+validates those separately.
 
-| Marker | Meaning |
-|---|---|
-| `unit` | Isolated logic tests without external services |
-| `integration` | API + DB validation |
-| `contract` | API contract and transport validation, including schema validation |
-| `negative` | Invalid input tests |
-| `e2e` | Multi-step workflow |
-| `graphql` | GraphQL API tests |
-**4. Specialized:** `performance`, `security`, `preflight`, `bulk`
+### ⚖️ Deciding whether to add `pr`
 
-**Marker rules:**
-- Max 2–3 markers per test, excluding domain
-- Domain markers are auto-applied — never add them manually
-- Use consistent naming (`negative`, not `negative_test`)
+Add `pr` when the test catches a meaningful merge-time risk, is reliable and
+repeatable, owns and cleans up its test data, and gives enough additional
+coverage to justify running it on every PR. Consider its runtime and required
+services too. A slow test can still be a good PR case if its risk coverage is
+important enough; make that cost a deliberate choice.
+
+Leave `pr` off broad, expensive, flaky, or redundant cases that are better
+suited to the broader Integration, Regression, or manual run. Do not mark an
+entire module unless every test in it belongs in the PR selection. Use a
+function-level `@pytest.mark.pr` when only selected cases qualify.
+
+Example: the module-level markers classify every case as Orders Integration;
+only the first case is opted into the PR subset:
 
 ```python
-pytestmark = [
-    pytest.mark.integration,
-    pytest.mark.regression
-]
+import pytest
+
+pytestmark = pytest.mark.integration
+
+
+@pytest.mark.pr
+def test_create_order_persists_order(order_factory):
+    ...
+
+
+def test_large_order_with_many_line_items():
+    ...
 ```
 
-GitHub Actions runs the shared Unit suite before Preflight in its fast-check
-workflow, then executes Smoke, Integration, Regression, Performance, Contract,
-Security, and UI suites through their dedicated workflows.
+Preview a selection without executing the tests:
 
-**Big picture:**
+```bash
+pytest --collect-only -q tests/orders -m "integration and pr and not smoke"
+```
 
-- Domain → `customers`, `orders`, etc.
-- Execution → `smoke`, `sanity`, `regression`
-- Type → `unit`, `integration`, `contract`, `negative`, `e2e`, `graphql`
-- Special → `performance`, `security`, `preflight`, `bulk`
+Only workflows whose filters include `pr` use this marker. For example, the
+Contract workflow selects `contract`; adding `pr` to a Contract test does not
+change that workflow's selection. GitHub branch protection decides which
+workflow status is required. In this repository, the target policy is one
+central `PR Quality Gate` requiring Unit, Preflight, Smoke, and the curated
+Integration subset; Contract and UI remain informational.
+
+For the newcomer checklist and fuller examples, see
+[`tests/README.md`](../../tests/README.md). Marker names and descriptions are
+registered in `pytest.ini`, and strict marker validation catches typos.
 
 ---
 
 ## 13. 🤖 CI Strategy
 
-| Pipeline | Command |
-|---|---|
-| Fast shared checks (CI order) | `pytest tests/shared/unit_tests -m unit` then `pytest -m preflight` |
-| Smoke | `pytest -n auto -m "smoke or sanity"` |
-| Full validation | `pytest -n auto -m "not performance and not security"` |
-| Nightly | `pytest -n auto -m regression` |
-| Scheduled | `pytest -n auto -m performance` / `pytest -n auto -m security` |
+The central `pr-validation.yml` workflow runs these mandatory selections and
+aggregates their results in `PR Quality Gate`. Unit and Preflight run
+independently; neither waits for the other:
 
-These pytest markers map onto dedicated GitHub Actions workflows — see the table in §14.
+| PR lane | Command / marker expression |
+|---|---|
+| Unit | `pytest tests/shared/unit_tests -m "unit and pr"` |
+| Preflight | `pytest -m "preflight and pr"` |
+| Smoke | `pytest -m "smoke and pr"` |
+| Curated Integration | `pytest -m "integration and pr and not smoke"` |
+
+The workflow scopes entity suites to the discovered domain and shared suites
+to `tests/shared/`. The Smoke lane includes both the entity Smoke matrix and a
+separate Shared Smoke job. The Integration PR lane is entity-scoped and uses the
+curated `integration and pr and not smoke` selection. Contract and UI run in
+separate informational workflows. The broader Integration workflow continues
+to provide the full entity Integration selection on its configured non-PR
+triggers. See §14 for the shared-suite responsibilities.
 
 The shared CI runner passes `-n auto` to every workflow. The
 `pytest-xdist[psutil]` development dependency chooses the available physical
@@ -1905,11 +1950,18 @@ as a normal prerequisite.
 
 The framework also contains shared tests for isolated framework logic, API
 contracts, security, and environment behavior. These suites execute once for
-the whole framework rather than once per entity. The fast-check lane runs Unit
-then Preflight; other entity-specific workflows remain independently
-triggered. Contract and Security discover entities dynamically and iterate
-internally, so CI reports show **Scope: Shared Framework** rather than an
-entity name.
+the whole framework rather than being collected separately under each entity.
+A shared test can still use entity discovery and parametrization internally to
+exercise every supported entity.
+
+The PR workflow separates test collection from test classification:
+- `scope: shared` makes the reusable runner collect from `tests/shared/`.
+- `scope: entity` makes it collect from a discovered `tests/<entity>/` folder.
+- The pytest marker expression filters the tests collected from that scope.
+
+The central PR workflow runs Unit and Preflight independently, runs entity
+Smoke through a matrix, runs Shared Smoke once, and runs the curated entity
+Integration matrix. Contract and UI remain separate informational workflows.
 
 ```
 tests/shared/
@@ -1940,7 +1992,8 @@ WooCommerce, or the database. Run them with:
 pytest tests/shared/unit_tests -m unit -v
 ```
 
-The fast-check CI workflow runs Unit first, then Preflight.
+In PR validation, Unit and Preflight are independent jobs. The Quality Gate
+waits for both and requires both to succeed.
 
 **Preflight** — verifies the test harness itself before the full suite runs:
 logging configuration, correlation/nodeid propagation, structured logging,
@@ -1948,10 +2001,25 @@ pytest configuration, markers, CLI flags, and other framework-level checks.
 Preflight must **not** call live APIs or require Docker, OAuth credentials,
 WooCommerce, or a database.
 
+**Shared Smoke** — currently represented by
+`tests/shared/security/test_authentication_success.py`. It discovers all
+supported entities, sends an authenticated GET request to each collection
+endpoint, and checks for HTTP 200 with a JSON list. It validates the common
+authenticated read path once as a shared test; it is not a copy or mixture
+of all entity Smoke tests.
+
+Its module markers include `security`, `smoke`, `shared`, and `pr`. The
+Shared Smoke job runs the shared scope with `smoke and pr`; entity Smoke
+jobs use the same marker expression but collect from each entity directory.
+
 **Contract** — validates API contracts and transport behavior:
 connectivity, HTTP status, response format, content-type, schema,
-serialization, and GraphQL schema/transport contracts. Entities are
-discovered automatically where applicable.
+serialization, and GraphQL schema/transport contracts. The shared REST
+connectivity and response-format tests carry both `contract` and `integration`
+markers because they call a live API. They run through the Contract workflow,
+which selects the shared scope with the `contract` marker. A marker does not
+route a test to a workflow by itself. Entities are discovered automatically
+where applicable.
 
 GraphQL contract tests therefore belong to the shared Contract suite,
 while GraphQL business behavior remains under the corresponding entity's
@@ -1966,10 +2034,10 @@ while GraphQL business behavior remains under the corresponding entity's
 
 | Workflow | Type | Scope | Public report |
 |---|---|---|:---:|
-| Unit + Preflight | Shared | Framework (Unit runs first) | ❌ |
+| Unit + Preflight | Shared | Framework (independent PR jobs; both required by PR Quality Gate) | ❌ |
 | Contract | Shared | Framework | ❌ |
 | Security | Shared | Framework | ❌ |
-| Smoke | Entity | Customers / Orders / ... | ✅ |
+| Smoke | Entity + Shared | Entity matrix plus one Shared Smoke job | Entity reports; Shared Smoke report policy is workflow-specific |
 | Integration | Entity | Customers / Orders / ... | ✅ |
 | Regression | Entity | Customers / Orders / ... | ✅ |
 | Performance | Entity | Customers / Orders / ... | ✅ |
