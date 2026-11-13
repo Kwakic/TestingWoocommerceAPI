@@ -11,6 +11,7 @@ Python · pytest · Playwright · Docker · REST · GraphQL · MySQL · GitHub A
 [![Docker](https://img.shields.io/badge/docker-ready-2496ED?logo=docker)](https://www.docker.com/)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
+[![PR Validation](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/pr-validation.yml/badge.svg)](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/pr-validation.yml)
 [![Smoke](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/smoke.yml/badge.svg)](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/smoke.yml)
 [![UI](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/ui.yml/badge.svg)](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/ui.yml)
 [![Integration](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/integration.yml/badge.svg)](https://github.com/Kwakic/TestingWoocommerceAPI/actions/workflows/integration.yml)
@@ -40,7 +41,7 @@ The framework supports:
 - **📊 Automated reporting** with Allure and GitHub Pages
 - **🧪 Enterprise-style test data architecture** with Factory, Builder, Provisioner, Ownership, Seeds, and pytest lifecycle integration
 - **⚡ Parallel-ready execution** with `pytest-xdist`, physical-core worker detection, and test-owned resources
-- **🔁 Segmented CI/CD** through GitHub Actions and GitLab CI, with shared unit tests running before preflight
+- **🔁 Segmented CI/CD** through GitHub Actions, with a central pull-request workflow coordinating Unit, Preflight, Smoke, and curated Integration checks
 - **⚙️ One-command setup** (`make run`)
 
 Playwright is intentionally integrated into the same pytest architecture rather than maintained as a separate UI automation project.
@@ -68,6 +69,41 @@ The framework is designed around clear separation of responsibilities and busine
 
 ---
 
+## 🚦 Pull Request Validation
+
+When a pull request targets `main`, the central
+[`pr-validation.yml`](./.github/workflows/pr-validation.yml) workflow coordinates
+the mandatory checks. Unit and Preflight run independently, while Smoke and
+Integration validate the relevant entity-level scenarios.
+
+```mermaid
+flowchart TD
+    PR["Pull Request targeting main"] --> PV["pr-validation.yml"]
+
+    PV --> UNIT["Unit Tests<br/>Shared framework tests"]
+    PV --> PREFLIGHT["Preflight<br/>Framework health checks"]
+    PV --> SMOKE["Entity Smoke<br/>Per-entity critical tests"]
+    PV --> SHARED["Shared Smoke<br/>Cross-entity authentication"]
+    PV --> INTEGRATION["Entity Integration<br/>Curated PR integration tests"]
+
+    UNIT --> GATE["PR Quality Gate<br/>All mandatory checks must succeed"]
+    PREFLIGHT --> GATE
+    SMOKE --> GATE
+    SHARED --> GATE
+    INTEGRATION --> GATE
+
+    GATE --> RESULT["PR validation result"]
+```
+
+The PR Quality Gate succeeds only when every mandatory check succeeds. Allure
+report generation is handled separately and does not determine the gate result.
+Contract and UI workflows remain separate informational PR checks.
+
+📚 See the [CI/CD Architecture Guide](./docs/ci/README_CI_ARCHITECTURE.md)
+for workflow dependencies, test selection, reporting, and branch-protection details.
+
+---
+
 ## ✨ Core architectural principles
 
 - 🏗️ **Domain-Driven Architecture** — Organizes the framework into independent business entities (Customers, Orders, Products, Coupons), each with its own REST/GraphQL API tests, UI tests where applicable, DAO, validators, models, helpers, and test data.
@@ -84,7 +120,7 @@ The framework is designed around clear separation of responsibilities and busine
 
 - ⚡ **Parallel Test Execution** — Uses `pytest-xdist[psutil]` to run tests across available physical CPU cores. CI passes `-n auto` through the shared runner; tests own mutable data and do not depend on execution order.
 
-- 🔄 **Segmented CI/CD Pipelines** — GitHub Actions runs shared unit tests before preflight in its fast-check workflow; dedicated workflows cover Smoke, Integration, Regression, Performance, Contract, Security, and UI validation.
+- 🔄 **Segmented CI/CD Pipelines** — A central GitHub Actions pull-request workflow coordinates independent Unit and Preflight checks, entity-level Smoke and curated Integration tests, and Shared Smoke behind one PR Quality Gate. Dedicated workflows also cover Regression, Performance, Contract, Security, and UI validation.
 
 - 🤖 **Automated Action Updates** — Dependabot checks pinned GitHub Actions weekly and opens update PRs for review. Secret-backed UI tests are skipped on Dependabot PRs and run on trusted pushes to `main`. See the [CI guide](./docs/ci/README_CI_ARCHITECTURE.md#github-actions-dependency-updates).
 
@@ -323,8 +359,8 @@ Run the isolated shared unit tests first:
 python -m pytest tests/shared/unit_tests -m unit -v
 ```
 
-The CI fast-check workflow runs this suite before preflight. These tests do
-not require the local WooCommerce environment.
+The central PR workflow runs this suite independently from Preflight. These
+tests do not require the local WooCommerce environment.
 
 For a CI-style, Allure-ready run:
 
