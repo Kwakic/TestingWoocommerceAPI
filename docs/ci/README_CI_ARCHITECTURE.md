@@ -16,72 +16,94 @@ Your custom Allure integration implements many advanced reporting concepts.
 
 ## 🧭 End-to-End Development & CI/CD Flow
 
-The easiest way to understand the repository is to follow the path from a
-developer's local commit to the protected `main` branch.
-
+The PR path is coordinated by `pr-validation.yml`. It runs the focused
+validation set, then exposes one result — **PR Quality Gate** — for GitHub
+branch protection.
 
 ```text
+
 Developer
-     │
- git commit
-     │
-     ▼
- pre-commit
- fast local checks
-     │
-     ├── #1. Fix trailing whitespace automatically ✅
-     ├── #2. Fix EOF newline automatically ✅
-     ├── #3. Format code with black ✅
-     ├── #4. Run flake8 ✅
-     ├── #5. Run preflight tests ✅
-     └── #6. Block commit if anything fails ❌
-     │
-     ▼
-    PR
-     │
-     ├── FAST CHECKS: shared unit tests → preflight
-     │
-     ├───────────────┬────────────────┐
-     │               │                │
-     ▼               ▼                ▼
-  SMOKE          CONTRACT       INTEGRATION
-   tests           tests            tests
-     │               │                │
-     ▼               ▼                ▼
-  SMOKE          contract       INTEGRATION
-   GATE            result            GATE
-     │               │                │
- REQUIRED        OPTIONAL          REQUIRED
-     │               │                │
-     └───────────────┼────────────────┘
-                     ▼
-              Branch Protection
-                     │
-                ✅ merge allowed
-                     │
-                     ▼
-                   main
-                     │
-            ┌────────┼────────┐
-            │        │        │
-            ▼        ▼        ▼
-       Regression Performance Security
-       scheduled   scheduled  scheduled
+    │
+    │ git commit
+    ▼
+pre-commit
+Local fast checks
+    │
+    ├── #1. Fix trailing whitespace
+    ├── #2. Fix EOF newline
+    ├── #3. Format code with Black
+    ├── #4. Run Flake8
+    ├── #5. Run Shared Unit tests
+    ├── #6. Run Preflight tests
+    └── #7. Block commit if anything fails
+    │
+    ▼
+Push branch / Open Pull Request
+    │
+    ▼
+Pull Request → main
+    │
+    ▼
+pr-validation.yml
+    │
+    ▼
+discover-entities
+    │
+    ├── Unit Tests (shared) ──────────────┐
+    │                                     │
+    ├── Preflight (shared) ───────────────┤
+    │                                     │
+    ├── Entity Smoke matrix ──────────────┤
+    │                                     ├── PR Quality Gate
+    ├── Shared Smoke (once) ──────────────┤       │
+    │                                     │       ├── FAIL → merge blocked
+    └── Curated Entity Integration ───────┘       └── PASS → eligible to merge
+    │
+    ├── Separate informational PR workflows:
+    │       ├── Contract
+    │       └── UI (Chromium on eligible/trusted PRs)
+    │
+    ▼
+Branch Protection
+    │
+    ▼
+main
+    │
+    ├── Full Integration suite (push to main)
+    │
+    └── Scheduled workflows
+            ├── Regression
+            ├── Performance
+            └── Security
+
+Allure report generation is separate from the PR Quality Gate:
+test results → report generation → report artifacts / QA Portal
+
 ```
 
-### What each stage means
+### What each part means
 
-| Stage | Purpose |
+| Component | Responsibility |
 |---|---|
-| **Pre-commit** | Gives the developer fast local feedback and prevents a bad commit from being created. |
-| **PR test workflows** | Run the authoritative CI validation on a clean GitHub runner. |
-| **Quality Gate** | Aggregates the result of its test workflow into one stable pass/fail check; it does **not** run the tests again. |
-| **Branch Protection** | Decides which CI results are mandatory before `main` can be updated. |
-| **Scheduled suites** | Run deeper validation after code has reached `main`, without slowing down normal pull requests. |
+| **Entity discovery** | Finds the supported entities used to build the Smoke and Integration matrices. |
+| **Unit** | Runs isolated shared framework tests. |
+| **Preflight** | Checks framework/test-harness readiness without starting the WooCommerce stack. |
+| **Entity Smoke** | Runs critical tests for each discovered business entity. |
+| **Shared Smoke** | Runs common framework/application checks once from `tests/shared/`. |
+| **Curated Integration** | Runs the explicitly selected, PR-eligible integration tests for each entity. |
+| **PR Quality Gate** | Checks that every mandatory dependency completed successfully; it does not execute the tests again. |
+| **Allure reporting** | Generates diagnostic reports from uploaded results; report jobs are not inputs to the PR Quality Gate. |
+| **Branch protection** | Decides whether GitHub requires the PR Quality Gate before merging. |
 
-The current branch-protection policy requires **Smoke Quality Gate** and
-**Integration Quality Gate**. Contract tests still run on pull requests, but
-their result is informational rather than a required merge check.
+**Important:** the workflow, the Quality Gate, and the required status check
+are three different things. A workflow runs tests; a gate aggregates their
+results; branch protection decides whether that gate blocks a merge.
+
+The target repository policy is to require **PR Quality Gate** only after
+the central workflow and migration have been verified. Until branch
+protection is updated, the previously configured Smoke and Integration
+checks may remain required. Contract and UI are informational under the
+documented target policy.
 
 ---
 
@@ -91,10 +113,10 @@ Your pipelines should answer **one specific question each**:
 
 | Workflow | Question | Purpose |
 |----------|----------|---------|
-| **preflight.yml** | Do shared unit tests and framework preflight pass? | Unit tests first, then fast harness validation |
-| **smoke.yml** | Are critical business flows healthy? | Deployment gate; powers badge |
+| **pr-validation.yml** | Is this PR safe to merge? | Coordinates Unit, Preflight, entity/shared Smoke, and curated Integration; exposes PR Quality Gate |\n| **preflight.yml** | Is the test harness healthy? | Standalone preflight workflow where configured; the central PR workflow also runs Preflight |
+| **smoke.yml** | Are critical API paths healthy? | Smoke suite for entity and shared framework checks on its configured triggers |
 | **contract.yml** | Did the REST/GraphQL API contract or schema change? | Contract validation; diagnostics |
-| **integration.yml** | Does API state match DB state? | End-to-end integration validation |
+| **integration.yml** | Do entity integration scenarios work? | Broader entity-scoped Integration suite on its configured triggers; PR uses a curated subset in `pr-validation.yml` |
 | **regression.yml** | Did we break anything? | Full coverage; trends & history |
 | **performance.yml** | Is the system getting slower? | Latency tracking; SLA validation |
 | **security.yml** | Are auth/permission rules still safe? | Auth boundaries; internal audit |
@@ -917,21 +939,21 @@ on:
 ```
 ### Trigger Strategy
 
-Integration tests run on pull requests and pushes to `main`.
+The central `pr-validation.yml` workflow runs a **curated, explicitly PR-marked**
+Integration subset for each discovered entity. The broader Integration suite
+runs on the workflow's configured post-merge and manual triggers.
 
 * **Pull requests**
-  * Validate API + database consistency before merge
-  * Detect persistence and cross-layer regressions early
-  * Provide integration-level feedback during code review
-* **Pushes to `main`**
-  * Validate the merged code
-  * Provide post-merge operational confidence
-  * Maintain historical integration trends
+  * Run `integration and pr and not smoke` for the selected entity scope.
+  * Keep the PR feedback set smaller and deliberate.
+  * Feed the results into the central `PR Quality Gate`.
+* **Pushes to `main` / manual runs**
+  * Run the broader entity Integration selection.
+  * Validate the merged code and maintain deeper integration coverage.
 
-This ensures critical business flows are validated both before and after merge.
-
-Integration tests may be configured as a required or non-required
-pull-request check through GitHub branch protection/rulesets.
+This separates fast merge-time validation from broader post-merge/manual
+coverage. The workflow selector determines which tests execute; branch
+protection determines whether the central gate is mandatory for merging.
 
 For this project, the recommended production configuration is to make
 integration tests a `required PR check` once the suite is stable.
@@ -1472,9 +1494,11 @@ runtime and cost. The current policy therefore prioritizes:
 A **Quality Gate** is an optional CI job that turns the result of one or more
 test jobs into a single, explicit pass/fail decision.
 
-This project implements the pattern in the entity workflows. For example,
-`integration.yml` contains an **Integration Quality Gate** that evaluates the
-result of the integration test job:
+The repository has used per-suite gates such as the **Integration Quality
+Gate** during its earlier segmented-workflow design. The current PR design
+centralizes the required PR result in `pr-validation.yml` as **PR Quality Gate**.
+The following simplified example illustrates the general per-suite gate
+pattern; it is not the target branch-protection check for PR validation:
 
 ```yaml
 integration-gate:
@@ -1538,10 +1562,11 @@ This separation is particularly useful when a workflow uses a **matrix** and
 therefore creates multiple test jobs.
 
 Instead of making every individual matrix job a required GitHub status check,
-the repository can expose one stable check such as:
+the repository exposes one stable check. For the current PR design, that check
+is:
 
 ```text
-Integration Quality Gate
+PR Quality Gate
 ```
 
 GitHub branch protection can then require that single check.
@@ -1571,118 +1596,118 @@ This makes it useful during development:
 
 This project deliberately keeps that final step configurable.
 
-### Recommended production pattern
+### The PR Quality Gate used by this repository
 
-For this repository, the pull-request path is:
-
-```text
-Pull Request
-     │
-     ├── Preflight        (informational framework validation)
-     ├── Smoke tests      ──> Smoke Quality Gate      ──> required
-     ├── Contract tests   ──> diagnostic result       ──> not required
-     └── Integration tests ─> Integration Quality Gate -> required
-```
-
-The Quality Gates do not execute the test suites again. They only evaluate
-the result of the test job(s) they depend on and expose a stable check for
-GitHub branch protection.
-
-The gate should fail when the test job it represents fails. Diagnostic and
-reporting steps can still run with `if: always()` so that artifacts and Allure
-reports remain available after a test failure.
-
-### Why this is better than requiring every test job
-
-Requiring individual matrix jobs can make branch protection fragile.
-
-For example, an entity matrix may produce:
-
-```text
-Integration Tests / customers
-Integration Tests / orders
-Integration Tests / products
-Integration Tests / coupons
-```
-
-GitHub could require every one of those generated checks. As entities are
-added or renamed, the repository protection configuration may need to be
-updated.
-
-A stable:
-
-```text
-Integration Quality Gate
-```
-
-provides a much cleaner contract between CI and branch protection.
-
-The same pattern is used for the protected PR suites:
-
-```text
-Smoke Quality Gate
-Integration Quality Gate
-```
-
-`Contract Quality Gate` is not part of the current branch-protection policy.
-The Contract workflow still runs on pull requests and provides diagnostic
-feedback, but its result is not required for merge.
-
-A Quality Gate is optional at the workflow level; whether a gate blocks a PR
-is controlled separately by GitHub branch protection.
-
-## Required PR Checks
-
-The Quality Gate becomes a true merge blocker only when its status is selected
-as a **required status check** in GitHub branch protection or repository
-rulesets.
-
-For example:
-
-| CI component | Can exist without being required? | Can block a PR when configured as required? |
-|---|---:|---:|
-| Preflight | Yes | Yes |
-| Smoke tests | Yes | Yes |
-| Contract tests | Yes | Yes |
-| Integration tests | Yes | Yes |
-| Smoke Quality Gate | Yes | **Yes — required for this project** |
-| Integration Quality Gate | Yes | **Yes — required for this project** |
-
-For this project, Smoke and Integration Quality Gates are the required
-branch-protection checks. Contract remains a PR validation workflow but is
-currently informational.
-
-> **Best practice:** keep CI execution and repository policy separate. The
-> workflow defines *how quality is evaluated*; branch protection defines
-> *whether that quality result is mandatory for merging*.
-
-### Current PR validation flow
-
-The current architecture validates the following suites on pull requests:
+The central `pr-validation.yml` workflow coordinates the required PR test
+selections. The gate directly depends on entity discovery and every
+mandatory test job:
 
 ```text
 Pull Request
      │
-     ├── Preflight
-     ├── Smoke
-     ├── Contract
-     ├── Integration
-     │       ┌─────┴─────┐
-     │       ▼           ▼
-     │     FAIL         PASS
-     │       │           │
-     │       ▼           ▼
-     │  Gate fails    Gate passes
+     ▼
+discover-entities
      │
-     └── UI
-         │
-         └── Chromium
-
+     ├── Unit ───────────────────────┐
+     ├── Preflight ──────────────────┤
+     ├── Entity Smoke matrix ────────┤
+     ├── Shared Smoke ───────────────┤
+     └── Curated Integration matrix ─┤
+                                     ▼
+                              PR Quality Gate
+                                 │       │
+                               FAIL     PASS
+                                 │       │
+                             Block PR  Eligible to merge
 ```
 
-The current branch-protection policy requires the Smoke and Integration
-Quality Gates. The Contract workflow still runs on pull requests, but its
-result is informational and does not block merge.
+Unit and Preflight run independently, so a Unit failure does not prevent
+Preflight diagnostics. Entity Smoke and Integration use the discovered
+entity matrix. Shared Smoke runs once with the shared test scope.
+
+The gate uses the results of its dependencies; it does not rerun pytest.
+It must fail if entity discovery or any mandatory test job does not succeed.
+Allure report jobs are intentionally outside the gate dependency list:
+they can generate diagnostic artifacts after a test failure, but a report
+generation problem does not change the test gate's result.
+
+### What Shared Smoke means
+
+Shared Smoke is not a combination of all entity Smoke suites. It is a
+framework-level test selection collected from `tests/shared/`.
+
+The current example is
+`tests/shared/security/test_authentication_success.py`. It discovers the
+supported entities, performs an authenticated GET against each collection
+endpoint, and checks for HTTP 200 and a JSON list. It validates the common
+authenticated read path once, while entity Smoke suites validate
+entity-specific critical behavior.
+
+The runner selects it using the shared scope and `smoke and pr`:
+
+```yaml
+scope: shared
+pytest_markers: "smoke and pr"
+```
+
+The equivalent local pytest command is:
+
+```bash
+pytest tests/shared -m "smoke and pr"
+```
+
+Entity Smoke uses the same marker expression but collects from each
+`tests/<entity>/` directory. This illustrates two independent filters:
+**scope/directory determines what pytest collects; markers determine which
+collected tests are selected.**
+
+### Why there is no separate Shared Integration PR job
+
+The two shared REST checks in `tests/shared/contracts/rest/` carry
+`shared`, `contract`, and `integration` markers because they exercise a live
+API while validating endpoint availability and response format. They are
+executed by the Contract workflow, which selects the shared scope using the
+`contract` marker.
+
+The `integration` marker describes a test characteristic/requirement; it
+does not route the test to `integration.yml`. That workflow's scope and
+pytest expression determine its test collection. The current PR Integration
+matrix is entity-scoped and selects `integration and pr and not smoke`.
+There is no separate Shared Integration job in the current PR design.
+
+This is a deliberate scope distinction, not an unexecuted test gap for
+those two REST checks: they run through Contract. Do not add a Shared
+Integration job solely to mirror Shared Smoke. Add one only if the project
+introduces genuinely shared integration scenarios that need a separate
+CI lane and gate policy.
+
+### Why this is better than requiring every matrix job
+
+Requiring individual matrix jobs can make branch protection fragile. An
+entity matrix may create separate checks for customers, orders, products,
+and coupons. A stable `PR Quality Gate` gives GitHub one check to require
+even as entities are added or renamed.
+
+### Required PR checks
+
+A Quality Gate becomes a merge blocker only when GitHub branch protection
+or a repository ruleset selects it as a required status check.
+
+| CI component | Role in target PR policy |
+|---|---|
+| Unit | Mandatory input to PR Quality Gate |
+| Preflight | Mandatory input to PR Quality Gate |
+| Entity Smoke | Mandatory input to PR Quality Gate |
+| Shared Smoke | Mandatory input to PR Quality Gate |
+| Curated Integration matrix | Mandatory input to PR Quality Gate |
+| Contract | Runs separately; informational |
+| UI | Runs separately on eligible/trusted PRs; informational |
+| Allure report generation | Diagnostic/reporting output; not a gate dependency |
+
+The target branch-protection policy is one required check: **PR Quality
+Gate**. During migration, keep the old required checks until the new gate
+has been verified and GitHub branch protection has been updated. Workflow
+YAML does not change branch-protection settings automatically.
 
 ### Why Preflight remains on pull requests
 
@@ -2012,12 +2037,14 @@ Contract tests cover both REST and GraphQL API contracts while remaining part of
 
 | Workflow | Trigger | Reason |
 |----------|---------|--------|
-| **preflight.yml (Unit → Preflight)** | `pull_request:` | Fast PR feedback (unit checks run first) |
-| **smoke** | `push: [main]` | Deployment gate; powers badge |
-| **contract** | `push: [main]` + `workflow_dispatch:` | Catch schema changes; on-demand debug |
-| **regression** | `schedule:` (nightly) + `workflow_dispatch:` | Full coverage; historical trends |
-| **performance** | `schedule:` (weekly) + `workflow_dispatch:` | SLA tracking; trend analysis |
-| **security** | `schedule:` (weekly) + `workflow_dispatch:` | Regular audit; on-demand validation |
+| **pr-validation.yml** | `pull_request:` to `main` | Central PR validation and `PR Quality Gate` |
+| **contract.yml** | Pull request and its configured non-PR triggers | Shared REST/GraphQL contract diagnostics; informational for merge |
+| **smoke.yml** | Pull request during migration, `push: [main]`, and/or manual trigger as configured | Entity and Shared Smoke validation; avoid duplicate PR runs after migration |
+| **integration.yml** | Pull request during migration, `push: [main]`, and/or manual trigger as configured | Broader entity Integration; PR subset is owned by `pr-validation.yml` after migration |
+| **regression.yml** | `schedule:` (nightly) + `workflow_dispatch:` | Full coverage; historical trends |
+| **performance.yml** | `schedule:` (weekly) + `workflow_dispatch:` | SLA tracking; trend analysis |
+| **security.yml** | `schedule:` (weekly) + `workflow_dispatch:` | Regular audit; on-demand validation |
+| **ui.yml** | Pull request, `push: [main]`, and manual trigger where eligible | Browser-based user journeys; informational on PRs |
 
 ---
 

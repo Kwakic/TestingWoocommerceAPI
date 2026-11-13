@@ -31,11 +31,12 @@ Top-level (trimmed):
 │       │   ├── orders.py
 │       │   └── coupons.py
 │
-├── tests/                     # test suites (by entity)
+├── tests/                     # entity and framework-level test suites
 │   ├── customers/
 │   ├── products/
 │   ├── orders/
 │   ├── coupons/
+│   ├── shared/                 # unit, preflight, contract, security, shared smoke
 │   └── ui/
 │       ├── config/
 │       ├── pages/
@@ -480,6 +481,36 @@ This design provides:
 - Clear failure ownership
 - Independent execution
 - Better reporting (Allure per suite)
+
+---
+
+### Pull-request validation at a glance
+
+`pr-validation.yml` coordinates the focused PR test set and exposes one
+**PR Quality Gate**:
+
+```text
+Pull Request
+   ├── Unit + Preflight
+   ├── Entity Smoke matrix
+   ├── Shared Smoke (one shared job)
+   └── Curated Integration matrix
+                │
+                ▼
+         PR Quality Gate
+```
+
+Shared Smoke is a framework-level check from `tests/shared/`. The current
+test validates the authenticated GET path across every discovered entity.
+It is separate from entity Smoke, which validates entity-owned critical
+behavior. Contract and UI run as separate informational PR workflows.
+Allure report generation is diagnostic and is not an input to the PR
+Quality Gate.
+
+For the full workflow dependencies, marker selection, Shared Smoke
+explanation, and branch-protection migration policy, see
+[`README_CI_ARCHITECTURE.md`](./docs/ci/README_CI_ARCHITECTURE.md) and
+[`README_GITHUB_PRODUCTION_SETTINGS.md`](./docs/ci/README_GITHUB_PRODUCTION_SETTINGS.md).
 
 ---
 

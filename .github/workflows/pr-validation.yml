@@ -144,6 +144,18 @@ jobs:
       team: ${{ matrix.team }}
       tier: ${{ matrix.tier }}
 
+  shared-smoke-report:
+    name: Shared Smoke Report
+    needs: shared-smoke
+    if: always()
+    permissions:
+      contents: read
+    uses: ./.github/workflows/reusable-allure-report.yml
+    with:
+      suite_name: smoke
+      report_timeout_minutes: 10
+      entity: shared
+
   integration-report:
     name: Integration Report • ${{ matrix.entity }}
     needs:

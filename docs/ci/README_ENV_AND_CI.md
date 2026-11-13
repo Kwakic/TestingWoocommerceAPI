@@ -180,6 +180,48 @@ policy is to require **PR Quality Gate** only; Contract and UI remain
 informational. Workflow files do not change GitHub's branch-protection
 settings.
 
+### What exactly is Shared Smoke?
+
+Shared Smoke is a small framework-level test selection, not a combined
+execution of the Customers, Products, Orders, and Coupons Smoke suites.
+
+The current Shared Smoke test is
+`tests/shared/security/test_authentication_success.py`. It discovers the
+supported entities and makes an authenticated GET request to each
+collection endpoint. It checks that each request returns HTTP 200 and a
+JSON list. In other words, it verifies the common authenticated read path.
+
+```text
+Shared Smoke (one shared job)
+      │
+      ▼
+discover supported entities
+      │
+      ├── GET /customers
+      ├── GET /products
+      ├── GET /orders
+      └── GET /coupons
+      │
+      ▼
+HTTP 200 + JSON list for each
+```
+
+Entity Smoke is different: it runs entity-owned critical tests from each
+`tests/<entity>/` directory. Both Shared Smoke and Entity Smoke can use the
+same `smoke and pr` marker expression because the runner supplies a
+different collection scope.
+
+Run the shared selection locally after the WooCommerce environment and
+credentials are ready:
+
+```bash
+pytest tests/shared -m "smoke and pr" -v
+```
+
+**Remember:** the directory/scope controls what is collected; pytest
+markers filter the collected tests; the workflow determines which scope
+and marker expression are passed to pytest.
+
 For marker assignment conventions, see [`tests/README.md`](../../tests/README.md)
 and the declarations in [`pytest.ini`](../../pytest.ini). The branch-protection
 policy is described in [`README_GITHUB_PRODUCTION_SETTINGS.md`](README_GITHUB_PRODUCTION_SETTINGS.md).

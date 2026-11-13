@@ -242,6 +242,18 @@ jobs:
       pytest_maxfail: 1
       fail_on_empty: true
 
+  shared-smoke-report:
+    name: Shared Smoke Report
+    needs: shared-smoke
+    if: always()
+    permissions:
+      contents: read
+    uses: ./.github/workflows/reusable-allure-report.yml
+    with:
+      suite_name: smoke
+      report_timeout_minutes: 10
+      entity: shared
+
   # ==================================================
   # 🚦 JOB 3 — SMOKE QUALITY GATE
   # ==================================================

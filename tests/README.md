@@ -81,20 +81,83 @@ Examples:
 
 Markers describe separate dimensions and should be combined intentionally:
 
-- **Execution lane:** `pr`, `smoke`, `regression`, and `preflight` describe when
-  a test is selected. Add `pr` only to stable, high-signal cases intended for
-  the focused pull-request checks.
+- **Execution lane:** `pr`, `smoke`, `regression`, and `preflight` help CI
+  select tests for a run. `pr` means a test is included in the focused PR
+  validation selection; it does not describe the kind of test.
 - **Test type:** `unit`, `integration`, `contract`, `ui`, and `performance`
   describe what the test exercises. These can overlap with an execution lane.
 - **Test traits:** `negative`, `bulk`, `e2e`, `security`, and `graphql` describe
   scenario characteristics and can overlap with both type and lane markers.
 
+### What the `pr` marker means
+
+The `pr` marker opts a test into a focused set of checks run for pull requests.
+CI combines it with a test-type marker to select a particular lane:
+
+| PR lane | Marker expression | Selection |
+| --- | --- | --- |
+| Unit | `unit and pr` | Unit tests opted into PR validation |
+| Preflight | `preflight and pr` | Framework/environment checks opted into PR validation |
+| Smoke | `smoke and pr` | Critical API/UI health cases opted into PR validation |
+| Integration | `integration and pr and not smoke` | Curated API/database cases not already selected as smoke tests |
+| UI (informational) | `ui and pr` | UI cases run on trusted PRs, outside the required gate |
+| Contract (informational) | `contract` | Contract workflow selects this marker; it does not use `pr` |
+
+Marking a test `pr` does **not** create a GitHub check or make the test a merge
+blocker by itself. It only makes the test eligible for a workflow whose pytest
+filter includes `pr`. The central **PR Quality Gate** determines the required
+test results for merging; GitHub branch protection determines whether that
+gate is required.
+
+### How to decide whether a test belongs in the PR selection
+
+Add `pr` when the test:
+
+1. Catches a meaningful regression that should be found before merge.
+2. Is reliable and repeatable, with isolated test data and no known flakiness.
+3. Can run within the PR feedback-time and CI-resource budget.
+4. Adds useful coverage beyond an already selected smoke or PR test.
+
+Leave `pr` off when a test is broad, costly, flaky, or better suited to full
+post-merge/manual coverage. A slow test can still merit `pr` when its risk
+coverage justifies the cost; make that a deliberate team decision. Do not add
+`pr` to every test or every module just to make it run on PRs.
+
+The entity/domain marker is inferred from the `tests/<entity>/` path, so do not
+add it manually. For example, a module can declare its test type once, while
+opting only one stable case into the PR integration subset:
+
+```python
+import pytest
+
+pytestmark = pytest.mark.integration
+
+
+@pytest.mark.pr
+def test_create_order_persists_order(order_factory):
+    ...
+
+
+def test_large_order_with_many_line_items():
+    ...
+```
+
+The first test matches `integration and pr and not smoke`; the second remains
+part of the broader Integration suite but is not selected by that PR filter.
+If a test is already marked `smoke`, the Integration PR expression excludes it;
+the Smoke lane selects it when it also has `pr`.
+
 Use module-level markers only when every test in that module shares the
-classification. Use function-level markers to select individual cases. The
-`integration` marker means the test uses the live application/API environment;
-it does not by itself mean that the test belongs in the PR lane. Full integration
-coverage runs on pushes to `main` and manual runs, while the PR Integration Gate
-selects only tests marked `integration` and `pr` that are not already smoke tests.
+classification. Use function-level markers when only selected cases should be
+in the PR lane. The `integration` marker means the test requires a running test
+API and may verify database persistence; it does not by itself put the test in
+the PR lane or imply that it uses a production/remote environment.
+
+Preview the selected tests locally before adding or changing markers:
+
+```bash
+pytest --collect-only -q tests/orders -m "integration and pr and not smoke"
+```
 
 All marker names and descriptions live in [`pytest.ini`](../pytest.ini). Strict
 marker validation is enabled, and required PR lanes fail when their marker
