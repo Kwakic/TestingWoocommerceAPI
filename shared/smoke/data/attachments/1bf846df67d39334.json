@@ -1,0 +1,19 @@
+{
+  "ENV": "ci",
+  "MACHINE": "machine1",
+  "AUTH_TYPE": "oauth1",
+  "STRICT_ENTITY_DISCOVERY": true,
+  "ENABLE_STRUCTURED_LOGS": true,
+  "ENABLE_JSON_PRETTY": false,
+  "LOG_PAYLOADS": false,
+  "REDACT_SENSITIVE_FIELDS": true,
+  "DISABLE_LOG_EMOJIS": false,
+  "KEEP_STRUCTURED_RUNS": 1,
+  "LOG_DIR": "/home/runner/work/TestingWoocommerceAPI/TestingWoocommerceAPI/reports/logs",
+  "FAIL_ON_EMPTY_LIST": false,
+  "PERF_ITERATIONS": null,
+  "AUTO_ALLURE_REPORT": false,
+  "PLAYWRIGHT_TRACE_ARTIFACT_ENABLED": false,
+  "REQUIRE_ENV": true,
+  "SESSION_ID": "43470975077"
+}

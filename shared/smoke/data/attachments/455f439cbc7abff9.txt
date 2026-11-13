@@ -1,0 +1,4 @@
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/system_status → Status code: 200 (completed in 0.562s)
+INFO     EcommerceAPI.plugins.api.shared_api:shared_api.py:181 ✅ Environment validation passed (API reachable, auth OK). Base URL: http://localhost:8080/wp-json/wc/v3/
+INFO     EcommerceAPI.plugins.allure_autogen:allure_autogen.py:520 📎 Framework configuration attached to Allure
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons → Status code: 200 (completed in 0.114s)

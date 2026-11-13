@@ -1,0 +1,37 @@
+"Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
+"passed","Fri Nov 13 17:17:56 UTC 2026","Fri Nov 13 17:17:56 UTC 2026","115","tests.shared.security","test_authentication_success","","","","test_authenticated_requests_are_allowed[coupons]","
+Authentication success guard.
+
+Ensures valid OAuth credentials allow access
+to WooCommerce API endpoints.
+
+This complements the negative authentication matrix
+which verifies invalid credentials are rejected.
+"
+"passed","Fri Nov 13 17:17:56 UTC 2026","Fri Nov 13 17:17:56 UTC 2026","104","tests.shared.security","test_authentication_success","","","","test_authenticated_requests_are_allowed[customers]","
+Authentication success guard.
+
+Ensures valid OAuth credentials allow access
+to WooCommerce API endpoints.
+
+This complements the negative authentication matrix
+which verifies invalid credentials are rejected.
+"
+"passed","Fri Nov 13 17:17:56 UTC 2026","Fri Nov 13 17:17:56 UTC 2026","134","tests.shared.security","test_authentication_success","","","","test_authenticated_requests_are_allowed[products]","
+Authentication success guard.
+
+Ensures valid OAuth credentials allow access
+to WooCommerce API endpoints.
+
+This complements the negative authentication matrix
+which verifies invalid credentials are rejected.
+"
+"passed","Fri Nov 13 17:17:56 UTC 2026","Fri Nov 13 17:17:56 UTC 2026","107","tests.shared.security","test_authentication_success","","","","test_authenticated_requests_are_allowed[orders]","
+Authentication success guard.
+
+Ensures valid OAuth credentials allow access
+to WooCommerce API endpoints.
+
+This complements the negative authentication matrix
+which verifies invalid credentials are rejected.
+"
