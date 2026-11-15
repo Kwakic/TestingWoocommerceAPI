@@ -187,6 +187,9 @@ jobs:
       # ==================================================
       suite_name: performance
       pytest_markers: performance
+      # Performance lanes must always collect a benchmark. An empty entity
+      # suite means its benchmark is missing or marker selection is broken.
+      fail_on_empty: true
 
       # ==================================================
       # Pytest runtime configuration

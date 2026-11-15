@@ -165,10 +165,12 @@ filter collects no tests.
 
 ## Performance tests
 
-Performance tests measure API response time with sequential requests. The
-customer benchmark sends 3 warm-up requests, excludes those timings, and then
-measures 30 customer-list requests by default. It reports the average and an
-approximate P95 against configured thresholds.
+Performance tests live under each entity's `performance/` directory and use
+sequential requests. Customers, Products, Orders, and Coupons each send 3
+excluded warm-up requests and measure 30 requests by default. Their summaries
+report the average, approximate P95, minimum, and maximum against entity-owned
+thresholds. Current scenarios cover customer and product lists, processing
+orders, and coupon search.
 
 This is useful for spotting broad response-time changes between runs. It does
 not measure how many simultaneous users the API can handle or its throughput;

@@ -159,9 +159,9 @@ Benefits:
 ```
 docker-compose.wp.yml    → defines db / wordpress / wpcli services
 Dockerfile               → builds a container image for running the test
-                            suite itself (used for API_ENV=docker and in CI),
-                            NOT for building WordPress/MySQL — those are
-                            pulled as prebuilt images
+                            suite itself (used for containerized test
+                            execution), NOT for building WordPress/MySQL —
+                            those are pulled as prebuilt images
 scripts/setup.sh         → waits for containers, fixes permissions,
                             installs WordPress + WooCommerce, generates
                             API keys, generates WooCommerce credentials.
@@ -173,7 +173,7 @@ Makefile                 → orchestrates the whole flow behind `make run`
                             the Dockerfile image is built
 ```
 
-**Correction vs. earlier notes:** this project *does* ship a `Dockerfile` and a `.dockerignore`. They aren't used to build WordPress or MySQL (those come from official prebuilt images), but they matter when you run tests in containerized mode (`API_ENV=docker`) or in CI, where the test runner itself is built as an image.
+**Important distinction:** this project *does* ship a `Dockerfile` and a `.dockerignore`. They aren't used to build WordPress or MySQL (those come from official prebuilt images). The Dockerfile is used when you choose containerized test execution (`API_ENV=docker`). The current GitHub Actions workflow runs pytest directly on the GitHub-hosted runner; it does not build the test-runner image. CI could be changed to use that image in the future, but CI execution does not automatically mean containerized test execution.
 
 ---
 
@@ -280,6 +280,79 @@ The local bootstrap process intentionally separates responsibilities across mult
 
 Following the Single Responsibility Principle (SRP), each component owns one specific task. This keeps the bootstrap
 process reusable, easier to maintain, and allows the same `setup.sh` script to be used unchanged by both local development and GitHub Actions.
+
+---
+
+### How the components work together
+
+The Docker infrastructure and application bootstrap are separate responsibilities.
+
+**1. `docker-compose.wp.yml` — Defines the environment**
+
+Defines the three services required by the framework:
+
+| Service | Purpose |
+|---|---|
+| `db` (MySQL) | Database for WordPress and WooCommerce |
+| `wordpress` | Runs the WordPress application |
+| `wpcli` | Provides command-line tools to install and configure WordPress |
+
+**2. Docker Engine — Creates and runs the containers**
+
+When Docker Compose executes:
+
+```bash
+docker compose -f docker-compose.wp.yml up -d
+```
+
+It instructs Docker Engine to create and start the containers using their respective images.
+
+At this point, the infrastructure is running, but WordPress and WooCommerce still need to be provisioned.
+
+**3. `scripts/setup.sh` — Installs and configures the application**
+
+The bootstrap script uses WP-CLI to:
+
+1. Install WordPress.
+2. Install and activate WooCommerce.
+3. Configure WooCommerce and checkout settings.
+4. Install and activate additional plugins, including WPGraphQL.
+5. Generate WooCommerce REST API credentials.
+6. Provision the WordPress Application Password for authenticated GraphQL operations.
+
+**4. WooCommerce environment ready**
+
+The framework now has a configured WooCommerce instance with REST and GraphQL APIs available for testing.
+
+#### End-to-end flow
+
+```text
+docker-compose.wp.yml
+Defines the services and their configuration
+        |
+        v
+Docker Compose
+Orchestrates the services
+        |
+        v
+Docker Engine
+Creates and runs the containers
+        |
+        v
+MySQL + WordPress + WP-CLI
+Infrastructure is running
+        |
+        v
+scripts/setup.sh
+Installs and configures WordPress + WooCommerce
+        |
+        v
+WooCommerce environment ready
+        |
+        v
+EcommerceAPI / pytest
+Executes API, GraphQL and database tests
+```
 
 ---
 
@@ -434,12 +507,414 @@ baseline product images without creating duplicate baseline products.
 |---|---|
 | Does `docker compose up` build an image? | No — `db` and `wordpress` use official prebuilt images (`mysql`, `wordpress`) |
 | Is the `Dockerfile` required for local test runs? | No — by default, pytest runs on the host against the Dockerized WordPress instance (`API_ENV=test`) |
-| When *is* the `Dockerfile` used? | When running tests inside a container (`API_ENV=docker`) or in CI pipelines that containerize the test runner |
+| When *is* the `Dockerfile` used? | When running tests inside a container (`API_ENV=docker`). The current GitHub Actions workflow runs pytest on the hosted runner and does not build this image. |
 | Do I need `.dockerignore` for local test runs? | No — only relevant when the `Dockerfile` image is actually built |
 
 ---
 
-## 8. Core Docker concepts (quick reference)
+## 8. 🚦 Test execution models
+
+The framework supports three execution models. **For a QA engineer joining the project, the recommended starting point is Host-Based Execution.** You do not need to build or run the test-runner Docker image to develop tests.
+
+All three models use the same repository, framework code and test suite. The difference is **where pytest runs** and how it connects to the WooCommerce application.
+
+### Quick decision guide
+
+| What are you trying to do? | Use this model | Why? |
+|---|---|---|
+| Set up the project for the first time | **Host-Based Execution** | `make run` prepares the local development environment and runs the tests. |
+| Write or change a test | **Host-Based Execution** | Your IDE, local Python environment and pytest work directly with your current source files. |
+| Change framework code or dependencies | **Host-Based Execution** | You can edit, install and test changes without rebuilding a Docker image after every change. |
+| Debug a failing test | **Host-Based Execution** | The local debugger and IDE can attach directly to pytest. |
+| Check that the project runs in its packaged Docker environment | **Containerized Test Execution** | Confirms that the test-runner image contains the expected code, Python runtime and dependencies. |
+| Validate a pull request or run scheduled suites | **CI Execution — GitHub Actions** | Runs automated checks and publishes the configured reports. |
+
+> **The recommended team workflow:** develop and debug locally, validate changes through CI, and use containerized execution when you specifically need to verify the Docker test-runner environment. These are complementary options, not competing versions of the framework.
+
+> 💡 **CI and containerized execution are different concepts.** CI describes how execution is triggered and orchestrated (for example, by GitHub Actions). Containerized execution describes where pytest runs (inside a Docker container). A CI pipeline can run pytest directly on its hosted runner or run a Dockerized test-runner image.
+
+---
+
+### 8.1 🧑‍💻 Default Local Execution — Host-Based
+
+**Use this for normal day-to-day development.** Pytest runs on your computer using the project's local Python environment (`.venv`). Docker is still used for the application under test: WordPress, WooCommerce and MySQL.
+
+You are not running a separate local Apache or WordPress server. The WordPress web server is inside the Dockerized application environment. Your local pytest process sends requests to it through the published `localhost:8080` port.
+
+#### Architecture
+
+```text
+┌──────────────────────────────────────────────┐
+│              Developer's computer            │
+│                                              │
+│       Python + .venv + pytest + EcommerceAPI  │
+│                  TEST RUNNER                  │
+└──────────────────────┬───────────────────────┘
+                       │
+                       │ HTTP / REST / GraphQL
+                       │ localhost:8080
+                       ▼
+┌──────────────────────────────────────────────┐
+│                    Docker                    │
+│                                              │
+│       WordPress + WooCommerce + MySQL         │
+│             APPLICATION UNDER TEST           │
+└──────────────────────────────────────────────┘
+```
+
+#### First-time setup
+
+Clone the repository, enter the project directory and run:
+
+```bash
+make run
+```
+
+This prepares the local environment, starts and provisions WooCommerce, installs the framework's development dependencies, prepares Playwright browsers and runs the test suite.
+
+#### Everyday development workflow
+
+Once the environment is set up, the normal development loop is:
+
+1. Create a feature branch.
+2. Edit tests or framework code in your IDE.
+3. Run the relevant test or suite with your local pytest environment.
+4. Debug and iterate as needed.
+5. Commit and push your changes, then open a pull request.
+
+For example, run pytest from the project root:
+
+```bash
+pytest
+```
+
+You can also target a specific test file, directory or marker using the usual pytest options. You do not need to rebuild the test-runner Docker image when you change a test or framework file in this host-based workflow.
+
+If you have stopped the WooCommerce services, start them and provision the application again before running tests:
+
+```bash
+make up
+make setup
+```
+
+#### Connection configuration
+
+The host-based test runner uses host-accessible endpoints:
+
+- `API_ENV=test`
+- REST API: `http://localhost:8080/wp-json/wc/v3/`
+- GraphQL API: `http://localhost:8080/graphql`
+- Database host: the host-accessible MySQL address and published port (for example, `127.0.0.1:3306`).
+
+#### When to use it
+
+- Developing new API, GraphQL, database or UI tests.
+- Updating shared framework code, fixtures, builders or helpers.
+- Installing or changing Python dependencies during development.
+- Running individual tests, test files or complete suites.
+- Debugging failures using an IDE or Python debugger.
+- Getting fast feedback without rebuilding a test-runner image.
+
+**Recommended for everyday local development and the default approach for QA engineers contributing to this repository.**
+
+---
+
+### 8.2 🐳 Containerized Test Execution
+
+In this model, **pytest itself runs inside Docker**. The custom test-runner image packages the Python runtime, framework dependencies and the project files copied into the image. The test-runner container connects to the WooCommerce services over the Docker network.
+
+This is an additional execution option. It is not necessary for every test change or every local development run.
+
+#### Architecture
+
+```text
+┌────────────────────────────────────────────────────┐
+│                       Docker                       │
+│                                                    │
+│  ┌──────────────────────┐                          │
+│  │   Test-runner        │                          │
+│  │   container          │                          │
+│  │                      │                          │
+│  │   Python + pytest    │                          │
+│  │   EcommerceAPI       │                          │
+│  │   Tests              │                          │
+│  └──────────┬───────────┘                          │
+│             │                                      │
+│             │ Docker network                       │
+│             │                                      │
+│  ┌──────────▼───────────┐    ┌──────────────────┐   │
+│  │ WordPress +          │    │      MySQL       │   │
+│  │ WooCommerce          │    │                  │   │
+│  └──────────────────────┘    └──────────────────┘   │
+│                                                    │
+└────────────────────────────────────────────────────┘
+```
+
+#### How it works
+
+1. Start the WooCommerce infrastructure with Docker Compose.
+2. Provision WordPress, WooCommerce, plugins, credentials and test data.
+3. Build the custom test-runner image from the project's `Dockerfile`.
+4. Start a test-runner container on the same Docker network as the application services.
+5. Pytest executes inside that container.
+6. The test runner reaches WordPress and MySQL using Docker service names.
+
+Inside a Docker network, containers should use service names such as `wordpress` and `db`, rather than `localhost`. Within the test-runner container, `localhost` refers to the test-runner container itself.
+
+#### Important: what happens when you change code?
+
+The current Dockerfile copies the framework and tests into the image during the image build. The image therefore contains a **snapshot of the source code at build time**.
+
+- If you change a test or framework file on your computer, the already-built image does not automatically receive that change.
+- To test the updated source using the current image approach, rebuild the image.
+- If you only want to develop and iterate quickly, use Host-Based Execution instead.
+
+A Docker development setup with bind mounts or an IDE Dev Container can make live source changes available inside a container, but that is a different configuration and is not what the current `docker run` example below sets up.
+
+#### Example
+
+Start and provision the application:
+
+```bash
+make up
+make setup
+```
+
+Build the test-runner image:
+
+```bash
+docker build -t ecommerceapi-test-runner .
+```
+
+Run the test runner:
+
+```bash
+docker run --rm \
+  --network <compose-network-name> \
+  --env-file .env \
+  -e API_ENV=docker \
+  -e DB_HOST=db \
+  ecommerceapi-test-runner
+```
+
+The image must have a suitable `CMD` or `ENTRYPOINT` that runs pytest. Replace the network placeholder with the actual network created by this project's Compose configuration. The `--env-file` passes configured environment variables into the container; explicit `-e` values override matching values from that file.
+
+When finished, stop the WooCommerce infrastructure:
+
+```bash
+make down
+```
+
+`docker run --rm` removes the test-runner container when it exits. It does **not** stop the WooCommerce services; `make down` handles those services.
+
+#### Configuration differences
+
+| Setting | Host-Based Execution | Containerized Execution |
+|---|---|---|
+| `API_ENV` | `test` | `docker` |
+| WordPress hostname | `localhost` | `wordpress` |
+| Database hostname | Host-accessible address, e.g. `127.0.0.1` | `db` |
+| Database port | Published host port | Internal MySQL service port |
+| Test runner location | Developer's computer | Test-runner container |
+
+`API_ENV` selects the endpoint configuration; it does not start Docker or decide where pytest runs. Selecting `API_ENV=docker` is appropriate when the test runner is actually inside the Docker network.
+
+#### When to use it
+
+- Verifying that the framework and tests run in the packaged Docker environment.
+- Checking that the expected Python version and dependencies are included in the image.
+- Reproducing an issue that occurs only inside the container.
+- Providing a portable, controlled test-runner environment for another team or machine.
+- Preparing or validating a containerized runner that could later be used by CI.
+
+**Use this when you need to validate or distribute the containerized test-runner environment. It is not the default workflow for editing tests.**
+
+---
+
+### 8.3 ⚙️ CI Execution — GitHub Actions
+
+CI execution automates test runs in response to events such as pull requests, pushes or scheduled workflows.
+
+In the project's **current GitHub Actions setup**, the GitHub-hosted runner is the test runner. Python and the project dependencies are installed on that runner, while Docker Compose starts the WooCommerce application services. Pytest runs directly on the GitHub-hosted runner — it does not run inside the custom test-runner image.
+
+#### Architecture
+
+```text
+┌────────────────────────────────────────────────────┐
+│                  GitHub Actions                     │
+│                                                    │
+│  ┌──────────────────────────────────────────────┐  │
+│  │              GitHub-hosted runner             │  │
+│  │                                              │  │
+│  │       Python + pytest + EcommerceAPI          │  │
+│  │                 TEST RUNNER                   │  │
+│  └──────────────────────┬───────────────────────┘  │
+│                         │                          │
+│                         │ localhost:8080           │
+│                         ▼                          │
+│  ┌──────────────────────────────────────────────┐  │
+│  │                    Docker                    │  │
+│  │                                              │  │
+│  │       WordPress + WooCommerce + MySQL         │  │
+│  │              APPLICATION UNDER TEST          │  │
+│  └──────────────────────────────────────────────┘  │
+│                                                    │
+└────────────────────────────────────────────────────┘
+```
+
+#### How it works
+
+1. A GitHub event triggers the relevant workflow.
+2. GitHub Actions provisions a hosted runner and checks out the repository.
+3. The workflow sets up Python and installs the project dependencies.
+4. Docker Compose starts the WooCommerce infrastructure.
+5. The setup process provisions WordPress, WooCommerce, plugins and test data.
+6. Pytest executes directly on the GitHub-hosted runner.
+7. Allure results and other test artifacts are uploaded.
+8. The workflow attempts Docker cleanup, including when earlier steps fail.
+
+The project's reusable workflows and composite actions coordinate common setup, execution, reporting and cleanup tasks.
+
+#### Example: pull request validation
+
+```text
+Pull Request
+     │
+     ▼
+PR Validation Workflow
+     │
+     ├── Preflight Checks
+     │
+     ├── Unit Tests
+     │
+     └── Integration Tests
+              │
+              ▼
+         Quality Gate
+              │
+              ▼
+       PR Validation Result
+```
+
+Other workflows can run smoke, regression, performance, contract and security tests according to their configured triggers.
+
+#### Configuration
+
+The current CI execution uses the host-accessible service endpoints from the GitHub-hosted runner:
+
+- `API_ENV=ci`
+- REST API: `http://localhost:8080/wp-json/wc/v3/`
+- GraphQL API: `http://localhost:8080/graphql`
+- Database host: `127.0.0.1`
+- Database port: the published MySQL port (`3306`).
+
+The hosted runner reaches the Dockerized services through their published host ports. This is why the CI configuration differs from the `API_ENV=docker` configuration used by a test runner inside the Docker network.
+
+#### When to use it
+
+- Automatically validating pull requests.
+- Running tests after code is pushed to a branch.
+- Executing scheduled regression suites.
+- Enforcing quality gates before changes are merged.
+- Generating and publishing Allure reports.
+- Providing repeatable validation results to the development team.
+
+**This is the project's current approach to automated CI validation.**
+
+---
+
+### 8.4 🔀 Comparing the three execution models
+
+| Aspect | Local Host-Based | Containerized Test Runner | GitHub Actions CI |
+|---|---|---|---|
+| Where pytest runs | Developer's computer | Docker container | GitHub-hosted runner |
+| Where WooCommerce runs | Docker | Docker | Docker |
+| Python environment | Local `.venv` | Built into test-runner image | Set up on CI runner |
+| API connection | Host-published port | Docker service name | Host-published port |
+| Typical trigger | Developer | Developer or automation | GitHub event or schedule |
+| Main purpose | Development and debugging | Reproducible packaged execution | Automated validation |
+
+### 8.5 🎯 Recommended team workflow
+
+For a team sharing and maintaining this framework, use the execution models together:
+
+| Team activity | Recommended execution |
+|---|---|
+| New QA engineer onboarding | Host-Based — `make run` |
+| Developing or updating tests | Host-Based |
+| Changing framework code or dependencies | Host-Based |
+| Debugging a failing test | Host-Based |
+| Checking the packaged Docker runner | Containerized Test Runner |
+| Validating a pull request | GitHub Actions CI |
+| Running nightly regression | GitHub Actions CI |
+| Investigating a container-specific failure | Containerized Test Runner |
+
+The normal contribution lifecycle is:
+
+```text
+Clone / Pull latest changes
+          │
+          ▼
+     make run
+  (local setup)
+          │
+          ▼
+ Develop tests and framework
+     using local .venv
+          │
+          ▼
+ Run relevant pytest tests
+          │
+          ▼
+     Commit / Push
+          │
+          ▼
+    Open Pull Request
+          │
+          ▼
+    GitHub Actions CI
+          │
+          ▼
+      Review / Merge
+```
+
+This keeps everyday development quick while ensuring that changes are validated automatically before they are merged.
+
+### 8.6 🧩 CI and containerized execution can be combined
+
+The three models are not mutually exclusive. A CI pipeline can also build and execute the test-runner Docker image instead of installing Python directly on the hosted runner.
+
+For example, a future containerized CI flow could look like this:
+
+```text
+GitHub Actions
+      │
+      ▼
+Build Test-runner Image
+      │
+      ▼
+Start WooCommerce Infrastructure
+      │
+      ▼
+Run Test-runner Container
+      │
+      ▼
+Execute Pytest
+      │
+      ▼
+Publish Allure Results
+      │
+      ▼
+Cleanup Docker Environment
+```
+
+That approach combines automated CI orchestration with containerized test execution. It is an alternative architecture, not a description of the current workflow.
+
+The key principle is to maintain **one shared framework and one test suite**, independent of the execution environment. Developers can work locally, validate the packaged runner in Docker, and rely on CI/CD for automated team-wide validation.
+
+---
+
+## 9. Core Docker concepts (quick reference)
 
 - **Image** — a blueprint (e.g. `mysql:8`, `wordpress:latest`)
 - **Container** — a running instance of an image
@@ -448,7 +923,7 @@ baseline product images without creating duplicate baseline products.
 
 ---
 
-## 9. Framework vs Infrastructure (Mental model)
+## 10. Framework vs Infrastructure (Mental model)
 
 ```
 Framework (EcommerceAPI)  → HOW tests run
@@ -460,7 +935,7 @@ Makefile                   → single entrypoint tying it all together
 
 ---
 
-## 10. Requirements
+## 11. Requirements
 
 - Docker
 - Docker Compose
@@ -469,7 +944,7 @@ Makefile                   → single entrypoint tying it all together
 
 ---
 
-## 11. 🛠️ Troubleshooting
+## 12. 🛠️ Troubleshooting
 
 | Symptom | Possible cause | Solution |
 |---------|----------------|----------|

@@ -1,6 +1,9 @@
 # ============================================================================
-# docker-compose.wp.yml
-# WooCommerce test stack: MySQL + WordPress + WP-CLI
+# docker-compose.wp.yml -> defines the WooCommerce infrastructure.
+# It creates and starts the infrastructure that WooCommerce needs, but
+# it does not, by itself, install and configure WooCommerce.
+
+# WooCommerce test stack: MySQL + WordPress + WP-CLI (These are official prebuilt images)
 #
 # No `container_name:` on any service, on purpose. Docker enforces
 # container-name uniqueness ENGINE-WIDE, not per Compose project — so a

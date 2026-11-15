@@ -266,7 +266,28 @@ jobs:
       - name: Install Allure
         if: env.HAS_ALLURE_RESULTS == 'true'
         run: |
-          curl -L -o allure.zip https://github.com/allure-framework/allure2/releases/download/2.29.0/allure-2.29.0.zip
+          ALLURE_URL="https://github.com/allure-framework/allure2/releases/download/2.29.0/allure-2.29.0.zip"
+          ARCHIVE_VALID=false
+
+          # GitHub occasionally returns an incomplete or non-ZIP response.
+          # Validate each download and retry before extraction.
+          for attempt in 1 2 3; do
+            rm -f allure.zip
+            if curl --fail --location --connect-timeout 30 --max-time 300 \
+              --retry 2 --retry-all-errors --retry-delay 2 \
+              --output allure.zip "$ALLURE_URL" \
+              && unzip -tq allure.zip; then
+              ARCHIVE_VALID=true
+              break
+            fi
+
+            echo "Allure archive download/validation failed (attempt $attempt/3)."
+          done
+
+          if [[ "$ARCHIVE_VALID" != "true" ]]; then
+            echo "Could not download a valid Allure 2.29.0 archive."
+            exit 1
+          fi
 
           unzip -q allure.zip
 

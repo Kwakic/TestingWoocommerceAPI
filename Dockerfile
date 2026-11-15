@@ -1,6 +1,10 @@
 # =============================================================================
-# Dockerfile
-# Python test runner image
+# Dockerfile it is a plain text blueprint used to build an image (is a set of instructions for building a Docker image).
+
+# Builts Python test runner image
+# The image contains the environment needed to execute the framework.
+# It is used to package the test code and its dependencies into a consistent environment
+# Defines optional containerized test runner
 
 # Purpose:
 #   - Build a reusable pytest runner image for GitLab CI
@@ -9,9 +13,28 @@
 #   - Does NOT run WordPress (CI entities do that)
 #   - This image is only for running pytest, not WordPress.
 
+ # - It locks down your exact Python version, operating system libraries, and pytest
+ #   packages. This prevents the "it works on my machine" problem across different computers.
+ # - Your CI server only needs Docker installed to build and run the test image. You do
+ #   not have to manually configure Python environments on every build agent.
+ # - Running tests inside a container keeps dependencies separate from other projects on your host machine.
+
+# The Dockerfile builds an image containing the test execution environment:
+#   - Python 3.13
+#   - Your EcommerceAPI framework
+#   - Python dependencies
+#   - Pytest and testing dependencies
+#   - The files needed to execute the test
+
 # You only need a Dockerfile if:
-  #- you want to run tests inside a container
-  #- or build a custom test image
+#   - you want to run tests inside a container
+#   - or build a custom test image
+
+# NOTE:
+# - The current CI pipeline does not need the custom Dockerfile. It runs pytest directly on the
+#   GitHub-hosted Ubuntu runner.
+# - make run command does not need your custom Dockerfile at all neither
+
 # =============================================================================
 
 # -------------------------------------------------------------------

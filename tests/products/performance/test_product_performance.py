@@ -4,7 +4,7 @@
 
 Purpose
 -------
-Validate the response time of the Products  API.
+Validate the response time of the Products API.
 
 Unlike Contract, Security and Preflight, performance tests belong to each
 business entity.
@@ -82,7 +82,8 @@ PRODUCTS_PERFORMANCE = {
     },
     "max_avg_response": 6.20,
     "max_p95_response": 11.50,
-    "iterations": 5,
+    "warmup_iterations": 3,
+    "iterations": 30,
 }
 
 
@@ -125,15 +126,43 @@ def test_product_response_times(
     """
     Benchmark the Products endpoint.
 
-    The benchmark executes multiple requests, measures their response times,
-    calculates summary statistics, and validates the configured performance
-    thresholds.
+    The benchmark sends excluded warm-up requests, then measures sequential
+    product-list requests and validates the configured response-time limits.
     """
 
     iterations = _resolve_iterations(pytestconfig)
+    warmup_iterations = PRODUCTS_PERFORMANCE["warmup_iterations"]
+
+    if iterations < 20:
+        logger.warning(
+            "Only %d measured requests are configured; P95 will be very rough. "
+            "Use at least 20 for trend checks, or omit the override to use the profile default.",
+            iterations,
+        )
 
     logger.info(
-        "🔁 Products benchmark (%d iterations)",
+        "Warming up Products endpoint (%d requests; excluded from results)",
+        warmup_iterations,
+    )
+
+    for warmup_run in range(warmup_iterations):
+        duration, response = measure_get_response_time(
+            api_client=api_client,
+            endpoint=PRODUCTS_PERFORMANCE["endpoint"],
+            params=PRODUCTS_PERFORMANCE["params"],
+        )
+
+        if response is None:
+            logger.warning(
+                "Warm-up request %02d failed; it will not be included in the benchmark.",
+                warmup_run + 1,
+            )
+            continue
+
+        logger.debug("Warm-up %02d -> %.3fs (excluded)", warmup_run + 1, duration)
+
+    logger.info(
+        "Products benchmark (%d measured requests)",
         iterations,
     )
 
@@ -189,7 +218,7 @@ def test_product_response_times(
     average = statistics.mean(response_times)
 
     p95 = (
-        statistics.quantiles(response_times, n=100)[94]
+        statistics.quantiles(response_times, n=20, method="inclusive")[18]
         if len(response_times) > 1
         else max(response_times)
     )
@@ -239,6 +268,11 @@ def test_product_response_times(
 
     logger.info("Average     : %.3fs", average)
     logger.info("P95         : %.3fs", p95)
+    logger.info(
+        "Samples     : %d measured; %d warm-up requests excluded",
+        len(response_times),
+        warmup_iterations,
+    )
     logger.info("Minimum     : %.3fs", minimum)
     logger.info("Maximum     : %.3fs", maximum)
 

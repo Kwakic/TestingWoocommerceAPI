@@ -19,6 +19,24 @@ on:
     # The credentials are supplied by the caller workflow
     # from GitHub Secrets and are used by the WooCommerce
     # environment setup to seed the dedicated UI customer.
+
+    # The current reusable workflow follows this sequence:
+    #
+    # Step	Responsibility
+    # 1	    Checkout repository
+    # 2	    Setup Python project
+    # 3	    Install Playwright browser (if required)
+    # 4	    Setup WooCommerce environment (if required)
+    # 5	    Configure CI environment
+    # 6	    Determine pytest target
+    # 7	    Validate UI credentials (if UI suite)
+    # 8	    Run pytest
+    # 9	    Upload Allure results
+    # 10	Upload structured logs
+    # 11	Upload JUnit results
+    # 12	Upload Playwright traces
+    # 13	Docker Cleanup
+
     # --------------------------------------------------
     secrets:
       UI_CUSTOMER_USERNAME:
@@ -614,7 +632,10 @@ jobs:
             PYTEST_TRACE_ARGS+=(--tracing retain-on-failure --output reports/playwright)
           fi
 
-          python -m pytest "$TEST_TARGET" \
+          # GitHub's bash runner enables errexit before this script starts.
+          # Capture pytest's status in an if condition so exit code 5 can be
+          # handled below instead of terminating the step immediately.
+          if python -m pytest "$TEST_TARGET" \
             -m "$PYTEST_MARKERS" \
             --browser "$PYTEST_BROWSER" \
             -n "$PYTEST_WORKERS" \
@@ -625,12 +646,11 @@ jobs:
             "${PYTEST_MAXFAIL_ARGS[@]}" \
             --clean-alluredir \
             --junitxml=reports/junit/results.xml \
-            --alluredir=reports/allure-results
-
-          PYTEST_EXIT_CODE=$?
-
-          # Restore strict mode
-          set -e
+            --alluredir=reports/allure-results; then
+            PYTEST_EXIT_CODE=0
+          else
+            PYTEST_EXIT_CODE=$?
+          fi
 
           # ----------------------------------------------
           # Exit Code 5 = No tests collected

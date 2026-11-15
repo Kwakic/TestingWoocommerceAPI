@@ -81,6 +81,74 @@ test results → report generation → report artifacts / QA Portal
 
 ```
 
+## Local Pre-Commit Validation
+
+Before a commit is created, the repository's pre-commit hooks run local quality checks. They help catch formatting, file-integrity, security, and test issues before code is pushed to GitHub.
+
+```mermaid
+flowchart TD
+    A[Developer runs git commit] --> B[Pre-commit hooks]
+
+    B --> C[File and security checks]
+    C --> C1[Remove trailing whitespace]
+    C1 --> C2[Ensure newline at end of file]
+    C2 --> C3[Validate YAML and JSON]
+    C3 --> C4[Check for large files]
+    C4 --> C5[Check for merge-conflict markers]
+    C5 --> C6[Detect private keys]
+
+    C6 --> D[Code quality checks]
+    D --> D1[Format Python code with Black]
+    D1 --> D2[Lint Python code with Flake8]
+
+    D2 --> E[Run Shared Unit tests]
+    E --> F[Run Preflight tests]
+
+    F --> G{Did every hook pass?}
+    G -- No --> H[Commit is blocked]
+    G -- Yes --> I[Commit is created]
+    I --> J[Push branch and open Pull Request]
+```
+
+### Checks performed
+
+| Stage | Checks |
+|---|---|
+| File and security checks | Trailing whitespace, final newline, YAML/JSON validity, large files, merge-conflict markers, private keys |
+| Code quality | Black formatting and Flake8 linting |
+| Tests | Shared Unit tests and Preflight tests |
+
+The test hooks run these commands:
+
+```bash
+python -m pytest tests/shared/unit_tests -m unit -q
+python -m pytest -m preflight -q
+```
+
+If a hook fails, the commit is blocked. Fix the reported issue and run `git commit` again.
+
+### Local validation vs. CI validation
+
+The same Shared Unit and Preflight test categories are also executed by the central GitHub Actions PR validation workflow. Locally, pre-commit runs its hooks sequentially as part of the commit process. In CI, Unit and Preflight are separate jobs and can run in parallel with the other PR validation jobs.
+
+```mermaid
+flowchart LR
+    A[Local: git commit] --> B[Pre-commit hooks]
+    B --> C[Shared Unit tests]
+    C --> D[Preflight tests]
+    D --> E[Commit allowed]
+
+    F[Pull Request] --> G[GitHub Actions: pr-validation.yml]
+    G --> H[Unit job]
+    G --> I[Preflight job]
+    G --> J[Smoke and Integration jobs]
+    H --> K[PR Quality Gate]
+    I --> K
+    J --> K
+```
+
+
+
 ### What each part means
 
 | Component | Responsibility |

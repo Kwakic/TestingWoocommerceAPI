@@ -1,3 +1,11 @@
+# GitHub Actions: Orchestrates CI execution
+# The configure-ci-env composite action prepares the configuration for the GitHub Actions runner
+
+# It configures things such as:
+#   - API_ENV=ci — tells your framework which environment configuration to use.
+#   - CI-specific logging settings.
+#   - Other environment variables required for CI execution.
+
 name: Configure CI Environment
 
 description: >
