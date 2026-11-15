@@ -1,0 +1,48 @@
+INFO     tests.customers.api.test_get_all_customers:test_get_all_customers.py:196 🟢 Mocking list_customers_paginated to return empty list
+INFO     tests.customers.api.test_get_all_customers:test_get_all_customers.py:203 ✅ Successfully mocked empty customers list
+INFO     EcommerceAPI.plugins.entities:entities.py:718 🔧 Starting teardown of created test resources...
+INFO     root:cleanup_helpers.py:98 🧹 Cleaning up customer(s)... (12 queued)
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 20
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/customers/20?force=True → Status code: 200 (completed in 0.126s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 20
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 22
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/customers/22?force=True → Status code: 200 (completed in 0.136s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 22
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 23
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/customers/23?force=True → Status code: 200 (completed in 0.139s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 23
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 24
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/customers/24?force=True → Status code: 200 (completed in 0.120s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 24
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 25
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/customers/25?force=True → Status code: 200 (completed in 0.115s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 25
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 26
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/customers/26?force=True → Status code: 200 (completed in 0.128s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 26
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 27
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/customers/27?force=True → Status code: 200 (completed in 0.109s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 27
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 29
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/customers/29?force=True → Status code: 200 (completed in 0.111s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 29
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 30
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/customers/30?force=True → Status code: 200 (completed in 0.110s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 30
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 32
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/customers/32?force=True → Status code: 200 (completed in 0.110s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 32
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 33
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/customers/33?force=True → Status code: 200 (completed in 0.112s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 33
+DEBUG    root:cleanup_helpers.py:120 🔄 Deleting customer ID: 34
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/customers/34?force=True → Status code: 200 (completed in 0.115s)
+INFO     root:cleanup_helpers.py:124 ✅ Deleted customer ID: 34
+INFO     root:cleanup_helpers.py:156 ✅ Finished cleanup for customer(s).
+INFO     EcommerceAPI.plugins.entities:entities.py:758 
+
+🧹 ====================================== CLEANUP SUMMARY ======================================
+INFO     EcommerceAPI.plugins.entities:entities.py:761 📊 Created during test run: {'customers': 12}
+INFO     EcommerceAPI.plugins.entities:entities.py:762 🧾 Cleanup total summary:
+INFO     EcommerceAPI.plugins.entities:entities.py:764    • customer: 12 deleted (12 created)
+INFO     EcommerceAPI.plugins.entities:entities.py:765 ✅ All test data cleanup completed.
