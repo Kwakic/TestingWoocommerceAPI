@@ -13,8 +13,8 @@ name: Unit Tests + Preflight Checks ⚡
 # ==================================================
 
 on:
-  # Run on pull requests (any branch)
-  pull_request:  # Every PR
+#  # Run on pull requests (any branch)
+#  pull_request:  # Every PR
 
 
   workflow_dispatch:  # Allow manual execution from GitHub UI

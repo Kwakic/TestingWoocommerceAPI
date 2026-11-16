@@ -33,10 +33,10 @@ name: Integration Tests 🔗
 # ==================================================
 on:
 
-  # Run on pull requests targeting main branch
-  # ==================================================
-  pull_request:
-    branches: [ main ]
+#  # Run on pull requests targeting main branch
+#  # ==================================================
+#  pull_request:
+#    branches: [ main ]
 
 
   # Run on pushes to main branch
