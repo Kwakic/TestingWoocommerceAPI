@@ -516,6 +516,10 @@ baseline product images without creating duplicate baseline products.
 
 The framework supports three execution models. **For a QA engineer joining the project, the recommended starting point is Host-Based Execution.** You do not need to build or run the test-runner Docker image to develop tests.
 
+1. **Default Local Execution** — Host-Based
+2. **Containerized Test Execution**
+3. **CI Execution** — GitHub Actions
+
 All three models use the same repository, framework code and test suite. The difference is **where pytest runs** and how it connects to the WooCommerce application.
 
 ### Quick decision guide
@@ -652,12 +656,10 @@ This is an additional execution option. It is not necessary for every test chang
 
 #### How it works
 
-1. Start the WooCommerce infrastructure with Docker Compose.
-2. Provision WordPress, WooCommerce, plugins, credentials and test data.
-3. Build the custom test-runner image from the project's `Dockerfile`.
-4. Start a test-runner container on the same Docker network as the application services.
-5. Pytest executes inside that container.
-6. The test runner reaches WordPress and MySQL using Docker service names.
+1. Build the test-runner image from the project's `Dockerfile` before the first run (then rebuild after image inputs change).
+2. `make test-docker` starts the WooCommerce infrastructure and provisions WordPress, plugins, credentials and test data.
+3. The target starts a test-runner container on the same Docker network as the application services.
+4. Pytest executes inside that container and reaches WordPress and MySQL using Docker service names.
 
 Inside a Docker network, containers should use service names such as `wordpress` and `db`, rather than `localhost`. Within the test-runner container, `localhost` refers to the test-runner container itself.
 
@@ -669,43 +671,22 @@ The current Dockerfile copies the framework and tests into the image during the 
 - To test the updated source using the current image approach, rebuild the image.
 - If you only want to develop and iterate quickly, use Host-Based Execution instead.
 
-A Docker development setup with bind mounts or an IDE Dev Container can make live source changes available inside a container, but that is a different configuration and is not what the current `docker run` example below sets up.
+A Docker development setup with source bind mounts or an IDE Dev Container can make live source changes available inside a container, but that is a different configuration from `make test-docker`, which mounts the artifact directories only.
 
-#### Example
+#### Run it with Make
 
-Start and provision the application:
-
-```bash
-make up
-make setup
-```
-
-Build the test-runner image:
+From the repository root, build the test-runner image and run the containerized suite:
 
 ```bash
 docker build -t ecommerceapi-test-runner .
+make test-docker
 ```
 
-Run the test runner:
+Build the image before the first `make test-docker` run; the target uses the prebuilt image and does not build it. Rebuild after changing the Dockerfile, pytest configuration, tests, framework source or dependencies copied into the image. The target reuses `make up`, `make setup` and `make down`, and discovers the active Compose network from the running stack. It passes `.env` credentials to the runner and sets `API_ENV=docker`, `DB_HOST=db` and `DB_PORT=3306`.
 
-```bash
-docker run --rm \
-  --network <compose-network-name> \
-  --env-file .env \
-  -e API_ENV=docker \
-  -e DB_HOST=db \
-  ecommerceapi-test-runner
-```
+The runner uses `docker run --rm`; Makefile bind mounts keep Allure results and structured logs in `reports/`, and Playwright artifacts in `test-results/`. Cleanup runs after `make up`, `make setup` or pytest fails and after successful execution, while preserving the earlier failure status if cleanup also fails.
 
-The image must have a suitable `CMD` or `ENTRYPOINT` that runs pytest. Replace the network placeholder with the actual network created by this project's Compose configuration. The `--env-file` passes configured environment variables into the container; explicit `-e` values override matching values from that file.
-
-When finished, stop the WooCommerce infrastructure:
-
-```bash
-make down
-```
-
-`docker run --rm` removes the test-runner container when it exits. It does **not** stop the WooCommerce services; `make down` handles those services.
+`make run` remains the normal host-based development workflow. Use `make test-docker` when you want pytest to run inside the packaged image. See [Default Local Execution — Host-Based](#81--default-local-execution--host-based) for the standard workflow.
 
 #### Configuration differences
 

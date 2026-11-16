@@ -54,7 +54,7 @@ The UI layer is documented separately in:
 
 ## 🚀 Quick Start (Recommended)
 
-### Option 1 — Docker (Recommended)
+### Option 1 — Local Development with Docker Services (Recommended)
 
 For most contributors, the quickest way to get started is:
 
@@ -81,6 +81,14 @@ Run the test suite:
 ```bash
 make test
 ```
+
+In this standard workflow, Docker runs WordPress and WooCommerce while pytest
+runs on the host in the project `.venv`. To run pytest inside the optional
+Docker test-runner image, build it and run `make test-docker` from the
+repository root. That target preserves reports and test artifacts on the host
+and cleans up the WooCommerce infrastructure. See the
+[Docker Infrastructure Guide](../ci/README_DOCKER_INFRASTRUCTURE.md) for
+details.
 
 ---
 

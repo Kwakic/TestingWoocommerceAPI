@@ -65,11 +65,17 @@ Top-level (trimmed):
 
 The framework is designed to be executed through a **controlled orchestration layer**, not by calling `pytest` directly.
 
-👉 The canonical entrypoint is:
+👉 The default host-based entrypoint is:
 
 ```bash
 make run
 ```
+
+To validate the packaged Docker test runner, build `ecommerceapi-test-runner`
+and run `make test-docker`. That target orchestrates the containerized suite
+and cleans up the WooCommerce infrastructure afterward. See the
+[Docker Infrastructure Guide](../ci/README_DOCKER_INFRASTRUCTURE.md) for
+details.
 
 ## 🧩 What make run does
 
@@ -94,8 +100,9 @@ make run
 * Reports (Allure)
 * Structured logs
 
-**6. 🧹 Tear down (optional)**
-* Containers stopped/cleaned
+After `make run`, the Docker infrastructure remains available for local
+iteration; use `make down` when finished. `make test-docker` stops the
+WooCommerce infrastructure automatically after its containerized run.
 
 ---
 
@@ -115,7 +122,8 @@ Running pytest manually bypasses:
 pytest is the execution engine, but it must run within a correctly
 provisioned environment (Docker + credentials).
 
-- Use `make run` for full orchestration
+- Use `make run` for the normal host-based full workflow
+- Use `make test-docker` to run pytest inside the Docker test-runner image
 - Use `pytest` directly only when the environment is already prepared
 
 This can lead to:
@@ -129,7 +137,8 @@ This can lead to:
 ## 🧠 Design Principle
 
 👉 pytest is the execution engine,
-👉 make run is the system orchestrator
+👉 `make run` orchestrates the default host-based workflow
+👉 `make test-docker` orchestrates containerized test execution
 
 ```
 make run
@@ -327,7 +336,9 @@ This design ensures:
 
 ⚠️ This is **not the recommended way** to run the framework.
 
-👉 Use `make run` unless you explicitly need low-level control.
+👉 Use `make run` for normal host-based development. Use `make test-docker` to
+validate the packaged runner; use direct `pytest` when the environment is
+already prepared.
 
 ---
 

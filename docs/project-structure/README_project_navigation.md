@@ -484,13 +484,13 @@ Project-level configuration and orchestration.
 
 | File                          | Purpose                                                         |
 |-------------------------------|-----------------------------------------------------------------|
-| **Makefile**                  | Orchestrates common tasks (`make run`, `make test`, etc.)       |
+| **Makefile**                  | Orchestrates common tasks (`make run`, `make test`, `make test-docker`, etc.) |
 | **pytest.ini**                | pytest configuration & marker definitions                       |
 | **conftest.py**               | Shared root-level fixtures & hooks                              |
 | **.env**                      | Local environment variables & credentials                       |
 | **.env.example**              | Template for `.env` file                                        |
 | **docker-compose.matrix.yml** | Multi-container setup (WordPress, WooCommerce, MySQL)           |
-| **Dockerfile**                | Container image for CI/CD execution                             |
+| **Dockerfile**                | Reusable image for local containerized tests; GitHub Actions does not use it |
 | **README.md**                 | Project landing page & documentation index                      |
 | **.gitignore**                | Git ignore rules                                                |
 | **CHANGELOG.md**              | Project changelog                                               |
