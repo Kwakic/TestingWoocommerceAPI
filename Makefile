@@ -273,7 +273,11 @@ test-docker:
 					-e LOG_DIR=/app/reports/logs \
 					--mount "type=bind,source=$$HOST_ROOT/reports,target=/app/reports" \
 					--mount "type=bind,source=$$HOST_ROOT/test-results,target=/app/test-results" \
-					ecommerceapi-test-runner pytest --clean-alluredir -v; \
+					ecommerceapi-test-runner pytest --clean-alluredir \
+						--tracing retain-on-failure \
+						--screenshot only-on-failure \
+						--video retain-on-failure \
+						--output test-results -v; \
 				TEST_EXIT=$$?; \
 			fi; \
 		fi; \

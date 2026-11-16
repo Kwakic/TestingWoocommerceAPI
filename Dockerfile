@@ -71,6 +71,21 @@ WORKDIR /app
 # Copy installed site-packages
 COPY --from=builder /usr/local /usr/local
 
+# Keep the browser cache inside the image so the runtime uses the exact
+# browser revisions required by the Playwright package installed above.
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+
+# Install the browsers exercised by the UI workflow. --with-deps installs
+# their required Linux libraries in this runtime image as well as the browser
+# binaries; using the installed Playwright CLI keeps browser revisions aligned.
+# Playwright's bundled Node runtime needs libatomic on this slim base before
+# the CLI can install the remaining browser dependencies.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libatomic1 \
+    && rm -rf /var/lib/apt/lists/* \
+    && python -m playwright install --with-deps chromium firefox webkit \
+    && rm -rf /var/lib/apt/lists/*
+
 # Global pytest configuration (CRITICAL)
 COPY pytest.ini ./pytest.ini
 COPY conftest.py ./conftest.py
