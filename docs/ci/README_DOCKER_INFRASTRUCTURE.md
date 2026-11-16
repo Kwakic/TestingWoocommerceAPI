@@ -678,7 +678,10 @@ A Docker development setup with source bind mounts or an IDE Dev Container can m
 From the repository root, build the test-runner image and run the containerized suite:
 
 ```bash
+# Rebuild the image when the Dockerfile or dependencies change
 docker build -t ecommerceapi-test-runner .
+
+# Execute tests inside Docker
 make test-docker
 ```
 

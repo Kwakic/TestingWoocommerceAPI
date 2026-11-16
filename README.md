@@ -372,7 +372,10 @@ To run the suite inside the Docker test-runner image, build the image and use
 the optional containerized target:
 
 ```bash
+# Rebuild the image when the Dockerfile or dependencies change
 docker build -t ecommerceapi-test-runner .
+
+# Execute tests inside Docker
 make test-docker
 ```
 

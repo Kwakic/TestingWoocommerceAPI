@@ -375,7 +375,10 @@ make test
 For an optional containerized run, build the test-runner image once and run:
 
 ```bash
+# Rebuild the image when the Dockerfile or dependencies change
 docker build -t ecommerceapi-test-runner .
+
+# Execute tests inside Docker
 make test-docker
 ```
 
