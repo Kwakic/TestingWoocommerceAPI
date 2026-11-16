@@ -22,7 +22,7 @@
 #                                     generated API credentials into .env
 #   Python                        -> consumes .env, never creates it
 
-.PHONY: up setup install test test-ci run down clean ensure-env venv
+.PHONY: up setup install test test-ci test-docker run down clean ensure-env venv
 
 # --------------------------------------------------
 # Project-local virtual environment.
@@ -220,6 +220,65 @@ test: venv
 # --------------------------------------------------
 test-ci: venv
 	$(VENV_PYTHON) -m pytest --clean-alluredir --alluredir=reports/allure-results -v
+
+# --------------------------------------------------
+# Run pytest in the reusable Docker test-runner image.
+#
+# Reuse the normal infrastructure/bootstrap targets, discover the Compose
+# network from its running db container, and bind-mount generated artifacts
+# so --rm does not discard them. The EXIT trap always runs `make down` and
+# keeps the original setup/pytest status if cleanup also fails.
+# --------------------------------------------------
+test-docker:
+	@set +e; \
+	TEST_EXIT=0; \
+	cleanup() { \
+		trap - 0; \
+		echo "[DOCKER] Stopping WooCommerce infrastructure..."; \
+		$(MAKE) down; \
+		CLEANUP_EXIT=$$?; \
+		if [ "$$TEST_EXIT" -ne 0 ]; then exit "$$TEST_EXIT"; fi; \
+		exit "$$CLEANUP_EXIT"; \
+	}; \
+	trap cleanup 0; \
+	$(MAKE) up; \
+	TEST_EXIT=$$?; \
+	if [ "$$TEST_EXIT" -eq 0 ]; then \
+		$(MAKE) setup; \
+		TEST_EXIT=$$?; \
+	fi; \
+	if [ "$$TEST_EXIT" -eq 0 ]; then \
+		mkdir -p reports test-results; \
+		TEST_EXIT=$$?; \
+	fi; \
+	if [ "$$TEST_EXIT" -eq 0 ]; then \
+		DB_CONTAINER=$$(docker compose -f docker-compose.wp.yml ps -q db); \
+		if [ -z "$$DB_CONTAINER" ]; then \
+			echo "[ERROR] Could not find the Compose db container to resolve its network."; \
+			TEST_EXIT=1; \
+		else \
+			NETWORK=$$(docker inspect -f '{{range $$name, $$network := .NetworkSettings.Networks}}{{printf "%s " $$name}}{{end}}' "$$DB_CONTAINER"); \
+			NETWORK=$${NETWORK%% *}; \
+			if [ -z "$$NETWORK" ]; then \
+				echo "[ERROR] Could not resolve the Compose network from the db container."; \
+				TEST_EXIT=1; \
+			else \
+				HOST_ROOT=$$(pwd -W 2>/dev/null || pwd); \
+				MSYS_NO_PATHCONV=1 docker run --rm \
+					--network "$$NETWORK" \
+					--env-file .env \
+					-e API_ENV=docker \
+					-e DB_HOST=db \
+					-e DB_PORT=3306 \
+					-e LOG_DIR=/app/reports/logs \
+					--mount "type=bind,source=$$HOST_ROOT/reports,target=/app/reports" \
+					--mount "type=bind,source=$$HOST_ROOT/test-results,target=/app/test-results" \
+					ecommerceapi-test-runner pytest --clean-alluredir -v; \
+				TEST_EXIT=$$?; \
+			fi; \
+		fi; \
+	fi; \
+	exit "$$TEST_EXIT"
 
 # --------------------------------------------------
 # Full local developer workflow.
