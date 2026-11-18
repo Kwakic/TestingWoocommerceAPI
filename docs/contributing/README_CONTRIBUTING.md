@@ -55,7 +55,9 @@ Style & PR checklist
 - Keep commits small and focused.
 - Add/adjust tests for any functional change.
 - Run `pytest` and ensure the tests you touched pass locally.
-- If you modify Dockerfile/CI scripts, describe how to test them locally (e.g., docker build + compose up commands).
+- If you modify the Docker test runner, validate it with
+  `docker build -t ecommerceapi-test-runner .` and `make test-docker`. Describe
+  relevant CI validation separately when CI files change.
 
 Reporting issues and questions
 - Open an issue if you find flaky tests or CI failures. Include:

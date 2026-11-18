@@ -172,13 +172,17 @@ Integration matrix. Unit and Preflight run independently. Allure report jobs
 are separate from the gate and run after their test matrix finishes, including
 when tests fail.
 
-During migration, the existing PR triggers and the currently configured
-**Smoke Quality Gate** and **Integration Quality Gate** branch checks remain in
-place while the new gate is verified. Do not select the new gate in branch
-protection until it has completed successfully. The target branch-protection
-policy is to require **PR Quality Gate** only; Contract and UI remain
-informational. Workflow files do not change GitHub's branch-protection
-settings.
+PR test execution is now centralized in `pr-validation.yml`. The standalone
+Smoke and Integration workflows no longer run on PRs, avoiding duplicate
+execution; they retain their configured post-merge and manual runs. The
+standalone Unit + Preflight workflow is manual, while Unit and Preflight both
+run as independent jobs in the central PR workflow.
+
+GitHub branch protection currently requires **PR Quality Gate**. Contract and
+UI workflows still run separately on eligible PRs as informational checks and
+are not dependencies of the required gate. Keep them off the required status
+check list unless the merge policy changes. Workflow files do not change
+GitHub's branch-protection settings.
 
 ### What exactly is Shared Smoke?
 

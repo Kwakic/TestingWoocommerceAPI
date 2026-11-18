@@ -368,6 +368,23 @@ For a CI-style, Allure-ready run:
 make test-ci
 ```
 
+To run the suite inside the Docker test-runner image, build the image and use
+the optional containerized target:
+
+```bash
+# Rebuild the image when the Dockerfile or dependencies change
+docker build -t ecommerceapi-test-runner .
+
+# Execute tests inside Docker
+make test-docker
+```
+
+`make test-docker` preserves reports and test artifacts on the host and cleans
+up the WooCommerce infrastructure after the run. `make run` remains the normal
+host-based development workflow. See the
+[Docker Infrastructure Guide](./docs/ci/README_DOCKER_INFRASTRUCTURE.md) for
+details.
+
 For direct framework installation and pytest execution:
 
 ```bash
@@ -412,7 +429,7 @@ This README is the **landing page**. Detailed implementation and operational gui
 | **CI/CD** | [CI/CD Architecture Guide](./docs/ci/README_CI_ARCHITECTURE.md) | Workflow design and artifact strategy |
 | | [Allure Reporting Guide](./docs/ci/README_ALLURE.md) | Report generation and publication |
 | | [Environment & CI Guide](./docs/ci/README_ENV_AND_CI.md) | Environment-to-pipeline mapping |
-| | [Docker Infrastructure Guide](./docs/ci/README_DOCKER_INFRASTRUCTURE.md) | CI container setup |
+| | [Docker Infrastructure Guide](./docs/ci/README_DOCKER_INFRASTRUCTURE.md) | Local containerized runner and Docker infrastructure |
 | | [Git Workflow Handbook](./docs/ci/README_GIT_WORKFLOW_HANDBOOK.md) | Branching and PR conventions |
 | **Contributing** | [Contributing Guide](./docs/contributing/README_CONTRIBUTING.md) | Contribution workflow |
 | | [Changelog Guidelines](./docs/contributing/README_CHANGELOG_GUIDELINES.md) | Changelog conventions |

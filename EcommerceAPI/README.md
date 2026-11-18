@@ -33,6 +33,12 @@ After bootstrap, run the suite again with:
 make test
 ```
 
+To check the suite inside the Docker test-runner image, build it and run
+`make test-docker` from the repository root. This is an optional alternative;
+`make run` remains the normal host-based workflow. See the
+[Docker Infrastructure Guide](../docs/ci/README_DOCKER_INFRASTRUCTURE.md) for
+the build command, artifact locations and cleanup behavior.
+
 ## Direct framework setup
 
 For framework development from an existing checkout, install the framework

@@ -372,7 +372,23 @@ This prevents port conflicts and ensures that Docker commands are operating on t
 make test
 ```
 
-### Stop the environment
+For an optional containerized run, build the test-runner image once and run:
+
+```bash
+# Rebuild the image when the Dockerfile or dependencies change
+docker build -t ecommerceapi-test-runner .
+
+# Execute tests inside Docker
+make test-docker
+```
+
+`make run` remains the standard host-based setup and development workflow.
+The Docker target saves reports and test artifacts on the host and cleans up
+the WooCommerce infrastructure after execution. See the
+[Docker Infrastructure Guide](../ci/README_DOCKER_INFRASTRUCTURE.md) for
+details.
+
+### Stop a host-based environment
 
 ```bash
 make down
