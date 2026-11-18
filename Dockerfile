@@ -1,5 +1,5 @@
 # =============================================================================
-# Dockerfile it is a plain text blueprint used to build an image (is a set of instructions for building a Docker image).
+# Dockerfile it is a plain text/instructions blueprint used to build an image.
 
 # Builts Python test runner image
 # The image contains the environment needed to execute the framework.

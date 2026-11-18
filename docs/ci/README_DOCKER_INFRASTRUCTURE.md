@@ -685,7 +685,7 @@ docker build -t ecommerceapi-test-runner .
 make test-docker
 ```
 
-Build the image before the first `make test-docker` run; the target uses the prebuilt image and does not build it. Rebuild after changing the Dockerfile, pytest configuration, tests, framework source or dependencies copied into the image. The target reuses `make up`, `make setup` and `make down`, and discovers the active Compose network from the running stack. It passes `.env` credentials to the runner and sets `API_ENV=docker`, `DB_HOST=db` and `DB_PORT=3306`.
+Build the image before the first `make test-docker` run; the target uses the prebuilt image and does not build it. Rebuild after changing the Dockerfile, pytest configuration, tests, framework source or dependencies copied into the image. The target reuses `make up`, `make setup` and `make down`, and discovers the active Compose network and application database credentials from the running stack. It passes the other `.env` settings and credentials to the runner, then sets `API_ENV=docker`, `DB_HOST=db` and `DB_PORT=3306`. Values from `.env` override same-named Dockerfile defaults unless the target explicitly overrides them.
 
 The runner uses `docker run --rm`; Makefile bind mounts keep Allure results and structured logs in `reports/`, and Playwright artifacts in `test-results/`. Cleanup runs after `make up`, `make setup` or pytest fails and after successful execution, while preserving the earlier failure status if cleanup also fails.
 
