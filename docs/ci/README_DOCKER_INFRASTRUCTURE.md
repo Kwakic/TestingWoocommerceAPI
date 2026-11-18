@@ -685,9 +685,24 @@ docker build -t ecommerceapi-test-runner .
 make test-docker
 ```
 
-Build the image before the first `make test-docker` run; the target uses the prebuilt image and does not build it. Rebuild after changing the Dockerfile, pytest configuration, tests, framework source or dependencies copied into the image. The target reuses `make up`, `make setup` and `make down`, and discovers the active Compose network from the running stack. It passes `.env` credentials to the runner and sets `API_ENV=docker`, `DB_HOST=db` and `DB_PORT=3306`.
+Build the image before the first `make test-docker` run; the target uses the prebuilt image and does not build it. Rebuild after changing the Dockerfile, pytest configuration, tests, framework source or dependencies copied into the image. The target reuses `make up`, `make setup` and `make down`, and discovers the active Compose network and application database credentials from the running stack. It passes the other `.env` settings and credentials to the runner, then sets `API_ENV=docker`, `DB_HOST=db` and `DB_PORT=3306`. Values from `.env` override same-named Dockerfile defaults unless the target explicitly overrides them.
 
 The runner uses `docker run --rm`; Makefile bind mounts keep Allure results and structured logs in `reports/`, and Playwright artifacts in `test-results/`. Cleanup runs after `make up`, `make setup` or pytest fails and after successful execution, while preserving the earlier failure status if cleanup also fails.
+
+The test-runner image includes the Playwright browser binaries and Linux
+dependencies for **Chromium, Firefox and WebKit**. They are installed at image
+build time using the Playwright CLI from the project's installed development
+dependencies, so their revisions match the Python Playwright package in that
+image. `make test-docker` runs browsers headlessly and does not require a
+Playwright browser installation on the host.
+
+For UI test diagnostics, `make test-docker` writes artifacts to
+`test-results/`: traces and videos are retained for failed tests, and
+screenshots are captured on failure. The directory is bind-mounted from the
+host, so these files remain available after the runner container exits. Allure
+results and structured logs remain under `reports/` through the other bind
+mount. Rebuild the image after changing the Dockerfile or Playwright
+dependencies.
 
 `make run` remains the normal host-based development workflow. Use `make test-docker` when you want pytest to run inside the packaged image. See [Default Local Execution — Host-Based](#81--default-local-execution--host-based) for the standard workflow.
 

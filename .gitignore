@@ -76,6 +76,7 @@ Thumbs.db
 # ==============================
 reports/
 EcommerceAPI/reports/
+test-results/
 test-output/
 
 # ==============================

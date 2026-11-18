@@ -97,7 +97,7 @@ venv:
 		if [ -n "$(PYBIN)" ]; then \
 			if command -v "$(PYBIN)" >/dev/null 2>&1 || [ -x "$(PYBIN)" ]; then \
 				VER=$$("$(PYBIN)" -c "import sys; print('%d.%d' % sys.version_info[:2])" 2>/dev/null); \
-				MAJ=$${VER%%.*}; MIN=$${VER##*.}; \
+				MAJ=$$(printf '%s\n' "$$VER" | cut -d. -f1); MIN=$$(printf '%s\n' "$$VER" | cut -d. -f2); \
 				if [ "$$MAJ" = "$(PYTHON_MIN_MAJOR)" ] && [ -n "$$MIN" ] && [ "$$MIN" -ge $(PYTHON_MIN_MINOR) ] 2>/dev/null; then \
 					echo "[OK] Found Python $$VER via PYBIN='$(PYBIN)'"; \
 					FOUND="$(PYBIN)"; \
@@ -112,7 +112,7 @@ venv:
 				if command -v "$$CAND" >/dev/null 2>&1; then \
 					VER=$$("$$CAND" -c "import sys; print('%d.%d' % sys.version_info[:2])" 2>/dev/null); \
 					if [ -n "$$VER" ]; then \
-						MAJ=$${VER%%.*}; MIN=$${VER##*.}; \
+						MAJ=$$(printf '%s\n' "$$VER" | cut -d. -f1); MIN=$$(printf '%s\n' "$$VER" | cut -d. -f2); \
 						if [ "$$MAJ" = "$(PYTHON_MIN_MAJOR)" ] && [ "$$MIN" -ge $(PYTHON_MIN_MINOR) ]; then \
 							echo "[OK] Found Python $$VER via '$$CAND'"; \
 							FOUND="$$CAND"; \
@@ -143,7 +143,7 @@ venv:
 		$$FOUND -m venv $(VENV_DIR); \
 	fi
 	@VER=$$("$(VENV_PYTHON)" -c "import sys; print('%d.%d' % sys.version_info[:2])" 2>/dev/null); \
-	MAJ=$${VER%%.*}; MIN=$${VER##*.}; \
+	MAJ=$$(printf '%s\n' "$$VER" | cut -d. -f1); MIN=$$(printf '%s\n' "$$VER" | cut -d. -f2); \
 	if [ "$$MAJ" != "$(PYTHON_MIN_MAJOR)" ] || [ "$$MIN" -lt $(PYTHON_MIN_MINOR) ]; then \
 		echo "[ERROR] $(VENV_PYTHON) is Python $$VER, but $(PYTHON_MIN_MAJOR).$(PYTHON_MIN_MINOR)+ is required."; \
 		echo "        Delete $(VENV_DIR) and re-run so it can be recreated correctly."; \
@@ -257,9 +257,16 @@ test-docker:
 			echo "[ERROR] Could not find the Compose db container to resolve its network."; \
 			TEST_EXIT=1; \
 		else \
+			DB_ENVIRONMENT=$$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$$DB_CONTAINER"); \
+			DB_USER=$$(printf '%s\n' "$$DB_ENVIRONMENT" | sed -n 's/^MYSQL_USER=//p'); \
+			DB_PASSWORD=$$(printf '%s\n' "$$DB_ENVIRONMENT" | sed -n 's/^MYSQL_PASSWORD=//p'); \
+			DB_DATABASE=$$(printf '%s\n' "$$DB_ENVIRONMENT" | sed -n 's/^MYSQL_DATABASE=//p'); \
 			NETWORK=$$(docker inspect -f '{{range $$name, $$network := .NetworkSettings.Networks}}{{printf "%s " $$name}}{{end}}' "$$DB_CONTAINER"); \
-			NETWORK=$${NETWORK%% *}; \
-			if [ -z "$$NETWORK" ]; then \
+			NETWORK=$$(printf '%s\n' "$$NETWORK" | cut -d' ' -f1); \
+			if [ -z "$$DB_USER" ] || [ -z "$$DB_PASSWORD" ] || [ -z "$$DB_DATABASE" ]; then \
+				echo "[ERROR] Could not resolve application DB credentials from the Compose db container."; \
+				TEST_EXIT=1; \
+			elif [ -z "$$NETWORK" ]; then \
 				echo "[ERROR] Could not resolve the Compose network from the db container."; \
 				TEST_EXIT=1; \
 			else \
@@ -267,13 +274,20 @@ test-docker:
 				MSYS_NO_PATHCONV=1 docker run --rm \
 					--network "$$NETWORK" \
 					--env-file .env \
+					-e "DB_USER=$$DB_USER" \
+					-e "DB_PASSWORD=$$DB_PASSWORD" \
+					-e "DB_DATABASE=$$DB_DATABASE" \
 					-e API_ENV=docker \
 					-e DB_HOST=db \
 					-e DB_PORT=3306 \
 					-e LOG_DIR=/app/reports/logs \
 					--mount "type=bind,source=$$HOST_ROOT/reports,target=/app/reports" \
 					--mount "type=bind,source=$$HOST_ROOT/test-results,target=/app/test-results" \
-					ecommerceapi-test-runner pytest --clean-alluredir -v; \
+					ecommerceapi-test-runner pytest --clean-alluredir \
+						--tracing retain-on-failure \
+						--screenshot only-on-failure \
+						--video retain-on-failure \
+						--output test-results -v; \
 				TEST_EXIT=$$?; \
 			fi; \
 		fi; \
