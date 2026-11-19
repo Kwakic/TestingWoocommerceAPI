@@ -50,7 +50,8 @@ Top-level (trimmed):
 ├── Makefile                   # orchestration
 ├── docker-compose.wp.yml
 ├── .env.example
-├── .env                       # local only
+├── .env                       # ignored Docker host profile
+├── .env.wamp                  # ignored existing-WAMP profile
 ├── pyproject.toml             # repo-level config
 ```
 
@@ -543,11 +544,16 @@ The framework intentionally separates **environment selection** from
 
 ### Local development
 
-- `.env` is used for local convenience only.
+- `.env` supplies Docker host-based settings (`API_ENV=test`).
+- `.env.wamp` supplies the existing WAMP settings (`API_ENV=local`).
 - Never commit secrets to the repository.
-- During `make run`, WooCommerce automatically generates a fresh pair of
+- During `make run`, Docker WooCommerce generates a fresh pair of
   REST API credentials (`WC_KEY` / `WC_SECRET`), which are merged into
-  the local `.env`.
+  `.env` only; `.env.wamp` is untouched.
+
+WAMP is external and is not started or provisioned by Docker. Run only the
+REST API suites directly with `API_ENV=local`; GraphQL and Playwright UI tests
+currently require Docker/CI provisioning.
 
 ### Continuous Integration
 
@@ -573,11 +579,12 @@ APIClient
 
 This means:
 
-- `.env` stores authentication credentials only.
+- `.env` and `.env.wamp` each store credentials and direct database settings
+  for their own profile.
 - `API_ENV` selects the active environment.
 - Entity configuration files own endpoint mappings.
-- The same configuration model is used for local development, Docker,
-  and GitHub Actions.
+- REST endpoints, GraphQL endpoints, and direct DB credentials are loaded
+  from the selected profile. GitHub Actions supplies its own values.
 
 ### GraphQL configuration
 
@@ -597,7 +604,7 @@ GraphQLClient
 
 GraphQL authentication is separate from the REST authentication pipeline.
 
-Local authenticated GraphQL mutations use WordPress Application Passwords:
+Docker/CI authenticated GraphQL mutations use WordPress Application Passwords:
 
 ```text
 WP_ADMIN_USER

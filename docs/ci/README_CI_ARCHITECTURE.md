@@ -324,13 +324,23 @@ The framework supports multiple execution environments. The selected environment
 
 | Execution Context | `API_ENV` | Description |
 |-------------------|-----------|-------------|
-| Local development (Docker Desktop) | `test` | Tests run on the host, WordPress runs in Docker (`localhost:8888`) |
-| Local development (no Docker) | `local` | Tests and WordPress both run locally |
-| Tests running inside Docker | `docker` | Uses the Docker network (`wordpress`) |
-| GitHub Actions | `ci` | GitHub runner communicates with Docker services (`localhost:8080`) |
+| Existing WAMP site | `local` | Host pytest runs REST tests against the manually provisioned site at `localhost:8888/kwakiweb`; no Docker orchestration |
+| Docker host-based | `test` | Host pytest targets Compose WordPress at `localhost:8080`; `.env` supplies Docker credentials and database settings |
+| Docker containerized | `docker` | The custom test-runner container uses Compose service DNS (`wordpress`, `db`) |
+| GitHub Actions | `ci` | Hosted-runner pytest targets the Compose WordPress service through `localhost:8080` |
 | Shared development server | `dev` | Shared development environment |
 | Staging | `staging` | Pre-production environment |
 | Production | `prod` | Production environment |
+
+Docker Compose provides exactly three services: `wordpress` (WordPress with
+the WooCommerce plugin), `db` (MySQL), and `wpcli` (WP-CLI). WooCommerce is
+not a separate container. The Docker profiles use this stack; WAMP is an
+existing external WordPress/WooCommerce installation.
+
+`API_ENV=local` loads the ignored `.env.wamp` file only. The other local Docker
+profiles load `.env`; GitHub Actions supplies its credentials and database
+settings through the workflow environment. WAMP currently supports REST API
+tests only; GraphQL and UI suites use the provisioned Docker/CI environments.
 
 All GitHub Actions workflows obtain their environment
 configuration exclusively through the reusable
@@ -351,7 +361,8 @@ The framework now resolves the endpoint dynamically from
 
 As a result:
 
-- `.env` stores credentials only.
+- `.env` stores Docker host-based credentials and database settings.
+- `.env.wamp` stores the separate WAMP credentials and database settings.
 - Entity configuration owns endpoint mappings.
 - Changing environments requires only changing `API_ENV`.
 
@@ -780,10 +791,12 @@ disappear without requiring workflow changes.
 
 ## 2.1 Unit Tests + Preflight Checks ⚡
 
-The `preflight.yml` workflow runs shared unit tests before framework preflight.
-The `preflight` job depends on the `unit` job, so a unit failure stops this
-fast-check workflow before preflight begins. GitLab's `shared_preflight` job
-runs the same two commands in order before its deploy and entity-test stages.
+The standalone `preflight.yml` workflow runs shared unit tests before framework
+preflight; its `preflight` job depends on the `unit` job. In the central
+`pr-validation.yml` pull-request workflow, Unit and Preflight run as independent
+jobs, and both must pass for the PR Quality Gate. GitHub Actions is the
+supported CI platform for this repository; the remaining GitLab configuration
+and examples are legacy and are not part of the active CI process.
 
 ### Unit tests
 

@@ -42,8 +42,6 @@ from pathlib import Path
 from typing import Optional
 
 import pytest
-from dotenv import load_dotenv
-
 from EcommerceAPI.src.configs.runtime_config import get_config
 
 from EcommerceAPI.src.utils import log_context
@@ -61,7 +59,7 @@ from EcommerceAPI.src.utils.custom_logger import (
     CustomFormatter,
 )
 
-from EcommerceAPI.src.utils.env_utils import env_bool
+from EcommerceAPI.src.utils.env_utils import env_bool, load_profile_dotenv
 from EcommerceAPI.src.utils.entity_discovery import extract_entity_from_nodeid
 
 # Use the single-session id from the framework config (single source of truth)
@@ -158,26 +156,6 @@ def _record_factory(*args, **kwargs):
     return record
 
 
-# --------------------------------------------------------------------------------------
-# Locate the project's .env file (walking upward from pytest root)
-# --------------------------------------------------------------------------------------
-def _locate_dotenv(start: Path) -> Optional[Path]:
-    """
-    Locate the nearest .env file.
-
-    Starting from the pytest root directory, the framework walks
-    up the directory tree until it finds a .env file.
-
-    This allows pytest to be executed from different folders
-    without changing configuration behaviour.
-    """
-    for p in [start] + list(start.parents):
-        candidate = p / ".env"
-        if candidate.is_file():
-            return candidate
-    return None
-
-
 # ======================================================================================
 # PYTEST CLI OPTIONS REGISTRATION
 # ======================================================================================
@@ -259,23 +237,20 @@ def pytest_configure(config):
     """
     global RUN_ID, PROCESS_ID, IS_XDIST_WORKER, STRUCTURED_LOGS_ENABLED
 
-    # Resolve rootdir safely (fall back to cwd in odd contexts)
+    # Resolve pytest's project root for report/log output paths.
     try:
         rootdir = Path(config.rootpath)
     except AttributeError:
         rootdir = Path.cwd()
 
-    # 1) Load .env by searching upward from pytest root — do not override existing env vars by default.
-    env_path = _locate_dotenv(rootdir) or (rootdir / ".env")
-    if env_path and env_path.is_file():
-        try:
-            load_dotenv(dotenv_path=str(env_path), override=False)
-            log.debug("Loaded .env from: %s", env_path)
-        except Exception as load_err:
-            # Narrow failure: if dotenv fails unexpectedly, log debug but continue.
-            log.debug(
-                "Failed loading .env from %s: %s", env_path, load_err, exc_info=True
-            )
+    # runtime_config loads the selected profile file before pytest starts.
+    # Reuse that same selection here; never load .env after selecting WAMP.
+    try:
+        env_path = load_profile_dotenv()
+        if env_path:
+            log.debug("Loaded profile environment from: %s", env_path)
+    except Exception as load_err:
+        log.debug("Failed loading profile environment: %s", load_err, exc_info=True)
 
     workerinput = getattr(config, "workerinput", None) or {}
     worker_env_id = os.getenv("PYTEST_XDIST_WORKER")

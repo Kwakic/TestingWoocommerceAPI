@@ -295,7 +295,7 @@ test-docker:
 	exit "$$TEST_EXIT"
 
 # --------------------------------------------------
-# Full local developer workflow.
+# Full local Docker host-based developer workflow.
 #
 # This is the primary entry point for contributors.
 # It prepares a complete local development environment:
@@ -304,20 +304,43 @@ test-docker:
 #   • starts the Docker infrastructure
 #   • bootstraps WordPress + WooCommerce
 #   • installs the Python framework
-#   • runs the test suite
+#   • runs pytest on the host against the Docker Compose services (API_ENV=test)
 #
-# Equivalent to:
+# Workflow steps:
 #
 #   make up
 #   make setup
 #   make install
-#   make test
+#   pytest with API_ENV=test and the running Compose database credentials
 #
 # Most contributors only need:
 #
 #   make run
 # --------------------------------------------------
-run: ensure-env up setup install test
+run: ensure-env up setup install
+	@set -e; \
+		DB_CONTAINER="$$(docker compose -f docker-compose.wp.yml ps -q db)"; \
+		if [ -z "$$DB_CONTAINER" ]; then \
+			echo "[ERROR] Could not find the Compose db container for host-based pytest."; \
+			exit 1; \
+		fi; \
+		DB_ENVIRONMENT="$$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$$DB_CONTAINER")"; \
+		RUN_DB_USER="$$(printf '%s\n' "$$DB_ENVIRONMENT" | sed -n 's/^MYSQL_USER=//p')"; \
+		RUN_DB_PASSWORD="$$(printf '%s\n' "$$DB_ENVIRONMENT" | sed -n 's/^MYSQL_PASSWORD=//p')"; \
+		RUN_DB_DATABASE="$$(printf '%s\n' "$$DB_ENVIRONMENT" | sed -n 's/^MYSQL_DATABASE=//p')"; \
+		if [ -z "$$RUN_DB_USER" ] || [ -z "$$RUN_DB_PASSWORD" ] || [ -z "$$RUN_DB_DATABASE" ]; then \
+			echo "[ERROR] Could not read application DB credentials from the Compose db container."; \
+			exit 1; \
+		fi; \
+		echo "[TEST] Running host-based pytest against Docker Compose (API_ENV=test)..."; \
+		API_ENV=test \
+		DB_USER="$$RUN_DB_USER" \
+		DB_PASSWORD="$$RUN_DB_PASSWORD" \
+		DB_HOST=127.0.0.1 \
+		DB_PORT=3306 \
+		DB_DATABASE="$$RUN_DB_DATABASE" \
+		DB_TABLE_PREFIX=wp_ \
+		$(VENV_PYTHON) -m pytest -v
 
 # --------------------------------------------------
 # Stop infrastructure and remove everything Docker manages

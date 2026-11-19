@@ -495,7 +495,9 @@ accessing a database, or making network requests. Run them with:
 pytest tests/shared/unit_tests -m unit -v
 ```
 
-The CI fast-check workflow runs Unit first and Preflight second.
+The standalone Preflight workflow runs Unit before Preflight. In the central
+pull-request workflow, Unit and Preflight run as independent jobs and both are
+required by the PR Quality Gate.
 
 ## Preflight tests
 

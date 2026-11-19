@@ -25,7 +25,11 @@ from pathlib import Path
 from typing import Optional
 import os
 
-from EcommerceAPI.src.utils.env_utils import env_bool
+from EcommerceAPI.src.utils.env_utils import env_bool, load_profile_dotenv
+
+# Load only the file belonging to API_ENV. In particular, API_ENV=local
+# selects .env.wamp and never loads Docker credentials from .env.
+load_profile_dotenv()
 
 # ============================================================================
 # Session identifier (single source of truth)

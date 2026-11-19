@@ -130,7 +130,7 @@ reusable-test-runner.yml
      ├── Allure raw results
      ├── JUnit XML
      └── structured logs
-     └── failure-only Playwright traces (opt-in Actions artifact)
+     └── failure-only Playwright traces (GitHub Actions artifact)
      │
      ▼
 reusable-allure-report.yml
@@ -214,16 +214,21 @@ requests, trusted pushes to `main`, and manual workflow runs. This keeps the
 customer credentials unavailable to Dependabot while still testing merged
 changes on `main`.
 
-Failed UI tests still produce traces on the runner, but CI does not upload the
-trace ZIPs by default because they can contain page and network data. Set
-`PLAYWRIGHT_TRACE_ARTIFACT_ENABLED=true` in
-`.github/actions/configure-ci-env/action.yml` to upload browser-specific
-`ui-<browser>-playwright-traces` artifacts, which are retained for seven days.
-Uploaded artifacts may be public in a public repository. When trace upload is
-disabled, the Allure result explains how to reproduce the trace locally. This
-setting does not disable the separate Allure results, JUnit, or structured-log
-artifacts. The local value is kept in `.env` and `.env.example` for
-configuration consistency.
+Failed UI tests produce traces on the runner, and the CI configuration enables
+uploading browser-specific `ui-<browser>-playwright-traces` artifacts for seven
+days. The upload runs only when pytest fails and at least one trace ZIP exists;
+successful UI runs do not publish trace artifacts. The diagnostic step logs
+whether `reports/playwright/` exists, how many ZIPs were found, their paths,
+and why upload is skipped when applicable. If the action flag is set to
+`false`, the Allure result explains how to reproduce the trace locally. Trace
+uploads do not replace or disable the separate Allure results, JUnit, or
+structured-log artifacts. The local value remains in `.env` and `.env.example`
+for configuration consistency.
+
+Trace files can contain page, screenshot, DOM, and network data. In a public
+repository, artifact access may be public; use test data safe for the
+repository's audience or set `PLAYWRIGHT_TRACE_ARTIFACT_ENABLED=false` in the
+CI action to disable uploads.
 
 ---
 
@@ -250,10 +255,10 @@ information is not exposed through the public portal.
 ## 📦 CI artifacts
 
 Raw Allure results, JUnit files and structured logs are retained for 14 days.
-Generated HTML report artifacts are retained for 30 days. Playwright trace
-artifacts are disabled by default; if enabled, they are retained for seven
-days. The GitHub Pages portal keeps the published reports and their trend
-history separately.
+Generated HTML report artifacts are retained for 30 days. Failed UI trace
+artifacts are retained for seven days when pytest fails and traces exist. The
+GitHub Pages portal keeps the published reports and their trend history
+separately.
 
 API entity jobs use predictable artifacts such as:
 
@@ -269,17 +274,17 @@ UI browser jobs use:
 ui-chromium-allure-results
 ui-chromium-structured-logs
 ui-chromium-junit-results
-ui-chromium-playwright-traces  (opt-in, failed tests only; 7 days)
+ui-chromium-playwright-traces  (failed UI runs with traces; 7 days)
 
 ui-firefox-allure-results
 ui-firefox-structured-logs
 ui-firefox-junit-results
-ui-firefox-playwright-traces  (opt-in, failed tests only; 7 days)
+ui-firefox-playwright-traces  (failed UI runs with traces; 7 days)
 
 ui-webkit-allure-results
 ui-webkit-structured-logs
 ui-webkit-junit-results
-ui-webkit-playwright-traces  (opt-in, failed tests only; 7 days)
+ui-webkit-playwright-traces  (failed UI runs with traces; 7 days)
 ```
 
 The browser-specific UI Allure results are merged before HTML generation.

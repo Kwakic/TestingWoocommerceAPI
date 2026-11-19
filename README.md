@@ -187,10 +187,11 @@ The UI report combines browser-specific results from the Chromium, Firefox, and 
 
 When Playwright tracing is enabled, local Allure results attach a failed test's
 trace ZIP to that test. CI keeps trace contents out of the published QA Portal
-and uploads failed-test traces as seven-day GitHub Actions artifacts only when
-`PLAYWRIGHT_TRACE_ARTIFACT_ENABLED=true`. CI defaults to off in
-`.github/actions/configure-ci-env/action.yml`; change that value to enable it.
-In a public repository, enabled trace artifacts are publicly accessible.
+and uploads traces for failed UI test runs as browser-specific, seven-day
+GitHub Actions artifacts. The shared CI action enables these uploads; passing
+UI runs do not publish trace artifacts. In a public repository, artifact
+access follows the repository's visibility and can expose captured page and
+network data, so keep test data safe to share.
 
 The portal is **metadata-driven**: when additional entities publish supported operational suites such as Smoke, Integration, Regression, or Performance, the corresponding reports can appear without requiring manual HTML or README changes.
 
@@ -343,6 +344,48 @@ The framework resolves the appropriate API endpoint from the selected environmen
 
 📚 [Environment & Config Guide](./docs/framework/README_ENVIRONMENT_CONFIG_GUIDE.md) · [Authentication Guide](./docs/framework/README_AUTHENTICATION.md)
 
+### Four test execution scenarios
+
+| Scenario | Pytest runs | WordPress / WooCommerce and MySQL | API and DB connection | Profile file and command |
+|---|---|---|---|---|
+| WAMP, existing local site | Host `.venv` / Python | Existing WAMP installation outside Docker | REST `localhost:8888/kwakiweb`; DB settings from `.env.wamp` (current WAMP MySQL port: `8889`) | `.env.wamp`; `API_ENV=local pytest -m orders -n auto` (REST tests only) |
+| Docker, host-based | Host `.venv` / Python | Compose `wordpress` (WordPress + WooCommerce plugin), `db`, and `wpcli` | REST/GraphQL `localhost:8080`; MySQL `127.0.0.1:3306` | `.env`; `make run` for setup, then `make test` or a focused pytest command |
+| Docker, containerized | Custom test-runner container | Same three Compose services | REST/GraphQL `wordpress`; MySQL `db:3306` | `.env` plus runner overrides; `make test-docker` (full suite) |
+| GitHub Actions CI | GitHub-hosted runner | Same three Compose services | REST/GraphQL `localhost:8080`; MySQL `127.0.0.1:3306` | GitHub Actions supplies its own environment; PR/push or a manual workflow run |
+
+`API_ENV` selects the endpoint and credentials profile. A pytest path or
+`-m` expression selects which tests run, and `-n auto` runs them in parallel.
+These are separate choices: for example, `API_ENV=local pytest -m orders -n auto`
+selects the Orders tests and points them at WAMP.
+
+Docker Compose has exactly three services: `wordpress`, `db`, and `wpcli`.
+WooCommerce is a plugin inside `wordpress`, not its own container. WAMP is an
+existing external installation and requires no Docker startup, provisioning,
+or cleanup. Copy `.env.wamp.example` to the ignored `.env.wamp` and fill in its
+REST API and MySQL credentials. With the project virtual environment active,
+run a WAMP REST selection from Bash or Git Bash like this:
+
+```bash
+API_ENV=local pytest -m orders -n auto
+```
+
+In PowerShell, run the equivalent command with the project interpreter:
+
+```powershell
+$env:API_ENV = "local"
+.\.venv\Scripts\python.exe -m pytest -m orders -n auto
+Remove-Item Env:API_ENV
+```
+
+`-m orders` selects every collected test item carrying the `orders` marker.
+Use a test path as well when you want to limit collection to a specific folder,
+for example `tests/orders/api`. WAMP currently supports REST tests only;
+GraphQL and Playwright UI tests require the provisioned Docker/CI environment.
+
+`make run` always selects the Docker host-based profile and supplies the
+database credentials from the running Compose `db` service. `make test` runs
+the selected profile without starting or provisioning infrastructure.
+
 ---
 
 ## 🧪 Manual Test Execution
@@ -350,7 +393,26 @@ The framework resolves the appropriate API endpoint from the selected environmen
 For normal development:
 
 ```bash
+# First time (and whenever you need to bootstrap/reseed the local stack):
+make run
+
+# Full suite after the Docker environment is already running:
 make test
+
+# Focus on Orders smoke tests against the local Docker environment:
+API_ENV=test pytest -m "orders and smoke" -n auto
+```
+
+The direct pytest examples assume the project's development environment is
+active. On PowerShell, set the environment variable and invoke the project
+interpreter. Clear the variable afterwards if you will switch profiles in the
+same terminal. `make test` uses the profile in `.env` and does not start Docker
+services.
+
+```powershell
+$env:API_ENV = "test"
+.\.venv\Scripts\python.exe -m pytest -m "orders and smoke" -n auto
+Remove-Item Env:API_ENV
 ```
 
 Run the isolated shared unit tests first:
@@ -367,6 +429,17 @@ For a CI-style, Allure-ready run:
 ```bash
 make test-ci
 ```
+
+`make test-ci` is a local full-suite run with clean Allure results; it does not
+start a GitHub Actions workflow or provision the application. The active CI
+system is GitHub Actions: pull requests and pushes trigger the configured
+workflows, and workflows that support manual execution can be started from
+**GitHub → Actions → select workflow → Run workflow**. CI sets `API_ENV=ci`,
+creates its own WooCommerce environment and credentials, and applies the
+marker selection configured for each job. Do not use `API_ENV=ci` for a local
+run; it expects the CI service and credentials. See the
+[CI/CD Architecture Guide](./docs/ci/README_CI_ARCHITECTURE.md) for workflow
+selections and triggers.
 
 To run the suite inside the Docker test-runner image, build the image and use
 the optional containerized target:

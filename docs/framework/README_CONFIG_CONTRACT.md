@@ -137,12 +137,11 @@ All flags are:
 
 | Variable | Type | Default | Meaning |
 |----------|------|---------|---------|
-| `PLAYWRIGHT_TRACE_ARTIFACT_ENABLED` | Boolean | `false` | Upload failed UI trace ZIPs as a CI artifact and show the artifact link in Allure. |
+| `PLAYWRIGHT_TRACE_ARTIFACT_ENABLED` | Boolean | `false` runtime fallback | Upload failed UI trace ZIPs as a CI artifact and show the artifact link in Allure. The CI action explicitly sets it to `true` for hosted UI runs. |
 
 Playwright trace recording is controlled separately by pytest's `--tracing`
-option. The flag above controls CI artifact publishing; CI sets its default in
-`.github/actions/configure-ci-env/action.yml`, and local configuration lives in
-`.env` / `.env.example`.
+option. The flag above controls CI artifact publishing; the hosted CI action
+sets it to `true`, while local configuration lives in `.env` / `.env.example`.
 
 ---
 

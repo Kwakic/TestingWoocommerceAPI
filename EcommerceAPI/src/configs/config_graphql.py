@@ -38,7 +38,9 @@ GRAPHQL_HOSTS = {
     # ------------------------------------------------------------------
     # Legacy local development
     #
-    # Existing WordPress installation outside Docker.
+    # Existing WordPress installation outside Docker. The project currently
+    # supports REST API testing only on WAMP; GraphQL tests require the
+    # provisioned Docker/CI environments.
     # ------------------------------------------------------------------
     "local": "http://localhost:8888/kwakiweb/graphql",
     # ------------------------------------------------------------------

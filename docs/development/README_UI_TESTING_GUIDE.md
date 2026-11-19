@@ -1042,8 +1042,11 @@ This keeps API and shared test executions unchanged.
 When a UI test fails, Playwright retains its trace under:
 
 ```text
-reports/playwright/
+reports/playwright/<worker-id>/<test-id>/trace.zip
 ```
+
+With pytest-xdist, each worker uses its own output directory (for example,
+`gw0` or `gw1`) so one worker cannot clear another worker's trace files.
 
 ## Trace artifact management
 
@@ -1055,10 +1058,10 @@ ui-firefox-playwright-traces
 ui-webkit-playwright-traces
 ```
 
-The upload behavior is controlled by:
+The reusable runner enables trace artifact uploads for UI jobs with:
 
 ```yaml
-PLAYWRIGHT_TRACE_ARTIFACT_ENABLED: false
+PLAYWRIGHT_TRACE_ARTIFACT_ENABLED: true
 ```
 
 The setting is configured in:
@@ -1069,18 +1072,21 @@ The setting is configured in:
 
 | Configuration | Behaviour |
 |---|---|
-| `false` (default) | Trace artifacts are not uploaded |
-| `true` | Failed-test traces are uploaded for seven days |
+| `false` | Trace artifacts are not uploaded |
+| `true` (CI setting) | Traces are uploaded for seven days only when the UI pytest step fails and trace ZIPs exist |
 
-To enable uploads, change the value to `true` in the CI configuration. No GitHub repository setting is required.
+Successful UI runs do not publish trace artifacts. The runner's
+**Diagnose Playwright traces** step reports whether the output directory exists,
+the ZIP count and filenames, and whether upload is skipped and why. A following
+step reports the upload result.
 
 The local `.env` value controls local framework configuration, while the CI action sets the value for hosted runners.
 
-> **Security consideration:** In a public repository, enabled trace artifacts are publicly accessible. Playwright traces can contain page content, browser state, and network data. Keep uploads disabled unless the captured information is safe to publish.
+> **Security consideration:** Traces can include page content, screenshots, DOM snapshots, and network request or response data. GitHub artifact access follows repository visibility and permissions; use test data that is safe for the people who can access the workflow run. Set the CI action value to `false` if uploads must be disabled.
 
 ### Downloading and inspecting CI traces
 
-When trace uploads are enabled:
+For a failed UI run with retained traces:
 
 1. Open the relevant GitHub Actions workflow run.
 2. Navigate to the failed Chromium, Firefox, or WebKit job.
@@ -1189,7 +1195,7 @@ Each browser execution also produces browser-specific diagnostic artifacts:
 ```text
 ui-<browser>-structured-logs
 ui-<browser>-junit-results
-ui-<browser>-playwright-traces  (opt-in, failed tests only; 7 days)
+ui-<browser>-playwright-traces  (failed UI runs with traces; 7 days)
 ```
 
 Playwright trace ZIPs are uploaded separately from Allure results because they
