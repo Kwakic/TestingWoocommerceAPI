@@ -1,5 +1,23 @@
 # Makefile = orchestrates project execution
 
+# What each Make target actually does?
+#
+# The Makefile has a clear separation of responsibilities:
+#
+# Target:			 Actual responsibility:
+# make ensure-env	 Creates .env from .env.example if missing
+# make venv			 Creates .venv using Python 3.13+ and validates it
+# make up			 Starts Docker Compose infrastructure
+# make setup		 Provisions WordPress/WooCommerce, generates API credentials and seeds products and UI users
+# make install		 Installs the framework, development dependencies, Git hooks and Playwright browsers
+# make test			 Runs the full pytest suite
+# make test-ci		 Runs pytest with clean Allure results
+# make run			 Orchestrates environment preparation and full test execution
+# make down			 Stops containers and removes Docker volumes
+# make clean		 Performs a full Docker and WordPress data reset
+# make test-docker	 Runs tests inside the Docker test-runner image, then cleans up
+
+
 # It controls:
 # - environment bootstrap (.env)
 # - docker
@@ -226,17 +244,35 @@ test-ci: venv
 #
 # Reuse the normal infrastructure/bootstrap targets, discover the Compose
 # network from its running db container, and bind-mount generated artifacts
-# so --rm does not discard them. The EXIT trap always runs `make down` and
-# keeps the original setup/pytest status if cleanup also fails.
+# so --rm does not discard them. WooCommerce signs OAuth requests against its
+# configured home URL, so temporarily switch it to the Compose hostname for
+# this containerized run. The EXIT trap restores the prior URLs, runs
+# `make down`, and keeps the original setup/pytest status if cleanup fails.
 # --------------------------------------------------
 test-docker:
 	@set +e; \
 	TEST_EXIT=0; \
+	SITE_URL_SAVED=0; \
+	ORIGINAL_HOME=; \
+	ORIGINAL_SITEURL=; \
 	cleanup() { \
 		trap - 0; \
+		CLEANUP_EXIT=0; \
+		if [ "$$SITE_URL_SAVED" -eq 1 ]; then \
+			echo "[DOCKER] Restoring WordPress site URLs..."; \
+			MSYS_NO_PATHCONV=1 docker compose -f docker-compose.wp.yml run --rm -T wpcli wp option update home "$$ORIGINAL_HOME" --allow-root >/dev/null; \
+			HOME_RESTORE_EXIT=$$?; \
+			MSYS_NO_PATHCONV=1 docker compose -f docker-compose.wp.yml run --rm -T wpcli wp option update siteurl "$$ORIGINAL_SITEURL" --allow-root >/dev/null; \
+			SITEURL_RESTORE_EXIT=$$?; \
+			if [ "$$HOME_RESTORE_EXIT" -ne 0 ] || [ "$$SITEURL_RESTORE_EXIT" -ne 0 ]; then \
+				echo "[ERROR] Could not restore the original WordPress site URLs."; \
+				CLEANUP_EXIT=1; \
+			fi; \
+		fi; \
 		echo "[DOCKER] Stopping WooCommerce infrastructure..."; \
 		$(MAKE) down; \
-		CLEANUP_EXIT=$$?; \
+		DOWN_EXIT=$$?; \
+		if [ "$$CLEANUP_EXIT" -eq 0 ] && [ "$$DOWN_EXIT" -ne 0 ]; then CLEANUP_EXIT=$$DOWN_EXIT; fi; \
 		if [ "$$TEST_EXIT" -ne 0 ]; then exit "$$TEST_EXIT"; fi; \
 		exit "$$CLEANUP_EXIT"; \
 	}; \
@@ -246,6 +282,24 @@ test-docker:
 	if [ "$$TEST_EXIT" -eq 0 ]; then \
 		$(MAKE) setup; \
 		TEST_EXIT=$$?; \
+	fi; \
+	if [ "$$TEST_EXIT" -eq 0 ]; then \
+		ORIGINAL_HOME=$$(MSYS_NO_PATHCONV=1 docker compose -f docker-compose.wp.yml run --rm -T wpcli wp option get home --allow-root | tr -d '\r'); \
+		HOME_GET_EXIT=$$?; \
+		ORIGINAL_SITEURL=$$(MSYS_NO_PATHCONV=1 docker compose -f docker-compose.wp.yml run --rm -T wpcli wp option get siteurl --allow-root | tr -d '\r'); \
+		SITEURL_GET_EXIT=$$?; \
+		if [ "$$HOME_GET_EXIT" -ne 0 ] || [ "$$SITEURL_GET_EXIT" -ne 0 ] || [ -z "$$ORIGINAL_HOME" ] || [ -z "$$ORIGINAL_SITEURL" ]; then \
+			echo "[ERROR] Could not read the current WordPress site URLs."; \
+			TEST_EXIT=1; \
+		else \
+			SITE_URL_SAVED=1; \
+			MSYS_NO_PATHCONV=1 docker compose -f docker-compose.wp.yml run --rm -T wpcli wp option update home http://wordpress --allow-root >/dev/null; \
+			TEST_EXIT=$$?; \
+			if [ "$$TEST_EXIT" -eq 0 ]; then \
+				MSYS_NO_PATHCONV=1 docker compose -f docker-compose.wp.yml run --rm -T wpcli wp option update siteurl http://wordpress --allow-root >/dev/null; \
+				TEST_EXIT=$$?; \
+			fi; \
+		fi; \
 	fi; \
 	if [ "$$TEST_EXIT" -eq 0 ]; then \
 		mkdir -p reports test-results; \
@@ -274,6 +328,7 @@ test-docker:
 				MSYS_NO_PATHCONV=1 docker run --rm \
 					--network "$$NETWORK" \
 					--env-file .env \
+					-e AUTO_ALLURE_REPORT=false \
 					-e "DB_USER=$$DB_USER" \
 					-e "DB_PASSWORD=$$DB_PASSWORD" \
 					-e "DB_DATABASE=$$DB_DATABASE" \
@@ -308,9 +363,9 @@ test-docker:
 #
 # Workflow steps:
 #
-#   make up
-#   make setup
-#   make install
+#   make up (Starts Docker Compose infrastructure)
+#   make setup (Provisions WordPress/WooCommerce, generates API credentials and seeds products and UI users)
+#   make install (Installs the framework, development dependencies, Git hooks and Playwright browsers)
 #   pytest with API_ENV=test and the running Compose database credentials
 #
 # Most contributors only need:

@@ -42,7 +42,7 @@ The framework supports:
 - **🧪 Enterprise-style test data architecture** with Factory, Builder, Provisioner, Ownership, Seeds, and pytest lifecycle integration
 - **⚡ Parallel-ready execution** with `pytest-xdist`, physical-core worker detection, and test-owned resources
 - **🔁 Segmented CI/CD** through GitHub Actions, with a central pull-request workflow coordinating Unit, Preflight, Smoke, and curated Integration checks
-- **⚙️ One-command setup** (`make run`)
+- **⚙️ Flexible local bootstrap** (`make install`, `make up`, `make setup`) with an optional one-command workflow (`make run`)
 
 Playwright is intentionally integrated into the same pytest architecture rather than maintained as a separate UI automation project.
 
@@ -108,7 +108,7 @@ for workflow dependencies, test selection, reporting, and branch-protection deta
 
 - 🏗️ **Domain-Driven Architecture** — Organizes the framework into independent business entities (Customers, Orders, Products, Coupons), each with its own REST/GraphQL API tests, UI tests where applicable, DAO, validators, models, helpers, and test data.
 
-- 🐳 **Reproducible Test Environment** — Spins up a complete WordPress + WooCommerce stack using Docker, providing a deterministic environment for API and Playwright UI testing through a one-command bootstrap (`make run`).
+- 🐳 **Reproducible Test Environment** — Spins up a complete WordPress + WooCommerce stack using Docker, providing a deterministic environment for API and Playwright UI testing. The environment can be prepared separately with `make install`, `make up`, and `make setup`, or bootstrapped together with `make run`.
 
 - 🌍 **Environment-Aware Configuration** — Uses `API_ENV` together with entity configuration files to resolve endpoints dynamically, completely separating environment selection from authentication.
 
@@ -235,7 +235,7 @@ This will give you:
 ```mermaid
 flowchart TD
 
-    A[User] -->|make run| B[Makefile]
+    A[User] -->|make install / make up / make setup| B[Makefile]
     B --> C[Docker Compose]
 
     C --> D[MySQL Database]
@@ -290,8 +290,8 @@ The diagram shows how the main framework components connect through a single pyt
 | Python 3.13+ | ✅ | Required by the framework |
 | Docker Desktop | ✅ | Runs WordPress, WooCommerce, and MySQL |
 | Git | ✅ | Clone the repository |
-| GNU Make | ✅ | Required by `make run` and other Makefile targets |
-| Playwright browsers | ⚙️ | Installed automatically by the project bootstrap |
+| GNU Make | ✅ | Required by the Makefile targets |
+| Playwright browsers | ⚙️ | Installed by `make install` |
 
 #### 🛠️ Installing GNU Make (Windows does not include `GNU Make` by default.)
 
@@ -306,29 +306,83 @@ The diagram shows how the main framework components connect through a single pyt
 
 ---
 
-## 🖥️ One-Command Setup
-Make sure **Docker Desktop is running**, then:
+## 🖥️ Quick Setup (Without Running Tests)
+
+Make sure **Docker Desktop is running**, then clone the repository:
 
 ```bash
-git clone https://github.com/Kwakic/TestingWoocommerceAPI.git && cd TestingWoocommerceAPI && make run
+git clone https://github.com/Kwakic/TestingWoocommerceAPI.git
+cd TestingWoocommerceAPI
 ```
----
 
-### What `make run` provides
+### Step 1: Prepare the local environment
 
-`make run` bootstraps the local environment, installs the framework and Playwright, starts Docker, provisions WordPress/WooCommerce, generates REST credentials, configures the test environment, seeds deterministic UI data, and runs the test suite.
+```bash
+make install
+```
 
-### 🔁 Re-running `make run`
+This creates or validates the project virtual environment, installs EcommerceAPI in editable mode with its development dependencies, installs the configured pre-commit hooks, and downloads the Playwright browser binaries.
 
-The command is designed to be **idempotent**, reusing valid local state where possible and avoiding duplicate setup work.
+### Step 2: Start and provision the application
 
-> You do not need to activate `.venv` manually for `make run`. The Makefile invokes the project-local environment directly.
+```bash
+make up
+make setup
+```
 
-After bootstrap, normal execution is:
+These commands start the Docker infrastructure and provision WordPress/WooCommerce, generate REST API credentials, configure the local environment, and seed deterministic UI test data.
+
+> **Note:** `pytest-xdist[psutil]` is included in the development dependencies, so parallel test execution is available through `-n auto`.
+
+### Step 3: Select and execute tests
+
+Once installation and provisioning are complete, execute the tests you need:
+
+```bash
+# Full test suite
+pytest -n auto
+
+# Customers entity
+pytest -m customers -n auto
+
+# Products entity
+pytest -m products -n auto
+
+# Orders smoke tests
+pytest -m "orders and smoke" -n auto
+
+# Specific test directory
+pytest tests/orders/api -n auto
+
+# Single test
+pytest tests/orders/api/test_orders.py -v
+```
+
+Use `-m` to select tests by entity or marker, and `-n auto` to distribute execution across available physical CPU cores. Direct `pytest` commands assume that the project's development environment is active. On Windows, you can invoke the project interpreter directly with `.venv/Scripts/python.exe -m pytest`.
+
+### Alternative: One-command execution
+
+If you prefer to prepare the environment and immediately execute the complete test suite, use:
+
+```bash
+make run
+```
+
+`make run` orchestrates the local environment setup, Docker startup, application provisioning, test-data seeding, and full test execution.
+
+You do not need to activate `.venv` manually for Makefile targets; the Makefile invokes the project-local environment directly.
+
+### Re-running tests
+
+Once the environment is installed and provisioned, you do not need to repeat those steps just to execute tests.
+
+Run the full suite with:
 
 ```bash
 make test
 ```
+
+Or use a focused pytest command to run the tests relevant to your development task.
 
 ---
 
@@ -349,7 +403,7 @@ The framework resolves the appropriate API endpoint from the selected environmen
 | Scenario | Pytest runs | WordPress / WooCommerce and MySQL | API and DB connection | Profile file and command |
 |---|---|---|---|---|
 | WAMP, existing local site | Host `.venv` / Python | Existing WAMP installation outside Docker | REST `localhost:8888/kwakiweb`; DB settings from `.env.wamp` (current WAMP MySQL port: `8889`) | `.env.wamp`; `API_ENV=local pytest -m orders -n auto` (REST tests only) |
-| Docker, host-based | Host `.venv` / Python | Compose `wordpress` (WordPress + WooCommerce plugin), `db`, and `wpcli` | REST/GraphQL `localhost:8080`; MySQL `127.0.0.1:3306` | `.env`; `make run` for setup, then `make test` or a focused pytest command |
+| Docker, host-based | Host `.venv` / Python | Compose `wordpress` (WordPress + WooCommerce plugin), `db`, and `wpcli` | REST/GraphQL `localhost:8080`; MySQL `127.0.0.1:3306` | `.env`; `make install`, then `make up` and `make setup` for initial preparation; use `make test` or a focused pytest command afterwards |
 | Docker, containerized | Custom test-runner container | Same three Compose services | REST/GraphQL `wordpress`; MySQL `db:3306` | `.env` plus runner overrides; `make test-docker` (full suite) |
 | GitHub Actions CI | GitHub-hosted runner | Same three Compose services | REST/GraphQL `localhost:8080`; MySQL `127.0.0.1:3306` | GitHub Actions supplies its own environment; PR/push or a manual workflow run |
 
@@ -393,10 +447,12 @@ the selected profile without starting or provisioning infrastructure.
 For normal development:
 
 ```bash
-# First time (and whenever you need to bootstrap/reseed the local stack):
-make run
+# First time (and whenever you need to prepare/reseed the local environment):
+make install
+make up
+make setup
 
-# Full suite after the Docker environment is already running:
+# Full suite after the environment is prepared:
 make test
 
 # Focus on Orders smoke tests against the local Docker environment:
@@ -448,7 +504,7 @@ the optional containerized target:
 # Rebuild the image when the Dockerfile or dependencies change
 docker build -t ecommerceapi-test-runner .
 
-# Execute tests inside Docker
+# Execute Full test suite inside Docker test-runner
 make test-docker
 ```
 

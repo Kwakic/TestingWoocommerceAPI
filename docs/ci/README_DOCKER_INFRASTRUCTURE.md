@@ -610,7 +610,9 @@ host-based workflow.
 If you have stopped the WooCommerce services, start them and provision the application again before running tests:
 
 ```bash
+# starts the Docker infrastructure
 make up
+# provisions WordPress/WooCommerce, configures credentials, installs dependencies and prepares test data.
 make setup
 ```
 
@@ -698,7 +700,7 @@ docker build -t ecommerceapi-test-runner .
 make test-docker
 ```
 
-Build the image before the first `make test-docker` run; the target uses the prebuilt image and does not build it. Rebuild after changing the Dockerfile, pytest configuration, tests, framework source or dependencies copied into the image. The target reuses `make up`, `make setup` and `make down`, and discovers the active Compose network and application database credentials from the running stack. It passes the other `.env` settings and credentials to the runner, then sets `API_ENV=docker`, `DB_HOST=db` and `DB_PORT=3306`. Values from `.env` override same-named Dockerfile defaults unless the target explicitly overrides them.
+Build the image before the first `make test-docker` run; the target uses the prebuilt image and does not build it. Rebuild after changing the Dockerfile, pytest configuration, tests, framework source or dependencies copied into the image. The target reuses `make up`, `make setup` and `make down`, and discovers the active Compose network and application database credentials from the running stack. It passes the other `.env` settings and credentials to the runner, then sets `API_ENV=docker`, `DB_HOST=db` and `DB_PORT=3306`. It disables in-container Allure HTML generation because the runner image does not include the Allure CLI; raw results remain in the mounted `reports/` directory. Values from `.env` override same-named Dockerfile defaults unless the target explicitly overrides them.
 
 The runner uses `docker run --rm`; Makefile bind mounts keep Allure results and structured logs in `reports/`, and Playwright artifacts in `test-results/`. Cleanup runs after `make up`, `make setup` or pytest fails and after successful execution, while preserving the earlier failure status if cleanup also fails.
 

@@ -31,6 +31,25 @@ EXPECTED_GRAPHQL_HOSTS = {
 }
 
 
+@pytest.fixture(autouse=True)
+def restore_profile_environment_after_test():
+    """Keep profile-loader mutations local to each environment test."""
+    profile_prefixes = ("DB_", "WC_", "WP_ADMIN_", "UI_")
+    profile_names = {"API_ENV", "GRAPHQL_URL"}
+    original_environment = {
+        name: value
+        for name, value in os.environ.items()
+        if name.startswith(profile_prefixes) or name in profile_names
+    }
+
+    yield
+
+    for name in tuple(os.environ):
+        if name.startswith(profile_prefixes) or name in profile_names:
+            os.environ.pop(name, None)
+    os.environ.update(original_environment)
+
+
 @pytest.mark.unit
 def test_all_rest_entity_profiles_use_the_expected_endpoints():
     for hosts in (CUSTOMER_HOSTS, PRODUCT_HOSTS, ORDER_HOSTS, COUPON_HOSTS):
