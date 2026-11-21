@@ -28,7 +28,7 @@ Typical topics include:
 ## Local development
 
 ### .env
-- Copy the example and **do not commit** your real secrets:
+- `.env` is the Docker host-based profile (`API_ENV=test`). Copy the example and **do not commit** its real credentials:
   - macOS / Linux / Git Bash:
     ```bash
     cp .env.example .env
@@ -39,7 +39,28 @@ Typical topics include:
     Copy-Item .env.example .env
     # edit .env in your editor
     ```
-- The logging plugin walks upward from the pytest root and uses python-dotenv to load `.env` (with `override=False`), so existing shell env vars are preserved.
+- `API_ENV=local` selects `.env.wamp` instead. Copy `.env.wamp.example` to `.env.wamp` for an existing WAMP installation; the runtime does not load Docker `.env` in that profile.
+- Docker bootstrap writes generated credentials only to `.env`. It never writes to `.env.wamp`.
+- GitHub Actions supplies its own profile values and does not require either local file.
+
+### Run a suite locally or in CI
+
+The shell examples below use Bash or Git Bash and assume the project
+development dependencies are installed and active. `API_ENV` chooses the
+endpoint and credentials profile; the pytest path or marker chooses the test
+selection. Use `-n auto` to enable pytest-xdist parallel execution. For
+PowerShell syntax, see the project [README](../../README.md).
+
+| Mode | How to run |
+|---|---|
+| Docker-backed local development (host pytest) | Run `make run` for first-time setup. When the Compose services are running, use `make test` for the full suite or `API_ENV=test pytest -m "orders and smoke" -n auto` for a focused selection. |
+| Existing WAMP site | Copy `.env.wamp.example` to `.env.wamp`, add the WAMP REST and DB settings, then run `API_ENV=local pytest -m orders -n auto`. WAMP currently supports REST tests only. |
+| Dockerized test runner | Build the image with `docker build -t ecommerceapi-test-runner .`, then run `make test-docker` for the full suite inside the container. |
+| GitHub Actions | Pull requests and pushes trigger configured workflows. For a manual run, open **Actions**, select a workflow that supports manual execution, then choose **Run workflow**. CI supplies `API_ENV=ci` and its own credentials. |
+
+For PowerShell syntax and more detail about each mode, see the project
+[README](../../README.md) and [Docker Infrastructure Guide](README_DOCKER_INFRASTRUCTURE.md).
+`make test-ci` is a local Allure-ready pytest run; it does not start a CI workflow.
 
 ---
 
@@ -324,8 +345,10 @@ development conventions, see:
 
 ### 🦾 Automatic `.env` creation and Playwright setup
 
-For local development, `make run` automatically creates `.env`
-from `.env.example` the first time it is executed.
+For Docker host-based development, `make run` automatically creates `.env`
+from `.env.example` the first time it is executed. It explicitly runs pytest
+with `API_ENV=test` and the database credentials read from the Compose `db`
+service. It never uses `.env.wamp`.
 
 During the bootstrap process, WooCommerce automatically generates
 a fresh pair of REST API credentials for the newly provisioned
@@ -520,9 +543,9 @@ chmod +x scripts/generate_allure.sh
 
 ## CI / Production best practices
 
-- Never commit `.env` with real secrets. Use CI provider secret stores:
-  - GitHub Actions: *Repository → Settings → Secrets → Actions*
-  - GitLab CI: *Project → Settings → CI/CD → Variables* (use protected/masked for sensitive values)
+- Never commit `.env` with real secrets. GitHub Actions is the supported CI
+  platform for this repository; store CI secrets under *Repository → Settings
+  → Secrets and variables → Actions*.
 
 Dependabot-triggered workflows cannot read GitHub Actions secrets; they can
 read only Dependabot secrets. Keep the seeded UI customer credentials in
@@ -586,7 +609,10 @@ Example steps (insert into your job):
 
 This ensures results and HTML are downloadable from the Actions UI even if the job fails.
 
-### GitLab CI — child job artifacts
+### Legacy GitLab CI — child job artifacts
+
+This is a retained example only. The project currently runs CI through GitHub
+Actions; this GitLab snippet is not used by the active workflows.
 When dynamically generating child jobs, ensure each generated job includes `artifacts` so CI stores results/report:
 
 ```yaml

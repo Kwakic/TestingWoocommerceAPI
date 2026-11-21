@@ -20,7 +20,7 @@ Quick guide to set up a developer environment, run tests locally, and contribute
 - `EcommerceAPI/` — shared, installable framework (package-level pyproject)
 - `tests/` — per-service test suites (customers, orders…)
 - `reports/` — Allure results & test artifacts
-- `.github/`, `.gitlab/` — CI pipelines
+- `.github/` — active GitHub Actions workflows; `.gitlab-ci.yml` is legacy and is not part of current CI
 - `pyproject.toml` (repo root) — tooling config (pytest, etc.)
 - `EcommerceAPI/pyproject.toml` — packaging metadata & extras
 
@@ -173,7 +173,7 @@ The bootstrap process automatically:
 - installs WordPress
 - installs WooCommerce
 - generates REST API credentials
-- writes `WC_KEY` and `WC_SECRET` into `.env`
+- writes Docker REST and GraphQL credentials into `.env` only
 - creates (or reuses) a project-local `.venv` and installs the framework + dev dependencies into it
 
 Developers should not manually edit endpoint URLs.
@@ -195,7 +195,7 @@ docs/framework/README_ENVIRONMENT_CONFIG_GUIDE.md
 
 ## 🧭 Local Development Environment
 
-For normal local development, pytest runs on the host against the
+For Docker-based local development, pytest runs on the host against the
 Dockerized WordPress + WooCommerce environment.
 
 The local Docker environment uses:
@@ -212,16 +212,50 @@ With `API_ENV=test:`
 
 This is the recommended setup for local framework development.
 
-Use `make run `to provision the complete local Docker environment. It:
+Use `make run` to provision the complete local Docker environment. It:
 
 * creates .env if needed
 * starts Docker
 * provisions WordPress and WooCommerce
 * generates WooCommerce API credentials
-* updates WC_KEY and WC_SECRET
+* stores Docker credentials in `.env` (never in `.env.wamp`)
 * runs the test suite
 
->Important: .env contains environment-specific credentials anddatabase settings. Do not reuse credentials or database configurationfrom one environment against another.
+`make run` explicitly selects `API_ENV=test` and passes the active Compose
+database credentials to host pytest. Docker Compose has three services:
+`wordpress` (WordPress + WooCommerce plugin), `db` (MySQL), and `wpcli`
+(WP-CLI). WooCommerce is not a separate container.
+
+### Existing WAMP installation — direct REST tests
+
+WAMP is an existing WordPress + WooCommerce + MySQL installation outside
+Docker. It is not started, provisioned, or cleaned up by the framework. Copy
+`.env.wamp.example` to the ignored `.env.wamp`, fill in the existing WAMP REST
+credentials and DB connection, then run pytest directly with
+`API_ENV=local`. The runtime loads only `.env.wamp` for this profile; Docker
+bootstrap updates `.env` and leaves WAMP credentials untouched.
+
+Only REST API suites are currently supported against WAMP. GraphQL and
+Playwright UI tests require the provisioned Docker/CI environment. With the
+project virtual environment active, the requested Orders REST selection is:
+
+```bash
+API_ENV=local pytest -m orders -n auto
+```
+
+In PowerShell, run:
+
+```powershell
+$env:API_ENV = "local"
+.\.venv\Scripts\python.exe -m pytest -m orders -n auto
+Remove-Item Env:API_ENV
+```
+
+The environment variable selects the WAMP profile; `-m orders` selects the
+Orders tests; `-n auto` enables parallel workers. Use a test path, such as
+`tests/orders/api`, to restrict collection to a specific directory.
+
+This direct pytest command does not invoke Docker Compose.
 
 For environment resolution details, see:
 
@@ -382,9 +416,9 @@ docker build -t ecommerceapi-test-runner .
 make test-docker
 ```
 
-`make run` remains the standard host-based setup and development workflow.
-The Docker target saves reports and test artifacts on the host and cleans up
-the WooCommerce infrastructure after execution. See the
+`make run` remains the Docker host-based setup and development workflow. The
+containerized target saves reports and test artifacts on the host and cleans
+up the WooCommerce infrastructure after execution. See the
 [Docker Infrastructure Guide](../ci/README_DOCKER_INFRASTRUCTURE.md) for
 details.
 
@@ -450,12 +484,12 @@ pipeline debugging rather than day-to-day testing.
 ---
 
 ## CI notes (summary)
-- GitHub Actions and GitLab dynamic pipelines should install dev extras:
+- GitHub Actions workflows install the development extras:
 ```bash
 python -m pip install -e './EcommerceAPI[dev]'
 ```
-- GitHub matrix discovery should output a JSON array of quoted service names (e.g. `["customers","orders"]`) to feed the matrix.
-- GitLab discover job dynamically creates `matrix.yml` at runtime; that artifact is referenced by the trigger.
+- Pull-request and push events run the workflows configured for those events. To run a workflow manually, open **GitHub → Actions**, select a workflow that supports manual runs, then choose **Run workflow**.
+- CI sets `API_ENV=ci`, provisions its own WooCommerce services and credentials, and selects tests through the markers configured in each workflow. See the [CI Architecture Guide](../ci/README_CI_ARCHITECTURE.md) for the current workflow matrix and PR gate.
 
 ---
 
@@ -550,7 +584,9 @@ Unit tests
 Verify isolated framework logic without WooCommerce, a database, or network
 access. Run them with `pytest tests/shared/unit_tests -m unit -v`.
 
-The CI fast-check workflow runs Unit first, then Preflight.
+The pull-request Quality Gate requires both Unit and Preflight jobs to pass;
+they run independently in that workflow. The standalone Preflight workflow
+also includes a Unit dependency before its Preflight job.
 
 Preflight tests
 ---------------

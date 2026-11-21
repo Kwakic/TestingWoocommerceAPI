@@ -373,6 +373,7 @@ Therefore, developers normally **do not need to create the GraphQL Application P
 If GraphQL authentication fails because the Application Password stored in `.env` is no longer valid for the current local WordPress installation, regenerate the local credentials with:
 
 ```bash
+# provisions WordPress/WooCommerce, configures credentials, installs dependencies and prepares test data.
 make setup
 ```
 

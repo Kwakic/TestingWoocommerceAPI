@@ -97,12 +97,12 @@ and CI execution.
 
 ## 1. What this infra provides
 
-The stack gives you a disposable, reproducible WooCommerce instance to run API + DB tests against:
+The stack gives you a disposable, reproducible WordPress/WooCommerce instance to run API + DB tests against. Docker Compose defines exactly three services; WooCommerce is a plugin in `wordpress`, not a separate container:
 
 | Service  | Role                                    |
 |----------|------------------------------------------|
 | `db`     | MySQL — backing database for WordPress   |
-| `wordpress` | WordPress + WooCommerce application server, exposed on http://localhost:8080 |
+| `wordpress` | WordPress + WooCommerce plugin, exposed on http://localhost:8080 |
 | `wpcli`  | WP-CLI — runs one-off commands (install WP, install/activate WooCommerce, generate API keys) |
 
 This is orchestrated by `docker-compose.wp.yml` at the repo root, and bootstrapped by `scripts/setup.sh`.
@@ -165,10 +165,11 @@ Dockerfile               → builds a container image for running the test
 scripts/setup.sh         → waits for containers, fixes permissions,
                             installs WordPress + WooCommerce, generates
                             API keys, generates WooCommerce credentials.
-write_env_credentials.sh → merges generated REST and GraphQL credentials into `.env`
+write_env_credentials.sh → merges generated Docker REST and GraphQL credentials into `.env` only
 
 Makefile                 → orchestrates the whole flow behind `make run`
 .env.example             → template for required environment variables
+.env.wamp.example        → template for the existing external WAMP profile
 .dockerignore            → excludes files from the build context when
                             the Dockerfile image is built
 ```
@@ -512,15 +513,16 @@ baseline product images without creating duplicate baseline products.
 
 ---
 
-## 8. 🚦 Test execution models
+## 8. 🚦 Four test execution scenarios
 
-The framework supports three execution models. **For a QA engineer joining the project, the recommended starting point is Host-Based Execution.** You do not need to build or run the test-runner Docker image to develop tests.
+The project supports four execution scenarios. Three use the Docker Compose stack; WAMP is an existing external WordPress/WooCommerce/MySQL installation and does not require Docker orchestration. **For framework development, the recommended starting point is Docker Host-Based Execution.**
 
-1. **Default Local Execution** — Host-Based
-2. **Containerized Test Execution**
-3. **CI Execution** — GitHub Actions
+1. **WAMP REST Execution** — Host pytest against the existing WAMP installation (`API_ENV=local`).
+2. **Docker Host-Based Execution** — Host pytest against Compose (`API_ENV=test`).
+3. **Docker Containerized Execution** — Test-runner container against Compose (`API_ENV=docker`).
+4. **GitHub Actions CI** — Hosted-runner pytest against Compose (`API_ENV=ci`).
 
-All three models use the same repository, framework code and test suite. The difference is **where pytest runs** and how it connects to the WooCommerce application.
+All four scenarios use the same repository and endpoint configuration architecture. The difference is where pytest and WordPress/MySQL run, and which profile file supplies credentials.
 
 ### Quick decision guide
 
@@ -592,12 +594,25 @@ For example, run pytest from the project root:
 pytest
 ```
 
-You can also target a specific test file, directory or marker using the usual pytest options. You do not need to rebuild the test-runner Docker image when you change a test or framework file in this host-based workflow.
+For a full run, use `make test`. To select only Orders smoke tests while
+keeping pytest on the host, run:
+
+```bash
+API_ENV=test pytest -m "orders and smoke" -n auto
+```
+
+You can also target a specific test file, directory or marker using the usual
+pytest options. `API_ENV` selects the Docker host profile, `-m` selects the
+tests, and `-n auto` enables parallel workers. You do not need to rebuild the
+test-runner Docker image when you change a test or framework file in this
+host-based workflow.
 
 If you have stopped the WooCommerce services, start them and provision the application again before running tests:
 
 ```bash
+# starts the Docker infrastructure
 make up
+# provisions WordPress/WooCommerce, configures credentials, installs dependencies and prepares test data.
 make setup
 ```
 
@@ -685,7 +700,7 @@ docker build -t ecommerceapi-test-runner .
 make test-docker
 ```
 
-Build the image before the first `make test-docker` run; the target uses the prebuilt image and does not build it. Rebuild after changing the Dockerfile, pytest configuration, tests, framework source or dependencies copied into the image. The target reuses `make up`, `make setup` and `make down`, and discovers the active Compose network and application database credentials from the running stack. It passes the other `.env` settings and credentials to the runner, then sets `API_ENV=docker`, `DB_HOST=db` and `DB_PORT=3306`. Values from `.env` override same-named Dockerfile defaults unless the target explicitly overrides them.
+Build the image before the first `make test-docker` run; the target uses the prebuilt image and does not build it. Rebuild after changing the Dockerfile, pytest configuration, tests, framework source or dependencies copied into the image. The target reuses `make up`, `make setup` and `make down`, and discovers the active Compose network and application database credentials from the running stack. It passes the other `.env` settings and credentials to the runner, then sets `API_ENV=docker`, `DB_HOST=db` and `DB_PORT=3306`. It disables in-container Allure HTML generation because the runner image does not include the Allure CLI; raw results remain in the mounted `reports/` directory. Values from `.env` override same-named Dockerfile defaults unless the target explicitly overrides them.
 
 The runner uses `docker run --rm`; Makefile bind mounts keep Allure results and structured logs in `reports/`, and Playwright artifacts in `test-results/`. Cleanup runs after `make up`, `make setup` or pytest fails and after successful execution, while preserving the earlier failure status if cleanup also fails.
 
@@ -735,6 +750,15 @@ dependencies.
 CI execution automates test runs in response to events such as pull requests, pushes or scheduled workflows.
 
 In the project's **current GitHub Actions setup**, the GitHub-hosted runner is the test runner. Python and the project dependencies are installed on that runner, while Docker Compose starts the WooCommerce application services. Pytest runs directly on the GitHub-hosted runner — it does not run inside the custom test-runner image.
+
+Pull requests and pushes start the workflows configured for those events. To
+start a workflow manually, open **GitHub → Actions**, choose a workflow that
+supports manual runs, then select **Run workflow**. CI configures `API_ENV=ci`
+and supplies the environment and generated credentials; contributors do not
+need to copy `.env` or `.env.wamp` into GitHub Actions. The workflow selects
+tests with its configured path and marker expression, and the reusable runner
+uses `-n auto`. For the PR gate and per-workflow selections, see the
+[CI/CD Architecture Guide](./README_CI_ARCHITECTURE.md).
 
 #### Architecture
 
@@ -822,16 +846,34 @@ The hosted runner reaches the Dockerized services through their published host p
 
 ---
 
-### 8.4 🔀 Comparing the three execution models
+### 8.4 🔀 Comparing the four execution scenarios
 
-| Aspect | Local Host-Based | Containerized Test Runner | GitHub Actions CI |
-|---|---|---|---|
-| Where pytest runs | Developer's computer | Docker container | GitHub-hosted runner |
-| Where WooCommerce runs | Docker | Docker | Docker |
-| Python environment | Local `.venv` | Built into test-runner image | Set up on CI runner |
-| API connection | Host-published port | Docker service name | Host-published port |
-| Typical trigger | Developer | Developer or automation | GitHub event or schedule |
-| Main purpose | Development and debugging | Reproducible packaged execution | Automated validation |
+| Aspect | WAMP (`local`) | Docker host (`test`) | Docker container (`docker`) | GitHub Actions (`ci`) |
+|---|---|---|---|---|
+| Where pytest runs | Developer's computer | Developer's computer / `.venv` | Custom test-runner container | GitHub-hosted runner |
+| Where WordPress + WooCommerce run | Existing WAMP outside Docker | Compose `wordpress` service | Compose `wordpress` service | Compose `wordpress` service |
+| Where MySQL runs | Existing WAMP installation | Compose `db` service | Compose `db` service | Compose `db` service |
+| API address | `localhost:8888/kwakiweb` | `localhost:8080` | `wordpress` | `localhost:8080` |
+| Direct DB address | `.env.wamp` values (current WAMP port `8889`) | `127.0.0.1:3306` | `db:3306` | `127.0.0.1:3306` |
+| Credentials | `.env.wamp` | `.env`; `make run` injects the live Compose DB credentials | `.env` plus explicit runner DB/profile overrides | GitHub Actions environment and generated secrets |
+| Command | Direct pytest with `API_ENV=local`; REST suites only | `make run` | `make test-docker` | Run a GitHub Actions workflow |
+
+For WAMP, copy `.env.wamp.example` to `.env.wamp` and fill in the existing
+WAMP REST and database credentials. `API_ENV=local` loads only `.env.wamp`;
+Docker setup writes credentials only to `.env`. WAMP is not bootstrapped or
+cleaned by any Docker target. From Bash or Git Bash, run an Orders REST
+selection with:
+
+```bash
+API_ENV=local pytest -m orders -n auto
+```
+
+In PowerShell, set `$env:API_ENV = "local"` and run
+`\.venv\Scripts\python.exe -m pytest -m orders -n auto`, then clear the
+variable with `Remove-Item Env:API_ENV`. Add `tests/orders/api` before the
+marker when you want to restrict collection to that directory. GraphQL and UI
+suites currently require the provisioned Docker/CI setup and are not supported
+against WAMP.
 
 ### 8.5 🎯 Recommended team workflow
 
@@ -839,6 +881,7 @@ For a team sharing and maintaining this framework, use the execution models toge
 
 | Team activity | Recommended execution |
 |---|---|
+| Run REST tests against the existing WAMP site | WAMP REST — direct pytest with `API_ENV=local` |
 | New QA engineer onboarding | Host-Based — `make run` |
 | Developing or updating tests | Host-Based |
 | Changing framework code or dependencies | Host-Based |
@@ -881,7 +924,7 @@ This keeps everyday development quick while ensuring that changes are validated 
 
 ### 8.6 🧩 CI and containerized execution can be combined
 
-The three models are not mutually exclusive. A CI pipeline can also build and execute the test-runner Docker image instead of installing Python directly on the hosted runner.
+The three Docker-based scenarios are not mutually exclusive. A CI pipeline can also build and execute the test-runner Docker image instead of installing Python directly on the hosted runner.
 
 For example, a future containerized CI flow could look like this:
 
@@ -1013,7 +1056,7 @@ The Docker infrastructure follows several design principles.
 - Local development mirrors CI.
 - Bootstrap is idempotent.
 - Credentials are generated automatically.
-- Environment selection belongs to the framework, not `.env`.
+- `API_ENV` selects the endpoint profile; the selected dotenv file supplies local credentials and DB settings.
 - REST and GraphQL share the same Docker infrastructure.
 - Components follow the Single Responsibility Principle.
 - Developers should only need one command (`make run`) to obtain a fully working test environment.

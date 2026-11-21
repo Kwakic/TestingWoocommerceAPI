@@ -35,8 +35,8 @@
 #    the filesystem ("could not be found"), WP-CLI exited non-zero with
 #    "Error: No plugins activated", `set -e` killed this script, and the
 #    caller saw only the downstream stdin error.
-#    Every plugin is now gated on is-installed AND is-active, reinstalled
-#    with --force when either is false, and verified active afterwards.
+#    Plugin state is discovered from WP-CLI's filesystem-backed plugin
+#    list, and the discovered plugin name is used for activation checks.
 #
 # 2. Fixed a missing space before a line-continuation backslash in the
 #    WooCommerce is-installed check, which silently turned the service
@@ -161,67 +161,77 @@ wpcli() {
 # ------------------------------------------------------------------
 # ensure_plugin <slug> <source> [extra wp-cli args...]
 #
-# Guarantees that a plugin is BOTH present on disk AND active, and
-# repairs the state if it isn't.
-#
-# Why this exists
-# ---------------
-# `wp plugin is-installed` verifies that WordPress can discover the
-# plugin from the filesystem (it calls get_plugins(), which scans
-# wp-content/plugins and reads real file headers). `wp plugin is-active`
-# verifies a separate, DB-only fact: whether the plugin's slug is
-# present in WordPress' `active_plugins` option. Those two sources can
-# disagree:
-#
-#   - ./wp-data is a host bind mount, so plugin FILES survive
-#     `docker compose down -v`
-#   - the MySQL volume is Docker-managed, so the DB does NOT
-#   - every wpcli invocation is a brand-new container reading that bind
-#     mount through Docker Desktop's VM file sharing on Windows
-#
-# Delete one half without the other (or interrupt a bootstrap midway)
-# and the DB can still list a plugin as active while its files are gone.
-# The old code only checked is-installed (correctly false) before
-# deciding whether to install, then separately checked is-active (which
-# read the stale DB opinion) before deciding whether to activate — so it
-# tried to activate a plugin whose install step it had just skipped,
-# which failed with "Error: No plugins activated" and — under set -e —
-# took the whole script down before credentials were ever generated.
-#
-# The gate below joins both checks with &&, so the DB-only is-active
-# result is never even consulted unless the filesystem check already
-# passed. When either is false it reinstalls with --force, which always
-# rewrites the files rather than trusting either side's cached opinion.
-# Normal healthy runs still skip the download entirely, so this costs
-# nothing in the common case.
+# WP-CLI can install a remote ZIP under a generated directory name (for
+# example, `wp-graphql-woocommerce-LbsZWqrCCUUfgqsR`) instead of the
+# requested plugin slug. Resolve the actual installed name from `plugin
+# list` and use it for activation and verification. This keeps setup
+# idempotent while still handling stale database entries: a plugin whose
+# files are missing will not appear in `plugin list` and will be
+# reinstalled.
 # ------------------------------------------------------------------
+plugin_find_name() {
+  local slug="$1"
+  local status="${2:-all}"
+  local plugin_names
+
+  if [[ "$status" == "active" ]]; then
+    plugin_names="$(wpcli wp plugin list --status=active --field=name)"
+  else
+    plugin_names="$(wpcli wp plugin list --field=name)"
+  fi
+
+  printf '%s\n' "$plugin_names" | awk -v slug="$slug" '
+    $0 == slug { exact = $0 }
+    index($0, slug "-") == 1 && suffix == "" { suffix = $0 }
+    END {
+      if (exact != "") print exact
+      else if (suffix != "") print suffix
+    }
+  '
+}
+
 ensure_plugin() {
   local slug="$1"
   local source="$2"
+  local installed_name
+  local active_name
   shift 2
 
-  if wpcli wp plugin is-installed "$slug" && wpcli wp plugin is-active "$slug"; then
+  active_name="$(plugin_find_name "$slug" active)"
+  if [[ -n "$active_name" ]]; then
     echo "✅ $slug already installed and active"
     return 0
   fi
 
+  installed_name="$(plugin_find_name "$slug")"
+  if [[ -n "$installed_name" ]]; then
+    echo "🔄 Activating $installed_name..."
+    wpcli wp plugin activate "$installed_name"
+    active_name="$(plugin_find_name "$slug" active)"
+    if [[ -n "$active_name" ]]; then
+      echo "✅ $slug installed and active as $active_name"
+      return 0
+    fi
+
+    echo "❌ $slug could not be activated as $installed_name — aborting."
+    exit 1
+  fi
+
   echo "🚀 (Re)provisioning $slug..."
 
-  # --force rewrites the plugin files even when WordPress believes the
-  # plugin is already installed. This is the line that makes a
-  # DB-says-yes / disk-says-no state repair itself instead of failing.
+  # --force replaces any stale installation at the target path.
   retry 5 wpcli wp plugin install "$source" "$@" --force --activate
 
-  # Verify rather than assume. A half-successful provisioning step must
-  # never be allowed to reach credential generation, because the failure
-  # would then surface somewhere far less obvious.
-  if ! wpcli wp plugin is-active "$slug"; then
+  # Verify the discovered plugin name rather than assuming the ZIP's
+  # extracted directory matches the requested slug.
+  active_name="$(plugin_find_name "$slug" active)"
+  if [[ -z "$active_name" ]]; then
     echo "❌ $slug was installed but is not active — aborting."
     echo "   Inspect with: docker compose -f docker-compose.wp.yml run --rm -T wpcli wp plugin list --allow-root"
     exit 1
   fi
 
-  echo "✅ $slug installed and active"
+  echo "✅ $slug installed and active as $active_name"
 }
 
 # ------------------------------------------------------------------
@@ -335,6 +345,16 @@ else
     --admin_email="$WP_ADMIN_EMAIL" \
     --allow-root
 fi
+
+# Keep background WordPress updates from entering maintenance mode while
+# the long-running test suite is using REST and GraphQL. WordPress returns
+# HTTP 503 with Retry-After: 600 while maintenance mode is active. Pinned
+# dependency updates below remain explicit WP-CLI operations.
+echo "🛡️ Disabling background WordPress updates for the test environment..."
+docker compose -f docker-compose.wp.yml run --rm -T \
+    --user root \
+    -e HTTP_HOST="$WP_HTTP_HOST" \
+    wpcli wp config set AUTOMATIC_UPDATER_DISABLED true --raw --allow-root
 
 # ------------------------------------------------------------------
 # STEP 1.1 — Allow parallel review-submission UI tests

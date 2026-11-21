@@ -43,11 +43,7 @@ import importlib
 from pathlib import Path
 from functools import lru_cache
 from typing import Dict, Any, Optional
-from dotenv import load_dotenv
 from EcommerceAPI.src.configs.runtime_config import get_config
-
-# Always load .env (safe no-op if missing)
-load_dotenv()
 
 
 # =====================================================================
@@ -292,7 +288,7 @@ def get_api_host(service: Optional[str] = None) -> str:
 
 
 # =====================================================================
-#  SECTION 5: DB Configuration (secure from .env only)
+#  SECTION 5: DB Configuration (selected profile environment only)
 # =====================================================================
 
 
@@ -304,7 +300,8 @@ def get_db_config() -> Dict[str, Any]:
 
     Instead, they are supplied through:
 
-    - .env for local development
+    - `.env` for Docker host-based development
+    - `.env.wamp` for the existing WAMP profile
     - CI secrets for automated pipelines
 
     Only values that exist are returned.
@@ -312,8 +309,8 @@ def get_db_config() -> Dict[str, Any]:
     Supported vars:
         DB_HOST
         DB_USER
-        DB_PASS
-        DB_NAME
+        DB_PASSWORD
+        DB_DATABASE
         DB_PORT
         DB_SOCKET
 
@@ -328,8 +325,8 @@ def get_db_config() -> Dict[str, Any]:
     cfg = {
         "host": get("DB_HOST"),
         "user": get("DB_USER"),
-        "password": get("DB_PASS"),
-        "database": get("DB_NAME"),
+        "password": get("DB_PASSWORD"),
+        "database": get("DB_DATABASE"),
         "port": get("DB_PORT"),
         "socket": get("DB_SOCKET"),
     }

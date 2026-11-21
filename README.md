@@ -42,7 +42,7 @@ The framework supports:
 - **🧪 Enterprise-style test data architecture** with Factory, Builder, Provisioner, Ownership, Seeds, and pytest lifecycle integration
 - **⚡ Parallel-ready execution** with `pytest-xdist`, physical-core worker detection, and test-owned resources
 - **🔁 Segmented CI/CD** through GitHub Actions, with a central pull-request workflow coordinating Unit, Preflight, Smoke, and curated Integration checks
-- **⚙️ One-command setup** (`make run`)
+- **⚙️ Flexible local bootstrap** (`make install`, `make up`, `make setup`) with an optional one-command workflow (`make run`)
 
 Playwright is intentionally integrated into the same pytest architecture rather than maintained as a separate UI automation project.
 
@@ -108,7 +108,7 @@ for workflow dependencies, test selection, reporting, and branch-protection deta
 
 - 🏗️ **Domain-Driven Architecture** — Organizes the framework into independent business entities (Customers, Orders, Products, Coupons), each with its own REST/GraphQL API tests, UI tests where applicable, DAO, validators, models, helpers, and test data.
 
-- 🐳 **Reproducible Test Environment** — Spins up a complete WordPress + WooCommerce stack using Docker, providing a deterministic environment for API and Playwright UI testing through a one-command bootstrap (`make run`).
+- 🐳 **Reproducible Test Environment** — Spins up a complete WordPress + WooCommerce stack using Docker, providing a deterministic environment for API and Playwright UI testing. The environment can be prepared separately with `make install`, `make up`, and `make setup`, or bootstrapped together with `make run`.
 
 - 🌍 **Environment-Aware Configuration** — Uses `API_ENV` together with entity configuration files to resolve endpoints dynamically, completely separating environment selection from authentication.
 
@@ -187,10 +187,11 @@ The UI report combines browser-specific results from the Chromium, Firefox, and 
 
 When Playwright tracing is enabled, local Allure results attach a failed test's
 trace ZIP to that test. CI keeps trace contents out of the published QA Portal
-and uploads failed-test traces as seven-day GitHub Actions artifacts only when
-`PLAYWRIGHT_TRACE_ARTIFACT_ENABLED=true`. CI defaults to off in
-`.github/actions/configure-ci-env/action.yml`; change that value to enable it.
-In a public repository, enabled trace artifacts are publicly accessible.
+and uploads traces for failed UI test runs as browser-specific, seven-day
+GitHub Actions artifacts. The shared CI action enables these uploads; passing
+UI runs do not publish trace artifacts. In a public repository, artifact
+access follows the repository's visibility and can expose captured page and
+network data, so keep test data safe to share.
 
 The portal is **metadata-driven**: when additional entities publish supported operational suites such as Smoke, Integration, Regression, or Performance, the corresponding reports can appear without requiring manual HTML or README changes.
 
@@ -234,7 +235,7 @@ This will give you:
 ```mermaid
 flowchart TD
 
-    A[User] -->|make run| B[Makefile]
+    A[User] -->|make install / make up / make setup| B[Makefile]
     B --> C[Docker Compose]
 
     C --> D[MySQL Database]
@@ -289,8 +290,8 @@ The diagram shows how the main framework components connect through a single pyt
 | Python 3.13+ | ✅ | Required by the framework |
 | Docker Desktop | ✅ | Runs WordPress, WooCommerce, and MySQL |
 | Git | ✅ | Clone the repository |
-| GNU Make | ✅ | Required by `make run` and other Makefile targets |
-| Playwright browsers | ⚙️ | Installed automatically by the project bootstrap |
+| GNU Make | ✅ | Required by the Makefile targets |
+| Playwright browsers | ⚙️ | Installed by `make install` |
 
 #### 🛠️ Installing GNU Make (Windows does not include `GNU Make` by default.)
 
@@ -305,29 +306,83 @@ The diagram shows how the main framework components connect through a single pyt
 
 ---
 
-## 🖥️ One-Command Setup
-Make sure **Docker Desktop is running**, then:
+## 🖥️ Quick Setup (Without Running Tests)
+
+Make sure **Docker Desktop is running**, then clone the repository:
 
 ```bash
-git clone https://github.com/Kwakic/TestingWoocommerceAPI.git && cd TestingWoocommerceAPI && make run
+git clone https://github.com/Kwakic/TestingWoocommerceAPI.git
+cd TestingWoocommerceAPI
 ```
----
 
-### What `make run` provides
+### Step 1: Prepare the local environment
 
-`make run` bootstraps the local environment, installs the framework and Playwright, starts Docker, provisions WordPress/WooCommerce, generates REST credentials, configures the test environment, seeds deterministic UI data, and runs the test suite.
+```bash
+make install
+```
 
-### 🔁 Re-running `make run`
+This creates or validates the project virtual environment, installs EcommerceAPI in editable mode with its development dependencies, installs the configured pre-commit hooks, and downloads the Playwright browser binaries.
 
-The command is designed to be **idempotent**, reusing valid local state where possible and avoiding duplicate setup work.
+### Step 2: Start and provision the application
 
-> You do not need to activate `.venv` manually for `make run`. The Makefile invokes the project-local environment directly.
+```bash
+make up
+make setup
+```
 
-After bootstrap, normal execution is:
+These commands start the Docker infrastructure and provision WordPress/WooCommerce, generate REST API credentials, configure the local environment, and seed deterministic UI test data.
+
+> **Note:** `pytest-xdist[psutil]` is included in the development dependencies, so parallel test execution is available through `-n auto`.
+
+### Step 3: Select and execute tests
+
+Once installation and provisioning are complete, execute the tests you need:
+
+```bash
+# Full test suite
+pytest -n auto
+
+# Customers entity
+pytest -m customers -n auto
+
+# Products entity
+pytest -m products -n auto
+
+# Orders smoke tests
+pytest -m "orders and smoke" -n auto
+
+# Specific test directory
+pytest tests/orders/api -n auto
+
+# Single test
+pytest tests/orders/api/test_orders.py -v
+```
+
+Use `-m` to select tests by entity or marker, and `-n auto` to distribute execution across available physical CPU cores. Direct `pytest` commands assume that the project's development environment is active. On Windows, you can invoke the project interpreter directly with `.venv/Scripts/python.exe -m pytest`.
+
+### Alternative: One-command execution
+
+If you prefer to prepare the environment and immediately execute the complete test suite, use:
+
+```bash
+make run
+```
+
+`make run` orchestrates the local environment setup, Docker startup, application provisioning, test-data seeding, and full test execution.
+
+You do not need to activate `.venv` manually for Makefile targets; the Makefile invokes the project-local environment directly.
+
+### Re-running tests
+
+Once the environment is installed and provisioned, you do not need to repeat those steps just to execute tests.
+
+Run the full suite with:
 
 ```bash
 make test
 ```
+
+Or use a focused pytest command to run the tests relevant to your development task.
 
 ---
 
@@ -343,6 +398,48 @@ The framework resolves the appropriate API endpoint from the selected environmen
 
 📚 [Environment & Config Guide](./docs/framework/README_ENVIRONMENT_CONFIG_GUIDE.md) · [Authentication Guide](./docs/framework/README_AUTHENTICATION.md)
 
+### Four test execution scenarios
+
+| Scenario | Pytest runs | WordPress / WooCommerce and MySQL | API and DB connection | Profile file and command |
+|---|---|---|---|---|
+| WAMP, existing local site | Host `.venv` / Python | Existing WAMP installation outside Docker | REST `localhost:8888/kwakiweb`; DB settings from `.env.wamp` (current WAMP MySQL port: `8889`) | `.env.wamp`; `API_ENV=local pytest -m orders -n auto` (REST tests only) |
+| Docker, host-based | Host `.venv` / Python | Compose `wordpress` (WordPress + WooCommerce plugin), `db`, and `wpcli` | REST/GraphQL `localhost:8080`; MySQL `127.0.0.1:3306` | `.env`; `make install`, then `make up` and `make setup` for initial preparation; use `make test` or a focused pytest command afterwards |
+| Docker, containerized | Custom test-runner container | Same three Compose services | REST/GraphQL `wordpress`; MySQL `db:3306` | `.env` plus runner overrides; `make test-docker` (full suite) |
+| GitHub Actions CI | GitHub-hosted runner | Same three Compose services | REST/GraphQL `localhost:8080`; MySQL `127.0.0.1:3306` | GitHub Actions supplies its own environment; PR/push or a manual workflow run |
+
+`API_ENV` selects the endpoint and credentials profile. A pytest path or
+`-m` expression selects which tests run, and `-n auto` runs them in parallel.
+These are separate choices: for example, `API_ENV=local pytest -m orders -n auto`
+selects the Orders tests and points them at WAMP.
+
+Docker Compose has exactly three services: `wordpress`, `db`, and `wpcli`.
+WooCommerce is a plugin inside `wordpress`, not its own container. WAMP is an
+existing external installation and requires no Docker startup, provisioning,
+or cleanup. Copy `.env.wamp.example` to the ignored `.env.wamp` and fill in its
+REST API and MySQL credentials. With the project virtual environment active,
+run a WAMP REST selection from Bash or Git Bash like this:
+
+```bash
+API_ENV=local pytest -m orders -n auto
+```
+
+In PowerShell, run the equivalent command with the project interpreter:
+
+```powershell
+$env:API_ENV = "local"
+.\.venv\Scripts\python.exe -m pytest -m orders -n auto
+Remove-Item Env:API_ENV
+```
+
+`-m orders` selects every collected test item carrying the `orders` marker.
+Use a test path as well when you want to limit collection to a specific folder,
+for example `tests/orders/api`. WAMP currently supports REST tests only;
+GraphQL and Playwright UI tests require the provisioned Docker/CI environment.
+
+`make run` always selects the Docker host-based profile and supplies the
+database credentials from the running Compose `db` service. `make test` runs
+the selected profile without starting or provisioning infrastructure.
+
 ---
 
 ## 🧪 Manual Test Execution
@@ -350,7 +447,28 @@ The framework resolves the appropriate API endpoint from the selected environmen
 For normal development:
 
 ```bash
+# First time (and whenever you need to prepare/reseed the local environment):
+make install
+make up
+make setup
+
+# Full suite after the environment is prepared:
 make test
+
+# Focus on Orders smoke tests against the local Docker environment:
+API_ENV=test pytest -m "orders and smoke" -n auto
+```
+
+The direct pytest examples assume the project's development environment is
+active. On PowerShell, set the environment variable and invoke the project
+interpreter. Clear the variable afterwards if you will switch profiles in the
+same terminal. `make test` uses the profile in `.env` and does not start Docker
+services.
+
+```powershell
+$env:API_ENV = "test"
+.\.venv\Scripts\python.exe -m pytest -m "orders and smoke" -n auto
+Remove-Item Env:API_ENV
 ```
 
 Run the isolated shared unit tests first:
@@ -368,6 +486,17 @@ For a CI-style, Allure-ready run:
 make test-ci
 ```
 
+`make test-ci` is a local full-suite run with clean Allure results; it does not
+start a GitHub Actions workflow or provision the application. The active CI
+system is GitHub Actions: pull requests and pushes trigger the configured
+workflows, and workflows that support manual execution can be started from
+**GitHub → Actions → select workflow → Run workflow**. CI sets `API_ENV=ci`,
+creates its own WooCommerce environment and credentials, and applies the
+marker selection configured for each job. Do not use `API_ENV=ci` for a local
+run; it expects the CI service and credentials. See the
+[CI/CD Architecture Guide](./docs/ci/README_CI_ARCHITECTURE.md) for workflow
+selections and triggers.
+
 To run the suite inside the Docker test-runner image, build the image and use
 the optional containerized target:
 
@@ -375,7 +504,7 @@ the optional containerized target:
 # Rebuild the image when the Dockerfile or dependencies change
 docker build -t ecommerceapi-test-runner .
 
-# Execute tests inside Docker
+# Execute Full test suite inside Docker test-runner
 make test-docker
 ```
 

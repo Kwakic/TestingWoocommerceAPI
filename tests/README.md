@@ -195,8 +195,9 @@ Examples include:
 ### Unit tests
 
 `tests/shared/unit_tests/` contains tests for framework logic that runs without
-WooCommerce, a database, or network access. GitHub Actions and GitLab CI run
-this suite before preflight.
+WooCommerce, a database, or network access. In pull-request validation,
+GitHub Actions runs Unit and Preflight as independent jobs; the PR Quality Gate
+requires both to succeed.
 
 Run the unit tests locally with:
 
@@ -204,7 +205,7 @@ Run the unit tests locally with:
 pytest tests/shared/unit_tests -m unit -v
 ```
 
-Run both fast checks in CI order with:
+To run both fast checks locally in sequence:
 
 ```bash
 pytest tests/shared/unit_tests -m unit -v && pytest -m preflight -v
@@ -278,6 +279,46 @@ This organisation:
 ---
 
 ## 🚀 Running Tests
+
+### Choose the environment and test selection
+
+`API_ENV` chooses which application and credentials pytest uses. The test path
+or `-m` marker expression chooses which tests pytest collects. `-n auto` runs
+the selected tests across the available physical CPU cores.
+
+Run the commands from the repository root with the development dependencies
+installed in the project virtual environment. `make run` creates/prepares that
+environment as part of Docker-backed setup; WAMP users can install the package
+with `python -m pip install -e './EcommerceAPI[dev]'` without starting Docker.
+
+| Run mode | Setup and command | What it runs against |
+|---|---|---|
+| Docker-backed local development (recommended) | First run `make run`; later use `make test` for the full suite or `API_ENV=test pytest -m "orders and smoke" -n auto` for Orders smoke tests. | Pytest runs on the host; WordPress, WooCommerce, and MySQL run in Docker Compose. |
+| Existing WAMP site | Copy `.env.wamp.example` to `.env.wamp`, fill in its REST and DB settings, then run `API_ENV=local pytest -m orders -n auto`. | Pytest runs on the host against the existing WAMP installation. REST tests only are supported. |
+| Dockerized test runner | Build with `docker build -t ecommerceapi-test-runner .`, then run `make test-docker`. | Pytest runs inside the test-runner container; this target runs the full suite and cleans up the Compose application after the run. |
+| GitHub Actions CI | Open **Actions**, select a workflow and choose **Run workflow** when supported; pull requests and pushes trigger configured workflows automatically. | GitHub Actions provisions its own WooCommerce environment and sets `API_ENV=ci`. |
+
+For WAMP, Bash/Git Bash accepts the inline environment assignment above. In
+PowerShell, use:
+
+```powershell
+$env:API_ENV = "local"
+.\.venv\Scripts\python.exe -m pytest -m orders -n auto
+Remove-Item Env:API_ENV
+```
+
+`-m orders` runs all collected items with the Orders marker. Add a path such as
+`tests/orders/api` when you need to restrict collection to that directory.
+WAMP does not support the GraphQL or Playwright UI suites. For the profile
+files and endpoint mapping, see the [Environment & CI Guide](../docs/ci/README_ENV_AND_CI.md).
+
+GitHub Actions is the supported CI platform for this repository. The local
+`make test-ci` target only runs pytest with clean Allure results; it does not
+launch or simulate a CI workflow. See the
+[CI Architecture Guide](../docs/ci/README_CI_ARCHITECTURE.md) for CI marker
+selections and workflow behavior.
+
+### Common pytest selections
 
 Run a single domain:
 

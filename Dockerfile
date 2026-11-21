@@ -93,30 +93,12 @@ COPY conftest.py ./conftest.py
 # Copy framework + tests
 COPY EcommerceAPI ./EcommerceAPI
 COPY tests ./tests
+# This source-level unit test inspects the credential writer script.
+COPY scripts/write_env_credentials.sh ./scripts/write_env_credentials.sh
 
-# ------------------------------------------------------------
-# Default runtime environment (CI overrides)
-# ------------------------------------------------------------
+# The image fallback is used only when the caller does not set API_ENV.
+# `make test-docker` explicitly sets API_ENV=docker.
 ENV ENV=docker
-ENV LOG_DIR=/app/reports/logs
-ENV AUTO_ALLURE_REPORT=true
-ENV FAIL_ON_EMPTY_LIST=false
-ENV STRICT_ENTITY_DISCOVERY=true
 
-#ENV ENVIRONMENT=test
-#ENV API_ENV=docker
-## Logging & Reporting
-#ENV ENABLE_STRUCTURED_LOGS=true
-#ENV ENABLE_JSON_PRETTY=false
-#ENV KEEP_STRUCTURED_RUNS=1
-#ENV REDACT_SENSITIVE_FIELDS=true
-#ENV LOG_PAYLOADS=false
-#ENV DISABLE_LOG_EMOJIS=true
-#ENV PLAYWRIGHT_TRACE_ARTIFACT_ENABLED=false
-## Performance test defaults
-#ENV PERF_ITERATIONS=5
-#ENV REQUIRE_ENV=false
-
-
-# Default command (CI overrides args)
+# Default command (the Makefile supplies the supported Docker test settings).
 CMD ["pytest", "-s"]

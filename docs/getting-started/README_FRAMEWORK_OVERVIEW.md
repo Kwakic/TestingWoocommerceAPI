@@ -10,7 +10,7 @@ Covers purpose, quick-start steps, key conventions, and where to find deeper doc
 - Support both **REST API testing** and **GraphQL API testing**.
 - Run fast preflight checks and full regression suites per microservice (customers, orders, products, coupons).
 - Produce machine- and human-friendly outputs: structured JSONL logs for ingestion and Allure results/HTML for test reporting.
-- Make it easy to run tests locally, in containers, and in CI (GitHub Actions / GitLab).
+- Make it easy to run tests locally, in containers, and in GitHub Actions CI.
 
 ### 🌐 API Capabilities
 
@@ -167,7 +167,8 @@ For full developer setup and step-by-step onboarding, see: `DEVELOPER_ONBOARDING
   - `EcommerceAPI/` — framework package and package-level `pyproject.toml`.
   - `tests/` — per-microservice test suites (e.g. `tests/customers/`, `tests/orders/`).
   - `reports/` — Allure results, generated HTML, structured logs.
-  - `.github/`, `.gitlab/` — CI pipeline configs.
+  - `.github/` — active CI workflows and reusable actions.
+  - `.gitlab-ci.yml` — legacy configuration; GitLab CI is not an active project workflow.
 
 - Packaging & install
   - Two `pyproject.toml` files (root: tool configs; package-level: packaging + extras).
@@ -190,8 +191,8 @@ For full developer setup and step-by-step onboarding, see: `DEVELOPER_ONBOARDING
   - Allure integration: tests write `--alluredir=reports/<service>/allure-results`; CI installs Allure CLI to generate HTML.
 
 - CI & matrix testing
-  - GitHub Actions: dynamic matrix of services (discover step outputs JSON array used with matrix.strategy).
-  - GitLab CI: discover job creates `matrix.yml` artifact with one child job per service.
+  - GitHub Actions discovers the test entities and runs them through the reusable test runner.
+  - Older GitLab matrix examples are retained as legacy references and are not used by current CI.
   - Use `AUTO_ALLURE_REPORT` to control whether HTML is generated in CI.
 
 ---

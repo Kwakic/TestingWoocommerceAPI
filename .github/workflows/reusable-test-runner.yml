@@ -554,6 +554,7 @@ jobs:
       # - Infrastructure failures           -> Fail
       # --------------------------------------------------
       - name: Run pytest
+        id: run_pytest
         shell: bash
         env:
           TEST_SCOPE: ${{ inputs.scope }}
@@ -772,21 +773,101 @@ jobs:
           retention-days: 14
 
       # --------------------------------------------------
-      # 12. Publish failure-only Playwright traces
+      # 12. Diagnose and publish failure-only Playwright traces
       # --------------------------------------------------
-      # This opt-in may publish traces publicly when the
-      # repository is public. Enable only when trace content
-      # is safe for public access. Passing tests leave no files.
+      # Trace artifacts can be public when the repository is public.
+      # Passing tests leave no retained trace files and are never uploaded.
+      - name: Diagnose Playwright traces
+        id: playwright_trace_diagnostics
+        if: always() && inputs.suite_name == 'ui'
+        shell: bash
+        env:
+          PLAYWRIGHT_TRACE_ARTIFACT_ENABLED: ${{ steps.configure_ci_env.outputs.playwright_trace_artifact_enabled }}
+          PYTEST_OUTCOME: ${{ steps.run_pytest.outcome }}
+        run: |
+          set -uo pipefail
+
+          TRACE_DIR="reports/playwright"
+          TRACE_FILES=()
+
+          if [[ -d "$TRACE_DIR" ]]; then
+            echo "Playwright output directory exists: $TRACE_DIR"
+            mapfile -t TRACE_FILES < <(find "$TRACE_DIR" -type f -name '*.zip' -print | sort)
+          else
+            echo "Playwright output directory exists: no ($TRACE_DIR)"
+          fi
+
+          TRACE_COUNT="${#TRACE_FILES[@]}"
+          echo "Playwright trace ZIP files found: $TRACE_COUNT"
+          if (( TRACE_COUNT > 0 )); then
+            echo "Files that would be uploaded:"
+            for trace_file in "${TRACE_FILES[@]}"; do
+              echo "- $trace_file"
+            done
+          else
+            echo "Files that would be uploaded: none"
+          fi
+
+          SHOULD_UPLOAD=false
+          if [[ "$PLAYWRIGHT_TRACE_ARTIFACT_ENABLED" != "true" ]]; then
+            SKIP_REASON="playwright_trace_artifact_enabled is not true"
+          elif [[ "$PYTEST_OUTCOME" != "failure" ]]; then
+            SKIP_REASON="pytest outcome was '$PYTEST_OUTCOME'; trace uploads are failure-only"
+          elif (( TRACE_COUNT == 0 )); then
+            SKIP_REASON="pytest failed but Playwright generated no trace ZIP files"
+          else
+            SHOULD_UPLOAD=true
+            SKIP_REASON=""
+          fi
+
+          if [[ "$SHOULD_UPLOAD" == "true" ]]; then
+            echo "Upload decision: enabled (failed UI run has retained traces)"
+          else
+            echo "Upload decision: skipped ($SKIP_REASON)"
+          fi
+
+          {
+            echo "trace_file_count=$TRACE_COUNT"
+            echo "should_upload=$SHOULD_UPLOAD"
+            echo "skip_reason=$SKIP_REASON"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Upload Playwright traces
+        id: upload_playwright_traces
         if: >-
           always() && inputs.suite_name == 'ui' &&
-          steps.configure_ci_env.outputs.playwright_trace_artifact_enabled == 'true'
+          steps.configure_ci_env.outputs.playwright_trace_artifact_enabled == 'true' &&
+          steps.run_pytest.outcome == 'failure' &&
+          steps.playwright_trace_diagnostics.outputs.should_upload == 'true'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ui-${{ inputs.browser }}-playwright-traces
           path: reports/playwright/
-          if-no-files-found: ignore
+          if-no-files-found: error
           retention-days: 7
+
+      - name: Report Playwright trace upload result
+        if: always() && inputs.suite_name == 'ui'
+        shell: bash
+        env:
+          SHOULD_UPLOAD: ${{ steps.playwright_trace_diagnostics.outputs.should_upload }}
+          SKIP_REASON: ${{ steps.playwright_trace_diagnostics.outputs.skip_reason }}
+          TRACE_FILE_COUNT: ${{ steps.playwright_trace_diagnostics.outputs.trace_file_count }}
+          UPLOAD_OUTCOME: ${{ steps.upload_playwright_traces.outcome }}
+        run: |
+          set -uo pipefail
+
+          if [[ "$SHOULD_UPLOAD" != "true" ]]; then
+            echo "Playwright trace upload skipped: ${SKIP_REASON:-diagnostics did not enable uploading}."
+          elif [[ "$UPLOAD_OUTCOME" == "success" ]]; then
+            echo "Playwright trace artifact uploaded successfully ($TRACE_FILE_COUNT ZIP file(s))."
+            echo "Artifact: ui-${{ inputs.browser }}-playwright-traces"
+          elif [[ "$UPLOAD_OUTCOME" == "failure" ]]; then
+            echo "::error::Playwright traces were found but artifact upload failed."
+            exit 1
+          else
+            echo "Playwright trace upload did not run (step outcome: ${UPLOAD_OUTCOME:-unknown})."
+          fi
 
       # --------------------------------------------------
       # 13. Cleanup Docker environment

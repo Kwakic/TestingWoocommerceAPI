@@ -57,7 +57,10 @@ config_loader.py
     Stores public API endpoint mappings.
 
 `.env`
-    Stores secrets and environment-specific values.
+    Stores Docker host-based credentials and database settings (`API_ENV=test`).
+
+`.env.wamp`
+    Stores credentials and database settings for the existing WAMP site (`API_ENV=local`).
 
 `runtime_metadata.py`
     Stores runtime session information.
@@ -110,6 +113,9 @@ configuration themselves.
 #### A. Startup banner (authoritative)
 
 At pytest startup, the framework logs:
+
+This example shows the local runtime fallback. The hosted CI configuration
+sets `PLAYWRIGHT_TRACE_ARTIFACT_ENABLED=true` for UI jobs.
 
 ```
 ================= FRAMEWORK CONFIG =================
@@ -365,9 +371,9 @@ Example (`config_customers.py`):
 
 ```python
 API_HOSTS = {
-    "test": "http://localhost:8888/kwakiweb/wp-json/wc/v3/",
-    "docker": "http://wordpress/wp-json/wc/v3/",
     "local": "http://localhost:8888/kwakiweb/wp-json/wc/v3/",
+    "test": "http://localhost:8080/wp-json/wc/v3/",
+    "docker": "http://wordpress/wp-json/wc/v3/",
     "dev": "http://host.docker.internal:8888/kwakiweb/wp-json/wc/v3/",
     "staging": "https://staging.example.com/wp-json/wc/v3/",
     "prod": "https://api.example.com/wp-json/wc/v3/",
@@ -379,90 +385,39 @@ API_HOSTS = {
 
 ---
 
-## ⚠️ Important: Environment ≠ Infrastructure
+## Four execution scenarios
 
-A key concept:
+`API_ENV` selects the endpoint topology. The profile dotenv file supplies the
+matching credentials and direct database connection values.
 
-> **Environment variables do not define infrastructure — they select a network topology.**
+| Scenario | `API_ENV` | Pytest location | WordPress / WooCommerce and MySQL | API and DB addresses | Credentials/configuration |
+|---|---|---|---|---|---|
+| Existing WAMP | `local` | Host | Existing WAMP installation outside Docker | REST `localhost:8888/kwakiweb`; DB address from WAMP config (the current setup uses `127.0.0.1:8889`) | `.env.wamp`; REST API only on WAMP. GraphQL and UI tests are not supported there. |
+| Docker host-based | `test` | Host `.venv` | Compose services `wordpress` (WordPress + WooCommerce plugin), `db`, `wpcli` | REST/GraphQL `localhost:8080`; DB `127.0.0.1:3306` | `.env`; `make run` selects this profile and reads DB credentials from Compose. |
+| Docker containerized | `docker` | Custom test-runner container | Same three Compose services | REST/GraphQL `wordpress`; DB `db:3306` | `.env` Docker credentials plus explicit runner DB/profile overrides; `make test-docker`. |
+| GitHub Actions | `ci` | GitHub-hosted runner | Same three Compose services | REST/GraphQL `localhost:8080`; DB `127.0.0.1:3306` | Values generated or set in GitHub Actions environment; no repository `.env` is required. |
 
-Different environments require different host resolution:
+Compose has exactly three services. WooCommerce is installed inside the
+`wordpress` service; `wpcli` is the command-line helper, not a WooCommerce
+container. WAMP is an already-provisioned external server and needs no Docker
+orchestration.
 
-| Environment | Where tests run | How WordPress is reached |
-|------------|----------------|--------------------------|
-| `test`     | Host machine   | `localhost:8888`         |
-| `docker`   | Inside Docker  | `wordpress` (Docker DNS) |
-| `ci`       | Host (CI runner) + Docker containers | `localhost:8080` |
+To run WAMP REST tests directly, copy `.env.wamp.example` to `.env.wamp`, fill
+in the existing WAMP REST and DB credentials, and set `API_ENV=local` before
+pytest. The runtime loads `.env.wamp` only for `local`; if it is missing,
+pytest fails with a clear configuration error instead of falling back to the
+Docker `.env`. For example, in PowerShell:
 
----
-
-## 💥 Common Pitfall (CI Failure)
-
-If CI runs with:
-
-```bash
-API_ENV=test
+```powershell
+$env:API_ENV = "local"
+.\.venv\Scripts\python.exe -m pytest tests\customers\api tests\orders\api tests\products\api tests\coupons\api
+Remove-Item Env:API_ENV
 ```
 
-Then the framework resolves:
-
-```
-http://localhost:8888/kwakiweb/wp-json/wc/v3/
-```
-
-❌ This fails in CI because:
-- CI is not running your local WordPress on port 8888
-
----
-
-## ✅ Correct CI Configuration
-
-You must explicitly select the correct environment:
-
-```bash
-API_ENV=ci
-```
-
-Example (GitHub Actions):
-
-```yaml
-- name: Configure environment (CI overrides)
-  run: |
-    echo "API_ENV=ci" >> $GITHUB_ENV
-```
-
----
-
-## 🧠 Why Not Use `docker` in CI?
-
-```
-docker → http://wordpress/
-```
-
-✔ Works only if:
-- tests run **inside Docker network**
-
-❌ In your setup:
-- pytest runs on **host**
-- containers run separately
-
-➡️ `wordpress` hostname is **not resolvable**
-
----
-
-## 🎯 Final Design (Correct and Clean)
-
-You now have **three distinct execution modes**:
-
-| Mode    | API_ENV | URL |
-|--------|--------|-----|
-| Local dev | `test` | localhost:8888 |
-| Docker-native | `docker` | wordpress |
-| CI pipeline | `ci` | localhost:8080 |
-
-✔ No hacks
-✔ No hardcoded overrides
-✔ Fully configurable
-✔ Matches real infrastructure
+Use `make run` for Docker host-based execution. It starts and provisions the
+Compose stack, then explicitly runs pytest with `API_ENV=test` and the live
+Compose database credentials. Use `make test-docker` when pytest itself must
+run inside Docker. GitHub Actions sets `API_ENV=ci` and its own credentials.
 
 ---
 
@@ -488,10 +443,13 @@ This makes the system:
 
 ---
 
-## 8️⃣ `.env` Best Practices
+## 8️⃣ Profile dotenv files
 
-- ✅ Use `.env.example` (tracked)
-- ✅ Never commit real secrets
+- Copy `.env.example` to `.env` for Docker host-based execution.
+- Copy `.env.wamp.example` to `.env.wamp` for the existing WAMP installation.
+- Both private files are Git-ignored; never commit credentials.
+- `API_ENV=local` loads only `.env.wamp`; Docker setup writes generated credentials only to `.env`.
+- `API_ENV=test`, `docker`, and `ci` use `.env` or the runner's explicit environment variables.
 - ✅ All values are strings
 - ✅ Booleans use: `1` / `true` / `yes` / `on`
 
@@ -506,16 +464,18 @@ PLAYWRIGHT_TRACE_ARTIFACT_ENABLED=false
 ```
 
 `PLAYWRIGHT_TRACE_ARTIFACT_ENABLED` controls whether failed UI traces are
-uploaded from CI as GitHub Actions artifacts. CI sets its default in
-`.github/actions/configure-ci-env/action.yml`; the value in `.env` is the local
-default. In a public repository, enabling CI uploads makes those artifacts
-publicly accessible.
+uploaded from CI as GitHub Actions artifacts. The local Docker-profile default
+in `.env` is `false`; `.github/actions/configure-ci-env/action.yml` explicitly
+sets the hosted CI value to `true`. CI uploads traces only for failed UI test
+runs that produced trace ZIPs, and retains them for seven days. In a public
+repository, artifact access may be public, so use test data safe for the
+repository's audience.
 
 ---
 
 ## 9️⃣ REQUIRE_ENV strict mode
 
-- Local: leave `REQUIRE_ENV=false` (or unset) for developer convenience. The logging plugin loads `.env` permissively.
+- Local: leave `REQUIRE_ENV=false` (or unset) for developer convenience. The runtime loads the dotenv file selected by `API_ENV`.
 - CI: set `REQUIRE_ENV=true` to fail fast when required config is missing.
 
 Example:

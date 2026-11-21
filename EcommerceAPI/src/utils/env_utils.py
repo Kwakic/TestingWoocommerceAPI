@@ -1,6 +1,54 @@
 # utils/env_utils.py
 
 import os
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+
+def profile_dotenv_path(
+    api_env: str | None = None,
+    project_root: Path | None = None,
+) -> Path:
+    """Return the private environment file for the selected execution profile.
+
+    WAMP is deliberately isolated in `.env.wamp`; selecting it must never
+    fall back to the Docker `.env` if the WAMP file is missing.
+    """
+    profile = (
+        (api_env or os.getenv("API_ENV") or os.getenv("ENV", "test")).strip().lower()
+    )
+    filename = ".env.wamp" if profile == "local" else ".env"
+    root = project_root or Path(__file__).resolve().parents[3]
+    return root / filename
+
+
+def load_profile_dotenv(
+    api_env: str | None = None,
+    project_root: Path | None = None,
+) -> Path | None:
+    """Load only the dotenv file belonging to the selected API profile."""
+    profile = (
+        (api_env or os.getenv("API_ENV") or os.getenv("ENV", "test")).strip().lower()
+    )
+    env_path = profile_dotenv_path(api_env=profile, project_root=project_root)
+    if not env_path.is_file():
+        if profile == "local":
+            raise FileNotFoundError(
+                "API_ENV=local requires the ignored .env.wamp file. "
+                "Copy .env.wamp.example to .env.wamp and fill in the existing WAMP settings."
+            )
+        return None
+    # The dedicated WAMP profile is authoritative: it must not inherit Docker
+    # credentials accidentally exported in the parent shell or IDE process.
+    if profile == "local":
+        for name in tuple(os.environ):
+            if name.startswith(("DB_", "WC_", "WP_ADMIN_", "UI_")) or name in {
+                "GRAPHQL_URL",
+            }:
+                os.environ.pop(name, None)
+    load_dotenv(dotenv_path=env_path, override=(profile == "local"))
+    return env_path
 
 
 def env_bool(varname: str, default: bool = False) -> bool:

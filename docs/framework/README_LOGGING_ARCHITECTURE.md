@@ -152,7 +152,7 @@ pytest
 logging_plugin.py
    │
    ├── installs LogRecord factory
-   ├── loads .env
+   ├── loads the selected profile file (.env or .env.wamp)
    ├── attaches ContextVars
    ├── configures logging
    │

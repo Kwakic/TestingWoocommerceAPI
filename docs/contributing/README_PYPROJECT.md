@@ -76,7 +76,7 @@ Docker / CI notes
 - Dockerfile must COPY package sources before running `pip install -e './EcommerceAPI[dev]'` in builder stage (so editable install works during image build).
 - Keep the repo root pytest block — CI and docker runs will pick it up when tests are executed from repo root.
 - GitHub Actions matrix: discovery must emit a valid JSON array of quoted service names (e.g. `["customers","orders"]`) to use `fromJson()` correctly.
-- GitLab dynamic pipelines: the discover job generates a `matrix.yml` artifact at runtime — that artifact is referenced in `artifacts: paths: - matrix.yml`.
+- GitLab dynamic-pipeline notes are legacy; the active CI workflows are in `.github/workflows/`.
 
 > 💡 **Configuration note**
 >
@@ -85,7 +85,8 @@ Docker / CI notes
 >
 > During the bootstrap process, WooCommerce generates a fresh pair of
 > REST API credentials, which are injected separately into the runtime
-> environment (or local `.env` during `make run`).
+> environment (or the Docker host-based `.env` during `make run`). WAMP REST
+> credentials remain in `.env.wamp` and are not used by Docker bootstrap.
 >
 > As a result, endpoint URLs are **not** stored in `.env`.
 > This separation keeps authentication independent from environment

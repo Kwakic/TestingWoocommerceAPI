@@ -487,9 +487,11 @@ Project-level configuration and orchestration.
 | **Makefile**                  | Orchestrates common tasks (`make run`, `make test`, `make test-docker`, etc.) |
 | **pytest.ini**                | pytest configuration & marker definitions                       |
 | **conftest.py**               | Shared root-level fixtures & hooks                              |
-| **.env**                      | Local environment variables & credentials                       |
-| **.env.example**              | Template for `.env` file                                        |
-| **docker-compose.matrix.yml** | Multi-container setup (WordPress, WooCommerce, MySQL)           |
+| **.env**                      | Docker host-based environment variables, API credentials & DB settings |
+| **.env.wamp**                 | Ignored WAMP REST credentials and database settings              |
+| **.env.example**              | Docker host-based template for `.env`                            |
+| **.env.wamp.example**         | Existing WAMP REST template for `.env.wamp`                      |
+| **docker-compose.wp.yml**     | Three services: WordPress + WooCommerce plugin, MySQL, WP-CLI    |
 | **Dockerfile**                | Reusable image for local containerized tests; GitHub Actions does not use it |
 | **README.md**                 | Project landing page & documentation index                      |
 | **.gitignore**                | Git ignore rules                                                |

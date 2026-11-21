@@ -27,6 +27,37 @@ from EcommerceAPI.src.configs.runtime_config import get_config
 log = logging.getLogger(__name__)
 
 
+def pytest_configure(config) -> None:
+    """Give each xdist worker a private pytest-playwright output directory.
+
+    pytest-playwright clears its configured ``--output`` directory from a
+    session-scoped fixture. Without worker-specific directories, concurrent
+    workers can remove traces another worker has already retained.
+
+    New Playwright output structure:
+
+        reports/playwright/
+         gw0/
+             tests/
+             trace.zip
+         gw1/
+             tests/
+             trace.zip
+
+    This prevents one worker from clearing another worker's trace files.
+    """
+    if config.getoption("--tracing", default="off") == "off":
+        return
+
+    workerinput = getattr(config, "workerinput", {}) or {}
+    worker_id = workerinput.get("workerid") or os.getenv("PYTEST_XDIST_WORKER")
+    if not worker_id:
+        return
+
+    output_dir = Path(config.getoption("--output", default="test-results"))
+    config.option.output = str(output_dir / worker_id)
+
+
 def _find_playwright_traces(item) -> list[Path]:
     """Find traces for one failed UI test after pytest-playwright teardown."""
     try:

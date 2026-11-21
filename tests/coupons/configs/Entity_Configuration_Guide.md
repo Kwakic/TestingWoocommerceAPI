@@ -1,113 +1,49 @@
-# ⚙️ Entity Configuration
+# ⚙️ Coupons Entity Configuration
 
-This directory contains the **entity-specific configuration** used by this
-test suite.
+This directory contains the public REST endpoint mapping for Coupons. The
+active `API_ENV` selects the endpoint; credentials and database connection
+settings come from the selected environment profile.
 
-Each entity owns its own `config_<entity>.py` module, which defines the
-public `API_HOSTS` mapping for every supported execution environment.
+## Coupons REST endpoints
 
-These configuration files:
+`config_coupons.py` defines one endpoint for each supported execution profile:
 
-- 🌐 Define public API endpoint URLs
-- 🔒 Contain **no secrets**
-- ✅ Are safe to commit to Git
-- 👥 Are owned by the entity team
+| Profile | `API_ENV` | Where pytest runs | Coupons REST endpoint | How to run |
+|---|---|---|---|---|
+| Existing WAMP site | `local` | Developer's computer | `http://localhost:8888/kwakiweb/wp-json/wc/v3/` | Direct pytest; REST tests only |
+| Docker host-based | `test` | Developer's computer | `http://localhost:8080/wp-json/wc/v3/` | `make run` |
+| Docker containerized | `docker` | Test-runner container | `http://wordpress/wp-json/wc/v3/` | `make test-docker` |
+| GitHub Actions | `ci` | GitHub-hosted runner | `http://localhost:8080/wp-json/wc/v3/` | Run a GitHub Actions workflow |
 
-Sensitive runtime values (such as WooCommerce API credentials) are
-generated during `make setup` and stored in `.env`.
+Choose the profile that matches where pytest runs. For example, when running
+Coupons REST tests against the existing WAMP site, copy `.env.wamp.example` to
+`.env.wamp`, fill in the existing WAMP credentials, then run from PowerShell:
 
-Framework runtime configuration (environment parsing, feature flags,
-logging, reporting, CI behaviour and runtime configuration) is managed
-by the shared EcommerceAPI framework.
-
----
-
-## 📦 What belongs here?
-
-This directory contains only the **entity-specific endpoint configuration**.
-
-Typical contents:
-
-```text
-configs/
-├── config_customers.py
-└── README.md
+```powershell
+$env:API_ENV = "local"
+.\.venv\Scripts\python.exe -m pytest tests\coupons\api
+Remove-Item Env:API_ENV
 ```
 
-`config_<entity>.py` defines the public `API_HOSTS` mapping used by the
-entity helpers to resolve the correct API endpoint for the active
-execution environment.
+This direct command does not start, provision, or clean up Docker. WAMP
+currently supports REST tests only; GraphQL and UI tests require the
+provisioned Docker/CI environments.
 
-The configuration is intentionally public because endpoint URLs are not
-sensitive.
+## What belongs in this directory?
 
----
+`config_coupons.py` may contain public Coupons API endpoint URLs. It must not
+contain API keys, passwords, database credentials, environment-variable
+loading, or other runtime settings.
 
-## 🚫 What does **not** belong here?
+- `.env` contains the Docker host-based profile (`API_ENV=test`).
+- `.env.wamp` contains the existing WAMP profile (`API_ENV=local`).
+- Docker container and CI credentials are supplied by their runner or
+  workflow environment.
+- GraphQL endpoints are shared and defined in
+  `EcommerceAPI/src/configs/config_graphql.py`.
+- Docker Compose has three services: `wordpress` (WordPress with the
+  WooCommerce plugin), `db` (MySQL), and `wpcli` (WP-CLI). WooCommerce is not
+  a separate container.
 
-This directory must **not** contain:
-
-- ❌ Secrets or credentials
-- ❌ Environment variable parsing
-- ❌ Runtime configuration
-- ❌ Logging configuration
-- ❌ Reporting configuration
-- ❌ Framework feature flags
-- ❌ CI-specific logic
-
-Those responsibilities belong to the shared EcommerceAPI framework.
-
----
-
-## 📚 Related Documentation
-
-### 🧭 Learn how the configuration system works
-
-`docs/framework/README_ENVIRONMENT_CONFIG_GUIDE.md`
-
-This is the **canonical guide** explaining:
-
-- API_ENV
-- Environment selection
-- Endpoint resolution
-- Docker
-- CI
-- Execution modes
-- Runtime configuration
-- Troubleshooting
-
-### 📘 Framework rules and architecture
-
-`docs/framework/README_CONFIG_CONTRACT.md`
-
-This document defines the configuration contract, ownership model, and
-architectural rules that all entities must follow.
-
----
-
-## 🏗️ Entity Ownership
-
-Each entity owns only its own endpoint definitions.
-
-For example:
-
-- 👤 Customers → `config_customers.py`
-- 📦 Orders → `config_orders.py`
-- 🛍️ Products → `config_products.py`
-- 🎟️ Coupons → `config_coupons.py`
-
-Shared framework components never import these modules directly.
-Instead, entity helpers resolve the correct endpoint and inject it into
-the shared API client, keeping the framework completely service-agnostic.
-
----
-
-> 💡 **Why is this README so short?**
->
-> This document is intentionally lightweight.
-> It explains only the purpose of this entity's configuration directory.
->
-> The complete framework configuration architecture is documented centrally in:
->
-> - `docs/framework/README_ENVIRONMENT_CONFIG_GUIDE.md`
-> - `docs/framework/README_CONFIG_CONTRACT.md`
+See the [Environment & Configuration Guide](../../../docs/framework/README_ENVIRONMENT_CONFIG_GUIDE.md)
+for the shared profile, credential, and database configuration details.
