@@ -1,0 +1,112 @@
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/system_status → Status code: 200 (completed in 1.173s)
+INFO     EcommerceAPI.plugins.api.shared_api:shared_api.py:181 ✅ Environment validation passed (API reachable, auth OK). Base URL: http://localhost:8080/wp-json/wc/v3/
+INFO     EcommerceAPI.plugins.allure_autogen:allure_autogen.py:520 📎 Framework configuration attached to Allure
+INFO     tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:59 Warming up Coupons endpoint (3 requests; excluded)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.064s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.064s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:71 Warm-up 01 -> 0.064s (excluded)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.066s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.067s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:71 Warm-up 02 -> 0.067s (excluded)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.063s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.064s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:71 Warm-up 03 -> 0.064s (excluded)
+INFO     tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:75 Coupons benchmark (30 measured requests)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.068s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.069s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:88 Run 01 -> 0.069s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.062s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.063s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:88 Run 02 -> 0.063s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.062s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.062s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:88 Run 03 -> 0.062s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.065s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.065s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:88 Run 04 -> 0.065s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.062s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.062s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:88 Run 05 -> 0.062s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.065s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.065s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:88 Run 06 -> 0.065s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.065s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.065s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:88 Run 07 -> 0.065s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.080s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.081s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:88 Run 08 -> 0.081s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.068s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.068s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:88 Run 09 -> 0.068s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.065s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.065s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:88 Run 10 -> 0.065s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.062s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.062s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:88 Run 11 -> 0.062s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.071s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.071s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:88 Run 12 -> 0.071s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.064s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.064s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:88 Run 13 -> 0.064s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.073s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.073s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:88 Run 14 -> 0.073s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.066s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.066s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:88 Run 15 -> 0.066s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.064s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.064s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:88 Run 16 -> 0.064s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.062s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.063s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:88 Run 17 -> 0.063s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.062s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.062s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:88 Run 18 -> 0.062s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.065s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.066s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:88 Run 19 -> 0.066s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.069s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.069s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:88 Run 20 -> 0.069s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.062s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.063s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:88 Run 21 -> 0.063s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.061s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.061s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:88 Run 22 -> 0.061s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.062s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.063s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:88 Run 23 -> 0.063s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.065s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.065s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:88 Run 24 -> 0.065s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.060s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.061s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:88 Run 25 -> 0.061s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.061s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.061s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:88 Run 26 -> 0.061s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.060s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.060s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:88 Run 27 -> 0.060s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.070s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.071s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:88 Run 28 -> 0.071s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.065s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.065s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:88 Run 29 -> 0.065s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons?search=SUMMER&per_page=100 → Status code: 200 (completed in 0.064s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET coupons?search=SUMMER&per_page=100 → 0.064s
+DEBUG    tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:88 Run 30 -> 0.064s
+INFO     tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:117 ========================================================================
+INFO     tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:118 COUPONS PERFORMANCE SUMMARY | environment=CI
+INFO     tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:122 CI: github_actions (45021568635)
+INFO     tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:124 Git: 5195075 (main)
+INFO     tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:125 Average: 0.065s | P95: 0.072s
+INFO     tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:126 Samples: 30 measured; 3 warm-ups excluded
+INFO     tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:129 Minimum: 0.060s | Maximum: 0.081s
+INFO     tests.coupons.performance.test_coupon_performance:test_coupon_performance.py:130 ========================================================================

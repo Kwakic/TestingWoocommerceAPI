@@ -1,0 +1,112 @@
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/system_status → Status code: 200 (completed in 0.686s)
+INFO     EcommerceAPI.plugins.api.shared_api:shared_api.py:181 ✅ Environment validation passed (API reachable, auth OK). Base URL: http://localhost:8080/wp-json/wc/v3/
+INFO     EcommerceAPI.plugins.allure_autogen:allure_autogen.py:520 📎 Framework configuration attached to Allure
+INFO     tests.orders.performance.test_order_performance:test_order_performance.py:59 Warming up Orders endpoint (3 requests; excluded)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.107s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.107s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:71 Warm-up 01 -> 0.107s (excluded)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.117s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.117s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:71 Warm-up 02 -> 0.117s (excluded)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.099s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.100s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:71 Warm-up 03 -> 0.100s (excluded)
+INFO     tests.orders.performance.test_order_performance:test_order_performance.py:75 Orders benchmark (30 measured requests)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.101s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.102s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:88 Run 01 -> 0.102s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.099s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.099s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:88 Run 02 -> 0.099s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.100s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.101s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:88 Run 03 -> 0.101s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.100s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.101s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:88 Run 04 -> 0.101s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.099s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.100s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:88 Run 05 -> 0.100s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.100s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.100s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:88 Run 06 -> 0.100s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.097s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.098s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:88 Run 07 -> 0.098s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.100s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.101s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:88 Run 08 -> 0.101s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.099s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.100s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:88 Run 09 -> 0.100s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.097s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.098s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:88 Run 10 -> 0.098s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.099s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.100s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:88 Run 11 -> 0.100s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.097s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.097s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:88 Run 12 -> 0.097s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.100s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.100s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:88 Run 13 -> 0.100s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.126s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.126s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:88 Run 14 -> 0.126s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.104s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.105s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:88 Run 15 -> 0.105s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.099s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.099s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:88 Run 16 -> 0.099s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.098s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.099s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:88 Run 17 -> 0.099s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.099s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.099s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:88 Run 18 -> 0.099s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.100s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.101s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:88 Run 19 -> 0.101s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.100s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.101s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:88 Run 20 -> 0.101s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.101s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.101s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:88 Run 21 -> 0.101s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.100s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.101s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:88 Run 22 -> 0.101s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.103s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.104s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:88 Run 23 -> 0.104s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.099s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.100s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:88 Run 24 -> 0.100s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.099s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.100s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:88 Run 25 -> 0.100s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.098s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.098s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:88 Run 26 -> 0.098s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.099s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.099s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:88 Run 27 -> 0.099s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.097s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.098s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:88 Run 28 -> 0.098s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.099s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.099s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:88 Run 29 -> 0.099s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/orders?status=processing&per_page=100 → Status code: 200 (completed in 0.096s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET orders?status=processing&per_page=100 → 0.096s
+DEBUG    tests.orders.performance.test_order_performance:test_order_performance.py:88 Run 30 -> 0.096s
+INFO     tests.orders.performance.test_order_performance:test_order_performance.py:117 ========================================================================
+INFO     tests.orders.performance.test_order_performance:test_order_performance.py:118 ORDERS PERFORMANCE SUMMARY | environment=CI
+INFO     tests.orders.performance.test_order_performance:test_order_performance.py:120 CI: github_actions (45021568635)
+INFO     tests.orders.performance.test_order_performance:test_order_performance.py:122 Git: 5195075 (main)
+INFO     tests.orders.performance.test_order_performance:test_order_performance.py:123 Average: 0.101s | P95: 0.104s
+INFO     tests.orders.performance.test_order_performance:test_order_performance.py:124 Samples: 30 measured; 3 warm-ups excluded
+INFO     tests.orders.performance.test_order_performance:test_order_performance.py:127 Minimum: 0.096s | Maximum: 0.126s
+INFO     tests.orders.performance.test_order_performance:test_order_performance.py:128 ========================================================================

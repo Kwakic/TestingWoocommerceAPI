@@ -1,0 +1,116 @@
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/system_status → Status code: 200 (completed in 0.634s)
+INFO     EcommerceAPI.plugins.api.shared_api:shared_api.py:181 ✅ Environment validation passed (API reachable, auth OK). Base URL: http://localhost:8080/wp-json/wc/v3/
+INFO     EcommerceAPI.plugins.allure_autogen:allure_autogen.py:520 📎 Framework configuration attached to Allure
+INFO     tests.products.performance.test_product_performance:test_product_performance.py:143 Warming up Products endpoint (3 requests; excluded from results)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.077s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.078s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:162 Warm-up 01 -> 0.078s (excluded)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.071s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.072s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:162 Warm-up 02 -> 0.072s (excluded)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.067s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.068s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:162 Warm-up 03 -> 0.068s (excluded)
+INFO     tests.products.performance.test_product_performance:test_product_performance.py:164 Products benchmark (30 measured requests)
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.066s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.066s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:191 Run 01 → 0.066s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.067s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.067s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:191 Run 02 → 0.067s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.071s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.072s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:191 Run 03 → 0.072s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.073s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.074s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:191 Run 04 → 0.074s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.077s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.078s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:191 Run 05 → 0.078s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.070s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.070s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:191 Run 06 → 0.070s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.072s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.072s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:191 Run 07 → 0.072s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.071s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.071s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:191 Run 08 → 0.071s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.071s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.072s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:191 Run 09 → 0.072s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.069s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.069s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:191 Run 10 → 0.069s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.067s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.067s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:191 Run 11 → 0.067s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.069s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.069s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:191 Run 12 → 0.069s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.066s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.067s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:191 Run 13 → 0.067s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.068s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.068s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:191 Run 14 → 0.068s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.068s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.068s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:191 Run 15 → 0.068s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.065s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.066s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:191 Run 16 → 0.066s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.066s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.066s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:191 Run 17 → 0.066s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.072s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.073s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:191 Run 18 → 0.073s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.078s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.079s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:191 Run 19 → 0.079s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.066s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.067s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:191 Run 20 → 0.067s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.071s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.072s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:191 Run 21 → 0.072s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.078s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.078s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:191 Run 22 → 0.078s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.070s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.071s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:191 Run 23 → 0.071s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.066s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.066s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:191 Run 24 → 0.066s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.066s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.066s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:191 Run 25 → 0.066s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.067s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.067s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:191 Run 26 → 0.067s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.067s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.068s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:191 Run 27 → 0.068s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.068s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.069s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:191 Run 28 → 0.069s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.069s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.070s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:191 Run 29 → 0.070s
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/products?per_page=100 → Status code: 200 (completed in 0.070s)
+INFO     EcommerceAPI.src.utils.performance_utils:performance_utils.py:105 📡 GET products?per_page=100 → 0.071s
+DEBUG    tests.products.performance.test_product_performance:test_product_performance.py:191 Run 30 → 0.071s
+INFO     tests.products.performance.test_product_performance:test_product_performance.py:249 ================================================================================
+INFO     tests.products.performance.test_product_performance:test_product_performance.py:250 📊 PRODUCTS PERFORMANCE SUMMARY
+INFO     tests.products.performance.test_product_performance:test_product_performance.py:251 ================================================================================
+INFO     tests.products.performance.test_product_performance:test_product_performance.py:253 Environment : CI
+INFO     tests.products.performance.test_product_performance:test_product_performance.py:256 CI          : github_actions (45021568635)
+INFO     tests.products.performance.test_product_performance:test_product_performance.py:263 Git         : 5195075 (main)
+INFO     tests.products.performance.test_product_performance:test_product_performance.py:269 Average     : 0.070s
+INFO     tests.products.performance.test_product_performance:test_product_performance.py:270 P95         : 0.078s
+INFO     tests.products.performance.test_product_performance:test_product_performance.py:271 Samples     : 30 measured; 3 warm-up requests excluded
+INFO     tests.products.performance.test_product_performance:test_product_performance.py:276 Minimum     : 0.066s
+INFO     tests.products.performance.test_product_performance:test_product_performance.py:277 Maximum     : 0.079s
+INFO     tests.products.performance.test_product_performance:test_product_performance.py:279 ================================================================================

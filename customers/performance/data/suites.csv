@@ -1,8 +1,8 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Sun Nov 01 11:05:35 UTC 2026","Sun Nov 01 11:05:35 UTC 2026","333","tests.customers.performance","test_customer_performance","","","","test_customer_response_times","
+"passed","Sun Nov 22 12:21:13 UTC 2026","Sun Nov 22 12:21:16 UTC 2026","2839","tests.customers.performance","test_customer_performance","","","","test_customer_response_times","
 Benchmark the Customers endpoint.
 
-The benchmark executes multiple requests, measures their response times,
-calculates summary statistics, and validates the configured performance
-thresholds.
+The benchmark first sends excluded warm-up requests, then measures the
+configured number of sequential customer-list requests. It summarizes
+those measured responses and checks the configured thresholds.
 "

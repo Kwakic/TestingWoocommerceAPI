@@ -1,0 +1,2 @@
+"Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
+"passed","Sun Nov 22 12:21:20 UTC 2026","Sun Nov 22 12:21:23 UTC 2026","3364","tests.orders.performance","test_order_performance","","","","test_order_response_times","Measure GET /orders for processing orders; warm-ups are excluded."
