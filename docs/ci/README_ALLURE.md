@@ -238,6 +238,7 @@ Not every CI workflow is published to GitHub Pages.
 
 | Suite | Allure | GitHub Pages |
 |---|---|---|
+| [Manual Entity Tests](./README_CI_ARCHITECTURE.md#run-an-entity-suite-on-demand) | HTML and raw artifacts for this run | ❌ |
 | Smoke | ✅ | ✅ |
 | Integration | ✅ | ✅ |
 | Regression | ✅ | ✅ |

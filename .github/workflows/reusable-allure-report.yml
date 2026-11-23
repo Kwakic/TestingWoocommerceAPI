@@ -22,6 +22,12 @@ on:
         type: number
         default: 10
 
+      restore_history:
+        description: Include published trend history in the HTML report
+        required: false
+        type: boolean
+        default: true
+
       entity:
         required: false
         type: string
@@ -212,7 +218,7 @@ jobs:
       # Used for Allure history/trend preservation
       # --------------------------------------------------
       - name: Checkout gh-pages branch
-        if: env.HAS_ALLURE_RESULTS == 'true'
+        if: inputs.restore_history && env.HAS_ALLURE_RESULTS == 'true'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -227,7 +233,7 @@ jobs:
       # across CI runs.
       # --------------------------------------------------
       - name: Restore Allure history
-        if: env.HAS_ALLURE_RESULTS == 'true'
+        if: inputs.restore_history && env.HAS_ALLURE_RESULTS == 'true'
         env:
           SUITE_NAME: ${{ inputs.suite_name }}
           ENTITY_NAME: ${{ inputs.entity }}
