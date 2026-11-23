@@ -38,6 +38,8 @@ def customer_resource_helper(all_resources):
 @pytest.fixture(scope="function")
 def ui_resources(
     all_resources,
+    request: pytest.FixtureRequest,
+    cleanup_totals,
 ) -> Generator[ResourceRegistrar, None, None]:
     """Register UI-created resources for function-scoped cleanup.
 
@@ -91,9 +93,12 @@ def ui_resources(
         resources_by_type.setdefault(resource_type, []).append(resource_id)
 
     for resource_type, resource_ids in resources_by_type.items():
+        totals = cleanup_totals[resource_type]
+        totals.registered.update(resource_ids)
         bundle = all_resources.entities.get(resource_type)
 
         if bundle is None:
+            totals.outcomes["skipped"] += len(resource_ids)
             message = (
                 f"Cannot clean up UI resource type '{resource_type}': "
                 "entity is not registered."
@@ -116,32 +121,28 @@ def ui_resources(
         # resources use the same deletion semantics as API-created resources.
         from EcommerceAPI.src.shared.helpers.cleanup_helpers import cleanup_items
 
-        already_deleted_ids = set()
-        total_created = len(set(resource_ids))
-
-        cleanup_items(
+        deleted_ids = cleanup_items(
             resource_type=resource_type,
             resource_ids=resource_ids,
             delete_method=bundle.delete_method,
             label=resource_label,
             summary_log=cleanup_summary,
-            total_created=total_created,
-            already_deleted_ids=already_deleted_ids,
+            total_created=len(resource_ids),
+            outcomes=totals.outcomes,
         )
 
-        for resource_id in resource_ids:
+        for resource_id in deleted_ids:
             all_resources.mark_deleted(resource_type, resource_id)
 
-    created_counts = {
-        resource_type: len(set(resource_ids))
+    registered_counts = {
+        resource_type: len(resource_ids)
         for resource_type, resource_ids in resources_by_type.items()
     }
 
-    log.info(
-        "\n🧹 ====================================== UI CLEANUP SUMMARY ======================================"
-    )
-    log.info("📊 Created during test run: %s", created_counts)
-    log.info("🧾 Cleanup total summary:")
+    log.info("\n🧹 ==================== UI CLEANUP SUMMARY ====================")
+    log.info("Test: %s", request.node.nodeid)
+    log.info("📊 Registered by this UI test: %s", registered_counts)
+    log.info("🧾 Cleanup results:")
     for line in cleanup_summary:
         log.info("   • %s", line)
-    log.info("✅ All UI test data cleanup completed.\n")
+    log.info("==================== END UI CLEANUP SUMMARY ====================\n")

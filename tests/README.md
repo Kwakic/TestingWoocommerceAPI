@@ -295,8 +295,15 @@ with `python -m pip install -e './EcommerceAPI[dev]'` without starting Docker.
 |---|---|---|
 | Docker-backed local development (recommended) | First run `make run`; later use `make test` for the full suite or `API_ENV=test pytest -m "orders and smoke" -n auto` for Orders smoke tests. | Pytest runs on the host; WordPress, WooCommerce, and MySQL run in Docker Compose. |
 | Existing WAMP site | Copy `.env.wamp.example` to `.env.wamp`, fill in its REST and DB settings, then run `API_ENV=local pytest -m orders -n auto`. | Pytest runs on the host against the existing WAMP installation. REST tests only are supported. |
-| Dockerized test runner | Build with `docker build -t ecommerceapi-test-runner .`, then run `make test-docker`. | Pytest runs inside the test-runner container; this target runs the full suite and cleans up the Compose application after the run. |
+| Dockerized test runner | Build with `docker build -t ecommerceapi-test-runner .`, then run `make test-docker`; pass selectors with `PYTEST_ARGS='-m "orders and smoke" -n auto'` or a test path/node ID. Use `DOCKER_INFRA=reuse` to keep an existing provisioned stack running. | Pytest runs inside the test-runner container. Managed mode owns and cleans up the Compose application it starts; reuse mode restores the WordPress URLs and leaves infrastructure running. Both persist reports and UI artifacts on the host. |
 | GitHub Actions CI | Open **Actions**, select a workflow and choose **Run workflow** when supported; pull requests and pushes trigger configured workflows automatically. | GitHub Actions provisions its own WooCommerce environment and sets `API_ENV=ci`. |
+
+**Docker reuse and data:** `DOCKER_INFRA=reuse` retains the running
+WordPress/MySQL environment, **not every test-created record**. Pytest cleanup
+still runs and may delete owned customers, products, orders or coupons; seeded
+data is intended to persist. See the
+[Docker Infrastructure Guide](docs/ci/README_DOCKER_INFRASTRUCTURE.md)
+for details.
 
 For WAMP, Bash/Git Bash accepts the inline environment assignment above. In
 PowerShell, use:
@@ -317,6 +324,38 @@ GitHub Actions is the supported CI platform for this repository. The local
 launch or simulate a CI workflow. See the
 [CI Architecture Guide](../docs/ci/README_CI_ARCHITECTURE.md) for CI marker
 selections and workflow behavior.
+
+`make run`, direct host pytest and `make test-docker` share a local execution
+lock to prevent concurrent test runs against the same mutable WooCommerce
+environment. See the [Docker Infrastructure Guide](../docs/ci/README_DOCKER_INFRASTRUCTURE.md)
+for managed/reuse behavior, artifact locations and stale-lock recovery.
+
+### When test records are deleted
+
+Look for **🧹 API CLEANUP SUMMARY** at module teardown or **🧹 UI CLEANUP SUMMARY** at test teardown. Each banner names the module or test and shows the deletion outcomes for its registered IDs.
+
+| How the record was created | Who tracks it | When cleanup runs |
+|---|---|---|
+| REST `create_valid_coupon`, `create_valid_customer`, `create_valid_order`, `create_valid_product` (including calls from UI tests) | The function-scoped creation fixture validates the response and registers the returned ID in `shared_api_resources`, unless `skip_cleanup=True`. | At teardown of that **module fixture on that worker**. Several tests can contribute to one summary. |
+| GraphQL product creation | Calling `graphql_resources(databaseId)` adds the product to the same module registry. | At the same module teardown, using the WooCommerce REST DELETE endpoint. |
+| Browser creation registered with `ui_resources`, such as a newly registered customer | A separate list of explicit IDs belongs to that **one UI test**. | At function teardown, including after a later assertion fails. Closing a browser context by itself only cleans up browser state. |
+| Seed scripts, raw API calls, browser actions and direct provisioner calls | Creation alone adds no ID to either registry. Some deletion tests explicitly delete their own record. | Only an explicit registration or a separate delete covers that record. |
+
+Each API banner covers **one module fixture on one worker**. A UI banner covers **one test**. At the end of pytest, **🧹 SESSION CLEANUP SUMMARY** combines the completed API and UI teardowns into one terminal table. With xdist, the controller prints it once after receiving the workers’ reports. For example, if the creation module registers and deletes 22 coupons and the retrieval module registers and deletes three more, the session’s coupons row shows 25 registered and 25 deleted. The performance test only reads coupons.
+
+| Session column | What it measures |
+|---|---|
+| Registered | Distinct IDs for that entity reported by teardown. Repeated registration across fixtures or workers counts once. |
+| Deleted | Teardown DELETE calls that returned HTTP 200 or 204. |
+| Missing | Teardown DELETE calls that returned HTTP 404. |
+| Failed | Other DELETE responses and request exceptions. |
+| Skipped | Registrations explicitly marked deleted before teardown, or registrations with no configured entity cleanup. |
+
+The outcome columns count fixture actions. If the same ID reaches two fixtures, one may delete it and the other may skip it. The table appears after passing runs and ordinary test failures when there are registered resources to report. If a worker exits without sending its report, the controller names that worker and labels the available totals **partial**. Unregistered records are outside all of these counts.
+
+Read the registered count separately from the DELETE outcomes. An ID explicitly marked deleted is skipped. A successful DELETE response (HTTP 200 or 204) counts as deleted. HTTP 404 is reported separately, and other unconfirmed responses or request exceptions are logged as failures. The helper continues through the remaining IDs. These cleanup errors are logged and can accompany a passing pytest result. Older images used the label **Created during test run** and could count an HTTP error response as a deletion. Check the individual responses when reading an older report.
+
+Both Docker modes run these same fixtures. Use reuse mode to inspect the surviving database. See the [read-only inspection steps](../docs/ci/README_DOCKER_INFRASTRUCTURE.md#inspect-test-data-after-a-run) and [known gaps in registration](../docs/development/README_TEST_DATA_ARCHITECTURE.md#cleanup-coverage-and-limits).
 
 ### Common pytest selections
 

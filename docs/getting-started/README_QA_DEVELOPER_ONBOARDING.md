@@ -406,23 +406,34 @@ This prevents port conflicts and ensures that Docker commands are operating on t
 make test
 ```
 
-For an optional containerized run, build the test-runner image once and run:
+To run pytest inside Docker against the WooCommerce site you prepared with
+`make run`, build the runner image and use the running site:
 
 ```bash
-# Rebuild the image when the Dockerfile or dependencies change
+# Build before the first run. Rebuild after changing tests or dependencies.
 docker build -t ecommerceapi-test-runner .
 
-# Execute tests inside Docker
-make test-docker
+# Repeat this command while the site is running
+make test-docker DOCKER_INFRA=reuse
 ```
 
-`make run` remains the Docker host-based setup and development workflow. The
-containerized target saves reports and test artifacts on the host and cleans
-up the WooCommerce infrastructure after execution. See the
-[Docker Infrastructure Guide](../ci/README_DOCKER_INFRASTRUCTURE.md) for
-details.
+If you are starting with no running project containers, use
+`make up && make setup` once before the first reuse run. For a single run
+with automatic cleanup, follow the managed example in the
+[Docker Infrastructure Guide](../ci/README_DOCKER_INFRASTRUCTURE.md#run-it-with-make).
 
-### Stop a host-based environment
+**Reuse and test data:** The WordPress/MySQL containers and database remain
+available, but pytest still runs its normal fixture teardown. Test-created
+customers, products, orders, or coupons may be removed; some untracked records
+may remain. Seeded baseline data is intended to persist. This applies whether
+or not you use `-n auto`. After URL restoration, inspect the site at
+`http://localhost:8080` or `http://localhost:8080/wp-admin`. See the
+[Docker Infrastructure Guide](../ci/README_DOCKER_INFRASTRUCTURE.md)
+for details.
+
+### Clean up after the last host or reuse run
+
+When you are ready to remove the site's test database and containers, run:
 
 ```bash
 make down

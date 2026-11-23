@@ -1111,7 +1111,25 @@ Coupon C
 the ownership registry should know that these resources belong to that test
 and can therefore be cleaned up.
 
-Stable environment seeds remain untouched.
+### Cleanup coverage and limits
+
+The ownership registry holds explicitly supplied entity/ID pairs in memory. It deduplicates IDs and records a manual deletion only for an ID it already owns. The teardown helper sends a force DELETE for each remaining registered ID. WordPress products seeded by SKU and UI customer accounts seeded by username never enter the registry during setup. Reading a seed or logging in as a seeded customer also leaves it outside the registry. **The registry trusts the caller**: registering an existing seed ID by mistake makes it eligible for deletion. There is no seed-ID exclusion list, database rollback, or reset of edits to existing records.
+
+The following paths matter when inspecting a reused database:
+
+| Path | Records outside automatic cleanup |
+|---|---|
+| [GraphQL category filter](../../tests/products/graphql/test_filter_products.py) | The test registers its product, but creates a product category without registering or deleting the category. |
+| [UI checkout](../../tests/ui/tests/shopping/checkout/test_customer_checkout.py) | Three checkouts place real orders. The API fixtures register the products and customers. The tests do not register the resulting order IDs. |
+| [UI product reviews](../../tests/ui/tests/catalog/test_product_review.py) | The product is registered. Review/comment IDs are never registered or counted, so the fixture summary cannot verify any deletion WooCommerce or WordPress performs with the parent product. |
+| [Customer deletion](../../tests/customers/api/test_customer_deletion.py), [GraphQL product deletion](../../tests/products/graphql/test_delete_product.py) and [GraphQL error handling](../../tests/products/graphql/test_product_error_handling.py) | These include cases that create a record and perform their own delete without a fallback registration. A failure before that delete can leave the record. Other customer deletion cases register first and mark deleted after the API confirms deletion. |
+| [Raw duplicate coupon POST](../../tests/coupons/api/test_create_coupons.py) and other negative creation tests | The valid prerequisite is tracked when created through a fixture. The raw request expects rejection. An unexpected successful creation is outside the registry. |
+
+Even on the normal fixture path, WooCommerce can commit a record before its ID reaches the registry. For example, a response can be lost or validation can fail. UI customer registration has a similar window between submitting the form and resolving the new customer by its unique email.
+
+With xdist each worker owns its own fixture instances and teardown. An assertion failure normally allows those fixtures to finish. A handled interrupt may also allow teardown. A killed process, lost worker or unavailable API may leave records behind. A replacement worker starts with an empty registry. Inspect the affected run and exact IDs before taking any cleanup action. See the [fixture scope and outcome table](../../tests/README.md#when-test-records-are-deleted).
+
+The controller combines registered IDs and outcome counts from workers that finish teardown. This produces one session report for all entities. Deletion remains the responsibility of the API module and UI function fixtures.
 
 ---
 

@@ -1,5 +1,13 @@
 # Makefile = orchestrates project execution
 
+# These recipes use POSIX shell syntax. GNU Make on Windows defaults to
+# cmd.exe unless the shell is selected explicitly, so choose Bash for the
+# supported Git Bash developer environment.
+ifeq ($(OS),Windows_NT)
+SHELL := bash
+.SHELLFLAGS := -c
+endif
+
 # What each Make target actually does?
 #
 # The Makefile has a clear separation of responsibilities:
@@ -40,7 +48,22 @@
 #                                     generated API credentials into .env
 #   Python                        -> consumes .env, never creates it
 
-.PHONY: up setup install test test-ci test-docker run down clean ensure-env venv
+.PHONY: up setup install test test-ci test-docker run down clean ensure-env venv guard-test-lock
+
+DOCKER_INFRA ?= managed
+
+# Host pytest and Docker test execution share the local WordPress database.
+# The lock is acquired atomically so only one test workflow can change or use
+# that environment at a time. The Makefile-owned workflows pass the internal
+# flag to their recursive targets; direct Make commands are blocked while a
+# test run owns the lock.
+guard-test-lock:
+	@if [ -d .test-execution.lock ] && [ "$$TEST_EXECUTION_LOCK_HELD_BY_MAKE" != "1" ]; then \
+		echo "[ERROR] A test execution currently owns the local WooCommerce environment."; \
+		if [ -f .test-execution.lock/owner.txt ]; then cat .test-execution.lock/owner.txt; fi; \
+		echo "Wait for it to finish before changing or stopping the environment."; \
+		exit 2; \
+	fi
 
 # --------------------------------------------------
 # Project-local virtual environment.
@@ -178,7 +201,7 @@ venv:
 # and therefore nothing to force-remove. See the comment at the top of
 # docker-compose.wp.yml for the full reasoning.
 # --------------------------------------------------
-up: ensure-env
+up: ensure-env guard-test-lock
 	@echo "[OK] Ensuring WordPress data directory exists..."
 	@mkdir -p wp-data
 	@echo "[DOCKER]  Starting Docker infrastructure..."
@@ -203,7 +226,7 @@ up: ensure-env
 # project that writes those values into .env, and it never touches
 # anything else in that file.
 # --------------------------------------------------
-setup: ensure-env
+setup: ensure-env guard-test-lock
 	@echo "[SETUP] Bootstrapping WooCommerce..."
 	@bash scripts/setup.sh | bash scripts/write_env_credentials.sh
 	@echo "[SETUP] Seeding WooCommerce test products..."
@@ -242,22 +265,48 @@ test-ci: venv
 # --------------------------------------------------
 # Run pytest in the reusable Docker test-runner image.
 #
-# Reuse the normal infrastructure/bootstrap targets, discover the Compose
-# network from its running db container, and bind-mount generated artifacts
-# so --rm does not discard them. WooCommerce signs OAuth requests against its
-# configured home URL, so temporarily switch it to the Compose hostname for
-# this containerized run. The EXIT trap restores the prior URLs, runs
-# `make down`, and keeps the original setup/pytest status if cleanup fails.
+# Usage:
+#   make test-docker
+#   make test-docker PYTEST_ARGS='-m "customers and integration" -n auto'
+#   make test-docker DOCKER_INFRA=reuse PYTEST_ARGS='tests/orders/api -n auto'
+#
+# managed (default) owns a fresh Compose lifecycle and refuses to take over
+# any existing Compose containers. reuse requires a running, provisioned stack
+# and never starts, provisions, or stops it. Both modes hold the shared test
+# lock, preserve artifacts with bind mounts, restore WordPress URLs, and retain
+# the original pytest/setup failure after cleanup.
 # --------------------------------------------------
-test-docker:
+test-docker: ensure-env
 	@set +e; \
 	TEST_EXIT=0; \
+	CLEANUP_EXIT=0; \
 	SITE_URL_SAVED=0; \
+	OWN_INFRA=0; \
+	LOCK_ACQUIRED=0; \
+	LOCK_DIR=.test-execution.lock; \
+	LOCK_TOKEN="make-docker-$$(date +%s)-$$$$"; \
 	ORIGINAL_HOME=; \
 	ORIGINAL_SITEURL=; \
+	if [ "$(DOCKER_INFRA)" != "managed" ] && [ "$(DOCKER_INFRA)" != "reuse" ]; then \
+		echo "[ERROR] DOCKER_INFRA must be 'managed' or 'reuse'."; \
+		exit 2; \
+	fi; \
+	if ! mkdir "$$LOCK_DIR" 2>/dev/null; then \
+		echo "[ERROR] Another test execution already owns the local environment lock."; \
+		if [ -f "$$LOCK_DIR/owner.txt" ]; then cat "$$LOCK_DIR/owner.txt"; fi; \
+		echo "Wait for it to finish. If it was interrupted, verify no test is running before removing the stale lock directory."; \
+		exit 2; \
+	fi; \
+	LOCK_ACQUIRED=1; \
+	if ! printf 'token=%s\npid=%s\nmode=docker-%s\n' "$$LOCK_TOKEN" "$$$$" "$(DOCKER_INFRA)" > "$$LOCK_DIR/owner.txt"; then \
+		rm -f "$$LOCK_DIR/owner.txt"; rmdir "$$LOCK_DIR"; \
+		echo "[ERROR] Could not write the local environment lock."; \
+		exit 2; \
+	fi; \
+	TEST_EXECUTION_LOCK_HELD_BY_MAKE=1; export TEST_EXECUTION_LOCK_HELD_BY_MAKE; \
 	cleanup() { \
-		trap - 0; \
-		CLEANUP_EXIT=0; \
+		STATUS=$$?; \
+		trap - 0 INT TERM; \
 		if [ "$$SITE_URL_SAVED" -eq 1 ]; then \
 			echo "[DOCKER] Restoring WordPress site URLs..."; \
 			MSYS_NO_PATHCONV=1 docker compose -f docker-compose.wp.yml run --rm -T wpcli wp option update home "$$ORIGINAL_HOME" --allow-root >/dev/null; \
@@ -269,25 +318,64 @@ test-docker:
 				CLEANUP_EXIT=1; \
 			fi; \
 		fi; \
-		echo "[DOCKER] Stopping WooCommerce infrastructure..."; \
-		$(MAKE) down; \
-		DOWN_EXIT=$$?; \
-		if [ "$$CLEANUP_EXIT" -eq 0 ] && [ "$$DOWN_EXIT" -ne 0 ]; then CLEANUP_EXIT=$$DOWN_EXIT; fi; \
-		if [ "$$TEST_EXIT" -ne 0 ]; then exit "$$TEST_EXIT"; fi; \
-		exit "$$CLEANUP_EXIT"; \
+		if [ "$$OWN_INFRA" -eq 1 ]; then \
+			echo "[DOCKER] Stopping managed WooCommerce infrastructure..."; \
+			TEST_EXECUTION_LOCK_HELD_BY_MAKE=1 $(MAKE) --no-print-directory down; \
+			DOWN_EXIT=$$?; \
+			if [ "$$CLEANUP_EXIT" -eq 0 ] && [ "$$DOWN_EXIT" -ne 0 ]; then CLEANUP_EXIT=$$DOWN_EXIT; fi; \
+		else \
+			echo "[DOCKER] Reused WooCommerce infrastructure remains running."; \
+		fi; \
+		if [ "$$LOCK_ACQUIRED" -eq 1 ] && grep -Fqx "token=$$LOCK_TOKEN" "$$LOCK_DIR/owner.txt" 2>/dev/null; then \
+			rm -f "$$LOCK_DIR/owner.txt"; \
+			rmdir "$$LOCK_DIR" || CLEANUP_EXIT=1; \
+		fi; \
+		FINAL_EXIT=$$TEST_EXIT; \
+		if [ "$$FINAL_EXIT" -eq 0 ]; then FINAL_EXIT=$$CLEANUP_EXIT; fi; \
+		if [ "$$FINAL_EXIT" -eq 0 ] && [ "$$STATUS" -ne 0 ]; then FINAL_EXIT=$$STATUS; fi; \
+		exit "$$FINAL_EXIT"; \
 	}; \
 	trap cleanup 0; \
-	$(MAKE) up; \
-	TEST_EXIT=$$?; \
-	if [ "$$TEST_EXIT" -eq 0 ]; then \
-		$(MAKE) setup; \
+	trap 'TEST_EXIT=130; exit 130' INT; \
+	trap 'TEST_EXIT=143; exit 143' TERM; \
+	EXISTING_CONTAINERS=$$(docker compose -f docker-compose.wp.yml ps -aq 2>/dev/null); \
+	if [ "$(DOCKER_INFRA)" = "managed" ]; then \
+		if [ -n "$$EXISTING_CONTAINERS" ]; then \
+			echo "[ERROR] Managed mode will not take over an existing Compose environment."; \
+			echo "Use DOCKER_INFRA=reuse for a running, provisioned stack, or stop it explicitly before a managed run."; \
+			TEST_EXIT=2; \
+			exit "$$TEST_EXIT"; \
+		fi; \
+		OWN_INFRA=1; \
+		echo "[DOCKER] Starting a managed WooCommerce environment..."; \
+		TEST_EXECUTION_LOCK_HELD_BY_MAKE=1 $(MAKE) --no-print-directory up; \
 		TEST_EXIT=$$?; \
+		if [ "$$TEST_EXIT" -eq 0 ]; then \
+			TEST_EXECUTION_LOCK_HELD_BY_MAKE=1 $(MAKE) --no-print-directory setup; \
+			TEST_EXIT=$$?; \
+		fi; \
+	else \
+		if [ -z "$$EXISTING_CONTAINERS" ]; then \
+			echo "[ERROR] Reuse mode requires an existing running Compose environment."; \
+			TEST_EXIT=2; \
+			exit "$$TEST_EXIT"; \
+		fi; \
+		DB_RUNNING=$$(docker compose -f docker-compose.wp.yml ps -q db); \
+		WP_RUNNING=$$(docker compose -f docker-compose.wp.yml ps -q wordpress); \
+		if [ -z "$$DB_RUNNING" ] || [ -z "$$WP_RUNNING" ]; then \
+			echo "[ERROR] Reuse mode requires both db and wordpress services to be running."; \
+			TEST_EXIT=2; \
+			exit "$$TEST_EXIT"; \
+		fi; \
+		echo "[DOCKER] Reusing the existing provisioned WooCommerce environment..."; \
 	fi; \
 	if [ "$$TEST_EXIT" -eq 0 ]; then \
-		ORIGINAL_HOME=$$(MSYS_NO_PATHCONV=1 docker compose -f docker-compose.wp.yml run --rm -T wpcli wp option get home --allow-root | tr -d '\r'); \
+		ORIGINAL_HOME_RAW=$$(MSYS_NO_PATHCONV=1 docker compose -f docker-compose.wp.yml run --rm -T wpcli wp option get home --allow-root); \
 		HOME_GET_EXIT=$$?; \
-		ORIGINAL_SITEURL=$$(MSYS_NO_PATHCONV=1 docker compose -f docker-compose.wp.yml run --rm -T wpcli wp option get siteurl --allow-root | tr -d '\r'); \
+		ORIGINAL_HOME=$$(printf '%s' "$$ORIGINAL_HOME_RAW" | tr -d '\r'); \
+		ORIGINAL_SITEURL_RAW=$$(MSYS_NO_PATHCONV=1 docker compose -f docker-compose.wp.yml run --rm -T wpcli wp option get siteurl --allow-root); \
 		SITEURL_GET_EXIT=$$?; \
+		ORIGINAL_SITEURL=$$(printf '%s' "$$ORIGINAL_SITEURL_RAW" | tr -d '\r'); \
 		if [ "$$HOME_GET_EXIT" -ne 0 ] || [ "$$SITEURL_GET_EXIT" -ne 0 ] || [ -z "$$ORIGINAL_HOME" ] || [ -z "$$ORIGINAL_SITEURL" ]; then \
 			echo "[ERROR] Could not read the current WordPress site URLs."; \
 			TEST_EXIT=1; \
@@ -333,6 +421,8 @@ test-docker:
 					-e "DB_PASSWORD=$$DB_PASSWORD" \
 					-e "DB_DATABASE=$$DB_DATABASE" \
 					-e API_ENV=docker \
+					-e DOCKER_INFRA="$(DOCKER_INFRA)" \
+					-e TEST_EXECUTION_LOCK_HELD_BY_MAKE=0 \
 					-e DB_HOST=db \
 					-e DB_PORT=3306 \
 					-e LOG_DIR=/app/reports/logs \
@@ -342,7 +432,7 @@ test-docker:
 						--tracing retain-on-failure \
 						--screenshot only-on-failure \
 						--video retain-on-failure \
-						--output test-results -v; \
+						--output test-results -v $(PYTEST_ARGS); \
 				TEST_EXIT=$$?; \
 			fi; \
 		fi; \
@@ -372,12 +462,43 @@ test-docker:
 #
 #   make run
 # --------------------------------------------------
-run: ensure-env up setup install
-	@set -e; \
+run:
+	@set +e; \
+		TEST_EXIT=0; \
+		LOCK_ACQUIRED=0; \
+		LOCK_DIR=.test-execution.lock; \
+		LOCK_TOKEN="make-run-$$(date +%s)-$$$$"; \
+		if ! mkdir "$$LOCK_DIR" 2>/dev/null; then \
+			echo "[ERROR] Another test execution already owns the local environment lock."; \
+			if [ -f "$$LOCK_DIR/owner.txt" ]; then cat "$$LOCK_DIR/owner.txt"; fi; \
+			exit 2; \
+		fi; \
+		LOCK_ACQUIRED=1; \
+		if ! printf 'token=%s\npid=%s\nmode=host-run\n' "$$LOCK_TOKEN" "$$$$" > "$$LOCK_DIR/owner.txt"; then \
+			rm -f "$$LOCK_DIR/owner.txt"; rmdir "$$LOCK_DIR"; \
+			echo "[ERROR] Could not write the local environment lock."; \
+			exit 2; \
+		fi; \
+		cleanup() { \
+			STATUS=$$?; \
+			trap - 0 INT TERM; \
+			if [ "$$LOCK_ACQUIRED" -eq 1 ] && grep -Fqx "token=$$LOCK_TOKEN" "$$LOCK_DIR/owner.txt" 2>/dev/null; then \
+				rm -f "$$LOCK_DIR/owner.txt"; \
+				rmdir "$$LOCK_DIR" || { if [ "$$TEST_EXIT" -eq 0 ]; then TEST_EXIT=2; fi; }; \
+			fi; \
+			if [ "$$TEST_EXIT" -ne 0 ]; then exit "$$TEST_EXIT"; fi; \
+			exit "$$STATUS"; \
+		}; \
+		trap cleanup 0; \
+		trap 'TEST_EXIT=130; exit 130' INT; \
+		trap 'TEST_EXIT=143; exit 143' TERM; \
+		TEST_EXECUTION_LOCK_HELD_BY_MAKE=1 $(MAKE) --no-print-directory ensure-env up setup install; \
+		TEST_EXIT=$$?; \
+		if [ "$$TEST_EXIT" -ne 0 ]; then exit "$$TEST_EXIT"; fi; \
 		DB_CONTAINER="$$(docker compose -f docker-compose.wp.yml ps -q db)"; \
 		if [ -z "$$DB_CONTAINER" ]; then \
 			echo "[ERROR] Could not find the Compose db container for host-based pytest."; \
-			exit 1; \
+			TEST_EXIT=1; exit "$$TEST_EXIT"; \
 		fi; \
 		DB_ENVIRONMENT="$$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$$DB_CONTAINER")"; \
 		RUN_DB_USER="$$(printf '%s\n' "$$DB_ENVIRONMENT" | sed -n 's/^MYSQL_USER=//p')"; \
@@ -385,9 +506,10 @@ run: ensure-env up setup install
 		RUN_DB_DATABASE="$$(printf '%s\n' "$$DB_ENVIRONMENT" | sed -n 's/^MYSQL_DATABASE=//p')"; \
 		if [ -z "$$RUN_DB_USER" ] || [ -z "$$RUN_DB_PASSWORD" ] || [ -z "$$RUN_DB_DATABASE" ]; then \
 			echo "[ERROR] Could not read application DB credentials from the Compose db container."; \
-			exit 1; \
+			TEST_EXIT=1; exit "$$TEST_EXIT"; \
 		fi; \
 		echo "[TEST] Running host-based pytest against Docker Compose (API_ENV=test)..."; \
+		TEST_EXECUTION_LOCK_HELD_BY_MAKE=1 \
 		API_ENV=test \
 		DB_USER="$$RUN_DB_USER" \
 		DB_PASSWORD="$$RUN_DB_PASSWORD" \
@@ -395,7 +517,9 @@ run: ensure-env up setup install
 		DB_PORT=3306 \
 		DB_DATABASE="$$RUN_DB_DATABASE" \
 		DB_TABLE_PREFIX=wp_ \
-		$(VENV_PYTHON) -m pytest -v
+		$(VENV_PYTHON) -m pytest -v; \
+		TEST_EXIT=$$?; \
+		exit "$$TEST_EXIT"
 
 # --------------------------------------------------
 # Stop infrastructure and remove everything Docker manages
@@ -403,7 +527,7 @@ run: ensure-env up setup install
 #
 # NOTE: this does NOT remove ./wp-data — see `clean` below.
 # --------------------------------------------------
-down:
+down: guard-test-lock
 	docker compose -f docker-compose.wp.yml down -v --remove-orphans
 
 # --------------------------------------------------

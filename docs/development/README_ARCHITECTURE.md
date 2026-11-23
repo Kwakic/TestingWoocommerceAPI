@@ -74,7 +74,8 @@ make run
 
 To validate the packaged Docker test runner, build `ecommerceapi-test-runner`
 and run `make test-docker`. That target orchestrates the containerized suite
-and cleans up the WooCommerce infrastructure afterward. See the
+and by default cleans up the WooCommerce infrastructure it starts; reuse mode
+leaves an existing provisioned stack running. See the
 [Docker Infrastructure Guide](../ci/README_DOCKER_INFRASTRUCTURE.md) for
 details.
 
@@ -102,8 +103,13 @@ details.
 * Structured logs
 
 After `make run`, the Docker infrastructure remains available for local
-iteration; use `make down` when finished. `make test-docker` stops the
-WooCommerce infrastructure automatically after its containerized run.
+iteration; use `make down` when finished. Managed `make test-docker` stops the
+WooCommerce infrastructure it started; `DOCKER_INFRA=reuse` leaves an existing
+provisioned stack running. Infrastructure persistence is separate from test-data ownership: reuse mode
+does not disable fixture teardown or resource cleanup, so test-created records
+may be deleted even though the database and containers remain. See the
+[Docker Infrastructure Guide](../ci/README_DOCKER_INFRASTRUCTURE.md)
+for the detailed lifecycle table.
 
 ---
 

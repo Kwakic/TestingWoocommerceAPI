@@ -605,6 +605,8 @@ def build_entity_matrix() -> dict[str, list[dict[str, str]]]:
 # since this fixture never receives values via .send() or returns a final value.
 def shared_api_resources(
     api_client: APIClient,
+    request: pytest.FixtureRequest,
+    cleanup_totals,
 ) -> Iterator[SharedAPIResources]:
     """
     Module-scoped fixture that discovers and exposes API helpers, DAOs, and resource tracking utils.
@@ -723,8 +725,14 @@ def shared_api_resources(
             if not resource_ids:
                 continue
 
+            totals = cleanup_totals[resource_type]
+            totals.registered.update(resource_ids)
             bundle = entity_registry.get(resource_type)
             if not bundle:
+                totals.outcomes["skipped"] += len(resource_ids)
+                summary_log.append(
+                    f"{resource_type}: {len(resource_ids)} skipped (no entity bundle)"
+                )
                 log.warning(
                     "No entity bundle for %s — skipping teardown.",
                     resource_type,
@@ -752,20 +760,22 @@ def shared_api_resources(
                 summary_log=summary_log,
                 total_created=total_created,
                 already_deleted_ids=already_deleted_ids,
+                outcomes=totals.outcomes,
             )
 
-        created_counts = ownership_registry.counts()
+        log.info("\n🧹 ==================== API CLEANUP SUMMARY ====================")
+        log.info("Module: %s", request.node.nodeid)
         log.info(
-            "\n\n🧹 ====================================== CLEANUP SUMMARY ======================================"
+            "📊 Registered in this module on this worker: %s",
+            ownership_registry.counts(),
         )
-        log.info("📊 Created during test run: %s", created_counts)
-        log.info("🧾 Cleanup total summary:")
+        log.info("🧾 Cleanup results:")
         for line in summary_log:
             log.info("   • %s", line)
-        log.info("✅ All test data cleanup completed.\n")
+        log.info("==================== END API CLEANUP SUMMARY ====================\n")
     else:
         # No resources were registered — skip all teardown logs.
-        log.debug("🧹 No test data created — skipping teardown.")
+        log.debug("No resource IDs registered for module cleanup.")
 
 
 # ----------------------------------------------------------------

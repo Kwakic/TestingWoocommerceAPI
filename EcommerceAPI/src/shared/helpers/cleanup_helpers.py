@@ -1,3 +1,4 @@
+from collections import Counter
 from functools import partial
 from typing import Callable, Iterable, List, Optional, Any, Set, Dict
 import logging as logger
@@ -38,7 +39,9 @@ def cleanup_items(
     total_created: int = 0,
     skip_message: Optional[str] = None,
     already_deleted_ids: Optional[Set[Any]] = None,
-) -> None:
+    *,
+    outcomes: Optional[Counter[str]] = None,
+) -> Set[Any]:
     """
     Generic teardown cleanup function for deleting test-created resources.
 
@@ -65,22 +68,24 @@ def cleanup_items(
         resource_ids: Iterable of resource identifiers to attempt deletion on.
         label: Friendly singular label for logs (e.g., "customers"). Defaults to resource_type.rstrip("s").
         summary_log: Optional list to which a summary line will be appended.
-        total_created: How many were created during the test session (for summary).
+        total_created: Number of distinct IDs registered in this fixture (for summary).
         skip_message: Optional message used when there is nothing to cleanup.
         already_deleted_ids: Set of IDs that were already removed during test execution.
+        outcomes: Optional session reporting counter for this entity's teardown outcomes.
         delete_method: Callable used to perform deletions.
                        Expected to accept the endpoint or path and optional params.
-                       Examples:
-                         - api_client.delete_it.py
-                         - custom_delete_method
+                       Returns a response with an HTTP status_code (e.g. api_client.delete).
                        The function will be called like:
                          delete_method(f"{resource_type}/{resource_id}", params={"force": True})
                        (This preserves previous behaviour.)
 
+    Returns:
+        IDs for which the API confirmed deletion (HTTP 200 or 204).
     """
 
     label = label or resource_type.rstrip("s")
-    deleted = skipped = failed = manually_deleted = 0
+    deleted_ids: Set[Any] = set()
+    skipped = failed = manually_deleted = not_found = 0
     seen_ids: Set[Any] = set()
     already_deleted_ids = already_deleted_ids or set()
 
@@ -92,8 +97,8 @@ def cleanup_items(
         msg = skip_message or f"🧹 Nothing to clean up for {label}(s)."
         logger.info(msg)
         if summary_log is not None:
-            summary_log.append(f"{label}: 0 deleted ({total_created} created)")
-        return
+            summary_log.append(f"{label}: 0 deleted ({total_created} registered)")
+        return deleted_ids
 
     logger.info(f"🧹 Cleaning up {label}(s)... ({len(resource_ids_list)} queued)")
 
@@ -120,25 +125,41 @@ def cleanup_items(
             logger.debug(f"🔄 Deleting {label} ID: {resource_id}")
             # Keep the same call shape as before for compatibility:
             # callers typically pass a bound APIClient.delete method which accepts an endpoint string and params
-            delete_method(f"{resource_type}/{resource_id}", params={"force": True})
-            logger.info(f"✅ Deleted {label} ID: {resource_id}")
-            deleted += 1
+            response = delete_method(
+                f"{resource_type}/{resource_id}", params={"force": True}
+            )
         except Exception as e:
-            # Normalize message for heuristic checks
-            err_msg = str(e).lower()
-            if any(
-                keyword in err_msg for keyword in ["not found", "does not exist", "404"]
-            ):
-                logger.warning(
-                    f"⚠️ {label.capitalize()} ID {resource_id} not found during teardown. Likely already deleted."
-                )
-                manually_deleted += 1
-            else:
-                logger.error(f"❌ Failed to delete {label} ID {resource_id}: {e}")
-                failed += 1
+            logger.error("Failed to delete %s ID %s: %s", label, resource_id, e)
+            failed += 1
+            continue
 
-        # Format summary
-    summary_parts = [f"{deleted} deleted"]
+        status = getattr(response, "status_code", None)
+        if status in (200, 204):
+            deleted_ids.add(resource_id)
+            logger.info("Deleted %s ID: %s", label, resource_id)
+        elif status == 404:
+            logger.warning("DELETE %s/%s returned HTTP 404", resource_type, resource_id)
+            not_found += 1
+        else:
+            logger.error(
+                "Unconfirmed DELETE %s/%s (status: %s)",
+                resource_type,
+                resource_id,
+                status,
+            )
+            failed += 1
+
+    if outcomes is not None:
+        outcomes.update(
+            deleted=len(deleted_ids),
+            missing=not_found,
+            failed=failed,
+            skipped=manually_deleted,
+        )
+
+    summary_parts = [f"{len(deleted_ids)} deleted"]
+    if not_found:
+        summary_parts.append(f"{not_found} not found (HTTP 404)")
     if manually_deleted:
         summary_parts.append(
             f"{manually_deleted} skipped (already deleted during test execution)"
@@ -148,12 +169,13 @@ def cleanup_items(
     if failed:
         summary_parts.append(f"{failed} failed")
 
-    summary = f"{label}: {', '.join(summary_parts)} ({total_created} created)"
+    summary = f"{label}: {', '.join(summary_parts)} ({total_created} registered)"
 
     if summary_log is not None:
         summary_log.append(summary)
-
-    logger.info(f"✅ Finished cleanup for {label}(s).")
+    else:
+        logger.info(summary)
+    return deleted_ids
 
 
 # -------------------------------------------------
@@ -161,7 +183,7 @@ def cleanup_items(
 # -------------------------------------------------
 def make_cleanup_partial(
     api_client: APIClient, resource_type: str, label: Optional[str] = None
-) -> Callable[..., None]:
+) -> Callable[..., Set[Any]]:
     """
     Create a pre-bound cleanup callable for a specific resource type using the provided API client.
 
@@ -178,7 +200,7 @@ def make_cleanup_partial(
     )
 
 
-def make_all_cleanups(api_client: Any) -> Dict[str, Callable[..., None]]:
+def make_all_cleanups(api_client: Any) -> Dict[str, Callable[..., Set[Any]]]:
     """
     Convenience factory to build a small dictionary of common cleanup callables bound to the given API client.
 
@@ -228,27 +250,23 @@ def _require_default_api_client() -> Any:
 
 def cleanup_orders(resource_ids: Iterable[Any], **kwargs) -> None:
     api_client = _require_default_api_client()
-    return make_cleanup_partial(api_client, "orders", label="order")(
-        resource_ids, **kwargs
-    )
+    make_cleanup_partial(api_client, "orders", label="order")(resource_ids, **kwargs)
 
 
 def cleanup_products(resource_ids: Iterable[Any], **kwargs) -> None:
     api_client = _require_default_api_client()
-    return make_cleanup_partial(api_client, "products", label="product")(
+    make_cleanup_partial(api_client, "products", label="product")(
         resource_ids, **kwargs
     )
 
 
 def cleanup_customers(resource_ids: Iterable[Any], **kwargs) -> None:
     api_client = _require_default_api_client()
-    return make_cleanup_partial(api_client, "customers", label="customers")(
+    make_cleanup_partial(api_client, "customers", label="customers")(
         resource_ids, **kwargs
     )
 
 
 def cleanup_coupons(resource_ids: Iterable[Any], **kwargs) -> None:
     api_client = _require_default_api_client()
-    return make_cleanup_partial(api_client, "coupons", label="coupon")(
-        resource_ids, **kwargs
-    )
+    make_cleanup_partial(api_client, "coupons", label="coupon")(resource_ids, **kwargs)

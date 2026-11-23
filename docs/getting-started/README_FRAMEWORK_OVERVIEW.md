@@ -85,8 +85,9 @@ make test
 In this standard workflow, Docker runs WordPress and WooCommerce while pytest
 runs on the host in the project `.venv`. To run pytest inside the optional
 Docker test-runner image, build it and run `make test-docker` from the
-repository root. That target preserves reports and test artifacts on the host
-and cleans up the WooCommerce infrastructure. See the
+repository root. That target preserves reports and test artifacts on the host;
+its default managed mode cleans up the infrastructure it starts, while reuse
+mode leaves a provisioned stack running. See the
 [Docker Infrastructure Guide](../ci/README_DOCKER_INFRASTRUCTURE.md) for
 details.
 

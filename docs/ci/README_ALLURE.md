@@ -69,7 +69,7 @@ its custom contexts use the same trace mode and output directory through the
 
 
 
-### Preview a report
+### 🔍 Preview a report
 
 ```bash
 allure serve reports/allure-results

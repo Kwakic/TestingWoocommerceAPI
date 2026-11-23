@@ -78,6 +78,7 @@ reports/
 EcommerceAPI/reports/
 test-results/
 test-output/
+.test-execution.lock/
 
 # ==============================
 # 🔐 Environment variables (IMPORTANT)
