@@ -1,5 +1,5 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Sat Nov 21 12:14:05 UTC 2026","Sat Nov 21 12:14:05 UTC 2026","151","tests.shared.security","test_authentication_success","","","","test_authenticated_requests_are_allowed[products]","
+"passed","Mon Nov 23 09:46:39 UTC 2026","Mon Nov 23 09:46:40 UTC 2026","113","tests.shared.security","test_authentication_success","","","","test_authenticated_requests_are_allowed[products]","
 Authentication success guard.
 
 Ensures valid OAuth credentials allow access
@@ -8,7 +8,7 @@ to WooCommerce API endpoints.
 This complements the negative authentication matrix
 which verifies invalid credentials are rejected.
 "
-"passed","Sat Nov 21 12:14:05 UTC 2026","Sat Nov 21 12:14:05 UTC 2026","121","tests.shared.security","test_authentication_success","","","","test_authenticated_requests_are_allowed[customers]","
+"passed","Mon Nov 23 09:46:39 UTC 2026","Mon Nov 23 09:46:39 UTC 2026","105","tests.shared.security","test_authentication_success","","","","test_authenticated_requests_are_allowed[orders]","
 Authentication success guard.
 
 Ensures valid OAuth credentials allow access
@@ -17,7 +17,7 @@ to WooCommerce API endpoints.
 This complements the negative authentication matrix
 which verifies invalid credentials are rejected.
 "
-"passed","Sat Nov 21 12:14:05 UTC 2026","Sat Nov 21 12:14:05 UTC 2026","131","tests.shared.security","test_authentication_success","","","","test_authenticated_requests_are_allowed[coupons]","
+"passed","Mon Nov 23 09:46:39 UTC 2026","Mon Nov 23 09:46:39 UTC 2026","108","tests.shared.security","test_authentication_success","","","","test_authenticated_requests_are_allowed[coupons]","
 Authentication success guard.
 
 Ensures valid OAuth credentials allow access
@@ -26,7 +26,7 @@ to WooCommerce API endpoints.
 This complements the negative authentication matrix
 which verifies invalid credentials are rejected.
 "
-"passed","Sat Nov 21 12:14:05 UTC 2026","Sat Nov 21 12:14:05 UTC 2026","111","tests.shared.security","test_authentication_success","","","","test_authenticated_requests_are_allowed[orders]","
+"passed","Mon Nov 23 09:46:39 UTC 2026","Mon Nov 23 09:46:39 UTC 2026","86","tests.shared.security","test_authentication_success","","","","test_authenticated_requests_are_allowed[customers]","
 Authentication success guard.
 
 Ensures valid OAuth credentials allow access
