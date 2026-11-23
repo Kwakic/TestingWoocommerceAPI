@@ -1,0 +1,28 @@
+INFO     tests.customers.api.test_get_customer:test_get_customer.py:219 🚫 Retrieving non-existent customers ID: 99999999
+DEBUG    EcommerceAPI.src.entities.customers.helpers.customers_helper:customers_helper.py:340 🟢 Calling 'Get Customer' for ID 99999999.
+DEBUG    EcommerceAPI.src.entities.customers.api.customers_api:customers_api.py:88 📡 GET /customers/99999999
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/customers/99999999 → Status code: 404 (completed in 0.079s)
+DEBUG    EcommerceAPI.src.clients.api_client:api_client.py:694 {
+                                                                 "code": "woocommerce_rest_invalid_id",
+                                                                 "message": "Invalid resource ID.",
+                                                                 "data": {
+                                                                   "status": 404
+                                                                 }
+                                                               }
+INFO     EcommerceAPI.src.entities.customers.validators.customer_validators:customer_validators.py:404 ✅ Valid error response received (code=woocommerce_rest_invalid_id status=404)
+INFO     tests.customers.api.test_get_customer:test_get_customer.py:242 ✅ Error response schema validated for non-existent customers fetch
+INFO     EcommerceAPI.plugins.entities:entities.py:720 🔧 Starting teardown of created test resources...
+INFO     root:cleanup_helpers.py:103 🧹 Cleaning up customer(s)... (2 queued)
+DEBUG    root:cleanup_helpers.py:125 🔄 Deleting customer ID: 28
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/customers/28?force=True → Status code: 200 (completed in 0.108s)
+INFO     root:cleanup_helpers.py:139 Deleted customer ID: 28
+DEBUG    root:cleanup_helpers.py:125 🔄 Deleting customer ID: 31
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/customers/31?force=True → Status code: 200 (completed in 0.096s)
+INFO     root:cleanup_helpers.py:139 Deleted customer ID: 31
+INFO     EcommerceAPI.plugins.entities:entities.py:766 
+🧹 ==================== API CLEANUP SUMMARY ====================
+INFO     EcommerceAPI.plugins.entities:entities.py:767 Module: tests/customers/api/test_get_customer.py
+INFO     EcommerceAPI.plugins.entities:entities.py:768 📊 Registered in this module on this worker: {'customers': 2}
+INFO     EcommerceAPI.plugins.entities:entities.py:772 🧾 Cleanup results:
+INFO     EcommerceAPI.plugins.entities:entities.py:774    • customer: 2 deleted (2 registered)
+INFO     EcommerceAPI.plugins.entities:entities.py:775 ==================== END API CLEANUP SUMMARY ====================

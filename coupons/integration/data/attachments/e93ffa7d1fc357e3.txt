@@ -1,0 +1,23 @@
+DEBUG    EcommerceAPI.src.entities.coupons.helpers.coupons_helper:coupons_helper.py:257 🟢 Calling 'Get Coupon' for ID 999999999.
+DEBUG    EcommerceAPI.src.entities.coupons.api.coupons_api:coupons_api.py:91 📡 GET /coupons/999999999
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons/999999999 → Status code: 404 (completed in 0.094s)
+DEBUG    EcommerceAPI.src.clients.api_client:api_client.py:694 {
+                                                                 "code": "woocommerce_rest_shop_coupon_invalid_id",
+                                                                 "message": "Invalid ID.",
+                                                                 "data": {
+                                                                   "status": 404
+                                                                 }
+                                                               }
+INFO     EcommerceAPI.src.entities.coupons.validators.coupon_validators:coupon_validators.py:266 ✅ Valid coupon error response: code=woocommerce_rest_shop_coupon_invalid_id status=404
+INFO     EcommerceAPI.plugins.entities:entities.py:720 🔧 Starting teardown of created test resources...
+INFO     root:cleanup_helpers.py:103 🧹 Cleaning up coupon(s)... (1 queued)
+DEBUG    root:cleanup_helpers.py:125 🔄 Deleting coupon ID: 38
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/coupons/38?force=True → Status code: 200 (completed in 0.113s)
+INFO     root:cleanup_helpers.py:139 Deleted coupon ID: 38
+INFO     EcommerceAPI.plugins.entities:entities.py:766 
+🧹 ==================== API CLEANUP SUMMARY ====================
+INFO     EcommerceAPI.plugins.entities:entities.py:767 Module: tests/coupons/api/test_get_coupon.py
+INFO     EcommerceAPI.plugins.entities:entities.py:768 📊 Registered in this module on this worker: {'coupons': 1}
+INFO     EcommerceAPI.plugins.entities:entities.py:772 🧾 Cleanup results:
+INFO     EcommerceAPI.plugins.entities:entities.py:774    • coupon: 1 deleted (1 registered)
+INFO     EcommerceAPI.plugins.entities:entities.py:775 ==================== END API CLEANUP SUMMARY ====================
