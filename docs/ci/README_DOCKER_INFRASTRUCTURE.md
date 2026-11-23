@@ -672,37 +672,152 @@ This is an additional execution option. It is not necessary for every test chang
 #### How it works
 
 1. Build the test-runner image from the project's `Dockerfile` before the first run (then rebuild after image inputs change).
-2. `make test-docker` starts the WooCommerce infrastructure and provisions WordPress, plugins, credentials and test data.
-3. The target starts a test-runner container on the same Docker network as the application services.
-4. Pytest executes inside that container and reaches WordPress and MySQL using Docker service names.
+2. By default, `make test-docker` uses managed mode: it starts the WooCommerce infrastructure and provisions WordPress, plugins, credentials and test data.
+3. Alternatively, `DOCKER_INFRA=reuse` requires an already running, provisioned Compose stack and leaves it running after the tests.
+4. The target starts a temporary test-runner container on the active Compose network.
+5. Pytest executes inside that container and reaches WordPress and MySQL using Docker service names.
 
 Inside a Docker network, containers should use service names such as `wordpress` and `db`, rather than `localhost`. Within the test-runner container, `localhost` refers to the test-runner container itself.
 
-#### Important: what happens when you change code?
 
-The current Dockerfile copies the framework and tests into the image during the image build. The image therefore contains a **snapshot of the source code at build time**.
+### Managed vs. Reuse
 
-- If you change a test or framework file on your computer, the already-built image does not automatically receive that change.
-- To test the updated source using the current image approach, rebuild the image.
-- If you only want to develop and iterate quickly, use Host-Based Execution instead.
+| Feature | Managed (`DOCKER_INFRA=managed`) | Reuse (`DOCKER_INFRA=reuse`) |
+|---|---|---|
+| Infrastructure | Starts and provisions a new Compose stack | Uses an existing, provisioned Compose stack |
+| Existing stack | Refuses to take over an already-running stack | Requires an already-running stack |
+| Test execution | Runs the full suite or selected tests | Runs the full suite or selected tests |
+| After pytest | Make removes the stack it started and its MySQL volume. | WordPress and MySQL keep running. The same database is available for the next run until you run `make down`. |
+| Test records | Pytest attempts to remove registered records before Make removes the database. | Pytest performs the same cleanup. Seeds and any leftover records can persist across runs. |
+| Best for | Clean, isolated test execution | Repeated testing during development |
 
-A Docker development setup with source bind mounts or an IDE Dev Container can make live source changes available inside a container, but that is a different configuration from `make test-docker`, which mounts the artifact directories only.
+**Examples:**
+
+```bash
+# Managed mode (default)
+make test-docker PYTEST_ARGS='-m customers'
+
+# Reuse an existing provisioned environment
+make test-docker DOCKER_INFRA=reuse PYTEST_ARGS='-m customers'
+```
+
+#### Inspect test data after a run
+
+With `DOCKER_INFRA=reuse`, wait for Make to restore the WordPress URLs, then inspect data **before running `make down`**. The `wp-data/` folder holds WordPress files. WooCommerce records, including coupons, live in MySQL. Keeping those files alone does not preserve the database after `make down`.
+
+1. Read **SESSION CLEANUP SUMMARY** at the end of pytest for one total across modules and workers. Both managed and reuse runs report the Docker profile and mode. To investigate a missing or failed deletion, find the individual ID and its DELETE response or exception under `reports/logs/` for the same run and worker. Save any evidence you need before the next run rotates logs or clears Allure results.
+2. Open the local [WordPress admin](http://localhost:8080/wp-admin/) and inspect **Marketing → Coupons**. To look up one logged coupon ID directly, replace the example ID below with yours. This WP-CLI command only reads the record.
+
+   ```bash
+   coupon_id=123
+   docker compose -f docker-compose.wp.yml run --rm -T wpcli wp post get "$coupon_id" --fields=ID,post_type,post_status --allow-root
+   ```
+
+3. A successfully deleted coupon should be absent. If you see an error, distinguish an invalid post ID from a database connection error before drawing a conclusion. In managed mode, use the saved logs and Allure results after teardown because the database has been removed.
+
+An ordinary test failure still allows pytest to run teardown for active fixtures. Killing the runner or losing a worker can leave its in-memory list of IDs unrecoverable. Reuse keeps those leftover records along with the rest of the database. The [test suite guide](../../tests/README.md#when-test-records-are-deleted) explains what each cleanup count covers.
+
+#### ⚠️ Important: What happens when you change code?
+
+The current Dockerfile copies the framework and tests into the Docker image during the build process. Therefore, the image contains a **snapshot of the source code at build time**.
+
+If you modify a test, fixture, pytest plugin, framework module, or dependency on your computer, the existing Docker image will not automatically include those changes.
+
+**Rebuild the Docker image after modifying the source code:**
+
+```bash
+docker build -t ecommerceapi-test-runner .
+```
+
+Then execute your tests:
+
+```bash
+make test-docker PYTEST_ARGS='-m customers'
+```
+
+**How do you know when to rebuild?**
+
+- Rebuild after changing tests, fixtures, framework modules, the Dockerfile, dependencies, or other files copied into the image.
+- You do **not** need to rebuild just to change pytest selection arguments (for example, `-m customers` or `-n auto`).
+- If you are unsure whether the image includes your latest changes, rebuild. Docker can reuse unchanged build layers.
+
+To inspect uncommitted local changes, run:
+
+```bash
+git status --short
+```
+
+This is useful for seeing modified files, but **a clean Git status does not prove the image is current**. You may have committed or pulled changes *after* the image was built. The current setup does not automatically compare source revisions with the image's contents.
+
+For faster development, use **Host-Based Execution**, where pytest executes the current files directly from your working directory:
+
+```bash
+pytest -m customers -n auto
+```
+
+A Docker development setup using source bind mounts or an IDE Dev Container could also make local code changes immediately available inside the container. However, the current `make test-docker` configuration mounts artifact directories only, not the source code.
 
 #### Run it with Make
 
-From the repository root, build the test-runner image and run the containerized suite:
+Build the runner image from the repository root before the first run. On Windows, use Git Bash.
 
 ```bash
-# Rebuild the image when the Dockerfile or dependencies change
 docker build -t ecommerceapi-test-runner .
-
-# Execute tests inside Docker
-make test-docker
 ```
 
-Build the image before the first `make test-docker` run; the target uses the prebuilt image and does not build it. Rebuild after changing the Dockerfile, pytest configuration, tests, framework source or dependencies copied into the image. The target reuses `make up`, `make setup` and `make down`, and discovers the active Compose network and application database credentials from the running stack. It passes the other `.env` settings and credentials to the runner, then sets `API_ENV=docker`, `DB_HOST=db` and `DB_PORT=3306`. It disables in-container Allure HTML generation because the runner image does not include the Allure CLI; raw results remain in the mounted `reports/` directory. Values from `.env` override same-named Dockerfile defaults unless the target explicitly overrides them.
+**Reuse WooCommerce for several test runs**
 
-The runner uses `docker run --rm`; Makefile bind mounts keep Allure results and structured logs in `reports/`, and Playwright artifacts in `test-results/`. Cleanup runs after `make up`, `make setup` or pytest fails and after successful execution, while preserving the earlier failure status if cleanup also fails.
+1. Check this project's services:
+
+   ```bash
+   docker compose -f docker-compose.wp.yml ps
+   ```
+
+   If the list is empty, start the services and prepare WordPress, WooCommerce, credentials and test data once:
+
+   ```bash
+   make up && make setup
+   ```
+
+   If the site was already prepared (for example, by `make run`) and `wordpress` and `db` (MySQL) are running, go straight to step 2. Compose runs `wpcli` on demand for WordPress commands, so it can show as exited between runs.
+
+2. Run the full suite, or select tests with `PYTEST_ARGS`. Repeat either command while the services are running:
+
+   ```bash
+   # Full suite
+   make test-docker DOCKER_INFRA=reuse
+
+   # Only Orders API tests
+   make test-docker DOCKER_INFRA=reuse PYTEST_ARGS='tests/orders/api -n auto'
+   ```
+
+   After each run, Docker removes the test-runner container and the target restores the site's original URLs. WordPress and MySQL stay running for the next selection.
+
+3. When you have finished using the environment and can discard its test database, clean it up:
+
+   ```bash
+   make down
+   ```
+
+   This removes the project's containers, network and database volume. Host files in `wp-data/`, `reports/` and `test-results/` survive cleanup.
+
+**Run once with automatic cleanup (managed mode)**
+
+Start with this project's Compose containers removed. Run `make test-docker` for the full suite, or run a selection directly:
+
+```bash
+make test-docker PYTEST_ARGS='-m "orders and smoke" -n auto'
+```
+
+Make starts and prepares the stack, runs pytest, then automatically runs `make down` after the tests pass or fail. It also attempts cleanup if startup or setup fails. If the project already has containers, managed mode stops before setup and leaves them alone.
+
+Both modes discover the network and database credentials from the running Compose stack. The runner receives `.env` settings with explicit Docker overrides including `API_ENV=docker`, `DB_HOST=db` and `DB_PORT=3306`. The target disables Allure HTML generation inside the image, which lacks the Allure CLI.
+
+Both modes use `docker run --rm` and mount the host artifact directories so test output survives removal of the runner container.
+
+Host pytest sessions, `make run` and `make test-docker` use a repository-local execution lock. This prevents concurrent host and Docker test runs from using the same mutable WooCommerce environment while the Docker runner temporarily changes WordPress URLs. The lock is released on normal completion and on handled interruption. If a process is forcibly terminated, it can leave the lock and, if termination happened during the temporary URL change, the Docker hostname in WordPress settings. Verify that no test or Make workflow is still running, remove the stale `.test-execution.lock/`, and restore the original WordPress URLs before retrying host-based tests. Direct `make up`, `make setup`, `make down` and `make clean` are blocked while a test workflow owns the lock. Run Make targets from Git Bash on Windows.
+
+The recipe preserves the setup/pytest exit status through cleanup. GNU Make itself reports exit code `2` when any recipe fails; its error line includes the recipe's actual status (for example, `Error 7`).
 
 The test-runner image includes the Playwright browser binaries and Linux
 dependencies for **Chromium, Firefox and WebKit**. They are installed at image

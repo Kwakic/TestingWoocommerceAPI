@@ -55,7 +55,7 @@ PowerShell syntax, see the project [README](../../README.md).
 |---|---|
 | Docker-backed local development (host pytest) | Run `make run` for first-time setup. When the Compose services are running, use `make test` for the full suite or `API_ENV=test pytest -m "orders and smoke" -n auto` for a focused selection. |
 | Existing WAMP site | Copy `.env.wamp.example` to `.env.wamp`, add the WAMP REST and DB settings, then run `API_ENV=local pytest -m orders -n auto`. WAMP currently supports REST tests only. |
-| Dockerized test runner | Build the image with `docker build -t ecommerceapi-test-runner .`, then run `make test-docker` for the full suite inside the container. |
+| Dockerized test runner | Build with `docker build -t ecommerceapi-test-runner .`, then use `make test-docker` (managed lifecycle) or `make test-docker DOCKER_INFRA=reuse` (keep an existing provisioned stack running). Forward a pytest selection with `PYTEST_ARGS='-m "orders and smoke" -n auto'`. |
 | GitHub Actions | Pull requests and pushes trigger configured workflows. For a manual run, open **Actions**, select a workflow that supports manual execution, then choose **Run workflow**. CI supplies `API_ENV=ci` and its own credentials. |
 
 For PowerShell syntax and more detail about each mode, see the project

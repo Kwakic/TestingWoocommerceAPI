@@ -37,7 +37,8 @@ To check the suite inside the Docker test-runner image, build it and run
 `make test-docker` from the repository root. This is an optional alternative;
 `make run` remains the normal host-based workflow. See the
 [Docker Infrastructure Guide](../docs/ci/README_DOCKER_INFRASTRUCTURE.md) for
-the build command, artifact locations and cleanup behavior.
+the build command, selective pytest options, artifact locations and managed or
+reused infrastructure behavior.
 
 ## Direct framework setup
 

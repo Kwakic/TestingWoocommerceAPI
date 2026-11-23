@@ -404,7 +404,7 @@ The framework resolves the appropriate API endpoint from the selected environmen
 |---|---|---|---|---|
 | WAMP, existing local site | Host `.venv` / Python | Existing WAMP installation outside Docker | REST `localhost:8888/kwakiweb`; DB settings from `.env.wamp` (current WAMP MySQL port: `8889`) | `.env.wamp`; `API_ENV=local pytest -m orders -n auto` (REST tests only) |
 | Docker, host-based | Host `.venv` / Python | Compose `wordpress` (WordPress + WooCommerce plugin), `db`, and `wpcli` | REST/GraphQL `localhost:8080`; MySQL `127.0.0.1:3306` | `.env`; `make install`, then `make up` and `make setup` for initial preparation; use `make test` or a focused pytest command afterwards |
-| Docker, containerized | Custom test-runner container | Same three Compose services | REST/GraphQL `wordpress`; MySQL `db:3306` | `.env` plus runner overrides; `make test-docker` (full suite) |
+| Docker, containerized | Custom test-runner container | Same three Compose services | REST/GraphQL `wordpress`; MySQL `db:3306` | `.env` plus runner overrides; `make test-docker` (full or selected pytest run; managed or reused infrastructure) |
 | GitHub Actions CI | GitHub-hosted runner | Same three Compose services | REST/GraphQL `localhost:8080`; MySQL `127.0.0.1:3306` | GitHub Actions supplies its own environment; PR/push or a manual workflow run |
 
 `API_ENV` selects the endpoint and credentials profile. A pytest path or
@@ -497,22 +497,34 @@ run; it expects the CI service and credentials. See the
 [CI/CD Architecture Guide](./docs/ci/README_CI_ARCHITECTURE.md) for workflow
 selections and triggers.
 
-To run the suite inside the Docker test-runner image, build the image and use
-the optional containerized target:
+**Running pytest inside Docker.** Build the runner image from the repository
+root before the first run. Rebuild it after changing the tests, framework or
+dependencies it contains.
 
 ```bash
-# Rebuild the image when the Dockerfile or dependencies change
 docker build -t ecommerceapi-test-runner .
-
-# Execute Full test suite inside Docker test-runner
-make test-docker
 ```
 
-`make test-docker` preserves reports and test artifacts on the host and cleans
-up the WooCommerce infrastructure after the run. `make run` remains the normal
+| What do you want to do? | Before testing | Test command | After testing |
+|---|---|---|---|
+| Run once with automatic cleanup (managed, the default) | Start with this project's Compose containers removed. Make starts and prepares WooCommerce for you. | `make test-docker` | Make runs `make down` automatically when tests finish, whether they pass or fail. |
+| Keep WooCommerce running for repeated tests (reuse) | If no project containers are running, run `make up && make setup` once. If `make run` already prepared the running stack, go straight to testing. | `make test-docker DOCKER_INFRA=reuse` | Repeat the test command as often as needed. Run `make down` yourself after the last run. |
+
+Both commands run the full suite by default. Add `PYTEST_ARGS` to select tests
+in either mode. For example, to run Orders smoke tests on the prepared stack:
+
+```bash
+make test-docker DOCKER_INFRA=reuse PYTEST_ARGS='-m "orders and smoke" -n auto'
+```
+
+Reports, logs and UI failure artifacts are saved on the host in `reports/` and
+`test-results/`. Host pytest, `make run`, and `make test-docker` share an
+execution lock so concurrent tests cannot change or use the same WooCommerce
+environment while its WordPress URLs are temporarily switched for Docker.
+Run Make targets from Git Bash on Windows. `make run` remains the normal
 host-based development workflow. See the
-[Docker Infrastructure Guide](./docs/ci/README_DOCKER_INFRASTRUCTURE.md) for
-details.
+[Docker Infrastructure Guide](./docs/ci/README_DOCKER_INFRASTRUCTURE.md#run-it-with-make) for
+lifecycle details and recovery guidance.
 
 For direct framework installation and pytest execution:
 
@@ -651,18 +663,18 @@ Virtualization Enabled In Firmware: Yes
 </details>
 
 <details>
-<summary>Container name conflict: <code>/wc-db</code></summary>
+<summary>Docker test target reports that an environment already exists</summary>
 
-Another WooCommerce test environment is already using the fixed containers (`wc-db`, `wc-wp`, `wc-cli`).
-
-If that environment is no longer required:
+Managed `make test-docker` will not take ownership of containers already
+created by this Compose project. If the existing stack is running and already
+provisioned, run against it without shutting it down:
 
 ```bash
-docker rm -f wc-db wc-wp wc-cli
-make run
+make test-docker DOCKER_INFRA=reuse
 ```
 
-Only one local instance can run at a time because the framework uses fixed container names.
+When you have finished using that stack and can discard its test database,
+run `make down`. You can then start a managed run.
 
 </details>
 

@@ -1842,6 +1842,13 @@ dimensions, so combine them when each label is useful:
    covers): `pr`, `smoke`, `sanity`, `regression`, `negative`, `e2e`,
    `graphql`, `security`, `preflight`, `bulk`.
 
+Use the same pytest paths and marker expressions with either host pytest or
+the Docker runner. For example, `make test-docker PYTEST_ARGS='-m "orders and
+smoke" -n auto'` runs the Orders smoke selection in the container. The
+[Test Suite README](../../tests/README.md#-running-tests) compares local run
+modes; the [Docker Infrastructure Guide](../ci/README_DOCKER_INFRASTRUCTURE.md#run-it-with-make)
+documents runner lifecycle and artifact handling.
+
 ### What `pr` does
 
 `pr` is an execution-selection label. It opts a test into a focused PR lane
@@ -2047,6 +2054,16 @@ while GraphQL business behavior remains under the corresponding entity's
 ## 15. 🧼 Framework Runtime Features (Cleanup, Observability, Retry & Timeout)
 
 **Cleanup** — automatic via fixtures. Avoid leftover data between tests.
+
+**Infrastructure vs. resource cleanup:** `DOCKER_INFRA=reuse` keeps the
+provisioned WordPress/MySQL stack running; it does **not** preserve all records
+created by tests. Fixture teardown and resource-ownership tracking may remove
+test-created entities in both sequential and `pytest-xdist` runs. Conversely,
+resources created without ownership registration or after an interrupted run
+may remain. Seeded baseline data is intended to be reusable; tests should not
+delete or mutate it unless the scenario explicitly requires that behavior.
+See the [Docker Infrastructure Guide](../ci/README_DOCKER_INFRASTRUCTURE.md)
+for the persistence comparison and browser access.
 
 **Observability** — already included: structured logging, request duration, error logging. No need for a separate metrics system.
 

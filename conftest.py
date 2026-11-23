@@ -14,6 +14,7 @@ pytest_plugins = [
     "EcommerceAPI.plugins.logging_plugin",  # MUST load first!!!
     "EcommerceAPI.plugins.config_pytest",
     "EcommerceAPI.plugins.reporting",
+    "EcommerceAPI.plugins.cleanup_reporting",
     "EcommerceAPI.plugins.allure_autogen",
     # -----------------------
     # Core Dependency Layer
@@ -37,4 +38,6 @@ pytest_plugins = [
     "tests.ui.fixtures.customer_auth",
     "tests.ui.fixtures.admin",
     "tests.ui.fixtures.resources",
+    # Keep the lock plugin last so the logging plugin remains first.
+    "EcommerceAPI.plugins.test_execution_lock",
 ]
