@@ -1,54 +1,5 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Mon Nov 23 09:46:42 UTC 2026","Mon Nov 23 09:46:43 UTC 2026","426","tests.customers.api","test_get_customer","","","","test_get_customer_by_email","
-Verify that a customers can be retrieved using the email filter.
-
-Endpoint tested:
-    GET /customers?email={email}
-
-Fixture responsibilities (`create_valid_customer`):
-    - POST /customers
-    - response validation (Pydantic)
-    - automatic cleanup registration
-
-Test flow:
-    1. Create a customers
-    2. Retrieve customers using email filter
-    3. Validate returned dataset
-    4. Verify returned customers identity
-    5. Verify API data matches database
-"
-"passed","Mon Nov 23 09:46:43 UTC 2026","Mon Nov 23 09:46:43 UTC 2026","321","tests.customers.api","test_get_all_customers","","","","test_get_all_customers_list_not_empty_and_valid_schema","
-Smoke test for GET /customers endpoint.
-
-Validates that:
-    - API returns a non-empty list of customers
-    - Each returned customers has a valid structure (Pydantic validation)
-
-Test flow:
-    1. Create customer for test
-    2. Call GET /customers
-    3. Ensure response contains customers
-    4. Validate structure of each customers
-"
-"passed","Mon Nov 23 09:46:43 UTC 2026","Mon Nov 23 09:46:43 UTC 2026","402","tests.customers.api","test_get_customer","","","","test_get_customer_by_id","
-Verify that a customers can be retrieved by ID.
-
-Endpoint tested:
-    GET /customers/{id}
-
-Fixture responsibilities:
-    - POST /customers
-    - response validation (Pydantic)
-    - cleanup registration
-
-Test flow:
-    1. Create customers
-    2. Retrieve customers by ID
-    3. Validate response structure
-    4. Verify returned customers identity
-    5. Verify API data matches database
-"
-"passed","Mon Nov 23 09:46:42 UTC 2026","Mon Nov 23 09:46:43 UTC 2026","352","tests.customers.api","test_create_customer","","","","test_create_single_customer_with_email_and_password_only","
+"passed","Mon Nov 23 17:32:42 UTC 2026","Mon Nov 23 17:32:42 UTC 2026","517","tests.customers.api","test_create_customer","","","","test_create_single_customer_with_email_and_password_only","
 Create a customer using the minimum valid payload.
 
 Test-data setup is handled by the `create_valid_customer` fixture:
@@ -81,7 +32,7 @@ Test flow:
 The test does not generate test data itself because test-data
 generation and provisioning belong to the fixture/data layer.
 "
-"passed","Mon Nov 23 09:46:43 UTC 2026","Mon Nov 23 09:46:44 UTC 2026","224","tests.customers.api","test_update_customer","","","","test_update_customer_first_name","
+"passed","Mon Nov 23 17:32:43 UTC 2026","Mon Nov 23 17:32:44 UTC 2026","331","tests.customers.api","test_update_customer","","","","test_update_customer_first_name","
 Verify that a customers can be updated successfully.
 
 Validates that:
@@ -94,4 +45,53 @@ Test flow:
     2. Update first_name and email
     3. Validate response structure
     4. Verify updated values
+"
+"passed","Mon Nov 23 17:32:42 UTC 2026","Mon Nov 23 17:32:43 UTC 2026","462","tests.customers.api","test_get_all_customers","","","","test_get_all_customers_list_not_empty_and_valid_schema","
+Smoke test for GET /customers endpoint.
+
+Validates that:
+    - API returns a non-empty list of customers
+    - Each returned customers has a valid structure (Pydantic validation)
+
+Test flow:
+    1. Create customer for test
+    2. Call GET /customers
+    3. Ensure response contains customers
+    4. Validate structure of each customers
+"
+"passed","Mon Nov 23 17:32:42 UTC 2026","Mon Nov 23 17:32:43 UTC 2026","594","tests.customers.api","test_get_customer","","","","test_get_customer_by_id","
+Verify that a customers can be retrieved by ID.
+
+Endpoint tested:
+    GET /customers/{id}
+
+Fixture responsibilities:
+    - POST /customers
+    - response validation (Pydantic)
+    - cleanup registration
+
+Test flow:
+    1. Create customers
+    2. Retrieve customers by ID
+    3. Validate response structure
+    4. Verify returned customers identity
+    5. Verify API data matches database
+"
+"passed","Mon Nov 23 17:32:42 UTC 2026","Mon Nov 23 17:32:42 UTC 2026","630","tests.customers.api","test_get_customer","","","","test_get_customer_by_email","
+Verify that a customers can be retrieved using the email filter.
+
+Endpoint tested:
+    GET /customers?email={email}
+
+Fixture responsibilities (`create_valid_customer`):
+    - POST /customers
+    - response validation (Pydantic)
+    - automatic cleanup registration
+
+Test flow:
+    1. Create a customers
+    2. Retrieve customers using email filter
+    3. Validate returned dataset
+    4. Verify returned customers identity
+    5. Verify API data matches database
 "
