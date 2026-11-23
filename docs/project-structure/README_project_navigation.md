@@ -415,6 +415,7 @@ Automation, workflows, and GitHub-specific configuration.
 .github/
 │
 ├── workflows/                        ← GitHub Actions workflows
+│   ├── manual-entity-tests.yml       ← On-demand entity and suite selection
 │   ├── smoke.yml                     ← Smoke test pipeline
 │   ├── integration.yml               ← Integration test pipeline
 │   ├── regression.yml                ← Regression test pipeline

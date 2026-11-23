@@ -199,6 +199,9 @@ WooCommerce, a database, or network access. In pull-request validation,
 GitHub Actions runs Unit and Preflight as independent jobs; the PR Quality Gate
 requires both to succeed.
 
+The shared unit suite also checks that the **Manual Entity Tests** dropdown
+matches the framework registry and that its matrix selects the requested entities.
+
 Run the unit tests locally with:
 
 ```bash
@@ -296,7 +299,7 @@ with `python -m pip install -e './EcommerceAPI[dev]'` without starting Docker.
 | Docker-backed local development (recommended) | First run `make run`; later use `make test` for the full suite or `API_ENV=test pytest -m "orders and smoke" -n auto` for Orders smoke tests. | Pytest runs on the host; WordPress, WooCommerce, and MySQL run in Docker Compose. |
 | Existing WAMP site | Copy `.env.wamp.example` to `.env.wamp`, fill in its REST and DB settings, then run `API_ENV=local pytest -m orders -n auto`. | Pytest runs on the host against the existing WAMP installation. REST tests only are supported. |
 | Dockerized test runner | Build with `docker build -t ecommerceapi-test-runner .`, then run `make test-docker`; pass selectors with `PYTEST_ARGS='-m "orders and smoke" -n auto'` or a test path/node ID. Use `DOCKER_INFRA=reuse` to keep an existing provisioned stack running. | Pytest runs inside the test-runner container. Managed mode owns and cleans up the Compose application it starts; reuse mode restores the WordPress URLs and leaves infrastructure running. Both persist reports and UI artifacts on the host. |
-| GitHub Actions CI | Open **Actions**, select a workflow and choose **Run workflow** when supported; pull requests and pushes trigger configured workflows automatically. | GitHub Actions provisions its own WooCommerce environment and sets `API_ENV=ci`. |
+| GitHub Actions on demand | Choose an entity and suite under **Actions → Manual Entity Tests → Run workflow**. [Selection and reports](../docs/ci/README_CI_ARCHITECTURE.md#run-an-entity-suite-on-demand) | Each entity job gets its own WooCommerce environment with `API_ENV=ci`. |
 
 **Docker reuse and data:** `DOCKER_INFRA=reuse` retains the running
 WordPress/MySQL environment, **not every test-created record**. Pytest cleanup

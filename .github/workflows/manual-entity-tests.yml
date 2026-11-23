@@ -1,0 +1,87 @@
+name: Manual Entity Tests
+run-name: Manual ${{ inputs.suite }} • ${{ inputs.entity }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      entity:
+        description: Entity to test
+        type: choice
+        required: true
+        default: customers
+        options:
+          - customers
+          - orders
+          - products
+          - coupons
+          - all
+      suite:
+        description: Test suite
+        type: choice
+        required: true
+        default: smoke
+        options:
+          - smoke
+          - integration
+          - regression
+          - performance
+
+permissions:
+  contents: read
+
+jobs:
+  select:
+    name: Select entity and suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.selection.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-python-project
+      - name: Check dispatch choices and matrix selection
+        run: python -m pytest tests/shared/unit_tests/test_manual_entity_selection.py -q
+      - name: Resolve selection
+        id: selection
+        shell: bash
+        env:
+          ENTITY: ${{ inputs.entity }}
+          SUITE: ${{ inputs.suite }}
+        run: |
+          set -euo pipefail
+          case "$SUITE" in
+            smoke|integration|regression|performance) ;;
+            *) echo "Unsupported entity suite: $SUITE" >&2; exit 1 ;;
+          esac
+          matrix=$(python .github/scripts/generate_matrix.py --entity="$ENTITY")
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+  test:
+    needs: select
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.select.outputs.matrix) }}
+    uses: ./.github/workflows/reusable-test-runner.yml
+    with:
+      scope: entity
+      entity: ${{ matrix.entity }}
+      team: ${{ matrix.team }}
+      tier: ${{ matrix.tier }}
+      suite_name: ${{ inputs.suite }}
+      pytest_markers: ${{ inputs.suite }}
+      fail_on_empty: true
+      timeout_minutes: 45
+
+  report:
+    needs: [select, test]
+    if: ${{ !cancelled() && needs.select.result == 'success' }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.select.outputs.matrix) }}
+    uses: ./.github/workflows/reusable-allure-report.yml
+    with:
+      entity: ${{ matrix.entity }}
+      suite_name: ${{ inputs.suite }}
+      restore_history: false

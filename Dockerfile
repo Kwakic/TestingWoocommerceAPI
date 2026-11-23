@@ -93,8 +93,10 @@ COPY conftest.py ./conftest.py
 # Copy framework + tests
 COPY EcommerceAPI ./EcommerceAPI
 COPY tests ./tests
-# This source-level unit test inspects the credential writer script.
+# Shared unit tests exercise the credential writer and manual CI selection.
 COPY scripts/write_env_credentials.sh ./scripts/write_env_credentials.sh
+COPY .github/scripts/generate_matrix.py ./.github/scripts/generate_matrix.py
+COPY .github/workflows/manual-entity-tests.yml ./.github/workflows/manual-entity-tests.yml
 
 # The image fallback is used only when the caller does not set API_ENV.
 # `make test-docker` explicitly sets API_ENV=docker.

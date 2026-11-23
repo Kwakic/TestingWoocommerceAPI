@@ -95,6 +95,10 @@ GitHub Actions
 The same workflow is used by all entity teams
 (customers, products, orders and coupons).
 
+For an on-demand CI run, choose the entity and suite in **Manual Entity Tests**.
+CI provisions a separate WooCommerce stack for each selected entity.
+[Manual selection and reports](./README_CI_ARCHITECTURE.md#run-an-entity-suite-on-demand)
+
 ---
 
 ### 🎭 Playwright browser setup

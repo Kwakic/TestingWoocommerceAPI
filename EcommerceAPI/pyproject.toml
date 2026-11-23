@@ -68,6 +68,7 @@ dev = [
   "freezegun>=1.5.3",          # Freeze time in tests
   "playwright>=1.55.0",        # Browser automation and end-to-end testing framework
   "pytest-playwright[base-url]>=0.10.0",  # Playwright fixtures plus the compatible base_url plugin
+  "PyYAML>=6.0",               # Read GitHub Actions dispatch choices in CI checks
   "pre-commit>=4.0.0",         # Manages and runs "Git hooks".It automatically checks your code for formatting errors,
   #style violations, and bugs before you are allowed to finalize a git commit
 # Remove explicit pytest transitive deps like pluggy/iniconfig unless you need pinned versions.

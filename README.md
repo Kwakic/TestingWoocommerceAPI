@@ -487,15 +487,10 @@ make test-ci
 ```
 
 `make test-ci` is a local full-suite run with clean Allure results; it does not
-start a GitHub Actions workflow or provision the application. The active CI
-system is GitHub Actions: pull requests and pushes trigger the configured
-workflows, and workflows that support manual execution can be started from
-**GitHub → Actions → select workflow → Run workflow**. CI sets `API_ENV=ci`,
-creates its own WooCommerce environment and credentials, and applies the
-marker selection configured for each job. Do not use `API_ENV=ci` for a local
-run; it expects the CI service and credentials. See the
-[CI/CD Architecture Guide](./docs/ci/README_CI_ARCHITECTURE.md) for workflow
-selections and triggers.
+start a GitHub Actions workflow or provision the application. To run a team's
+suite in GitHub Actions, open **Actions → Manual Entity Tests → Run workflow**
+and select an entity and suite. CI sets `API_ENV=ci` and provisions its own
+WooCommerce environment and credentials. [Selection and report instructions](./docs/ci/README_CI_ARCHITECTURE.md#run-an-entity-suite-on-demand)
 
 **Running pytest inside Docker.** Build the runner image from the repository
 root before the first run. Rebuild it after changing the tests, framework or

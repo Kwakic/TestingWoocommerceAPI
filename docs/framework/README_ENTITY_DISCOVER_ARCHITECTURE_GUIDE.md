@@ -684,9 +684,11 @@ Test ownership and runtime entity registration are related but technically indep
 
 # ⚙️ CI/CD Matrix Strategy
 
-The CI pipeline does **not** maintain its own list of entities.
-
-Instead it consumes the framework architecture.
+CI builds its execution matrix from the framework registry. The manual
+dispatch form lists the entity choices for developers. When adding an entity,
+update the form in `.github/workflows/manual-entity-tests.yml` as well.
+The manual workflow checks the choices against the registry before starting
+test jobs. [Run an entity suite on demand](../ci/README_CI_ARCHITECTURE.md#run-an-entity-suite-on-demand)
 
 ```text
 FRAMEWORK_ENTITIES
@@ -841,7 +843,8 @@ GitHub Actions Matrix
 
 ```
 
-This approach eliminates duplicated configuration, keeps CI aligned with the framework, and allows new entities to participate in the pipeline without modifying workflow YAML files.
+New registered entities automatically join the full CI matrix. Add each new
+name to the manual dispatch dropdown so a team can select it individually.
 
 ---
 

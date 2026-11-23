@@ -2041,6 +2041,7 @@ while GraphQL business behavior remains under the corresponding entity's
 
 | Workflow | Type | Scope | Public report |
 |---|---|---|:---:|
+| [Manual Entity Tests](../ci/README_CI_ARCHITECTURE.md#run-an-entity-suite-on-demand) | Entity | Selected suite for one or all business entities | Actions artifacts only |
 | Unit + Preflight | Shared | Framework (independent PR jobs; both required by PR Quality Gate) | ❌ |
 | Contract | Shared | Framework | ❌ |
 | Security | Shared | Framework | ❌ |

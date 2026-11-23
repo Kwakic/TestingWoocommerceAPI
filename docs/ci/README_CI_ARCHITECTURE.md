@@ -81,6 +81,28 @@ test results → report generation → report artifacts / QA Portal
 
 ```
 
+## Run an entity suite on demand
+
+1. Open **Actions → Manual Entity Tests → Run workflow** and select the branch to test. GitHub enables dispatch once the workflow exists on the default branch. Starting a run requires write access. [GitHub manual workflow guide](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow)
+2. Choose an **Entity** and **Test suite**, then click **Run workflow**. For example, `customers` + `integration` runs `pytest tests/customers -m integration` with the reusable runner's parallel workers. CI provisions its own WooCommerce stack for that job and cleans it up afterward.
+3. Open the run summary. Under **Artifacts**, download `report-customers-integration` for the Allure HTML report. The matching `customers-integration-allure-results`, `customers-integration-junit-results`, and `customers-integration-structured-logs` contain the underlying evidence.
+
+To start the same run from GitHub CLI, use this command.
+
+```bash
+gh workflow run manual-entity-tests.yml -f entity=customers -f suite=integration
+```
+
+| Selection | What runs |
+|---|---|
+| One entity | Only tests under its `tests/<entity>/` directory that carry the selected marker. |
+| `all` | The chosen suite once per registered business entity. Each job gets its own infrastructure and artifacts. A failure in one job allows the others to finish. |
+| `smoke`, `integration`, `regression`, `performance` | The matching pytest marker. Manual Smoke and Integration include eligible tests beyond the curated PR subset. |
+
+Shared Contract, Security, Preflight and browser UI checks have their own workflows. A selected entity with zero matching tests fails its job. When tests fail, available results and logs are uploaded and the report job can still generate HTML. Early setup failures or cancellation can leave fewer artifacts.
+
+Manual reports stay with that Actions run. HTML artifacts are retained for 30 days and raw results, logs and JUnit for 14. The **PR Quality Gate** still comes from Pull Request Validation, and the dashboard draws its published history from the operational suite workflows.
+
 ## Local Pre-Commit Validation
 
 Before a commit is created, the repository's pre-commit hooks run local quality checks. They help catch formatting, file-integrity, security, and test issues before code is pushed to GitHub.
@@ -283,6 +305,7 @@ Splitting pipelines by intent because:
 ```text
 ├──.github/                                          ← CI/CD & GitHub Actions
 │     ├── workflows/                                 ← GitHub Actions workflows
+│     │     ├── manual-entity-tests.yml              ← On-demand entity and suite selection
 │     │     ├── smoke.yml                            ← Smoke test pipeline
 │     │     ├── integration.yml                      ← Integration test pipeline
 │     │     ├── regression.yml                       ← Regression test pipeline
@@ -706,7 +729,7 @@ Examples:
 - Regression
 - Performance
 
-These workflows use framework entity registry and execute once for every supported entity (customers, orders, products, coupons, ...).
+The operational workflows use the framework entity registry and execute once per supported entity. **Manual Entity Tests** filters the same matrix to the requested selection.
 
 Each entity receives its own:
 
@@ -2118,6 +2141,7 @@ Contract tests cover both REST and GraphQL API contracts while remaining part of
 
 | Workflow | Trigger | Reason |
 |----------|---------|--------|
+| **manual-entity-tests.yml** | `workflow_dispatch` | On-demand entity and suite selection with run-specific reports |
 | **pr-validation.yml** | `pull_request:` to `main` | Central PR validation and `PR Quality Gate` |
 | **contract.yml** | Pull request and its configured non-PR triggers | Shared REST/GraphQL contract diagnostics; informational for merge |
 | **smoke.yml** | Pull request during migration, `push: [main]`, and/or manual trigger as configured | Entity and Shared Smoke validation; avoid duplicate PR runs after migration |
@@ -2258,6 +2282,7 @@ gh-pages/     Generated reports (indexed by destination_dir)
 
 ```text
 .github/workflows/
+├── manual-entity-tests.yml # On demand — selected entity and suite
 ├── preflight.yml        # PR — lightweight framework validation
 ├── ui.yml               # PR — Chromium; main/manual — cross-browser
 ├── smoke.yml            # PR + main — critical business paths
