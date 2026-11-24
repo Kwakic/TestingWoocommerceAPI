@@ -299,13 +299,13 @@ with `python -m pip install -e './EcommerceAPI[dev]'` without starting Docker.
 | Docker-backed local development (recommended) | First run `make run`; later use `make test` for the full suite or `API_ENV=test pytest -m "orders and smoke" -n auto` for Orders smoke tests. | Pytest runs on the host; WordPress, WooCommerce, and MySQL run in Docker Compose. |
 | Existing WAMP site | Copy `.env.wamp.example` to `.env.wamp`, fill in its REST and DB settings, then run `API_ENV=local pytest -m orders -n auto`. | Pytest runs on the host against the existing WAMP installation. REST tests only are supported. |
 | Dockerized test runner | Build with `docker build -t ecommerceapi-test-runner .`, then run `make test-docker`; pass selectors with `PYTEST_ARGS='-m "orders and smoke" -n auto'` or a test path/node ID. Use `DOCKER_INFRA=reuse` to keep an existing provisioned stack running. | Pytest runs inside the test-runner container. Managed mode owns and cleans up the Compose application it starts; reuse mode restores the WordPress URLs and leaves infrastructure running. Both persist reports and UI artifacts on the host. |
-| GitHub Actions on demand | Choose an entity and suite under **Actions → Manual Entity Tests → Run workflow**. [Selection and reports](../docs/ci/README_CI_ARCHITECTURE.md#run-an-entity-suite-on-demand) | Each entity job gets its own WooCommerce environment with `API_ENV=ci`. |
+| GitHub Actions on demand | Choose a suite for one entity or `all` under **Actions → Manual Entity Tests**. [Run an entity suite and open its Allure report](../docs/ci/README_CI_ARCHITECTURE.md#run-an-entity-suite-on-demand) | Each entity job gets its own WooCommerce environment with `API_ENV=ci`. |
 
 **Docker reuse and data:** `DOCKER_INFRA=reuse` retains the running
 WordPress/MySQL environment, **not every test-created record**. Pytest cleanup
 still runs and may delete owned customers, products, orders or coupons; seeded
 data is intended to persist. See the
-[Docker Infrastructure Guide](docs/ci/README_DOCKER_INFRASTRUCTURE.md)
+[Docker Infrastructure Guide](../docs/ci/README_DOCKER_INFRASTRUCTURE.md)
 for details.
 
 For WAMP, Bash/Git Bash accepts the inline environment assignment above. In
