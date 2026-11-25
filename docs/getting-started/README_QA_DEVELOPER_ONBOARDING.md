@@ -516,6 +516,9 @@ tests/<service>/api/test_new_feature.py
 ---
 
 ## Making changes & PRs
+
+For a domain change, start with the entity's team guide. For shared fixtures, UI journeys or CI, involve the QA platform. When adding a team or entity, update the registry, regenerate CODEOWNERS and run the ownership unit tests. [Ownership and review rules](../framework/README_ENTITY_DISCOVER_ARCHITECTURE_GUIDE.md#code-ownership-and-reviews) · [Step by step: assign two entities to one team](../framework/README_ENTITY_DISCOVER_ARCHITECTURE_GUIDE.md#assign-two-entities-to-one-team)
+
 1. Create a branch:
 ```bash
 git checkout -b feat/short-description

@@ -245,16 +245,14 @@ code.
 
 ### Recommended: YES when the repository has multiple owners
 
-Use a `CODEOWNERS` file when different teams own different parts of the
-repository.
+In this portfolio repository, `@Kwakic` owns the repository and receives review requests for the domain and platform roles. A PR author cannot approve their own PR. Keep mandatory code-owner approval optional while a single maintainer fills every role.
 
-For a small personal project:
+For an organization repository:
 
-``` text
-[ ] Require review from Code Owners
-```
-
-is perfectly reasonable.
+1. Give the actual domain and platform teams explicit **Write** access and make the teams visible. Map their verified GitHub handles to the logical teams and regenerate CODEOWNERS. [Ownership model and onboarding](../framework/README_ENTITY_DISCOVER_ARCHITECTURE_GUIDE.md#code-ownership-and-reviews)
+2. After CODEOWNERS reaches the base branch, use a ready PR from a different contributor to verify the requested reviewers. Check the CODEOWNERS file on GitHub for invalid accounts or patterns.
+3. In **Settings → Rules → Rulesets**, edit or create an active branch ruleset targeting `main`. Under **Require a pull request before merging**, require an approval and enable **Require review from Code Owners**. With classic branch protection, use the corresponding options under **Settings → Branches**. Configure the **PR Quality Gate** separately as a required status check.
+4. Verify that an eligible code owner other than the PR author can approve, and that the intended merge rule applies. Include the platform owner for `.github/` so governance and CI changes also go through review. [GitHub CODEOWNERS](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners) · [GitHub rulesets](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/creating-rulesets-for-a-repository)
 
 ------------------------------------------------------------------------
 

@@ -200,7 +200,7 @@ jobs:
       # ==================================================
       # Entity ownership boundary
       #
-      # Entity == Team == Microservice
+      # The entity registry supplies the owning team for each domain.
       #
       # Examples:
       # - customers

@@ -96,6 +96,8 @@ COPY tests ./tests
 # Shared unit tests exercise the credential writer and manual CI selection.
 COPY scripts/write_env_credentials.sh ./scripts/write_env_credentials.sh
 COPY .github/scripts/generate_matrix.py ./.github/scripts/generate_matrix.py
+COPY .github/scripts/generate_codeowners.py ./.github/scripts/generate_codeowners.py
+COPY .github/CODEOWNERS ./.github/CODEOWNERS
 COPY .github/workflows/manual-entity-tests.yml ./.github/workflows/manual-entity-tests.yml
 
 # The image fallback is used only when the caller does not set API_ENV.

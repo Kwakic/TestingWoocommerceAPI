@@ -120,6 +120,8 @@ for workflow dependencies, test selection, reporting, and branch-protection deta
 
 - ⚡ **Parallel Test Execution** — Uses `pytest-xdist[psutil]` to run tests across available physical CPU cores. CI passes `-n auto` through the shared runner; tests own mutable data and do not depend on execution order.
 
+- **Team ownership** — Domain teams maintain their tests and framework components. The QA platform maintains shared fixtures, CI and reporting. [Ownership and review rules](./docs/framework/README_ENTITY_DISCOVER_ARCHITECTURE_GUIDE.md#code-ownership-and-reviews)
+
 - 🔄 **Segmented CI/CD Pipelines** — A central GitHub Actions pull-request workflow coordinates independent Unit and Preflight checks, entity-level Smoke and curated Integration tests, and Shared Smoke behind one PR Quality Gate. Dedicated workflows also cover Regression, Performance, Contract, Security, and UI validation.
 
 - 🤖 **Automated Action Updates** — Dependabot checks pinned GitHub Actions weekly and opens update PRs for review. Secret-backed UI tests are skipped on Dependabot PRs and run on trusted pushes to `main`. See the [CI guide](./docs/ci/README_CI_ARCHITECTURE.md#github-actions-dependency-updates).
