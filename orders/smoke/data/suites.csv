@@ -1,5 +1,23 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Wed Nov 25 15:36:08 UTC 2026","Wed Nov 25 15:36:09 UTC 2026","900","tests.orders.api","test_apply_valid_coupon_to_order","","","","test_valid_coupon_applies_50_percent_discount","Apply a 50% coupon when the Order meets its minimum spend.
+"passed","Wed Nov 25 21:52:32 UTC 2026","Wed Nov 25 21:52:33 UTC 2026","550","tests.orders.api","test_update_order","","","","test_update_order_status[cancelled]","Update an Order to a supported status and verify it persists.
+
+Test flow:
+
+    1. Create a Product and a valid Order through their fixtures.
+    2. Build a partial state containing the requested status.
+    3. Apply the state through OrderStateProvisioner.
+    4. Validate the update response and retrieve the Order again.
+"
+"passed","Wed Nov 25 21:52:33 UTC 2026","Wed Nov 25 21:52:33 UTC 2026","640","tests.orders.api","test_update_order","","","","test_update_order_status[completed]","Update an Order to a supported status and verify it persists.
+
+Test flow:
+
+    1. Create a Product and a valid Order through their fixtures.
+    2. Build a partial state containing the requested status.
+    3. Apply the state through OrderStateProvisioner.
+    4. Validate the update response and retrieve the Order again.
+"
+"passed","Wed Nov 25 21:52:31 UTC 2026","Wed Nov 25 21:52:32 UTC 2026","609","tests.orders.api","test_apply_valid_coupon_to_order","","","","test_valid_coupon_applies_50_percent_discount","Apply a 50% coupon when the Order meets its minimum spend.
 
 Test flow:
 
@@ -8,7 +26,16 @@ Test flow:
     3. Create an Order containing the Product and Coupon.
     4. Retrieve the Order and verify the Coupon and discount totals.
 "
-"passed","Wed Nov 25 15:36:09 UTC 2026","Wed Nov 25 15:36:10 UTC 2026","641","tests.orders.api","test_create_order","","","","test_create_single_order","Create a minimal Order and compare its API response with the database.
+"passed","Wed Nov 25 21:52:33 UTC 2026","Wed Nov 25 21:52:34 UTC 2026","604","tests.orders.api","test_update_order","","","","test_update_order_status[on-hold]","Update an Order to a supported status and verify it persists.
+
+Test flow:
+
+    1. Create a Product and a valid Order through their fixtures.
+    2. Build a partial state containing the requested status.
+    3. Apply the state through OrderStateProvisioner.
+    4. Validate the update response and retrieve the Order again.
+"
+"passed","Wed Nov 25 21:52:32 UTC 2026","Wed Nov 25 21:52:33 UTC 2026","450","tests.orders.api","test_create_order","","","","test_create_single_order","Create a minimal Order and compare its API response with the database.
 
 Test flow:
 
@@ -17,7 +44,7 @@ Test flow:
     3. Retrieve the Order through the API.
     4. Compare API data with the Order and line-item database records.
 "
-"passed","Wed Nov 25 15:36:08 UTC 2026","Wed Nov 25 15:36:09 UTC 2026","675","tests.orders.api","test_get_order","","","","test_get_order_by_id","Retrieve a valid Order by ID and verify its identity and line items.
+"passed","Wed Nov 25 21:52:31 UTC 2026","Wed Nov 25 21:52:32 UTC 2026","480","tests.orders.api","test_get_order","","","","test_get_order_by_id","Retrieve a valid Order by ID and verify its identity and line items.
 
 Fixture responsibilities:
     - Create a Product for the Order line item.
@@ -30,31 +57,4 @@ Test flow:
     3. Assert the GET transport status.
     4. Validate the Order response structure.
     5. Verify the Order ID and Product line item.
-"
-"passed","Wed Nov 25 15:36:11 UTC 2026","Wed Nov 25 15:36:11 UTC 2026","851","tests.orders.api","test_update_order","","","","test_update_order_status[on-hold]","Update an Order to a supported status and verify it persists.
-
-Test flow:
-
-    1. Create a Product and a valid Order through their fixtures.
-    2. Build a partial state containing the requested status.
-    3. Apply the state through OrderStateProvisioner.
-    4. Validate the update response and retrieve the Order again.
-"
-"passed","Wed Nov 25 15:36:10 UTC 2026","Wed Nov 25 15:36:11 UTC 2026","907","tests.orders.api","test_update_order","","","","test_update_order_status[completed]","Update an Order to a supported status and verify it persists.
-
-Test flow:
-
-    1. Create a Product and a valid Order through their fixtures.
-    2. Build a partial state containing the requested status.
-    3. Apply the state through OrderStateProvisioner.
-    4. Validate the update response and retrieve the Order again.
-"
-"passed","Wed Nov 25 15:36:09 UTC 2026","Wed Nov 25 15:36:10 UTC 2026","824","tests.orders.api","test_update_order","","","","test_update_order_status[cancelled]","Update an Order to a supported status and verify it persists.
-
-Test flow:
-
-    1. Create a Product and a valid Order through their fixtures.
-    2. Build a partial state containing the requested status.
-    3. Apply the state through OrderStateProvisioner.
-    4. Validate the update response and retrieve the Order again.
 "
