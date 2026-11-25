@@ -84,24 +84,44 @@ test results → report generation → report artifacts / QA Portal
 ## Run an entity suite on demand
 
 1. Open **Actions → Manual Entity Tests → Run workflow** and select the branch to test. GitHub enables dispatch once the workflow exists on the default branch. Starting a run requires write access. [GitHub manual workflow guide](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow)
-2. Choose an **Entity** and **Test suite**, then click **Run workflow**. For example, `customers` + `integration` runs `pytest tests/customers -m integration` with the reusable runner's parallel workers. CI provisions its own WooCommerce stack for that job and cleans it up afterward.
-3. Open the run summary. Under **Artifacts**, download `report-customers-integration` for the Allure HTML report. The matching `customers-integration-allure-results`, `customers-integration-junit-results`, and `customers-integration-structured-logs` contain the underlying evidence.
+2. Choose an **Entity** and **Test suite**, then click **Run workflow**. For example, `orders` + `regression` selects `pytest tests/orders -m regression`. Choosing `all` + `regression` runs that suite across every registered entity.
+3. Open the new run, for example **Manual regression • orders**. Each selected entity has its own test job, WooCommerce stack and report job. CI cleans up each stack after its tests finish.
 
 To start the same run from GitHub CLI, use this command.
 
 ```bash
-gh workflow run manual-entity-tests.yml -f entity=customers -f suite=integration
+gh workflow run manual-entity-tests.yml -f entity=orders -f suite=regression
 ```
 
 | Selection | What runs |
 |---|---|
 | One entity | Only tests under its `tests/<entity>/` directory that carry the selected marker. |
-| `all` | The chosen suite once per registered business entity. Each job gets its own infrastructure and artifacts. A failure in one job allows the others to finish. |
+| `all` | The chosen suite once each for Customers, Orders, Products and Coupons. If one entity fails, the others continue. Each entity has a separate set of artifacts in the same run. |
 | `smoke`, `integration`, `regression`, `performance` | The matching pytest marker. Manual Smoke and Integration include eligible tests beyond the curated PR subset. |
 
 Shared Contract, Security, Preflight and browser UI checks have their own workflows. A selected entity with zero matching tests fails its job. When tests fail, available results and logs are uploaded and the report job can still generate HTML. Early setup failures or cancellation can leave fewer artifacts.
 
-Manual reports stay with that Actions run. HTML artifacts are retained for 30 days and raw results, logs and JUnit for 14. The **PR Quality Gate** still comes from Pull Request Validation, and the dashboard draws its published history from the operational suite workflows.
+Manual reports stay in the Actions run. The published Allure dashboard and its trend history come from the operational suite workflows. **Pull Request Validation** supplies the **PR Quality Gate** independently of manual runs.
+
+### Open the Allure HTML report
+
+1. Open the completed run's **Summary** and scroll to **Artifacts**. Click `report-orders-regression` to download the generated HTML as a ZIP. For an `all` run, choose the `report-<entity>-<suite>` artifact for the entity you want to inspect. [GitHub artifact download guide](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/download-workflow-artifacts)
+2. Open a terminal in the download folder. These commands extract the entire Orders report and enter the folder containing `index.html`.
+
+   ```bash
+   python -m zipfile -e report-orders-regression.zip report-orders-regression
+   cd report-orders-regression
+   ```
+
+3. Start a local server from that folder so the report can load its scripts and data.
+
+   ```bash
+   python -m http.server 8000 --bind 127.0.0.1
+   ```
+
+4. Open `http://127.0.0.1:8000/` in your browser. Choose **Suites** to inspect individual test results. Press **Ctrl+C** in the terminal when finished.
+
+The matching `orders-regression-allure-results`, `orders-regression-junit-results` and `orders-regression-structured-logs` artifacts contain raw Allure data, JUnit XML and logs. GitHub retains those artifacts for 14 days and the generated HTML for 30 days.
 
 ## Local Pre-Commit Validation
 
@@ -290,7 +310,7 @@ fi
 Splitting pipelines by intent because:
 
 - **⚡ Faster feedback** — Developers get PR results in 1–3 min, not 20+ min
-- **📊 Cleaner dashboards** — Each workflow has its own Allure + GitHub Pages view
+- **📊 Cleaner dashboards** — Operational suites publish their Allure reports to GitHub Pages. Manual Entity Tests keep reports with the run.
 - **📈 Stable trends** — Regression always runs the same tests (not mix of preflight + smoke + contract)
 - **👥 Easier ownership** — Each team owns specific workflow
 - **💰 Lower CI costs** — Don't run heavy tests on every PR
@@ -1989,9 +2009,8 @@ Examine:
 - `allure-report/index.html` — Full dashboard
 
 ### Step 4: Analyze Allure Report
-```
-Open allure-report/index.html in browser
-```
+Serve the extracted HTML report from the folder containing `index.html`. [Open the Allure HTML report](#open-the-allure-html-report)
+
 Navigate to:
 - **Overview** — Pass/fail summary
 - **Failures** — Failed test details

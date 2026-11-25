@@ -140,7 +140,7 @@ Test data is treated as a **first-class architectural concern**, separating data
 
 The framework distinguishes **stable environment seeds** from **dynamic test-owned data**, ensuring baseline UI personas and other shared resources are protected from normal test cleanup.
 
-📚 [Explore the Test Data Architecture](./README_TEST_DATA_ARCHITECTURE.md)
+📚 [Explore the Test Data Architecture](./docs/development/README_TEST_DATA_ARCHITECTURE.md)
 
 ---
 
@@ -491,8 +491,8 @@ make test-ci
 `make test-ci` is a local full-suite run with clean Allure results; it does not
 start a GitHub Actions workflow or provision the application. To run a team's
 suite in GitHub Actions, open **Actions → Manual Entity Tests → Run workflow**
-and select an entity and suite. CI sets `API_ENV=ci` and provisions its own
-WooCommerce environment and credentials. [Selection and report instructions](./docs/ci/README_CI_ARCHITECTURE.md#run-an-entity-suite-on-demand)
+and select a suite for one entity or `all`. CI sets `API_ENV=ci` and provisions
+its own WooCommerce environment and credentials. [Run an entity suite and open its Allure report](./docs/ci/README_CI_ARCHITECTURE.md#run-an-entity-suite-on-demand)
 
 **Running pytest inside Docker.** Build the runner image from the repository
 root before the first run. Rebuild it after changing the tests, framework or
@@ -552,7 +552,7 @@ This README is the **landing page**. Detailed implementation and operational gui
 | **Development** | [Test Development Guide](./docs/development/README_TEST_DEVELOPMENT_GUIDE.md) ⭐ | Canonical guide for writing tests |
 | | [API Client Guide](./docs/development/README_API_CLIENT.md) | API client design and usage |
 | | [UI Testing Guide](./docs/development/README_UI_TESTING_GUIDE.md) | Playwright architecture, fixtures, Page Objects, roles, and browser execution |
-| | [Test Data Architecture](./README_TEST_DATA_ARCHITECTURE.md) ⭐ | Factory, Builder, Provisioner, Ownership, Seeds, and cleanup |
+| | [Test Data Architecture](./docs/development/README_TEST_DATA_ARCHITECTURE.md) ⭐ | Factory, Builder, Provisioner, Ownership, Seeds, and cleanup |
 | | [Architecture Guide](./docs/development/README_ARCHITECTURE.md) | Framework internals |
 | | [Validators Guide](./docs/development/README_VALIDATORS.md) | Validation patterns |
 | | [Team Guides](./docs/development/team-guides) | Per-entity testing conventions |
@@ -580,7 +580,7 @@ New to the framework? Start here:
 
 1. [Framework Overview](./docs/getting-started/README_FRAMEWORK_OVERVIEW.md)
 2. [Project Navigation Guide](./docs/project-structure/README_project_navigation.md)
-3. [Test Data Architecture](./README_TEST_DATA_ARCHITECTURE.md)
+3. [Test Data Architecture](./docs/development/README_TEST_DATA_ARCHITECTURE.md)
 4. [Test Development Guide](./docs/development/README_TEST_DEVELOPMENT_GUIDE.md)
 5. [UI Testing Guide](./docs/development/README_UI_TESTING_GUIDE.md)
 
@@ -718,4 +718,4 @@ Questions or feedback? [Open an issue](https://github.com/Kwakic/TestingWoocomme
 
 This project is licensed under the **Apache License 2.0**.
 
-See the [`LICENSE`](./LICENSE) file for the full license text.
+Read the [Apache License 2.0 text](https://www.apache.org/licenses/LICENSE-2.0.txt).

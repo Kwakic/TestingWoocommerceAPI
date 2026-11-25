@@ -259,7 +259,7 @@ This direct pytest command does not invoke Docker Compose.
 
 For environment resolution details, see:
 
-[Environment & Config Guide](./docs/framework/README_ENVIRONMENT_CONFIG_GUIDE.md)
+[Environment & Config Guide](../framework/README_ENVIRONMENT_CONFIG_GUIDE.md)
 
 
 
@@ -340,7 +340,7 @@ pytest -m "graphql and contract" -v
 ```
 For GraphQL architecture, authentication and test development, see:
 
-[GraphQL Testing Guide](./docs/development/README_GRAPHQL_TESTING_GUIDE.md)
+[GraphQL Testing Guide](../development/README_GRAPHQL_TESTING_GUIDE.md)
 
 ---
 
@@ -495,12 +495,20 @@ pipeline debugging rather than day-to-day testing.
 ---
 
 ## CI notes (summary)
+
 - GitHub Actions workflows install the development extras:
 ```bash
 python -m pip install -e './EcommerceAPI[dev]'
 ```
-- Pull-request and push events run the workflows configured for those events. To run a workflow manually, open **GitHub → Actions**, select a workflow that supports manual runs, then choose **Run workflow**.
+- Pull requests and pushes trigger their configured workflows automatically.
 - CI sets `API_ENV=ci`, provisions its own WooCommerce services and credentials, and selects tests through the markers configured in each workflow. See the [CI Architecture Guide](../ci/README_CI_ARCHITECTURE.md) for the current workflow matrix and PR gate.
+
+### Run Manual Entity Tests in GitHub Actions
+
+1. In the GitHub repository, open **Actions → Manual Entity Tests → Run workflow**.
+2. Select the branch you want to test. For an Orders regression run, set **Entity** to `orders` and **Test suite** to `regression`. To run Regression for every entity, set **Entity** to `all`.
+3. Click **Run workflow**, then open the new run. For Orders alone, look for the Orders test job. For `all`, follow the separate test job for each entity.
+4. When the report jobs finish, open **Summary → Artifacts** and select `report-orders-regression` to inspect Orders. Follow the [instructions for opening the Allure HTML report](../ci/README_CI_ARCHITECTURE.md#open-the-allure-html-report).
 
 ---
 
