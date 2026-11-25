@@ -326,12 +326,14 @@ Each domain (`customers/`, `products/`, `orders/`, `coupons/`) contains:
 
 ### 📖 Team Guides
 
+Use the registry to find the logical owner and GitHub reviewer for each domain. [Ownership and review rules](../framework/README_ENTITY_DISCOVER_ARCHITECTURE_GUIDE.md#code-ownership-and-reviews)
+
 | Domain | Team Guide |
 |--------|-----------|
-| **customers/** | [Customers Guide](../development/TEAM_GUIDES/README_CUSTOMERS.md) |
-| **products/** | [Products Guide](../development/TEAM_GUIDES/README_PRODUCTS.md) |
-| **orders/** | [Orders Guide](../development/TEAM_GUIDES/README_ORDERS.md) |
-| **coupons/** | [Coupons Guide](../development/TEAM_GUIDES/README_COUPONS.md) |
+| **customers/** | [Customers Guide](../development/team-guides/README_CUSTOMERS.md) |
+| **products/** | [Products Guide](../development/team-guides/README_PRODUCTS.md) |
+| **orders/** | [Orders Guide](../development/team-guides/README_ORDERS.md) |
+| **coupons/** | [Coupons Guide](../development/team-guides/README_COUPONS.md) |
 | **shared/** | Framework-level validation — no dedicated team guide |
 
 ### 📝 When to Edit
@@ -345,11 +347,11 @@ Each domain (`customers/`, `products/`, `orders/`, `coupons/`) contains:
 ### 📖 Read Also
 
 - [Test Development Guide](../development/README_TEST_DEVELOPMENT_GUIDE.md)
-- [Team Guides](../development/TEAM_GUIDES/) — Domain-specific conventions
-  - [Customers Guide](../development/TEAM_GUIDES/README_CUSTOMERS.md)
-  - [Products Guide](../development/TEAM_GUIDES/README_PRODUCTS.md)
-  - [Orders Guide](../development/TEAM_GUIDES/README_ORDERS.md)
-  - [Coupons Guide](../development/TEAM_GUIDES/README_COUPONS.md)
+- [Team Guides](../development/team-guides/) — Domain-specific conventions
+  - [Customers Guide](../development/team-guides/README_CUSTOMERS.md)
+  - [Products Guide](../development/team-guides/README_PRODUCTS.md)
+  - [Orders Guide](../development/team-guides/README_ORDERS.md)
+  - [Coupons Guide](../development/team-guides/README_COUPONS.md)
 
 ---
 
@@ -521,7 +523,7 @@ Project-level configuration and orchestration.
    └── tests/{domain}/conftest.py                ← Add domain fixtures
 
 📖 Read:
-   └── docs/development/TEAM_GUIDES/README_{DOMAIN}.md  ← Team conventions
+   └── docs/development/team-guides/README_{DOMAIN}.md  ← Team conventions
    └── docs/development/README_TEST_DEVELOPMENT_GUIDE.md ← Framework guide
 
 🚀 Execute:

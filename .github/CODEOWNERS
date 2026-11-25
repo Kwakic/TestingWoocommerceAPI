@@ -1,0 +1,43 @@
+# GitHub uses this file to request a human review for changed paths.
+# Each rule lists a path pattern followed by its GitHub reviewer.
+# The last matching rule wins.
+# A trailing / covers the whole directory, including all subdirectories.
+# For example, /EcommerceAPI/src/entities/products/ covers its DAO and API.
+#
+# Change team or reviewer assignments in EcommerceAPI/src/metadata/entity_metadata.py.
+# Regenerate: python .github/scripts/generate_codeowners.py --write
+# Check:      python .github/scripts/generate_codeowners.py
+# Regeneration replaces hand edits. See the ownership guide for examples:
+# docs/framework/README_ENTITY_DISCOVER_ARCHITECTURE_GUIDE.md#read-a-codeowners-rule
+
+# QA platform: shared framework, CI, infrastructure, reporting and docs
+* @Kwakic
+/.github/ @Kwakic
+
+# coupons | promo team
+/tests/coupons/ @Kwakic
+/EcommerceAPI/src/entities/coupons/ @Kwakic
+/EcommerceAPI/plugins/api/coupons.py @Kwakic
+/EcommerceAPI/src/test_data/*/coupons/ @Kwakic
+/docs/development/team-guides/README_COUPONS.md @Kwakic
+
+# customers | commerce team
+/tests/customers/ @Kwakic
+/EcommerceAPI/src/entities/customers/ @Kwakic
+/EcommerceAPI/plugins/api/customers.py @Kwakic
+/EcommerceAPI/src/test_data/*/customers/ @Kwakic
+/docs/development/team-guides/README_CUSTOMERS.md @Kwakic
+
+# orders | purchase team
+/tests/orders/ @Kwakic
+/EcommerceAPI/src/entities/orders/ @Kwakic
+/EcommerceAPI/plugins/api/orders.py @Kwakic
+/EcommerceAPI/src/test_data/*/orders/ @Kwakic
+/docs/development/team-guides/README_ORDERS.md @Kwakic
+
+# products | catalog team
+/tests/products/ @Kwakic
+/EcommerceAPI/src/entities/products/ @Kwakic
+/EcommerceAPI/plugins/api/products.py @Kwakic
+/EcommerceAPI/src/test_data/*/products/ @Kwakic
+/docs/development/team-guides/README_PRODUCTS.md @Kwakic

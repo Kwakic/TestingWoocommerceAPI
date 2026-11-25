@@ -1819,7 +1819,7 @@ tests/
 ```
 
 - ✅ Domain-driven — matches the entity boundaries
-- ✅ Enables team ownership per entity
+- ✅ Routes entity tests, pytest plugins and test-data components to their registered domain team. [Ownership and review rules](../framework/README_ENTITY_DISCOVER_ARCHITECTURE_GUIDE.md#code-ownership-and-reviews)
 - ✅ Scales easily as new entities are added
 - ❌ Do **not** reorganize by smoke/regression folders
 
