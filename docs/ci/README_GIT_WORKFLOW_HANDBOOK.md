@@ -219,11 +219,10 @@ Before syncing with main, your working directory must be clean.
 
 ```bash
 git add .
-
-pre-commit run # staged files
+# staged files
+pre-commit run
 # or:
 pre-commit run --all-files
-
 git commit -m "WIP: working on login"
 ```
 
@@ -246,12 +245,10 @@ This allows you to pull in updates from main even if you have half-finished code
 
 Stash your work. Move your uncommitted changes to a temporary storage area by running following command:
 
-```
+```bash
 git stash
-
 # Restore later before push step:
 git stash pop
-
 # Include untracked files:
 git stash -u
 ```
@@ -281,9 +278,9 @@ To avoid conflicts and ensure your current branch (fix/bug_ticket_1235) is up-to
 
 ### 🟢 Option A (Beginner-friendly — recommended)
 
-```
+```bash
 git switch main
-git pull origin main
+git pull origin main (or git pull --ff-only?)
 
 git switch fix/bug_ticket_1235
 git merge main
@@ -295,26 +292,27 @@ In Git, `git pull` is essentially a combination of `git fetch` followed immediat
 By breaking these apart, you gain more control:
 
 
-```
+```bash
+# downloads updates for all branches on GitHub, including main, merged branches, and unmerged feature
+# branches created by your teammates
 git fetch origin
-
-# check for possible changes made in main branch ("What does remote have that I don’t?")
+# check for possible changes made in main branch ("What does remote have that I don’t?") in other words:
+# show me every commit that is on origin/main that I do NOT have in my current branch yet
 git log HEAD..origin/main --oneline
-
 # or check for: "What do I have that remote doesn’t?
 git log origin/main..HEAD --oneline
-
 git merge origin/main
+# or
+# The --no-edit flag skips opening the text editor for the merge commit message and automatically uses Git's default message.
+git merge --no-edit origin/main
 ```
 
 or (cleaner history):
 
-```
+```bash
 git fetch origin
-
 # check for possible changes made in main branch
 git log HEAD..origin/main --oneline
-
 git rebase origin/main
 ```
 
@@ -379,23 +377,19 @@ So normal push won’t work → you MUST use: `git push --force-with-lease`
 
 To avoid conflicts and ensure your branch is up-to-date.
 
-```
+```bash
 git fetch origin
-
 # check for possible changes made in main branch
 git log HEAD..origin/main --oneline
-
 git merge origin/main
 ```
 
 or (cleaner history):
 
-```
+```bash
 git fetch origin
-
 # check for possible changes made in main branch
 git log HEAD..origin/main --oneline
-
 git rebase origin/main
 ```
 
@@ -2872,10 +2866,17 @@ runs the exact same checks.
 * The pipeline runs `pre-commit run --all-files` or `pre-commit run`.
 * If it fails, the **Merge Request (MR)** or **Pull Request (PR)** is blocked. You cannot merge broken or poorly formatted code.
 
+```bash
+# staged files only
+pre-commit run
+
+# entire repo
+pre-commit run --all-files
+
+# another way to run pre-commit is:
+git hook run pre-commit
 ```
-pre-commit run  # staged files only
-pre-commit run --all-files  # entire repo
-```
+
 
 ### 3. Centralized Shared Configs
 In very large companies (hundreds of repos), they don't copy-paste the config.
@@ -2900,9 +2901,12 @@ Python/Black/Linting standards automatically.
 
 ### ⚠️ After updating `pre-commit-config.yaml` one important thing to expect:
 
-```
+```bash
 pre-commit install
 pre-commit run --all-files
+
+# another way to run pre-commit is:
+git hook run pre-commit
 ```
 👉 It will:
 

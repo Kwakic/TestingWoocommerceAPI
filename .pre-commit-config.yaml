@@ -15,6 +15,8 @@
   # git add .pre-commit-config.yaml
   # pre-commit run -a
   # git commit -m "chore: update hooks"
+# Note: another way to run pre-commit is: git hook run pre-commit
+
 
 repos:
   # 🔹 Basic formatting & whitespace (fix your current warnings)
