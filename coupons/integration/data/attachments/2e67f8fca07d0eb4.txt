@@ -1,0 +1,50 @@
+DEBUG    EcommerceAPI.src.entities.coupons.helpers.coupons_helper:coupons_helper.py:174 ⚙️ Creating coupon with payload keys: ['code', 'discount_type', 'amount', 'email_restrictions']
+DEBUG    EcommerceAPI.src.entities.coupons.api.coupons_api:coupons_api.py:69 📡 POST /coupons payload_keys=['code', 'discount_type', 'amount', 'email_restrictions']
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ POST /wp-json/wc/v3/coupons → Status code: 201 (completed in 0.169s)
+INFO     EcommerceAPI.src.entities.coupons.validators.coupon_validators:coupon_validators.py:46 ✅ Coupon structure valid: id=37 code=test-rixapykqyl
+DEBUG    EcommerceAPI.plugins.api.coupons:coupons.py:333 ℹ️ Registered coupon with ID: 37 for cleanup.
+DEBUG    EcommerceAPI.src.entities.coupons.helpers.coupons_helper:coupons_helper.py:257 🟢 Calling 'Get Coupon' for ID 37.
+DEBUG    EcommerceAPI.src.entities.coupons.api.coupons_api:coupons_api.py:91 📡 GET /coupons/37
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ GET /wp-json/wc/v3/coupons/37 → Status code: 200 (completed in 0.139s)
+INFO     EcommerceAPI.plugins.entities:entities.py:720 🔧 Starting teardown of created test resources...
+INFO     root:cleanup_helpers.py:103 🧹 Cleaning up coupon(s)... (11 queued)
+DEBUG    root:cleanup_helpers.py:125 🔄 Deleting coupon ID: 17
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/coupons/17?force=True → Status code: 200 (completed in 0.159s)
+INFO     root:cleanup_helpers.py:139 Deleted coupon ID: 17
+DEBUG    root:cleanup_helpers.py:125 🔄 Deleting coupon ID: 20
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/coupons/20?force=True → Status code: 200 (completed in 0.148s)
+INFO     root:cleanup_helpers.py:139 Deleted coupon ID: 20
+DEBUG    root:cleanup_helpers.py:125 🔄 Deleting coupon ID: 21
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/coupons/21?force=True → Status code: 200 (completed in 0.138s)
+INFO     root:cleanup_helpers.py:139 Deleted coupon ID: 21
+DEBUG    root:cleanup_helpers.py:125 🔄 Deleting coupon ID: 23
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/coupons/23?force=True → Status code: 200 (completed in 0.136s)
+INFO     root:cleanup_helpers.py:139 Deleted coupon ID: 23
+DEBUG    root:cleanup_helpers.py:125 🔄 Deleting coupon ID: 26
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/coupons/26?force=True → Status code: 200 (completed in 0.129s)
+INFO     root:cleanup_helpers.py:139 Deleted coupon ID: 26
+DEBUG    root:cleanup_helpers.py:125 🔄 Deleting coupon ID: 28
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/coupons/28?force=True → Status code: 200 (completed in 0.127s)
+INFO     root:cleanup_helpers.py:139 Deleted coupon ID: 28
+DEBUG    root:cleanup_helpers.py:125 🔄 Deleting coupon ID: 30
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/coupons/30?force=True → Status code: 200 (completed in 0.126s)
+INFO     root:cleanup_helpers.py:139 Deleted coupon ID: 30
+DEBUG    root:cleanup_helpers.py:125 🔄 Deleting coupon ID: 31
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/coupons/31?force=True → Status code: 200 (completed in 0.132s)
+INFO     root:cleanup_helpers.py:139 Deleted coupon ID: 31
+DEBUG    root:cleanup_helpers.py:125 🔄 Deleting coupon ID: 33
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/coupons/33?force=True → Status code: 200 (completed in 0.129s)
+INFO     root:cleanup_helpers.py:139 Deleted coupon ID: 33
+DEBUG    root:cleanup_helpers.py:125 🔄 Deleting coupon ID: 35
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/coupons/35?force=True → Status code: 200 (completed in 0.136s)
+INFO     root:cleanup_helpers.py:139 Deleted coupon ID: 35
+DEBUG    root:cleanup_helpers.py:125 🔄 Deleting coupon ID: 37
+INFO     EcommerceAPI.src.clients.api_client:api_client.py:681 ✅ DELETE /wp-json/wc/v3/coupons/37?force=True → Status code: 200 (completed in 0.131s)
+INFO     root:cleanup_helpers.py:139 Deleted coupon ID: 37
+INFO     EcommerceAPI.plugins.entities:entities.py:766 
+🧹 ==================== API CLEANUP SUMMARY ====================
+INFO     EcommerceAPI.plugins.entities:entities.py:767 Module: tests/coupons/api/test_create_coupons.py
+INFO     EcommerceAPI.plugins.entities:entities.py:768 📊 Registered in this module on this worker: {'coupons': 11}
+INFO     EcommerceAPI.plugins.entities:entities.py:772 🧾 Cleanup results:
+INFO     EcommerceAPI.plugins.entities:entities.py:774    • coupon: 11 deleted (11 registered)
+INFO     EcommerceAPI.plugins.entities:entities.py:775 ==================== END API CLEANUP SUMMARY ====================
