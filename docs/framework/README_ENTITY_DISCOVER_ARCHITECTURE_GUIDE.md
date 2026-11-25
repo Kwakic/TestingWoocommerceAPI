@@ -8,7 +8,7 @@
 
 1. Overview
 2. Core Philosophy
-3. Entity = Team = Microservice
+3. Code ownership and reviews
 4. Discovery Architecture
 5. Entity Discovery (Test Ownership)
 6. Framework Entity Discovery
@@ -29,23 +29,7 @@
 
 The framework is designed around a **Domain-Driven** Testing Architecture.
 
-Each business domain represents:
-
-- A Microservice
-- An Entity
-- An Owning Team
-- A CI Ownership Boundary
-- A Reporting Boundary
-
-Examples:
-
-| Entity | Team | Microservice |
-|----------|----------|----------|
-| customers | customers | Customers Service |
-| orders | orders | Orders Service |
-| products | products | Products Service |
-| coupons | coupons | Coupons Service |
-| shared | shared | Shared Platform Tests |
+Each business entity has its own test directory and an explicit logical owner. A team can own several entities. Shared QA infrastructure supports every domain.
 
 ---
 
@@ -76,21 +60,82 @@ CI Boundary
 
 ---
 
-## 🧩 Current framework convention
+## Code ownership and reviews
 
-### Current convention
+| Scope | Accountable team | Responsibility |
+|---|---|---|
+| Customers | commerce team | Customer behavior and its domain tests |
+| Products | catalog team | Catalog behavior and its domain tests |
+| Orders | purchase team | Order behavior, including scenarios that use products, customers or coupons |
+| Coupons | promo team | Coupon behavior and its domain tests |
+| Shared infrastructure | QA platform | Shared clients, fixtures and tests, cross-domain UI journeys, seed and maintenance scripts, CI, reporting and framework documentation |
 
-By default:
+Domain ownership follows the entity's test folder, framework package (API clients, helpers, DAOs, validators and models), API pytest plugin, entity test-data builders, factories and provisioners, and team guide. The QA platform maintains common mechanisms such as the cleanup registry. Pytest's resource registry records which test data can be deleted. [Test data lifecycle](../development/README_TEST_DATA_ARCHITECTURE.md)
 
-> Entity → Owning Team
+The framework registry holds the entity names, logical teams, criticality tiers and each team's GitHub review recipient. All five responsibilities currently route to the personal repository owner, `@Kwakic`. The logical names describe engineering responsibilities. GitHub routes review requests using the accounts in the generated file. [Ownership registry](../../EcommerceAPI/src/metadata/entity_metadata.py) · [CODEOWNERS](../../.github/CODEOWNERS)
 
-- The optional `team` metadata allows ownership to differ from the entity when multiple business domains belong to the same team.
+GitHub reads CODEOWNERS from the PR's base branch. The shared default comes first and later, more specific domain patterns take precedence. A ready PR from another contributor requests a matching owner. Requiring approval before merge is a separate repository setting. [Repository settings](../ci/README_GITHUB_PRODUCTION_SETTINGS.md#iii-require-review-from-code-owners)
 
-- If omitted, the framework automatically uses the entity name as the owning team.
+The existing shared PR unit lane checks that domain source directories, entity metadata and review rules agree. Matrix generation also rejects incomplete ownership. GitHub account existence, write access and team visibility must be verified on GitHub when assignments change. [Ownership tests](../../tests/shared/unit_tests/test_team_ownership.py)
 
-Today, most business entities use the default convention where the entity name and owning team are identical. This keeps reporting, logging and CI ownership simple while allowing ownership to be overridden when needed.
+### Read a CODEOWNERS rule
 
-Future versions may allow a single team to own multiple entities without changing the framework architecture.
+Suppose a pull request changes the Products DAO. GitHub looks at the file's path and applies the last matching rule in [CODEOWNERS](../../.github/CODEOWNERS).
+
+```text
+# products | catalog team
+/EcommerceAPI/src/entities/products/ @Kwakic
+```
+
+The first line is a comment for readers. The second is the rule: the path on the left starts at the repository root, and the handle on the right identifies the GitHub reviewer. The trailing `/` covers **every file below that directory**, including files added later.
+
+| Changed path | Which rule applies? |
+|---|---|
+| `dao/products_dao.py`, `helpers/products_helper.py`, `api/products_api.py`, `models/product_model.py`, or `validators/product_validators.py` under `EcommerceAPI/src/entities/products/` | The Products directory rule covers all five. A future `assertions/` folder under Products is covered too. |
+| `EcommerceAPI/src/test_data/factories/products/product_factory.py` | The Products test-data rule, `/EcommerceAPI/src/test_data/*/products/`. The `*` matches a layer such as `factories`, `builders`, or `provisioning`. |
+| `EcommerceAPI/plugins/api/products.py` | An exact file rule assigns this pytest plugin to Products. The Products test directory and team guide also have their own rules. |
+| `EcommerceAPI/src/shared/assertions/common_assertions.py` or `EcommerceAPI/src/clients/api_client.py` | The repository-wide `*` rule assigns these files to the QA platform, even when a Products test uses them. |
+
+In this portfolio, both the catalog team and the QA platform map to `@Kwakic`. That account is therefore the named reviewer for both a Products DAO change and a shared assertion change. **The reviewer reads the proposed code. CI runs pytest.** A separate branch rule determines whether approval is required to merge.
+
+**When to regenerate.** Adding a file under an already covered directory needs no ownership edit. To change a team or its reviewer, edit the registry and follow the worked example below. If a new domain-owned location falls outside the existing rules, update the path patterns in `render_codeowners()`, regenerate with `--write`, and review the generated diff in the same PR. [Generator](../../.github/scripts/generate_codeowners.py)
+
+### Assign two entities to one team
+
+Suppose the commerce team already owns Customers and will also take responsibility for Products. Make the change on your feature branch. Run the commands below from the repository root with the project's Python environment active.
+
+1. **Check the team name and reviewer.** Open the [ownership registry](../../EcommerceAPI/src/metadata/entity_metadata.py). In `ENTITY_METADATA`, Customers already uses `commerce team`. In `TEAM_REVIEWERS`, that team already maps to `@Kwakic`. Reuse the same spelling for Products. If you are assigning a genuinely new team, first add its name and verified GitHub reviewer to `TEAM_REVIEWERS`.
+
+2. **Change the Products entry in `ENTITY_METADATA`.** Replace `catalog team` with `commerce team`. The resulting entry is shown below. Customers already has the desired owner.
+
+   ```python
+   "products": {
+       "tier": "tier: high",
+       "team": "commerce team",
+   },
+   ```
+
+3. **Regenerate GitHub's review rules.** Run the generator after saving the registry. It writes [`.github/CODEOWNERS`](../../.github/CODEOWNERS) for you. Future runs overwrite hand edits to that file.
+
+   ```bash
+   python .github/scripts/generate_codeowners.py --write
+   ```
+
+4. **Verify both assignments.** The first command exits silently on success. Each matrix command should show `"team": "commerce team"` for the requested entity. The final command runs the shared ownership checks.
+
+   ```bash
+   python .github/scripts/generate_codeowners.py
+   python .github/scripts/generate_matrix.py --entity customers
+   python .github/scripts/generate_matrix.py --entity products
+   python -m pytest tests/shared/unit_tests/test_team_ownership.py -q
+   ```
+
+5. **Review the change and include both files in the same pull request.** Check the registry and generated rules together. In this portfolio, the Products heading becomes `# products | commerce team`. Both teams route to `@Kwakic`, so the reviewer lines still show that account. In an organization where the teams have different GitHub handles, the Products reviewer lines also change. Update the ownership table above when making an actual transfer.
+
+   ```bash
+   git diff -- EcommerceAPI/src/metadata/entity_metadata.py .github/CODEOWNERS
+   ```
+
 ---
 
 # 🏛️ Framework Discovery Architecture
@@ -588,7 +633,7 @@ Source:
 allure_autogen.py
 ```
 
-Team ownership is derived automatically.
+The current Allure `team` label uses the entity extracted from the test path. The CI matrix uses the owning team from the registry. Use the registry and CODEOWNERS for review decisions.
 
 Example:
 
@@ -598,7 +643,7 @@ tests/customers/...
         customers
 ```
 
-Executed teams are collected during runtime.
+Executed entity names are collected during runtime.
 
 Example:
 
@@ -746,72 +791,23 @@ is much more than simply selecting tests.
 
 Introducing a new business entity is an architectural change.
 
-### Step 1
+1. Add the domain to `FRAMEWORK_ENTITIES` and set its `team` in `ENTITY_METADATA`. Set a tier if the default does not apply. For an existing domain, follow the [worked example for transferring ownership](#assign-two-entities-to-one-team).
+2. For a new team, add one `TEAM_REVIEWERS` entry. In an organization, choose a visible team with explicit repository write access. Confirm the account on GitHub before assigning it.
+3. Add the domain implementation, tests, documented pytest marker, team guide, and entity choice in `.github/workflows/manual-entity-tests.yml`. Follow the existing runtime helper and DAO discovery conventions.
+4. From the repository root regenerate the review rules, inspect the diff, and run the shared checks. Include the registry and generated file together in the PR.
 
-Register the entity in the framework architecture.
-
-```python
-FRAMEWORK_ENTITIES = (
-    ...
-    "inventory",
-)
+```bash
+python .github/scripts/generate_codeowners.py --write
+git diff -- .github/CODEOWNERS
+python .github/scripts/generate_codeowners.py
+python -m pytest tests/shared/unit_tests/test_team_ownership.py tests/shared/unit_tests/test_manual_entity_selection.py -q
 ```
-
-### Step 2
-
-(Optional)
-
-Override metadata when required.
-
-```python
-ENTITY_METADATA = {
-    "inventory": {
-        "tier": "critical",
-    },
-}
-```
-
-### Step 3
-
-Implement the runtime components.
-
-```text
-inventory_helper.py
-inventory_api.py
-inventory_dao.py
-```
-
-### Step 4
-
-Create the test suite.
-
-```text
-tests/inventory/
-```
-
-No GitHub Actions workflow needs to be modified.
-
-The framework automatically generates the CI matrix from the architectural registry.
 
 ---
 
 # 🔮 Future Evolution
 
-Potential future metadata:
-
-```yaml
-matrix:
-  include:
-    - entity: customers
-      owner: customers-team
-      criticality: high
-
-    - entity: coupons
-      owner: promotions-team
-      criticality: low
-```
-
-Benefits:
+The registry supplies entity, team and tier to the CI matrix. Future uses include the following.
 
 - 📣 Slack notifications
 - 🔁 Selective retries

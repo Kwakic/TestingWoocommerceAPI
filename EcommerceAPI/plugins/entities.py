@@ -119,6 +119,7 @@ from EcommerceAPI.src.metadata.entity_metadata import (
     DEFAULT_ENTITY_METADATA,
     ENTITY_METADATA,
     discover_framework_entities,
+    validate_ownership,
 )
 
 import EcommerceAPI.src
@@ -565,25 +566,25 @@ def build_entity_matrix() -> dict[str, list[dict[str, str]]]:
     where:
 
         entity -> framework business domain
-        team   -> owning team (defaults to entity when omitted)
+        team   -> explicit logical owner from the framework registry
         tier   -> business criticality
     """
 
+    validate_ownership()
     matrix: dict[str, list[dict[str, str]]] = {"include": []}
 
     for entity in discover_framework_entities():
 
         metadata = {
             **DEFAULT_ENTITY_METADATA,
-            **ENTITY_METADATA.get(entity, {}),
+            **ENTITY_METADATA[entity],
         }
 
         matrix["include"].append(
             {
                 # Framework entity.
                 "entity": entity,
-                # Entity = Team by design.
-                "team": metadata.get("team", entity),
+                "team": metadata["team"],
                 # Business metadata.
                 "tier": metadata["tier"],
             }

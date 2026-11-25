@@ -878,6 +878,10 @@ GraphQL mutations use WordPress Application Passwords through Basic Auth.
 
 ---
 
+## Code review responsibilities
+
+Domain teams maintain entity implementations and their tests. The QA platform maintains cross-domain contracts, UI journeys, CI and shared helpers. A test can use another domain's factory while staying under the owning domain's review rules. [Ownership and review rules](../framework/README_ENTITY_DISCOVER_ARCHITECTURE_GUIDE.md#code-ownership-and-reviews)
+
 ## Final note
 
 The framework is designed for multi-team scale: independent entity test folders,

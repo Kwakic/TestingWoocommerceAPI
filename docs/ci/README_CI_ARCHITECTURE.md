@@ -644,7 +644,7 @@ standalone UI testing domain independent from the API entity matrix.
             GitHub Pages
 
 ```
-👉 The matrix includes optional ownership metadata (for example team). When omitted, the framework defaults the team to the entity name.
+The matrix carries each entity's registered team and tier. Missing ownership fails discovery with a configuration error. The shared Unit job checks the generated CODEOWNERS rules as part of the existing PR Quality Gate. GitHub requests reviewers through CODEOWNERS and enforces approvals through repository settings. [Ownership and review rules](../framework/README_ENTITY_DISCOVER_ARCHITECTURE_GUIDE.md#code-ownership-and-reviews)
 
 ---
 
