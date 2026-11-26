@@ -278,6 +278,55 @@ For example, a company could assign owners only to `/tests/customers/`, `/tests/
 
 **Important for this framework:** the generated CODEOWNERS starts with `* @Kwakic`. In an enterprise mapping, that catch-all would typically point to the QA platform team. Every file is therefore covered by an owner unless explicitly excluded by a later rule. With this full-coverage model, code-owner-only approval still requires human approval for every PR. Do not mistake disabling the general approval count for disabling all reviews.
 
+---
+
+### What does this mean in practice?
+
+Suppose a developer modifies Customers tests in a multi-team organization.
+
+The repository has the following branch protection settings:
+
+- **Require approvals:** YES (1 approval)
+- **Require review from Code Owners:** YES
+- **Require status checks to pass:** YES
+- **Required status check:** PR Quality Gate
+
+The Commerce team is the designated code owner for Customers.
+
+| Commerce team approves | Unrelated team approves | CI passes | Merge permitted |
+|---|---|---|---|
+| No | No | Yes | ❌ No |
+| No | Yes | Yes | ❌ No |
+| Yes | No | Yes | ✅ Yes |
+| Yes | Yes | Yes | ✅ Yes |
+| Yes | Yes | No | ❌ No |
+| Yes | No | No | ❌ No |
+| No | Yes | No | ❌ No |
+| No | No | No | ❌ No |
+
+**Key principles:**
+
+- **Require approvals:** Determines how many eligible reviewers must approve.
+- **Require review from Code Owners:** Determines whose approval is mandatory.
+- **PR Quality Gate:** Determines whether the required automated validation has passed.
+
+A single approval from an eligible Commerce team member satisfies both
+the general approval count and the code-owner approval requirement.
+
+An approval from an unrelated team does not replace the required
+code-owner approval.
+
+Similarly, successful CI execution does not replace human approval,
+and human approval does not override a failing PR Quality Gate.
+
+> **Enterprise best practice:** Both human code review and automated
+> quality validation must succeed before changes can enter the
+> protected branch.
+
+This example assumes that all other configured merge requirements
+are satisfied and no bypass permissions are exercised.
+
+---
 ### Recommended mature enterprise policy
 
 For a shared, production-grade QA automation framework, use **at least one general approval plus required code-owner approval**, with full ownership coverage and a required `PR Quality Gate`. This is the recommended baseline, not a universal rule followed by every enterprise. The general minimum protects against ownership gaps; specialist review ensures the appropriate domain or platform team evaluates the change.
@@ -291,6 +340,8 @@ As an external benchmark, the [OpenSSF Scorecard branch-protection rubric](https
 Maintain multiple eligible reviewers per team to avoid a single-person dependency, protect CODEOWNERS and its generator/registry alongside CI configuration, and use centrally managed rulesets where available. Restrict routine bypasses; any emergency exception should be authorized, documented and audited. Reviewers must be independent of the PR author; revalidate changed code before merge. For high-volume repositories, consider a merge queue rather than weakening required CI.
 
 For the framework's logical ownership model, path examples and review workflow, see [Code ownership and reviews](../framework/README_ENTITY_DISCOVER_ARCHITECTURE_GUIDE.md#code-ownership-and-reviews).
+
+---
 
 ### Configure a multi-team repository
 
