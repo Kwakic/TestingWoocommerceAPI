@@ -8,14 +8,20 @@ This guide is written for developers, QA engineers, SDETs, and juniors
 who may already know similar concepts from GitLab, Bitbucket, Jenkins,
 or another CI/CD platform but are new to GitHub Actions.
 
-> **Project policy:** The target PR policy for this repository is one required
-> check, **PR Quality Gate**, aggregating Unit, Preflight, Smoke, and the
-> curated Integration PR subset. Contract and UI remain informational. During
-> migration, the existing required Smoke and Integration checks stay enabled
-> until the new gate has been verified. Examples below that name `Smoke Quality
+> **Project CI policy:** The target required CI check for this repository is
+> **PR Quality Gate**, aggregating Unit, Preflight, Smoke, and the
+> curated Integration PR subset. Contract and UI remain informational. If migrating
+> from legacy required Smoke and Integration checks, retain them until the new gate
+> has been verified. Examples below that name `Smoke Quality
 > Gate` or `Integration Quality Gate` illustrate the general per-suite pattern;
 > they are not this repository's target branch-protection policy unless a
 > section explicitly says otherwise.
+
+> **Enterprise governance target:** Require at least one independent approval,
+> applicable code-owner approval, and the `PR Quality Gate` before merging to
+> `main`. See Section 22 for the
+> recommended baseline and stronger risk-based controls. Section 23 documents
+> the temporary solo-maintainer exception.
 
 ------------------------------------------------------------------------
 
@@ -190,7 +196,9 @@ A common starting point is:
 Required approvals: 1
 ```
 
-This means another person must review the PR before it can be merged.
+This means the PR needs at least one approving review from an eligible person other than its author before merging (unless a configured bypass applies). A reviewer with write access can satisfy the count without being a code owner, unless the separate code-owner requirement below is enabled.
+
+A review request, a comment and an approving review are different things. Required approvals block merging, not opening the PR.
 
 ### Solo portfolio repository
 
@@ -210,7 +218,7 @@ Nobody else exists to approve it
 For a personal portfolio project, it is reasonable to leave this
 disabled.
 
-For a team repository, require at least one approval.
+For a mature multi-team repository, require at least one approval by default, together with the applicable code-owner approval. A selective code-owner-only policy is an alternative where the organization deliberately accepts unowned changes without a general human review (see Section III).
 
 ------------------------------------------------------------------------
 
@@ -243,16 +251,75 @@ code.
 
 ## III. Require review from Code Owners
 
-### Recommended: YES when the repository has multiple owners
+### Recommended: YES for a multi-team repository with enforceable ownership
 
-In this portfolio repository, `@Kwakic` owns the repository and receives review requests for the domain and platform roles. A PR author cannot approve their own PR. Keep mandatory code-owner approval optional while a single maintainer fills every role.
+The `CODEOWNERS` file assigns review responsibility to individuals or teams. GitHub automatically requests reviews for covered changes in ready PRs, using the file from the PR's base branch. It does not make approval mandatory by itself. Email notifications depend on the reviewer's notification preferences.
 
-For an organization repository:
+**Require approvals** controls the number of approvals. **Require review from Code Owners** adds a requirement for approval from an applicable owner. These settings complement CODEOWNERS; neither replaces it.
 
-1. Give the actual domain and platform teams explicit **Write** access and make the teams visible. Map their verified GitHub handles to the logical teams and regenerate CODEOWNERS. [Ownership model and onboarding](../framework/README_ENTITY_DISCOVER_ARCHITECTURE_GUIDE.md#code-ownership-and-reviews)
-2. After CODEOWNERS reaches the base branch, use a ready PR from a different contributor to verify the requested reviewers. Check the CODEOWNERS file on GitHub for invalid accounts or patterns.
-3. In **Settings → Rules → Rulesets**, edit or create an active branch ruleset targeting `main`. Under **Require a pull request before merging**, require an approval and enable **Require review from Code Owners**. With classic branch protection, use the corresponding options under **Settings → Branches**. Configure the **PR Quality Gate** separately as a required status check.
-4. Verify that an eligible code owner other than the PR author can approve, and that the intended merge rule applies. Include the platform owner for `.github/` so governance and CI changes also go through review. [GitHub CODEOWNERS](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners) · [GitHub rulesets](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/creating-rulesets-for-a-repository)
+Example: a PR changes Customers tests owned by the Commerce team. Assume one required approval where enabled, a passing `PR Quality Gate`, and no other blockers or bypasses.
+
+| Require approvals | Require review from Code Owners | Customers PR (owned files) | PR changing only unowned files | Recommended usage |
+|---|---|---|---|---|
+| No (0) | No | No mandatory approval | No mandatory approval | Solo-maintainer exception or prototype |
+| Yes (1) | No | Any eligible reviewer | Any eligible reviewer | Team without mandatory domain ownership |
+| No (0) | Yes | Applicable code owner | No mandatory approval | Selective path-based review policy |
+| **Yes (1+)** | **Yes** | Applicable code owner; general count must also be met | Required number of eligible reviewers | **Recommended enterprise baseline** |
+
+**🔥Choose the fourth row for this framework's enterprise target.** The other rows explain valid alternatives, not equally recommended policies.
+
+An applicable owner's approval counts toward the general approval count. With a minimum of one, a single eligible code-owner approval can satisfy both requirements. Owners listed on the same matching rule are alternatives; changes across differently owned areas must satisfy all applicable ownership requirements.
+
+### Code-owner-only approval (selective policy)
+
+It is valid to set **Require approvals = No (0)** and **Require review from Code Owners = Yes**. This requires specialist approval for covered files without imposing a general review count on unowned files. In classic branch protection, leave the general approval checkbox off while enabling code-owner review; in a ruleset, keep the pull request rule enabled, set the required approval count to `0`, and enable code-owner review. The separate [GitHub rules API](https://docs.github.com/en/rest/repos/rules) fields `required_approving_review_count` and `require_code_owner_review` represent these two controls.
+
+For example, a company could assign owners only to `/tests/customers/`, `/tests/orders/` and `/.github/`. A change limited to an unowned `README.md` would not require approval under this policy. This assumes no other review rule (including latest-push approval), blocking review or merge requirement applies, and CI still passes.
+
+**Important for this framework:** the generated CODEOWNERS starts with `* @Kwakic`. In an enterprise mapping, that catch-all would typically point to the QA platform team. Every file is therefore covered by an owner unless explicitly excluded by a later rule. With this full-coverage model, code-owner-only approval still requires human approval for every PR. Do not mistake disabling the general approval count for disabling all reviews.
+
+### Recommended mature enterprise policy
+
+For a shared, production-grade QA automation framework, use **at least one general approval plus required code-owner approval**, with full ownership coverage and a required `PR Quality Gate`. This is the recommended baseline, not a universal rule followed by every enterprise. The general minimum protects against ownership gaps; specialist review ensures the appropriate domain or platform team evaluates the change.
+
+For example, if a developer changes Customers tests and only a Catalog reviewer approves, the owner requirement remains unsatisfied. If an eligible Commerce reviewer approves and CI passes, one approval can satisfy both review controls when the minimum is one. If the minimum is two, a second eligible approving reviewer is needed. For changes spanning multiple ownership areas, satisfy the applicable owner requirements as well.
+
+**Higher-assurance policy:** Require two or more distinct eligible approvals when the repository's risk classification warrants it, alongside mandatory code-owner review. For sensitive changes (e.g. CI permissions, secrets handling, ownership rules or release automation), require separate security/platform approval where policy demands it. Simply raising the approval count does not ensure the second reviewer belongs to a particular team; enforce that responsibility separately.
+
+As an external benchmark, the [OpenSSF Scorecard branch-protection rubric](https://github.com/ossf/scorecard/blob/main/docs/faq.md#branch-protection-how-to-setup-a-1010-branch-protection-on-github) includes two or more approvals and required code-owner review in its stronger protection tier, along with other controls. Its rubric is a security benchmark, not a universal enterprise requirement or a compliance certification.
+
+Maintain multiple eligible reviewers per team to avoid a single-person dependency, protect CODEOWNERS and its generator/registry alongside CI configuration, and use centrally managed rulesets where available. Restrict routine bypasses; any emergency exception should be authorized, documented and audited. Reviewers must be independent of the PR author; revalidate changed code before merge. For high-volume repositories, consider a merge queue rather than weakening required CI.
+
+For the framework's logical ownership model, path examples and review workflow, see [Code ownership and reviews](../framework/README_ENTITY_DISCOVER_ARCHITECTURE_GUIDE.md#code-ownership-and-reviews).
+
+### Configure a multi-team repository
+
+1. Give the actual domain and platform teams explicit **Write** access and make the teams visible. Map their verified GitHub handles to the logical teams in the framework registry and regenerate `.github/CODEOWNERS`. Include ownership for `.github/` to protect governance and CI changes.
+2. Merge the CODEOWNERS file into the intended base branch. Check GitHub for invalid owners or patterns. Open a ready PR from another contributor to verify automatic review routing before enforcing owner approval.
+3. In **Settings → Branches**, edit the classic branch protection rule for `main`. Alternatively, use **Settings → Rules → Rulesets** and edit an active branch ruleset targeting `main`.
+4. Configure the following settings for the **recommended enterprise baseline**:
+
+   ```text
+   [x] Require a pull request before merging
+       [x] Require approvals
+           Required approvals: 1
+       [x] Require review from Code Owners
+       [x] Dismiss stale pull request approvals when new commits are pushed
+
+   [x] Require status checks to pass before merging
+       Required check: PR Quality Gate
+   ```
+
+   In a ruleset, set the required approval count to `1` (or more according to risk) and enable the code-owner option under the pull request rule. Review the bypass configuration separately. For the selective alternative, use count `0` with code-owner approval enabled. Do not enable an independent latest-push approval requirement if unowned PRs are intended to merge without a review.
+5. Save the rule and verify it with a test PR. First confirm that a passing CI gate without the necessary approval does not allow a merge. Then obtain approval from an eligible code owner other than the author and confirm the requirements are satisfied. Also verify that an owner approval cannot replace a failing required CI check. Test an unrelated reviewer, a multi-domain change, and (if using selective reviews) a change limited to an unowned path.
+
+### Recommended solo portfolio configuration
+
+Keep `.github/CODEOWNERS` in the repository, but leave **Require approvals** and **Require review from Code Owners** disabled while all roles map to `@Kwakic`. A PR author cannot approve their own PR. Continue to require the automated `PR Quality Gate`. The file can still route reviews for PRs opened by other contributors once it exists on the base branch.
+
+These are recommended settings, not confirmation of the live configuration. Do not enable mandatory owner approval until a different eligible reviewer is available for every affected area, or an intentional bypass policy has been agreed.
+
+Official references: [GitHub CODEOWNERS](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners) · [Classic branch protection](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/managing-a-branch-protection-rule) · [Rulesets](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets)
 
 ------------------------------------------------------------------------
 
@@ -822,7 +889,7 @@ Not necessary
 
 # 22. ⚙️ Recommended Production Configuration
 
-For a typical professional team repository:
+For a mature enterprise team maintaining a shared QA framework, the following is the **recommended enterprise baseline (fourth approval scenario in Section 6)**. Keep a valid `.github/CODEOWNERS` file on the protected base branch with complete domain and platform coverage. Ensure each area has multiple eligible reviewers. Use organization-level rulesets where available to apply consistent protections across repositories.
 
 ``` text
 Branch:
@@ -833,8 +900,8 @@ Pull requests:
     [x] Require approvals
         → 1 approval
     [x] Dismiss stale approvals
-    [ ] Code Owners
-        → YES when the team uses CODEOWNERS
+    [x] Require review from Code Owners
+        → when valid code owners and eligible reviewers are configured
     [x] Require conversation resolution
 
 CI:
@@ -871,14 +938,15 @@ Merge queue:
         → enable for busy repositories
 ```
 
+**Higher-assurance enterprise profile:** retain the baseline settings above, increase the required approval count to at least two, and consider mandatory latest-push approval, additional independent security reviews, and required security checks according to risk. The [OpenSSF Scorecard branch-protection rubric](https://github.com/ossf/scorecard/blob/main/docs/faq.md#branch-protection-how-to-setup-a-1010-branch-protection-on-github) also recognizes stronger approval and review-freshness controls. Do not claim that the baseline alone satisfies the full rubric.
+
+**Enterprise operating guidance:** enforce protections for normal administrators as well as contributors, restrict and audit emergency bypasses, and verify that reviews and the CI gate apply to the code actually being merged. Consider latest-push approval or stale-review dismissal according to risk and review workload; apply additional security checks or independent approvals when required. A merge queue can be useful for high PR throughput. The selective code-owner-only policy from Section 6 is valid but is not the default recommendation for this fully owned framework.
+
 ------------------------------------------------------------------------
 
 # 23.🔥 Recommended Configuration for a Personal QA/SDET Portfolio
 
-A portfolio repository has a slightly different goal.
-
-You want to demonstrate professional practice without creating
-unnecessary administrative friction.
+This framework is designed to follow the enterprise target in Section 22. The solo-maintainer policy below is a temporary operational exception, not the target architecture. Enable mandatory independent reviews once real domain/platform reviewers are available; do not simulate independence with self-approval or routine bypasses.
 
 Recommended:
 
@@ -887,6 +955,9 @@ Recommended:
 
 [ ] Require approvals
     → unless another reviewer is available
+
+[ ] Require review from Code Owners
+    → keep CODEOWNERS present, but do not require its approval while solo
 
 [x] Require status checks
 
@@ -1260,8 +1331,15 @@ REVIEWS
 ────────────────────────────────────────
 
 [ ] Approval required for solo repository
-[x] 1 approval for team repository
+[x] At least 1 general approval for the enterprise baseline
+    → 2 or more for a higher-assurance policy, depending on risk
+[ ] 0 general approvals for a deliberately selective owner-only policy (alternative)
 [x] Dismiss stale approvals for team repository
+[x] CODEOWNERS file present and valid on the base branch
+[ ] Require code-owner approval for solo repository
+[x] Require code-owner approval for team repository with eligible owners
+[x] Verify full ownership coverage and independent reviewer availability
+[x] Protect ownership rules and their generation/configuration paths
 
 QUALITY GATES / PR CI
 ────────────────────────────────────────
@@ -1279,7 +1357,6 @@ OPTIONAL SECURITY
 ────────────────────────────────────────
 
 [ ] Signed commits
-[ ] CODEOWNERS
 [ ] Deployment protection
 [ ] Merge queue
 
@@ -1421,6 +1498,9 @@ The latter are implementation details of the CI pipeline.
 -   GitHub rulesets:
     https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets
 
+-   GitHub code owners:
+    https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
 -   GitHub status checks:
     https://docs.github.com/en/pull-requests/reference/status-checks
 
@@ -1439,4 +1519,4 @@ The latter are implementation details of the CI pipeline.
 Gate guide\
 **Audience:** Developers, QA Engineers, SDETs, juniors, and engineers
 migrating from other CI/CD platforms\
-**Last reviewed:** 2026-11-09
+**Last updated:** 2026-11-26 (enterprise baseline and higher-assurance review policy clarified)
